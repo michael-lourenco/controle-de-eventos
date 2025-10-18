@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -13,19 +14,23 @@ import {
   ClockIcon,
   UserGroupIcon,
   EyeIcon,
-  PencilIcon
+  PencilIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
-import { eventos } from '@/lib/mockData';
+import { eventos, deleteEvento } from '@/lib/mockData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { StatusEvento, TipoEvento } from '@/types';
+import { StatusEvento, TipoEvento, Evento } from '@/types';
 
 export default function EventosPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
+  const [eventosList, setEventosList] = useState<Evento[]>(eventos);
+  const [eventoParaExcluir, setEventoParaExcluir] = useState<Evento | null>(null);
 
-  const filteredEventos = eventos.filter(evento => {
+  const filteredEventos = eventosList.filter(evento => {
     const matchesSearch = evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          evento.local.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
@@ -33,6 +38,32 @@ export default function EventosPage() {
     
     return matchesSearch && matchesStatus && matchesTipo;
   });
+
+  const handleView = (evento: Evento) => {
+    router.push(`/eventos/${evento.id}`);
+  };
+
+  const handleEdit = (evento: Evento) => {
+    router.push(`/eventos/${evento.id}/editar`);
+  };
+
+  const handleDelete = (evento: Evento) => {
+    setEventoParaExcluir(evento);
+  };
+
+  const confirmDelete = () => {
+    if (eventoParaExcluir) {
+      const sucesso = deleteEvento(eventoParaExcluir.id);
+      if (sucesso) {
+        setEventosList(eventosList.filter(e => e.id !== eventoParaExcluir.id));
+        setEventoParaExcluir(null);
+      }
+    }
+  };
+
+  const cancelDelete = () => {
+    setEventoParaExcluir(null);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -62,7 +93,7 @@ export default function EventosPage() {
               Gerencie todos os eventos agendados
             </p>
           </div>
-          <Button>
+          <Button onClick={() => router.push('/eventos/novo')}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Novo Evento
           </Button>
@@ -132,7 +163,7 @@ export default function EventosPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-lg">{evento.cliente.nome}</CardTitle>
-                    <CardDescription>{evento.nomesNoivosAniversariante}</CardDescription>
+                    <CardDescription>{evento.contratante}</CardDescription>
                   </div>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(evento.status)}`}>
                     {evento.status}
@@ -163,11 +194,30 @@ export default function EventosPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900">{evento.tipoEvento}</span>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleView(evento)}
+                        title="Visualizar"
+                      >
                         <EyeIcon className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleEdit(evento)}
+                        title="Editar"
+                      >
                         <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDelete(evento)}
+                        title="Excluir"
+                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                      >
+                        <TrashIcon className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -186,13 +236,45 @@ export default function EventosPage() {
                 Tente ajustar os filtros ou criar um novo evento.
               </p>
               <div className="mt-6">
-                <Button>
+                <Button onClick={() => router.push('/eventos/novo')}>
                   <PlusIcon className="h-4 w-4 mr-2" />
                   Novo Evento
                 </Button>
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Modal de Confirmação de Exclusão */}
+        {eventoParaExcluir && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-md mx-4">
+              <CardHeader>
+                <CardTitle>Confirmar Exclusão</CardTitle>
+                <CardDescription>
+                  Tem certeza que deseja excluir o evento de <strong>{eventoParaExcluir.cliente.nome}</strong>?
+                  <br />
+                  Esta ação não pode ser desfeita.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={cancelDelete}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={confirmDelete}
+                  >
+                    Excluir
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </Layout>

@@ -27,7 +27,7 @@ export interface Evento {
   horarioTerminoServico: string;
   horarioDesmontagem: string;
   tempoEvento: string;
-  nomesNoivosAniversariante: string;
+  contratante: string;
   numeroConvidados: number;
   quantidadeMesas?: number;
   hashtag?: string;
@@ -217,4 +217,43 @@ export enum FormaPagamento {
   CARTAO_CREDITO = 'Cartão de crédito',
   DEPOSITO_BANCARIO = 'Depósito bancário',
   PIX = 'PIX'
+}
+
+export interface TipoCusto {
+  id: string;
+  nome: string;
+  descricao?: string;
+  categoria: 'Serviço' | 'Promoter' | 'Motorista' | 'Frete' | 'Insumos' | 'Impostos' | 'Outros';
+  ativo: boolean;
+  dataCadastro: Date;
+}
+
+export interface CustoEvento {
+  id: string;
+  eventoId: string;
+  evento: Evento;
+  tipoCustoId: string;
+  tipoCusto: TipoCusto;
+  valor: number;
+  quantidade?: number;
+  observacoes?: string;
+  dataCadastro: Date;
+}
+
+export interface AnexoEvento {
+  id: string;
+  eventoId: string;
+  evento: Evento;
+  nome: string;
+  tipo: 'PDF' | 'Imagem' | 'Documento' | 'Outro';
+  url: string;
+  tamanho: number; // em bytes
+  dataUpload: Date;
+}
+
+export interface ResumoCustosEvento {
+  custos: CustoEvento[];
+  total: number;
+  porCategoria: Record<string, number>;
+  quantidadeItens: number;
 }
