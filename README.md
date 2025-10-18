@@ -1,36 +1,157 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sistema Click-se - Controle de Pagamentos e Eventos
 
-## Getting Started
+Sistema web desenvolvido para gerenciar eventos e controle financeiro da Click-se, baseado na análise das planilhas existentes e formulários de contratação.
 
-First, run the development server:
+## 🚀 Funcionalidades
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### ✅ Implementadas
+- **Dashboard Principal** - Visão geral do negócio com estatísticas em tempo real
+- **Gestão de Eventos** - Cadastro, visualização e controle de eventos
+- **Controle Financeiro** - Acompanhamento de pagamentos e receitas
+- **Relatórios** - Análises financeiras e estatísticas do negócio
+- **Autenticação** - Sistema de login mockado para MVP
+- **Interface Responsiva** - Funciona em desktop e mobile
+
+### 🔄 Em Desenvolvimento
+- Sistema de notificações e alertas
+- Deploy na Vercel
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Next.js 15** - Framework React com App Router
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS** - Estilização
+- **Heroicons** - Ícones
+- **date-fns** - Manipulação de datas
+- **Dados mockados** - Para demonstração (MVP)
+
+## 📋 Pré-requisitos
+
+- Node.js 18 ou superior
+- npm ou yarn
+
+## 🚀 Como Executar
+
+1. **Clone o repositório**
+   ```bash
+   git clone <url-do-repositorio>
+   cd click-se-sistema
+   ```
+
+2. **Instale as dependências**
+   ```bash
+   npm install
+   ```
+
+3. **Execute o projeto**
+   ```bash
+   npm run dev
+   ```
+
+4. **Acesse no navegador**
+   ```
+   http://localhost:3000
+   ```
+
+## 🔐 Credenciais de Teste
+
+### Administrador
+- **Email:** admin@clickse.com
+- **Senha:** qualquer senha (mínimo 3 caracteres)
+
+### Usuário
+- **Email:** user@clickse.com
+- **Senha:** qualquer senha (mínimo 3 caracteres)
+
+## 📊 Estrutura do Projeto
+
+```
+src/
+├── app/                    # Páginas do Next.js
+│   ├── dashboard/         # Dashboard principal
+│   ├── eventos/           # Gestão de eventos
+│   ├── pagamentos/        # Controle financeiro
+│   ├── relatorios/        # Relatórios e análises
+│   └── login/             # Página de login
+├── components/            # Componentes reutilizáveis
+│   ├── ui/               # Componentes base
+│   └── Layout.tsx        # Layout principal
+├── lib/                  # Utilitários e dados
+│   ├── auth.ts          # Autenticação mockada
+│   └── mockData.ts      # Dados de exemplo
+└── types/               # Definições TypeScript
+    └── index.ts         # Interfaces e tipos
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📈 Funcionalidades Detalhadas
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Dashboard
+- Estatísticas em tempo real
+- Eventos do dia
+- Pagamentos pendentes/atrasados
+- Próximos eventos
+- Resumo financeiro
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Eventos
+- Listagem com filtros
+- Busca por cliente ou local
+- Filtros por status e tipo
+- Visualização em cards
+- Ações de gerenciamento
 
-## Learn More
+### Pagamentos
+- Controle de parcelas
+- Filtros por status e forma de pagamento
+- Resumo financeiro
+- Status de pagamentos
+- Ações de gerenciamento
 
-To learn more about Next.js, take a look at the following resources:
+### Relatórios
+- Seleção de período personalizado
+- Gráficos de receita mensal
+- Distribuição por tipo de evento
+- Status dos pagamentos
+- Exportação (preparado)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 Baseado nas Planilhas Analisadas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+O sistema foi desenvolvido baseado na análise das seguintes planilhas:
 
-## Deploy on Vercel
+1. **CLICK-SE ENTRADAS** - Controle financeiro de serviços
+2. **CLICK-SE PROMOTORES** - Gestão de eventos e profissionais
+3. **Formulário de Contratação** - Captura de dados do cliente
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔮 Próximos Passos
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Fase 2 - Banco de Dados Real
+- Substituir dados mockados
+- Implementar CRUD completo
+- Migração de dados das planilhas
+
+### Fase 3 - Funcionalidades Avançadas
+- Notificações em tempo real
+- Integração com APIs de pagamento
+- Relatórios em PDF/Excel
+- Backup automático
+
+### Fase 4 - Melhorias de UX
+- Formulários de cadastro
+- Edição inline
+- Drag & drop
+- Atalhos de teclado
+
+## 📝 Documentação
+
+Consulte o arquivo `documentacao/step-by-step.md` para detalhes completos do desenvolvimento.
+
+## 🤝 Contribuição
+
+Este é um projeto MVP desenvolvido para demonstração. Para contribuições ou sugestões, entre em contato.
+
+## 📄 Licença
+
+Este projeto é privado e destinado ao uso da Click-se.
+
+---
+
+**Desenvolvido com ❤️ para a Click-se**# controle-de-eventos
