@@ -1,5 +1,6 @@
 // Sistema de autenticação mockado para MVP
 import React from 'react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 export interface User {
   id: string;
@@ -117,36 +118,40 @@ export const requireAuth = (callback?: (user: User) => boolean) => {
 
 // Hook para usar em componentes React
 export const useAuth = () => {
-  const [user, setUser] = React.useState<User | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const { data: session, status } = useSession();
   
-  React.useEffect(() => {
-    const currentUser = getCurrentUser();
-    setUser(currentUser);
-    setLoading(false);
-  }, []);
+  const user: User | null = session ? {
+    id: session.user.id,
+    nome: session.user.name || '',
+    email: session.user.email || '',
+    role: (session.user.role as 'admin' | 'user') || 'user',
+    avatar: session.user.image || undefined
+  } : null;
   
   const loginUser = async (email: string, senha: string) => {
-    setLoading(true);
-    const result = await login(email, senha);
-    if (result.success && result.user) {
-      setUser(result.user);
-    }
-    setLoading(false);
-    return result;
+    const result = await signIn('credentials', {
+      email,
+      password: senha,
+      redirect: false
+    });
+    
+    return {
+      success: !result?.error,
+      user: result?.error ? null : user,
+      error: result?.error || null
+    };
   };
   
   const logoutUser = () => {
-    logout();
-    setUser(null);
+    signOut();
   };
   
   return {
     user,
-    loading,
+    loading: status === 'loading',
     login: loginUser,
     logout: logoutUser,
-    isAuthenticated: !!user,
+    isAuthenticated: !!session,
     isAdmin: user?.role === 'admin'
   };
 };

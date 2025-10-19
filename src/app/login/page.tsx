@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { login } from '@/lib/auth';
+import { signIn } from 'next-auth/react';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,14 +22,27 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const result = await login(email, senha);
+      const result = await signIn('credentials', {
+        email,
+        password: senha,
+        redirect: false
+      });
       
-      if (result.success) {
+      console.log('Resultado do signIn:', result);
+      
+      if (result?.error) {
+        console.error('Erro no login:', result.error);
+        setError('Email ou senha inválidos');
+      } else if (result?.ok) {
+        console.log('Login bem-sucedido, redirecionando...');
         router.push('/dashboard');
+        router.refresh();
       } else {
-        setError(result.error || 'Erro ao fazer login');
+        console.error('Resultado inesperado:', result);
+        setError('Erro inesperado. Tente novamente.');
       }
-    } catch {
+    } catch (error) {
+      console.error('Erro no catch:', error);
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);
@@ -65,14 +80,32 @@ export default function LoginPage() {
                 required
               />
               
-              <Input
-                label="Senha"
-                type="password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                placeholder="Sua senha"
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Senha
+                </label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    placeholder="Sua senha"
+                    required
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                    ) : (
+                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
 
               {error && (
                 <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
@@ -90,9 +123,22 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-md">
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Não tem uma conta?{' '}
+                <button
+                  type="button"
+                  onClick={() => router.push('/register')}
+                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                >
+                  Criar conta
+                </button>
+              </p>
+            </div>
+
+            <div className="mt-4 p-4 bg-blue-50 rounded-md">
               <h3 className="text-sm font-medium text-blue-800 mb-2">
-                Credenciais para teste:
+                Credenciais para teste (desenvolvimento):
               </h3>
               <div className="text-xs text-blue-700 space-y-1">
                 <p><strong>Admin:</strong> admin@clickse.com / qualquer senha</p>

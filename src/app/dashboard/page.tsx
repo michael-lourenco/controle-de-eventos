@@ -9,55 +9,76 @@ import {
   ExclamationTriangleIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
-import {
-  getEventosHoje,
-  getPagamentosPendentes,
-  getEventosProximos,
-  calcularValorTotalPendente,
-  calcularValorTotalAtrasado,
-  calcularReceitaMes,
-  calcularReceitaAno,
-  pagamentos
-} from '@/lib/mockData';
+import { useDashboardData } from '@/hooks/useData';
 import { Pagamento } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function DashboardPage() {
-  const eventosHoje = getEventosHoje();
-  const eventosProximos = getEventosProximos(7);
-  const valorTotalPendente = calcularValorTotalPendente();
-  const valorTotalAtrasado = calcularValorTotalAtrasado();
+  const { data: dashboardData, loading, error } = useDashboardData();
   
-  const hoje = new Date();
-  const receitaMes = calcularReceitaMes(hoje.getFullYear(), hoje.getMonth() + 1);
-  const receitaAno = calcularReceitaAno(hoje.getFullYear());
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Carregando dados do dashboard...</div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-600">Erro ao carregar dados: {error}</div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (!dashboardData) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Nenhum dado disponível</div>
+        </div>
+      </Layout>
+    );
+  }
 
   const stats = [
     {
       name: 'Eventos Hoje',
-      value: eventosHoje.length,
+      value: dashboardData.eventosHoje,
       icon: CalendarIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
     },
     {
       name: 'Receita do Mês',
-      value: `R$ ${receitaMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${dashboardData.receitaMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: CurrencyDollarIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
     {
       name: 'Valor Pendente',
-      value: `R$ ${valorTotalPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${dashboardData.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ClockIcon,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100'
     },
     {
       name: 'Valor Atrasado',
-      value: `R$ ${valorTotalAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${dashboardData.valorAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: ExclamationTriangleIcon,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100'
+    },
+    {
+      name: 'Eventos do Mês',
+      value: dashboardData.eventosMes,
       icon: ExclamationTriangleIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-100'
@@ -103,15 +124,15 @@ export default function DashboardPage() {
                 Eventos de Hoje
               </CardTitle>
               <CardDescription>
-                {format(hoje, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {eventosHoje.length === 0 ? (
+              {dashboardData.eventosHoje === 0 ? (
                 <p className="text-gray-500 text-center py-4">Nenhum evento agendado para hoje</p>
               ) : (
                 <div className="space-y-3">
-                  {eventosHoje.map((evento) => (
+                  {dashboardData.eventosHojeLista?.map((evento) => (
                     <div key={evento.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">{evento.cliente.nome}</p>
@@ -140,15 +161,15 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {valorTotalAtrasado === 0 ? (
-                <p className="text-gray-500 text-center py-4">Nenhum valor em atraso</p>
+              {dashboardData.pagamentosPendentes === 0 ? (
+                <p className="text-gray-500 text-center py-4">Nenhum pagamento pendente</p>
               ) : (
                 <div className="text-center">
                   <div className="text-3xl font-bold text-red-600">
-                    R$ {valorTotalAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {dashboardData.pagamentosPendentes}
                   </div>
                   <p className="text-sm text-gray-600 mt-2">
-                    Total de valores em atraso
+                    Pagamentos pendentes
                   </p>
                 </div>
               )}
@@ -168,7 +189,7 @@ export default function DashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {eventosProximos.length === 0 ? (
+            {dashboardData.eventosProximos.length === 0 ? (
               <p className="text-gray-500 text-center py-4">Nenhum evento nos próximos 7 dias</p>
             ) : (
               <div className="overflow-hidden">
@@ -193,7 +214,7 @@ export default function DashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {eventosProximos.map((evento) => (
+                    {dashboardData.eventosProximos.map((evento) => (
                       <tr key={evento.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {evento.cliente.nome}
@@ -229,10 +250,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600">
-                R$ {receitaMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {dashboardData.receitaMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                {format(hoje, 'MMMM yyyy', { locale: ptBR })}
+                {format(new Date(), 'MMMM yyyy', { locale: ptBR })}
               </p>
             </CardContent>
           </Card>
@@ -243,10 +264,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600">
-                R$ {receitaAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                R$ {dashboardData.receitaAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                {hoje.getFullYear()}
+                {new Date().getFullYear()}
               </p>
             </CardContent>
           </Card>
@@ -257,7 +278,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-gray-900">
-                {pagamentos.length}
+                {dashboardData.pagamentosPendentes}
               </div>
               <p className="text-sm text-gray-500 mt-1">
                 Registros no sistema

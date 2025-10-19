@@ -15,14 +15,45 @@ import {
   EyeIcon,
   PencilIcon
 } from '@heroicons/react/24/outline';
-import { pagamentos } from '@/lib/mockData';
+import { usePagamentos } from '@/hooks/useData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function PagamentosPage() {
+  const { data: pagamentos, loading, error } = usePagamentos();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterForma, setFilterForma] = useState<string>('todos');
+  
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Carregando pagamentos...</div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-600">Erro ao carregar pagamentos: {error}</div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (!pagamentos) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Nenhum pagamento encontrado</div>
+        </div>
+      </Layout>
+    );
+  }
 
   const filteredPagamentos = pagamentos.filter(pagamento => {
     const matchesSearch = pagamento.evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase());

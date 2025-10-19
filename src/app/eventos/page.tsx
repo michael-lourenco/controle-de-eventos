@@ -15,22 +15,54 @@ import {
   UserGroupIcon,
   EyeIcon,
   PencilIcon,
-  TrashIcon
+  TrashIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { eventos, deleteEvento } from '@/lib/mockData';
+import { useEventos } from '@/hooks/useData';
+import { dataService } from '@/lib/data-service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusEvento, TipoEvento, Evento } from '@/types';
 
 export default function EventosPage() {
   const router = useRouter();
+  const { data: eventos, loading, error, refetch } = useEventos();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
-  const [eventosList, setEventosList] = useState<Evento[]>(eventos);
   const [eventoParaExcluir, setEventoParaExcluir] = useState<Evento | null>(null);
+  
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Carregando eventos...</div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-600">Erro ao carregar eventos: {error}</div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (!eventos) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Nenhum evento encontrado</div>
+        </div>
+      </Layout>
+    );
+  }
 
-  const filteredEventos = eventosList.filter(evento => {
+  const filteredEventos = eventos.filter(evento => {
     const matchesSearch = evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          evento.local.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
@@ -51,12 +83,14 @@ export default function EventosPage() {
     setEventoParaExcluir(evento);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (eventoParaExcluir) {
-      const sucesso = deleteEvento(eventoParaExcluir.id);
-      if (sucesso) {
-        setEventosList(eventosList.filter(e => e.id !== eventoParaExcluir.id));
+      try {
+        await dataService.deleteEvento(eventoParaExcluir.id);
+        await refetch(); // Recarrega os dados
         setEventoParaExcluir(null);
+      } catch (error) {
+        console.error('Erro ao excluir evento:', error);
       }
     }
   };
@@ -93,10 +127,20 @@ export default function EventosPage() {
               Gerencie todos os eventos agendados
             </p>
           </div>
-          <Button onClick={() => router.push('/eventos/novo')}>
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Novo Evento
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={() => refetch()}
+              disabled={loading}
+            >
+              <ArrowPathIcon className="h-4 w-4 mr-2" />
+              Atualizar
+            </Button>
+            <Button onClick={() => router.push('/eventos/novo')}>
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Novo Evento
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}
