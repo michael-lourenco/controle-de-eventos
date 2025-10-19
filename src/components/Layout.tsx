@@ -31,14 +31,14 @@ const navigation = [
 
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   React.useEffect(() => {
     const checkAuth = () => {
       const currentUser = getCurrentUser();
-      setUser(currentUser);
+      setUser(currentUser ? { name: currentUser.nome || 'Usuário', email: currentUser.email || '' } : null);
       setLoading(false);
       
       if (!currentUser) {
@@ -121,7 +121,7 @@ export default function Layout({ children }: LayoutProps) {
                 <UserIcon className="h-8 w-8 rounded-full bg-gray-300" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">{user?.nome}</p>
+                <p className="text-sm font-medium text-gray-700">{user?.name}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function Layout({ children }: LayoutProps) {
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" />
               <div className="flex items-center gap-x-2">
                 <UserIcon className="h-6 w-6 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">{user?.nome}</span>
+                <span className="text-sm font-medium text-gray-700">{user?.name}</span>
               </div>
             </div>
           </div>

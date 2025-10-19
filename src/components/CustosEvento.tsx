@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/Button';
 import CustoForm from '@/components/forms/CustoForm';
 import { 
   CustoEvento, 
-  Evento,
-  ResumoCustosEvento
+  Evento
 } from '@/types';
 import { 
   createCustoEvento, 

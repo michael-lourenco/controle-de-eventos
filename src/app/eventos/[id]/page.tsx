@@ -24,11 +24,10 @@ import {
   getEventoById, 
   deleteEvento, 
   getPagamentosByEventoId, 
-  getContratoByEventoId,
   getCustosByEventoId,
   getAnexosByEventoId
 } from '@/lib/mockData';
-import { Evento, Pagamento, ContratoServico, CustoEvento, AnexoEvento } from '@/types';
+import { Evento, Pagamento, CustoEvento, AnexoEvento } from '@/types';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
 import CustosEvento from '@/components/CustosEvento';
 import AnexosEvento from '@/components/AnexosEvento';
@@ -40,7 +39,6 @@ export default function EventoViewPage() {
   const router = useRouter();
   const [evento, setEvento] = useState<Evento | null>(null);
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
-  const [contrato, setContrato] = useState<ContratoServico | null>(null);
   const [custos, setCustos] = useState<CustoEvento[]>([]);
   const [anexos, setAnexos] = useState<AnexoEvento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,11 +51,9 @@ export default function EventoViewPage() {
       
       if (eventoEncontrado) {
         const pagamentosEvento = getPagamentosByEventoId(eventoEncontrado.id);
-        const contratoEvento = getContratoByEventoId(eventoEncontrado.id);
         const custosEvento = getCustosByEventoId(eventoEncontrado.id);
         const anexosEvento = getAnexosByEventoId(eventoEncontrado.id);
         setPagamentos(pagamentosEvento);
-        setContrato(contratoEvento);
         setCustos(custosEvento);
         setAnexos(anexosEvento);
       }
@@ -345,7 +341,6 @@ export default function EventoViewPage() {
         <PagamentoHistorico
           eventoId={evento.id}
           pagamentos={pagamentos}
-          contrato={contrato}
           onPagamentosChange={handlePagamentosChange}
         />
 

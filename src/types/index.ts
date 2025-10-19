@@ -33,11 +33,13 @@ export interface Evento {
   hashtag?: string;
   numeroImpressoes?: number;
   cerimonialista?: {
-    nome: string;
-    telefone: string;
+    nome?: string;
+    telefone?: string;
   };
   observacoes?: string;
   status: 'Agendado' | 'Confirmado' | 'Em andamento' | 'Concluído' | 'Cancelado';
+  valorTotal: number; // Valor total a ser pago pelo evento
+  diaFinalPagamento: Date; // Dia final para pagamento completo
   dataCadastro: Date;
   dataAtualizacao: Date;
 }
@@ -86,15 +88,12 @@ export interface ContratoServico {
 
 export interface Pagamento {
   id: string;
-  contratoId: string;
-  contrato: ContratoServico;
+  eventoId: string;
+  evento: Evento;
   valor: number;
-  dataVencimento: Date;
-  dataPagamento?: Date;
+  dataPagamento: Date;
   formaPagamento: 'Dinheiro' | 'Cartão de crédito' | 'Depósito bancário' | 'PIX' | 'Transferência';
-  numeroParcela?: number;
-  totalParcelas?: number;
-  status: 'Pendente' | 'Pago' | 'Atrasado' | 'Cancelado';
+  status: 'Pago'; // Todos os pagamentos são considerados pagos
   observacoes?: string;
   comprovante?: string;
   dataCadastro: Date;

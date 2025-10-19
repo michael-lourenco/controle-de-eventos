@@ -12,22 +12,22 @@ import {
 import {
   getEventosHoje,
   getPagamentosPendentes,
-  getPagamentosAtrasados,
   getEventosProximos,
   calcularValorTotalPendente,
+  calcularValorTotalAtrasado,
   calcularReceitaMes,
   calcularReceitaAno,
   pagamentos
 } from '@/lib/mockData';
+import { Pagamento } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function DashboardPage() {
   const eventosHoje = getEventosHoje();
-  const pagamentosPendentes = getPagamentosPendentes();
-  const pagamentosAtrasados = getPagamentosAtrasados();
   const eventosProximos = getEventosProximos(7);
   const valorTotalPendente = calcularValorTotalPendente();
+  const valorTotalAtrasado = calcularValorTotalAtrasado();
   
   const hoje = new Date();
   const receitaMes = calcularReceitaMes(hoje.getFullYear(), hoje.getMonth() + 1);
@@ -49,18 +49,18 @@ export default function DashboardPage() {
       bgColor: 'bg-green-100'
     },
     {
-      name: 'Pagamentos Pendentes',
-      value: pagamentosPendentes.length,
-      icon: ExclamationTriangleIcon,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100'
-    },
-    {
       name: 'Valor Pendente',
       value: `R$ ${valorTotalPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ClockIcon,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100'
+    },
+    {
+      name: 'Valor Atrasado',
+      value: `R$ ${valorTotalAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: ExclamationTriangleIcon,
+      color: 'text-red-600',
+      bgColor: 'bg-red-100'
     }
   ];
 
@@ -128,38 +128,28 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Pagamentos Atrasados */}
+          {/* Valores Atrasados */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-red-600" />
-                Pagamentos Atrasados
+                Valores Atrasados
               </CardTitle>
               <CardDescription>
-                {pagamentosAtrasados.length} pagamentos em atraso
+                Eventos com valores em atraso
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {pagamentosAtrasados.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Nenhum pagamento em atraso</p>
+              {valorTotalAtrasado === 0 ? (
+                <p className="text-gray-500 text-center py-4">Nenhum valor em atraso</p>
               ) : (
-                <div className="space-y-3">
-                  {pagamentosAtrasados.slice(0, 5).map((pagamento) => (
-                    <div key={pagamento.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{pagamento.contrato.evento.cliente.nome}</p>
-                        <p className="text-sm text-gray-600">
-                          Vencido em {format(pagamento.dataVencimento, 'dd/MM/yyyy', { locale: ptBR })}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-red-600">
-                          R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-xs text-gray-500">Parcela {pagamento.numeroParcela}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-red-600">
+                    R$ {valorTotalAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Total de valores em atraso
+                  </p>
                 </div>
               )}
             </CardContent>

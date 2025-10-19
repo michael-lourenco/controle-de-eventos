@@ -53,11 +53,13 @@ interface FormData {
   hashtag?: string;
   numeroImpressoes?: number;
   cerimonialista?: {
-    nome: string;
-    telefone: string;
+    nome?: string;
+    telefone?: string;
   };
   observacoes?: string;
   status: StatusEvento;
+  valorTotal: number;
+  diaFinalPagamento: string;
 }
 
 const tipoEventoOptions = [
@@ -110,7 +112,9 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       telefone: ''
     },
     observacoes: '',
-    status: StatusEvento.AGENDADO
+    status: StatusEvento.AGENDADO,
+    valorTotal: 0,
+    diaFinalPagamento: ''
   });
 
   const [isNovoCliente, setIsNovoCliente] = useState(false);
@@ -148,7 +152,9 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         numeroImpressoes: evento.numeroImpressoes || 0,
         cerimonialista: evento.cerimonialista || { nome: '', telefone: '' },
         observacoes: evento.observacoes || '',
-        status: evento.status as StatusEvento
+        status: evento.status as StatusEvento,
+        valorTotal: evento.valorTotal,
+        diaFinalPagamento: evento.diaFinalPagamento.toISOString().split('T')[0]
       });
     }
   }, [evento]);
@@ -161,7 +167,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     }
   }, [clienteSearch]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -176,11 +182,21 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     }
   };
 
-  const handleNovoClienteChange = (field: string, value: any) => {
+  const handleNovoClienteChange = (field: string, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       novoCliente: {
         ...prev.novoCliente,
+        [field]: value
+      }
+    }));
+  };
+
+  const handleCerimonialistaChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      cerimonialista: {
+        ...prev.cerimonialista,
         [field]: value
       }
     }));
@@ -219,6 +235,8 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     if (!formData.endereco) newErrors.endereco = 'Endereço é obrigatório';
     if (!formData.contratante) newErrors.contratante = 'Nome do contratante é obrigatório';
     if (!formData.numeroConvidados || formData.numeroConvidados <= 0) newErrors.numeroConvidados = 'Número de convidados deve ser maior que zero';
+    if (!formData.valorTotal || formData.valorTotal <= 0) newErrors.valorTotal = 'Valor total deve ser maior que zero';
+    if (!formData.diaFinalPagamento) newErrors.diaFinalPagamento = 'Dia final de pagamento é obrigatório';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -261,9 +279,14 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         quantidadeMesas: formData.quantidadeMesas || undefined,
         hashtag: formData.hashtag || undefined,
         numeroImpressoes: formData.numeroImpressoes || undefined,
-        cerimonialista: formData.cerimonialista?.nome ? formData.cerimonialista : undefined,
+        cerimonialista: formData.cerimonialista?.nome ? {
+          nome: formData.cerimonialista.nome,
+          telefone: formData.cerimonialista.telefone || ''
+        } : undefined,
         observacoes: formData.observacoes || undefined,
-        status: formData.status
+        status: formData.status,
+        valorTotal: formData.valorTotal,
+        diaFinalPagamento: new Date(formData.diaFinalPagamento)
       };
 
       if (evento) {
@@ -459,6 +482,25 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
             value={formData.numeroImpressoes || ''}
             onChange={(e) => handleInputChange('numeroImpressoes', parseInt(e.target.value) || undefined)}
           />
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              label="Valor Total *"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.valorTotal}
+              onChange={(e) => handleInputChange('valorTotal', parseFloat(e.target.value) || 0)}
+              error={errors.valorTotal}
+            />
+            <Input
+              label="Dia Final de Pagamento *"
+              type="date"
+              value={formData.diaFinalPagamento}
+              onChange={(e) => handleInputChange('diaFinalPagamento', e.target.value)}
+              error={errors.diaFinalPagamento}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -523,18 +565,12 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
             <Input
               label="Nome do Cerimonialista"
               value={formData.cerimonialista?.nome || ''}
-              onChange={(e) => handleInputChange('cerimonialista', {
-                ...formData.cerimonialista,
-                nome: e.target.value
-              })}
+              onChange={(e) => handleCerimonialistaChange('nome', e.target.value)}
             />
             <Input
               label="Telefone do Cerimonialista"
               value={formData.cerimonialista?.telefone || ''}
-              onChange={(e) => handleInputChange('cerimonialista', {
-                ...formData.cerimonialista,
-                telefone: e.target.value
-              })}
+              onChange={(e) => handleCerimonialistaChange('telefone', e.target.value)}
             />
           </div>
         </CardContent>

@@ -17,7 +17,6 @@ import {
   pagamentos, 
   calcularReceitaMes,
   getPagamentosPendentes,
-  getPagamentosAtrasados
 } from '@/lib/mockData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -50,7 +49,7 @@ export default function RelatoriosPage() {
 
   const receitaTotal = pagamentosPeriodo.reduce((total, pagamento) => total + pagamento.valor, 0);
   const pagamentosPendentes = getPagamentosPendentes();
-  const pagamentosAtrasados = getPagamentosAtrasados();
+  const pagamentosAtrasados = []; // Com a nova lógica, não há mais status "Atrasado" nos pagamentos
 
   // Estatísticas por tipo de evento
   const eventosPorTipo = eventosPeriodo.reduce((acc, evento) => {
@@ -72,9 +71,9 @@ export default function RelatoriosPage() {
   // Status dos pagamentos
   const statusPagamentos = {
     pago: pagamentos.filter(p => p.status === 'Pago').length,
-    pendente: pagamentos.filter(p => p.status === 'Pendente').length,
-    atrasado: pagamentos.filter(p => p.status === 'Atrasado').length,
-    cancelado: pagamentos.filter(p => p.status === 'Cancelado').length
+    pendente: 0, // Com a nova lógica, não há mais status "Pendente"
+    atrasado: 0, // Com a nova lógica, não há mais status "Atrasado" nos pagamentos
+    cancelado: 0 // Com a nova lógica, não há mais status "Cancelado"
   };
 
   const handleGerarRelatorio = () => {

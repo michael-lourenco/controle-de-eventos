@@ -12,7 +12,6 @@ import {
   AnexoEvento,
   ResumoCustosEvento,
   StatusEvento,
-  StatusPagamento,
   StatusContrato,
   TipoEvento,
   FormaPagamento
@@ -339,6 +338,8 @@ export const eventos: Evento[] = [
     hashtag: '#giovanna2023',
     numeroImpressoes: 500,
     status: StatusEvento.CONCLUIDO,
+    valorTotal: 2500, // Valor total a ser pago
+    diaFinalPagamento: new Date('2023-01-15'), // 8 dias após o evento
     dataCadastro: new Date('2023-01-01'),
     dataAtualizacao: new Date('2023-01-07')
   },
@@ -361,6 +362,8 @@ export const eventos: Evento[] = [
     hashtag: '#danielle2023',
     numeroImpressoes: 300,
     status: StatusEvento.CONCLUIDO,
+    valorTotal: 1800, // Valor total a ser pago
+    diaFinalPagamento: new Date('2023-01-15'), // 8 dias após o evento
     dataCadastro: new Date('2023-01-01'),
     dataAtualizacao: new Date('2023-01-07')
   }
@@ -522,85 +525,63 @@ export const contratos: ContratoServico[] = [
 export const pagamentos: Pagamento[] = [
   {
     id: '1',
-    contratoId: '1',
-    contrato: contratos[0],
-    valor: 312,
-    dataVencimento: new Date('2023-01-07'),
-    dataPagamento: new Date('2023-01-07'),
-    formaPagamento: 'Depósito bancário',
-    numeroParcela: 1,
-    totalParcelas: 10,
-    status: StatusPagamento.PAGO,
-    dataCadastro: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-01-07')
+    eventoId: '1',
+    evento: eventos[0],
+    valor: 500,
+    dataPagamento: new Date('2023-01-05'), // Antes do dia final (15/01)
+    formaPagamento: 'PIX',
+    status: 'Pago',
+    observacoes: 'Primeiro pagamento',
+    dataCadastro: new Date('2023-01-05'),
+    dataAtualizacao: new Date('2023-01-05')
   },
   {
     id: '2',
-    contratoId: '1',
-    contrato: contratos[0],
-    valor: 312,
-    dataVencimento: new Date('2023-02-07'),
-    dataPagamento: new Date('2023-02-07'),
+    eventoId: '1',
+    evento: eventos[0],
+    valor: 800,
+    dataPagamento: new Date('2023-01-10'), // Antes do dia final (15/01)
     formaPagamento: 'Depósito bancário',
-    numeroParcela: 2,
-    totalParcelas: 10,
-    status: StatusPagamento.PAGO,
-    dataCadastro: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-02-07')
+    status: 'Pago',
+    observacoes: 'Segundo pagamento',
+    dataCadastro: new Date('2023-01-10'),
+    dataAtualizacao: new Date('2023-01-10')
   },
   {
     id: '3',
-    contratoId: '1',
-    contrato: contratos[0],
-    valor: 312,
-    dataVencimento: new Date('2023-03-07'),
-    dataPagamento: new Date('2023-03-07'),
-    formaPagamento: 'Depósito bancário',
-    numeroParcela: 3,
-    totalParcelas: 10,
-    status: StatusPagamento.PAGO,
-    dataCadastro: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-03-07')
+    eventoId: '1',
+    evento: eventos[0],
+    valor: 700,
+    dataPagamento: new Date('2023-01-20'), // Após o dia final (15/01)
+    formaPagamento: 'Cartão de crédito',
+    status: 'Atrasado',
+    observacoes: 'Pagamento atrasado',
+    dataCadastro: new Date('2023-01-20'),
+    dataAtualizacao: new Date('2023-01-20')
   },
   {
     id: '4',
-    contratoId: '1',
-    contrato: contratos[0],
-    valor: 312,
-    dataVencimento: new Date('2023-04-07'),
-    formaPagamento: 'Depósito bancário',
-    numeroParcela: 4,
-    totalParcelas: 10,
-    status: StatusPagamento.PENDENTE,
-    dataCadastro: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-01-01')
+    eventoId: '2',
+    evento: eventos[1],
+    valor: 600,
+    dataPagamento: new Date('2023-01-08'), // Antes do dia final (15/01)
+    formaPagamento: 'PIX',
+    status: 'Pago',
+    observacoes: 'Primeiro pagamento',
+    dataCadastro: new Date('2023-01-08'),
+    dataAtualizacao: new Date('2023-01-08')
   },
   {
     id: '5',
-    contratoId: '2',
-    contrato: contratos[1],
-    valor: 520,
-    dataVencimento: new Date('2023-01-07'),
-    dataPagamento: new Date('2023-01-07'),
-    formaPagamento: 'PIX',
-    numeroParcela: 1,
-    totalParcelas: 6,
-    status: StatusPagamento.PAGO,
-    dataCadastro: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-01-07')
-  },
-  {
-    id: '6',
-    contratoId: '2',
-    contrato: contratos[1],
+    eventoId: '2',
+    evento: eventos[1],
     valor: 400,
-    dataVencimento: new Date('2023-02-07'),
-    formaPagamento: 'PIX',
-    numeroParcela: 2,
-    totalParcelas: 6,
-    status: StatusPagamento.PENDENTE,
-    dataCadastro: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-01-01')
+    dataPagamento: new Date('2023-01-18'), // Após o dia final (15/01)
+    formaPagamento: 'Depósito bancário',
+    status: 'Atrasado',
+    observacoes: 'Pagamento atrasado',
+    dataCadastro: new Date('2023-01-18'),
+    dataAtualizacao: new Date('2023-01-18')
   }
 ];
 
@@ -618,7 +599,9 @@ export const getContratoById = (id: string): ContratoServico | undefined => {
 };
 
 export const getPagamentosByContratoId = (contratoId: string): Pagamento[] => {
-  return pagamentos.filter(pagamento => pagamento.contratoId === contratoId);
+  // Esta função não é mais necessária com a nova estrutura
+  // Os pagamentos agora são vinculados diretamente aos eventos
+  return [];
 };
 
 export const getEventosByClienteId = (clienteId: string): Evento[] => {
@@ -626,15 +609,14 @@ export const getEventosByClienteId = (clienteId: string): Evento[] => {
 };
 
 export const getPagamentosPendentes = (): Pagamento[] => {
-  return pagamentos.filter(pagamento => pagamento.status === StatusPagamento.PENDENTE);
+  // Com a nova lógica, não há mais status "Pendente" nos pagamentos
+  // Esta função retorna uma lista vazia pois todos os pagamentos são considerados "Pago"
+  // O conceito de "pendente" agora se refere ao valor restante do evento, não aos pagamentos
+  return [];
 };
 
 export const getPagamentosAtrasados = (): Pagamento[] => {
-  const hoje = new Date();
-  return pagamentos.filter(pagamento => 
-    pagamento.status === StatusPagamento.PENDENTE && 
-    pagamento.dataVencimento < hoje
-  );
+  return pagamentos.filter(pagamento => pagamento.status === 'Atrasado');
 };
 
 export const getEventosHoje = (): Evento[] => {
@@ -657,15 +639,50 @@ export const getEventosProximos = (dias: number = 7): Evento[] => {
 };
 
 export const calcularValorTotalPendente = (): number => {
-  return pagamentos
-    .filter(pagamento => pagamento.status === StatusPagamento.PENDENTE)
-    .reduce((total, pagamento) => total + pagamento.valor, 0);
+  // Calcula o valor total pendente de todos os eventos que ainda não passaram do dia final de pagamento
+  const hoje = new Date();
+  let valorTotalPendente = 0;
+
+  eventos.forEach(evento => {
+    const diaFinalPagamento = new Date(evento.diaFinalPagamento);
+    
+    // Só considera eventos que ainda não passaram do dia final de pagamento
+    if (hoje <= diaFinalPagamento) {
+      const pagamentosEvento = getPagamentosByEventoId(evento.id);
+      const valorPago = pagamentosEvento.reduce((total, p) => total + p.valor, 0);
+      const valorRestante = evento.valorTotal - valorPago;
+      valorTotalPendente += Math.max(0, valorRestante);
+    }
+  });
+
+  return valorTotalPendente;
+};
+
+export const calcularValorTotalAtrasado = (): number => {
+  // Calcula o valor total atrasado de todos os eventos que já passaram do dia final de pagamento
+  const hoje = new Date();
+  let valorTotalAtrasado = 0;
+
+  eventos.forEach(evento => {
+    const diaFinalPagamento = new Date(evento.diaFinalPagamento);
+    
+    // Só considera eventos que já passaram do dia final de pagamento
+    if (hoje > diaFinalPagamento) {
+      const pagamentosEvento = getPagamentosByEventoId(evento.id);
+      const valorPago = pagamentosEvento.reduce((total, p) => total + p.valor, 0);
+      const valorRestante = evento.valorTotal - valorPago;
+      valorTotalAtrasado += Math.max(0, valorRestante);
+    }
+  });
+
+  return valorTotalAtrasado;
 };
 
 export const calcularReceitaMes = (ano: number, mes: number): number => {
   return pagamentos
     .filter(pagamento => {
-      if (pagamento.status !== StatusPagamento.PAGO || !pagamento.dataPagamento) return false;
+      // Considera todos os pagamentos que têm data de pagamento (independente do status)
+      if (!pagamento.dataPagamento) return false;
       const dataPagamento = new Date(pagamento.dataPagamento);
       return dataPagamento.getFullYear() === ano && dataPagamento.getMonth() === mes - 1;
     })
@@ -675,7 +692,8 @@ export const calcularReceitaMes = (ano: number, mes: number): number => {
 export const calcularReceitaAno = (ano: number): number => {
   return pagamentos
     .filter(pagamento => {
-      if (pagamento.status !== StatusPagamento.PAGO || !pagamento.dataPagamento) return false;
+      // Considera todos os pagamentos que têm data de pagamento (independente do status)
+      if (!pagamento.dataPagamento) return false;
       const dataPagamento = new Date(pagamento.dataPagamento);
       return dataPagamento.getFullYear() === ano;
     })
@@ -756,10 +774,17 @@ export const searchClientes = (query: string): Cliente[] => {
   );
 };
 
+
 // Funções CRUD para Pagamentos
-export const createPagamento = (pagamentoData: Omit<Pagamento, 'id' | 'dataCadastro' | 'dataAtualizacao'>): Pagamento => {
+export const createPagamento = (pagamentoData: Omit<Pagamento, 'id' | 'status' | 'dataCadastro' | 'dataAtualizacao'>): Pagamento => {
+  const evento = getEventoById(pagamentoData.eventoId);
+  if (!evento) {
+    throw new Error('Evento não encontrado');
+  }
+
   const novoPagamento: Pagamento = {
     ...pagamentoData,
+    status: 'Pago', // Todos os pagamentos são considerados pagos
     id: (pagamentos.length + 1).toString(),
     dataCadastro: new Date(),
     dataAtualizacao: new Date()
@@ -776,6 +801,7 @@ export const updatePagamento = (id: string, pagamentoData: Partial<Omit<Pagament
   pagamentos[index] = {
     ...pagamentos[index],
     ...pagamentoData,
+    status: 'Pago', // Todos os pagamentos são considerados pagos
     dataAtualizacao: new Date()
   };
   
@@ -792,7 +818,7 @@ export const deletePagamento = (id: string): boolean => {
 
 // Função para buscar pagamentos por evento
 export const getPagamentosByEventoId = (eventoId: string): Pagamento[] => {
-  return pagamentos.filter(pagamento => pagamento.contrato.eventoId === eventoId);
+  return pagamentos.filter(pagamento => pagamento.eventoId === eventoId);
 };
 
 // Função para buscar contrato por evento
@@ -807,47 +833,37 @@ export const getPagamentoById = (id: string): Pagamento | undefined => {
 
 // Função para calcular resumo financeiro do evento
 export const getResumoFinanceiroEvento = (eventoId: string) => {
-  const contrato = getContratoByEventoId(eventoId);
+  const evento = getEventoById(eventoId);
   const pagamentosEvento = getPagamentosByEventoId(eventoId);
   
-  if (!contrato) {
+  if (!evento) {
     return {
       valorTotal: 0,
       valorPago: 0,
-      valorPendente: 0,
-      valorAtrasado: 0,
-      totalParcelas: 0,
-      parcelasPagas: 0,
-      parcelasPendentes: 0,
-      parcelasAtrasadas: 0
+      valorPendenteOuAtrasado: 0,
+      isAtrasado: false,
+      diaFinalPagamento: null
     };
   }
 
+  // Valor Pago: soma de todos os pagamentos, independente da data
   const valorPago = pagamentosEvento
-    .filter(p => p.status === StatusPagamento.PAGO)
     .reduce((total, p) => total + p.valor, 0);
 
-  const valorPendente = pagamentosEvento
-    .filter(p => p.status === StatusPagamento.PENDENTE)
-    .reduce((total, p) => total + p.valor, 0);
+  // Verificar se já passou do dia final de pagamento
+  const hoje = new Date();
+  const diaFinalPagamento = new Date(evento.diaFinalPagamento);
+  const jaPassouDiaFinal = hoje > diaFinalPagamento;
 
-  const valorAtrasado = pagamentosEvento
-    .filter(p => p.status === StatusPagamento.ATRASADO)
-    .reduce((total, p) => total + p.valor, 0);
-
-  const parcelasPagas = pagamentosEvento.filter(p => p.status === StatusPagamento.PAGO).length;
-  const parcelasPendentes = pagamentosEvento.filter(p => p.status === StatusPagamento.PENDENTE).length;
-  const parcelasAtrasadas = pagamentosEvento.filter(p => p.status === StatusPagamento.ATRASADO).length;
+  // Calcular valor restante
+  const valorRestante = Math.max(0, evento.valorTotal - valorPago);
 
   return {
-    valorTotal: contrato.valorTotal,
+    valorTotal: evento.valorTotal,
     valorPago,
-    valorPendente,
-    valorAtrasado,
-    totalParcelas: contrato.parcelas || 0,
-    parcelasPagas,
-    parcelasPendentes,
-    parcelasAtrasadas
+    valorPendenteOuAtrasado: valorRestante,
+    isAtrasado: jaPassouDiaFinal,
+    diaFinalPagamento: evento.diaFinalPagamento
   };
 };
 

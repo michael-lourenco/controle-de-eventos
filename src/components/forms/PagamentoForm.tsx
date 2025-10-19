@@ -8,27 +8,22 @@ import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { 
   Pagamento, 
-  ContratoServico,
-  StatusPagamento 
+  Evento
 } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface PagamentoFormProps {
   pagamento?: Pagamento;
-  contrato: ContratoServico;
+  evento: Evento;
   onSave: (pagamento: Pagamento) => void;
   onCancel: () => void;
 }
 
 interface FormData {
   valor: number;
-  dataVencimento: string;
-  dataPagamento?: string;
+  dataPagamento: string;
   formaPagamento: 'Dinheiro' | 'Cartão de crédito' | 'Depósito bancário' | 'PIX' | 'Transferência';
-  numeroParcela?: number;
-  totalParcelas?: number;
-  status: StatusPagamento;
   observacoes?: string;
   comprovante?: string;
 }
@@ -41,22 +36,11 @@ const formaPagamentoOptions = [
   { value: 'Transferência', label: 'Transferência' }
 ];
 
-const statusOptions = [
-  { value: StatusPagamento.PENDENTE, label: 'Pendente' },
-  { value: StatusPagamento.PAGO, label: 'Pago' },
-  { value: StatusPagamento.ATRASADO, label: 'Atrasado' },
-  { value: StatusPagamento.CANCELADO, label: 'Cancelado' }
-];
-
-export default function PagamentoForm({ pagamento, contrato, onSave, onCancel }: PagamentoFormProps) {
+export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: PagamentoFormProps) {
   const [formData, setFormData] = useState<FormData>({
     valor: 0,
-    dataVencimento: '',
     dataPagamento: '',
     formaPagamento: 'PIX',
-    numeroParcela: 1,
-    totalParcelas: contrato.parcelas || 1,
-    status: StatusPagamento.PENDENTE,
     observacoes: '',
     comprovante: ''
   });
@@ -67,27 +51,27 @@ export default function PagamentoForm({ pagamento, contrato, onSave, onCancel }:
     if (pagamento) {
       setFormData({
         valor: pagamento.valor,
-        dataVencimento: format(pagamento.dataVencimento, 'yyyy-MM-dd'),
-        dataPagamento: pagamento.dataPagamento ? format(pagamento.dataPagamento, 'yyyy-MM-dd') : '',
+        dataPagamento: format(pagamento.dataPagamento, 'yyyy-MM-dd'),
         formaPagamento: pagamento.formaPagamento,
-        numeroParcela: pagamento.numeroParcela || 1,
-        totalParcelas: pagamento.totalParcelas || contrato.parcelas || 1,
-        status: pagamento.status,
         observacoes: pagamento.observacoes || '',
         comprovante: pagamento.comprovante || ''
       });
     } else {
-      // Para novo pagamento, calcular próximo número de parcela
-      const proximaParcela = (contrato.parcelas || 1) + 1;
-      setFormData(prev => ({
-        ...prev,
-        numeroParcela: proximaParcela,
-        totalParcelas: contrato.parcelas || 1
-      }));
+      // Preencher dados sugeridos para novo pagamento
+      const hoje = new Date();
+      const valorSugerido = evento.valorTotal * 0.3; // Sugerir 30% do valor total
+      
+      setFormData({
+        valor: Math.round(valorSugerido * 100) / 100, // Arredondar para 2 casas decimais
+        dataPagamento: format(hoje, 'yyyy-MM-dd'),
+        formaPagamento: 'PIX', // PIX como padrão
+        observacoes: `Pagamento parcial - ${format(hoje, 'dd/MM/yyyy', { locale: ptBR })}`,
+        comprovante: ''
+      });
     }
-  }, [pagamento, contrato]);
+  }, [pagamento, evento]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -109,16 +93,12 @@ export default function PagamentoForm({ pagamento, contrato, onSave, onCancel }:
       newErrors.valor = 'Valor deve ser maior que zero';
     }
 
-    if (!formData.dataVencimento) {
-      newErrors.dataVencimento = 'Data de vencimento é obrigatória';
+    if (!formData.dataPagamento) {
+      newErrors.dataPagamento = 'Data de pagamento é obrigatória';
     }
 
-    if (formData.status === StatusPagamento.PAGO && !formData.dataPagamento) {
-      newErrors.dataPagamento = 'Data de pagamento é obrigatória quando status é Pago';
-    }
-
-    if (formData.numeroParcela && formData.totalParcelas && formData.numeroParcela > formData.totalParcelas) {
-      newErrors.numeroParcela = 'Número da parcela não pode ser maior que total de parcelas';
+    if (!formData.formaPagamento) {
+      newErrors.formaPagamento = 'Forma de pagamento é obrigatória';
     }
 
     setErrors(newErrors);
@@ -132,15 +112,11 @@ export default function PagamentoForm({ pagamento, contrato, onSave, onCancel }:
 
     try {
       const pagamentoData = {
-        contratoId: contrato.id,
-        contrato,
+        eventoId: evento.id,
+        evento,
         valor: formData.valor,
-        dataVencimento: new Date(formData.dataVencimento),
-        dataPagamento: formData.dataPagamento ? new Date(formData.dataPagamento) : undefined,
+        dataPagamento: new Date(formData.dataPagamento),
         formaPagamento: formData.formaPagamento,
-        numeroParcela: formData.numeroParcela,
-        totalParcelas: formData.totalParcelas,
-        status: formData.status,
         observacoes: formData.observacoes || undefined,
         comprovante: formData.comprovante || undefined
       };
@@ -153,32 +129,85 @@ export default function PagamentoForm({ pagamento, contrato, onSave, onCancel }:
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Informações do Contrato */}
+      {/* Informações do Evento */}
       <Card>
         <CardHeader>
-          <CardTitle>Informações do Contrato</CardTitle>
+          <CardTitle>Informações do Evento</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="grid grid-cols-2 gap-4 text-sm">
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <span className="font-medium text-gray-900">Valor Total:</span>
-              <div className="text-gray-600">R$ {contrato.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+              <label className="text-sm font-medium text-gray-700">Evento</label>
+              <div className="mt-1 text-sm text-gray-900">
+                {evento.contratante} - {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}
+              </div>
             </div>
             <div>
-              <span className="font-medium text-gray-900">Forma de Pagamento:</span>
-              <div className="text-gray-600">{contrato.formaPagamento}</div>
+              <label className="text-sm font-medium text-gray-700">Valor Total</label>
+              <div className="mt-1 text-sm text-gray-900">
+                R$ {evento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
             </div>
             <div>
-              <span className="font-medium text-gray-900">Parcelas:</span>
-              <div className="text-gray-600">{contrato.parcelas || 1}</div>
-            </div>
-            <div>
-              <span className="font-medium text-gray-900">Dia de Vencimento:</span>
-              <div className="text-gray-600">{contrato.diaVencimento || 'Não definido'}</div>
+              <label className="text-sm font-medium text-gray-700">Dia Final de Pagamento</label>
+              <div className="mt-1 text-sm text-gray-900">
+                {format(evento.diaFinalPagamento, 'dd/MM/yyyy', { locale: ptBR })}
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Sugestões de Valores (apenas para novo pagamento) */}
+      {!pagamento && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle className="text-blue-900">Sugestões de Valores</CardTitle>
+            <CardDescription className="text-blue-700">
+              Valores sugeridos baseados no valor total do evento
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div className="text-center">
+                <div className="text-lg font-semibold text-blue-900">
+                  R$ {(evento.valorTotal * 0.25).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+                <div className="text-sm text-blue-700">25% (Entrada)</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-blue-900">
+                  R$ {(evento.valorTotal * 0.5).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+                <div className="text-sm text-blue-700">50% (Meio)</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-blue-900">
+                  R$ {(evento.valorTotal * 0.75).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+                <div className="text-sm text-blue-700">75% (Quase Total)</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-semibold text-blue-900">
+                  R$ {evento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+                <div className="text-sm text-blue-700">100% (Total)</div>
+              </div>
+            </div>
+            <div className="mt-4 text-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFormData(prev => ({ ...prev, valor: evento.valorTotal }))}
+                className="text-blue-700 border-blue-300 hover:bg-blue-100"
+              >
+                Usar Valor Total
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Dados do Pagamento */}
       <Card>
@@ -199,72 +228,50 @@ export default function PagamentoForm({ pagamento, contrato, onSave, onCancel }:
               onChange={(e) => handleInputChange('valor', parseFloat(e.target.value) || 0)}
               error={errors.valor}
             />
-            <Select
-              label="Status *"
-              options={statusOptions}
-              value={formData.status}
-              onChange={(e) => handleInputChange('status', e.target.value as StatusPagamento)}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
-              label="Data de Vencimento *"
-              type="date"
-              value={formData.dataVencimento}
-              onChange={(e) => handleInputChange('dataVencimento', e.target.value)}
-              error={errors.dataVencimento}
-            />
-            <Input
-              label="Data de Pagamento"
+              label="Data do Pagamento *"
               type="date"
               value={formData.dataPagamento}
               onChange={(e) => handleInputChange('dataPagamento', e.target.value)}
               error={errors.dataPagamento}
-              disabled={formData.status !== StatusPagamento.PAGO}
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Select
-              label="Forma de Pagamento"
-              options={formaPagamentoOptions}
-              value={formData.formaPagamento}
-              onChange={(e) => handleInputChange('formaPagamento', e.target.value)}
-            />
-            <Input
-              label="Número da Parcela"
-              type="number"
-              min="1"
-              value={formData.numeroParcela || ''}
-              onChange={(e) => handleInputChange('numeroParcela', parseInt(e.target.value) || undefined)}
-              error={errors.numeroParcela}
-            />
-          </div>
+          <Select
+            label="Forma de Pagamento *"
+            options={formaPagamentoOptions}
+            value={formData.formaPagamento}
+            onChange={(e) => handleInputChange('formaPagamento', e.target.value)}
+            error={errors.formaPagamento}
+          />
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Input
-              label="Total de Parcelas"
-              type="number"
-              min="1"
-              value={formData.totalParcelas || ''}
-              onChange={(e) => handleInputChange('totalParcelas', parseInt(e.target.value) || undefined)}
-            />
-            <Input
-              label="Comprovante"
-              value={formData.comprovante || ''}
-              onChange={(e) => handleInputChange('comprovante', e.target.value)}
-              placeholder="Número do comprovante ou referência"
-            />
-          </div>
+          <Input
+            label="Comprovante"
+            value={formData.comprovante || ''}
+            onChange={(e) => handleInputChange('comprovante', e.target.value)}
+            placeholder="Número do comprovante ou referência"
+          />
 
           <Textarea
             label="Observações"
             value={formData.observacoes || ''}
             onChange={(e) => handleInputChange('observacoes', e.target.value)}
             rows={3}
-            placeholder="Observações adicionais sobre o pagamento"
+            placeholder="Observações sobre este pagamento"
           />
+        </CardContent>
+      </Card>
+
+      {/* Aviso sobre Status */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-4">
+          <div className="text-sm text-blue-800">
+            <strong>Informação:</strong> Todos os pagamentos são considerados como &quot;Pago&quot; independente da data.
+            <br />
+            <strong>Valor Pendente:</strong> Aparece até o dia final de pagamento para valores não pagos.
+            <br />
+            <strong>Valor Atrasado:</strong> Aparece após o dia final de pagamento para valores não pagos.
+          </div>
         </CardContent>
       </Card>
 
@@ -274,7 +281,7 @@ export default function PagamentoForm({ pagamento, contrato, onSave, onCancel }:
           Cancelar
         </Button>
         <Button type="submit">
-          {pagamento ? 'Atualizar Pagamento' : 'Criar Pagamento'}
+          {pagamento ? 'Atualizar Pagamento' : 'Adicionar Pagamento'}
         </Button>
       </div>
     </form>

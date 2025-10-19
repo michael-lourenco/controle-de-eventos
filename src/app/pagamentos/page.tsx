@@ -18,7 +18,6 @@ import {
 import { pagamentos } from '@/lib/mockData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { StatusPagamento } from '@/types';
 
 export default function PagamentosPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,7 +25,7 @@ export default function PagamentosPage() {
   const [filterForma, setFilterForma] = useState<string>('todos');
 
   const filteredPagamentos = pagamentos.filter(pagamento => {
-    const matchesSearch = pagamento.contrato.evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = pagamento.evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'todos' || pagamento.status === filterStatus;
     const matchesForma = filterForma === 'todos' || pagamento.formaPagamento === filterForma;
     
@@ -37,12 +36,6 @@ export default function PagamentosPage() {
     switch (status) {
       case 'Pago':
         return 'bg-green-100 text-green-800';
-      case 'Pendente':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Atrasado':
-        return 'bg-red-100 text-red-800';
-      case 'Cancelado':
-        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -52,26 +45,18 @@ export default function PagamentosPage() {
     switch (status) {
       case 'Pago':
         return <CheckCircleIcon className="h-4 w-4" />;
-      case 'Pendente':
-        return <ClockIcon className="h-4 w-4" />;
-      case 'Atrasado':
-        return <ExclamationTriangleIcon className="h-4 w-4" />;
       default:
         return <ClockIcon className="h-4 w-4" />;
     }
   };
 
-  const totalPendente = pagamentos
-    .filter(p => p.status === 'Pendente')
-    .reduce((sum, p) => sum + p.valor, 0);
+  const totalPendente = 0; // Com a nova lógica, não há mais status "Pendente"
 
   const totalPago = pagamentos
     .filter(p => p.status === 'Pago')
     .reduce((sum, p) => sum + p.valor, 0);
 
-  const totalAtrasado = pagamentos
-    .filter(p => p.status === 'Atrasado')
-    .reduce((sum, p) => sum + p.valor, 0);
+  const totalAtrasado = 0; // Com a nova lógica, não há mais status "Atrasado" nos pagamentos
 
   return (
     <Layout>
@@ -163,10 +148,7 @@ export default function PagamentosPage() {
                   className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   <option value="todos">Todos</option>
-                  <option value={StatusPagamento.PAGO}>Pago</option>
-                  <option value={StatusPagamento.PENDENTE}>Pendente</option>
-                  <option value={StatusPagamento.ATRASADO}>Atrasado</option>
-                  <option value={StatusPagamento.CANCELADO}>Cancelado</option>
+                  <option value="Pago">Pago</option>
                 </select>
               </div>
               <div>
@@ -238,10 +220,10 @@ export default function PagamentosPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
-                            {pagamento.contrato.evento.cliente.nome}
+                            {pagamento.evento.cliente.nome}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {pagamento.contrato.evento.tipoEvento}
+                            {pagamento.evento.tipoEvento}
                           </div>
                         </div>
                       </td>
@@ -249,14 +231,9 @@ export default function PagamentosPage() {
                         <div className="text-sm font-medium text-gray-900">
                           R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </div>
-                        {pagamento.numeroParcela && (
-                          <div className="text-sm text-gray-500">
-                            Parcela {pagamento.numeroParcela}/{pagamento.totalParcelas}
-                          </div>
-                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {format(pagamento.dataVencimento, 'dd/MM/yyyy', { locale: ptBR })}
+                        {format(pagamento.dataPagamento, 'dd/MM/yyyy', { locale: ptBR })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {pagamento.dataPagamento ? 

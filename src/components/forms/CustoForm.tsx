@@ -4,11 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
+import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import { 
   CustoEvento, 
-  TipoCusto,
   Evento
 } from '@/types';
 import { 
@@ -26,53 +25,26 @@ interface CustoFormProps {
 
 interface FormData {
   tipoCustoId: string;
-  novoTipoCusto: {
-    nome: string;
-    descricao: string;
-    categoria: 'Serviço' | 'Promoter' | 'Motorista' | 'Frete' | 'Insumos' | 'Impostos' | 'Outros';
-  };
   valor: number;
   quantidade?: number;
   observacoes?: string;
 }
 
-const categoriaOptions = [
-  { value: 'Serviço', label: 'Serviço' },
-  { value: 'Promoter', label: 'Promoter' },
-  { value: 'Motorista', label: 'Motorista' },
-  { value: 'Frete', label: 'Frete' },
-  { value: 'Insumos', label: 'Insumos' },
-  { value: 'Impostos', label: 'Impostos' },
-  { value: 'Outros', label: 'Outros' }
-];
 
 export default function CustoForm({ custo, evento, onSave, onCancel }: CustoFormProps) {
   const [formData, setFormData] = useState<FormData>({
     tipoCustoId: '',
-    novoTipoCusto: {
-      nome: '',
-      descricao: '',
-      categoria: 'Serviço'
-    },
     valor: 0,
     quantidade: 1,
     observacoes: ''
   });
 
-  const [isNovoTipoCusto, setIsNovoTipoCusto] = useState(false);
-  const [tipoCustoSearch, setTipoCustoSearch] = useState('');
-  const [tiposCustoFiltrados, setTiposCustoFiltrados] = useState<TipoCusto[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (custo) {
       setFormData({
         tipoCustoId: custo.tipoCustoId,
-        novoTipoCusto: {
-          nome: '',
-          descricao: '',
-          categoria: 'Serviço'
-        },
         valor: custo.valor,
         quantidade: custo.quantidade || 1,
         observacoes: custo.observacoes || ''
@@ -80,20 +52,8 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     }
   }, [custo]);
 
-  useEffect(() => {
-    if (tipoCustoSearch.length > 1) {
-      setTiposCustoFiltrados(
-        tiposCusto.filter(tipo => 
-          tipo.nome.toLowerCase().includes(tipoCustoSearch.toLowerCase()) &&
-          tipo.ativo
-        )
-      );
-    } else {
-      setTiposCustoFiltrados([]);
-    }
-  }, [tipoCustoSearch]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -108,34 +68,13 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     }
   };
 
-  const handleNovoTipoCustoChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      novoTipoCusto: {
-        ...prev.novoTipoCusto,
-        [field]: value
-      }
-    }));
-  };
 
-  const handleTipoCustoSelect = (tipoCusto: TipoCusto) => {
-    setFormData(prev => ({
-      ...prev,
-      tipoCustoId: tipoCusto.id
-    }));
-    setTipoCustoSearch(tipoCusto.nome);
-    setTiposCustoFiltrados([]);
-  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!isNovoTipoCusto && !formData.tipoCustoId) {
+    if (!formData.tipoCustoId) {
       newErrors.tipoCustoId = 'Selecione um tipo de custo';
-    }
-
-    if (isNovoTipoCusto) {
-      if (!formData.novoTipoCusto.nome) newErrors.novoTipoCustoNome = 'Nome é obrigatório';
     }
 
     if (!formData.valor || formData.valor <= 0) {
@@ -150,26 +89,42 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleCreateNewTipoCusto = (nome: string) => {
+    try {
+      const novoTipoCusto = createTipoCusto({
+        nome,
+        descricao: '',
+        categoria: 'Outros',
+        ativo: true
+      });
+      
+      setFormData(prev => ({
+        ...prev,
+        tipoCustoId: novoTipoCusto.id
+      }));
+      
+      // Limpar erro se existir
+      if (errors.tipoCustoId) {
+        setErrors(prev => ({
+          ...prev,
+          tipoCustoId: ''
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao criar novo tipo de custo:', error);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
 
     try {
-      let tipoCusto: TipoCusto;
-      
-      if (isNovoTipoCusto) {
-        tipoCusto = createTipoCusto({
-          ...formData.novoTipoCusto,
-          ativo: true
-        });
-      } else {
-        const tipoCustoExistente = getTipoCustoById(formData.tipoCustoId);
-        if (!tipoCustoExistente) {
-          setErrors({ tipoCustoId: 'Tipo de custo não encontrado' });
-          return;
-        }
-        tipoCusto = tipoCustoExistente;
+      const tipoCusto = getTipoCustoById(formData.tipoCustoId);
+      if (!tipoCusto) {
+        setErrors({ tipoCustoId: 'Tipo de custo não encontrado' });
+        return;
       }
 
       const custoData = {
@@ -188,6 +143,15 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     }
   };
 
+  // Preparar opções para o dropdown
+  const tipoCustoOptions = tiposCusto
+    .filter(tipo => tipo.ativo)
+    .map(tipo => ({
+      value: tipo.id,
+      label: tipo.nome,
+      description: `${tipo.categoria}${tipo.descricao ? ` - ${tipo.descricao}` : ''}`
+    }));
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Tipo de Custo */}
@@ -195,76 +159,20 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         <CardHeader>
           <CardTitle>Tipo de Custo</CardTitle>
           <CardDescription>
-            Selecione um tipo existente ou crie um novo
+            Selecione um tipo existente ou crie um novo digitando o nome
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <Button
-              type="button"
-              variant={!isNovoTipoCusto ? 'primary' : 'outline'}
-              onClick={() => setIsNovoTipoCusto(false)}
-            >
-              Tipo Existente
-            </Button>
-            <Button
-              type="button"
-              variant={isNovoTipoCusto ? 'primary' : 'outline'}
-              onClick={() => setIsNovoTipoCusto(true)}
-            >
-              Novo Tipo
-            </Button>
-          </div>
-
-          {!isNovoTipoCusto ? (
-            <div>
-              <Input
-                label="Buscar Tipo de Custo"
-                placeholder="Digite o nome do tipo de custo..."
-                value={tipoCustoSearch}
-                onChange={(e) => setTipoCustoSearch(e.target.value)}
-                error={errors.tipoCustoId}
-              />
-              {tiposCustoFiltrados.length > 0 && (
-                <div className="mt-2 border border-gray-200 rounded-md max-h-40 overflow-y-auto">
-                  {tiposCustoFiltrados.map((tipo) => (
-                    <div
-                      key={tipo.id}
-                      className="p-2 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                      onClick={() => handleTipoCustoSelect(tipo)}
-                    >
-                      <div className="font-medium">{tipo.nome}</div>
-                      <div className="text-sm text-gray-500">{tipo.categoria}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Input
-                label="Nome do Tipo *"
-                value={formData.novoTipoCusto.nome}
-                onChange={(e) => handleNovoTipoCustoChange('nome', e.target.value)}
-                error={errors.novoTipoCustoNome}
-              />
-              <Select
-                label="Categoria"
-                options={categoriaOptions}
-                value={formData.novoTipoCusto.categoria}
-                onChange={(e) => handleNovoTipoCustoChange('categoria', e.target.value)}
-              />
-              <div className="sm:col-span-2">
-                <Textarea
-                  label="Descrição"
-                  value={formData.novoTipoCusto.descricao}
-                  onChange={(e) => handleNovoTipoCustoChange('descricao', e.target.value)}
-                  rows={2}
-                  placeholder="Descrição do tipo de custo"
-                />
-              </div>
-            </div>
-          )}
+          <SelectWithSearch
+            label="Tipo de Custo *"
+            options={tipoCustoOptions}
+            value={formData.tipoCustoId}
+            onChange={(value) => handleInputChange('tipoCustoId', value)}
+            onCreateNew={handleCreateNewTipoCusto}
+            placeholder="Selecione ou digite para criar um novo tipo"
+            error={errors.tipoCustoId}
+            allowCreate={true}
+          />
         </CardContent>
       </Card>
 
@@ -292,7 +200,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
               type="number"
               min="1"
               value={formData.quantidade || ''}
-              onChange={(e) => handleInputChange('quantidade', parseInt(e.target.value) || undefined)}
+              onChange={(e) => handleInputChange('quantidade', parseInt(e.target.value) || 1)}
               error={errors.quantidade}
             />
           </div>

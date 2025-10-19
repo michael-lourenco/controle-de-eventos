@@ -5,9 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import PagamentoForm from '@/components/forms/PagamentoForm';
 import { 
-  Pagamento, 
-  ContratoServico,
-  StatusPagamento 
+  Pagamento
 } from '@/types';
 import { 
   createPagamento, 
@@ -21,26 +19,21 @@ import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  XCircleIcon,
   CurrencyDollarIcon,
   CalendarIcon,
-  CreditCardIcon
+  ClockIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
 interface PagamentoHistoricoProps {
   eventoId: string;
   pagamentos: Pagamento[];
-  contrato: ContratoServico | null;
   onPagamentosChange: () => void;
 }
 
 export default function PagamentoHistorico({ 
   eventoId, 
   pagamentos, 
-  contrato, 
   onPagamentosChange 
 }: PagamentoHistoricoProps) {
   const [showForm, setShowForm] = useState(false);
@@ -49,33 +42,21 @@ export default function PagamentoHistorico({
 
   const resumoFinanceiro = getResumoFinanceiroEvento(eventoId);
 
-  const getStatusIcon = (status: StatusPagamento) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case StatusPagamento.PAGO:
-        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
-      case StatusPagamento.PENDENTE:
-        return <ClockIcon className="h-5 w-5 text-yellow-500" />;
-      case StatusPagamento.ATRASADO:
-        return <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />;
-      case StatusPagamento.CANCELADO:
-        return <XCircleIcon className="h-5 w-5 text-gray-500" />;
+      case 'Pago':
+        return 'bg-green-100 text-green-800';
       default:
-        return <ClockIcon className="h-5 w-5 text-gray-500" />;
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusColor = (status: StatusPagamento) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case StatusPagamento.PAGO:
-        return 'bg-green-100 text-green-800';
-      case StatusPagamento.PENDENTE:
-        return 'bg-yellow-100 text-yellow-800';
-      case StatusPagamento.ATRASADO:
-        return 'bg-red-100 text-red-800';
-      case StatusPagamento.CANCELADO:
-        return 'bg-gray-100 text-gray-800';
+      case 'Pago':
+        return <CheckCircleIcon className="h-5 w-5 text-green-600" />;
       default:
-        return 'bg-gray-100 text-gray-800';
+        return <ClockIcon className="h-5 w-5 text-gray-600" />;
     }
   };
 
@@ -123,24 +104,6 @@ export default function PagamentoHistorico({
     setPagamentoEditando(null);
   };
 
-  if (!contrato) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Histórico de Pagamentos</CardTitle>
-          <CardDescription>
-            Nenhum contrato encontrado para este evento
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-500 text-center py-8">
-            É necessário criar um contrato antes de gerenciar os pagamentos.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   if (showForm) {
     return (
       <Card>
@@ -155,7 +118,7 @@ export default function PagamentoHistorico({
         <CardContent>
           <PagamentoForm
             pagamento={pagamentoEditando || undefined}
-            contrato={contrato}
+            evento={pagamentos[0]?.evento}
             onSave={handleSalvarPagamento}
             onCancel={handleCancelarForm}
           />
@@ -175,59 +138,37 @@ export default function PagamentoHistorico({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-3xl font-bold text-gray-900">
                 R$ {resumoFinanceiro.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <div className="text-sm text-gray-500">Valor Total</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-green-600">
                 R$ {resumoFinanceiro.valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <div className="text-sm text-gray-500">Valor Pago</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-600">
-                R$ {resumoFinanceiro.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              <div className={`text-3xl font-bold ${resumoFinanceiro.isAtrasado ? 'text-red-600' : 'text-yellow-600'}`}>
+                R$ {resumoFinanceiro.valorPendenteOuAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <div className="text-sm text-gray-500">Valor Pendente</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">
-                R$ {resumoFinanceiro.valorAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              <div className="text-sm text-gray-500">
+                {resumoFinanceiro.isAtrasado ? 'Valor Atrasado' : 'Valor Pendente'}
               </div>
-              <div className="text-sm text-gray-500">Valor Atrasado</div>
             </div>
           </div>
           
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div className="text-center">
+          {resumoFinanceiro.diaFinalPagamento && (
+            <div className="mt-6 text-center">
+              <div className="text-sm text-gray-500">Dia Final de Pagamento</div>
               <div className="text-lg font-semibold text-gray-900">
-                {resumoFinanceiro.totalParcelas}
+                {format(resumoFinanceiro.diaFinalPagamento, 'dd/MM/yyyy', { locale: ptBR })}
               </div>
-              <div className="text-sm text-gray-500">Total de Parcelas</div>
             </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-green-600">
-                {resumoFinanceiro.parcelasPagas}
-              </div>
-              <div className="text-sm text-gray-500">Parcelas Pagas</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-yellow-600">
-                {resumoFinanceiro.parcelasPendentes}
-              </div>
-              <div className="text-sm text-gray-500">Parcelas Pendentes</div>
-            </div>
-            <div className="text-center">
-              <div className="text-lg font-semibold text-red-600">
-                {resumoFinanceiro.parcelasAtrasadas}
-              </div>
-              <div className="text-sm text-gray-500">Parcelas Atrasadas</div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
@@ -264,7 +205,9 @@ export default function PagamentoHistorico({
             </div>
           ) : (
             <div className="space-y-4">
-              {pagamentos.map((pagamento) => (
+              {pagamentos
+                .sort((a, b) => new Date(b.dataPagamento).getTime() - new Date(a.dataPagamento).getTime())
+                .map((pagamento) => (
                 <div
                   key={pagamento.id}
                   className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
@@ -277,67 +220,41 @@ export default function PagamentoHistorico({
                           <span className="font-medium text-gray-900">
                             R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
-                          {pagamento.numeroParcela && (
-                            <span className="text-sm text-gray-500">
-                              (Parcela {pagamento.numeroParcela}/{pagamento.totalParcelas})
-                            </span>
-                          )}
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pagamento.status)}`}>
+                            {pagamento.status}
+                          </span>
                         </div>
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                           <div className="flex items-center">
                             <CalendarIcon className="h-4 w-4 mr-1" />
-                            Vencimento: {format(pagamento.dataVencimento, 'dd/MM/yyyy', { locale: ptBR })}
+                            {format(pagamento.dataPagamento, 'dd/MM/yyyy', { locale: ptBR })}
                           </div>
-                          {pagamento.dataPagamento && (
-                            <div className="flex items-center">
-                              <CheckCircleIcon className="h-4 w-4 mr-1" />
-                              Pago em: {format(pagamento.dataPagamento, 'dd/MM/yyyy', { locale: ptBR })}
-                            </div>
-                          )}
+                          <div className="flex items-center">
+                            <span className="mr-1">Forma:</span>
+                            {pagamento.formaPagamento}
+                          </div>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pagamento.status)}`}>
-                        {pagamento.status}
-                      </span>
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditarPagamento(pagamento)}
-                          title="Editar pagamento"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleExcluirPagamento(pagamento)}
-                          title="Excluir pagamento"
-                          className="text-red-600 hover:text-red-700 hover:border-red-300"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center">
-                        <CreditCardIcon className="h-4 w-4 mr-1" />
-                        {pagamento.formaPagamento}
-                      </div>
-                      {pagamento.comprovante && (
-                        <div>
-                          Comprovante: {pagamento.comprovante}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      Criado em {format(pagamento.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditarPagamento(pagamento)}
+                        title="Editar pagamento"
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExcluirPagamento(pagamento)}
+                        title="Excluir pagamento"
+                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                   
@@ -363,6 +280,8 @@ export default function PagamentoHistorico({
                 Tem certeza que deseja excluir este pagamento?
                 <br />
                 <strong>Valor:</strong> R$ {pagamentoParaExcluir.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                <br />
+                <strong>Data:</strong> {format(pagamentoParaExcluir.dataPagamento, 'dd/MM/yyyy', { locale: ptBR })}
                 <br />
                 Esta ação não pode ser desfeita.
               </CardDescription>

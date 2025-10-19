@@ -7,11 +7,10 @@ import { Button } from '@/components/ui/Button';
 import Layout from '@/components/Layout';
 import PagamentoForm from '@/components/forms/PagamentoForm';
 import { 
-  getPagamentoById, 
-  getContratoByEventoId,
-  pagamentos
+  getPagamentoById,
+  getEventoById
 } from '@/lib/mockData';
-import { Pagamento, ContratoServico } from '@/types';
+import { Pagamento, Evento } from '@/types';
 import {
   ArrowLeftIcon,
   CurrencyDollarIcon
@@ -21,16 +20,16 @@ export default function EditarPagamentoPage() {
   const params = useParams();
   const router = useRouter();
   const [pagamento, setPagamento] = useState<Pagamento | null>(null);
-  const [contrato, setContrato] = useState<ContratoServico | null>(null);
+  const [evento, setEvento] = useState<Evento | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (params.pagamentoId && params.id) {
       const pagamentoEncontrado = getPagamentoById(params.pagamentoId as string);
-      const contratoEncontrado = getContratoByEventoId(params.id as string);
+      const eventoEncontrado = getEventoById(params.id as string);
       
       setPagamento(pagamentoEncontrado || null);
-      setContrato(contratoEncontrado);
+      setEvento(eventoEncontrado || null);
       setLoading(false);
     }
   }, [params.pagamentoId, params.id]);
@@ -57,7 +56,7 @@ export default function EditarPagamentoPage() {
     );
   }
 
-  if (!pagamento || !contrato) {
+  if (!pagamento || !evento) {
     return (
       <Layout>
         <div className="text-center py-12">
@@ -93,8 +92,7 @@ export default function EditarPagamentoPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Editar Pagamento</h1>
               <p className="text-gray-600">
-                R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                {pagamento.numeroParcela && ` - Parcela ${pagamento.numeroParcela}/${pagamento.totalParcelas}`}
+                R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} - {pagamento.status}
               </p>
             </div>
           </div>
@@ -111,7 +109,7 @@ export default function EditarPagamentoPage() {
           <CardContent>
             <PagamentoForm
               pagamento={pagamento}
-              contrato={contrato}
+              evento={evento}
               onSave={handleSave}
               onCancel={handleCancel}
             />
