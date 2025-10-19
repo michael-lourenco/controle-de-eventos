@@ -33,9 +33,10 @@ export default function EventoViewPage() {
   const params = useParams();
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
-  const { data: pagamentos, loading: loadingPagamentos } = usePagamentosPorEvento(params.id as string);
+  const { data: pagamentos, loading: loadingPagamentos } = usePagamentosPorEvento(params.id as string, refreshKey);
   const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string);
   
   // Por enquanto, anexos como array vazio até implementar o hook
@@ -90,8 +91,8 @@ export default function EventoViewPage() {
 
   const handlePagamentosChange = () => {
     // Função para recarregar pagamentos quando houver mudanças
-    // Por enquanto, apenas um placeholder
-    console.log('Pagamentos foram alterados');
+    console.log('Pagamentos foram alterados - recarregando dados');
+    setRefreshKey(prev => prev + 1);
   };
 
   const handleCustosChange = () => {
@@ -352,6 +353,7 @@ export default function EventoViewPage() {
           eventoId={evento.id}
           pagamentos={pagamentos}
           onPagamentosChange={handlePagamentosChange}
+          evento={evento}
         />
 
         {/* Custos do Evento */}

@@ -1,18 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import PagamentoForm from '@/components/forms/PagamentoForm';
 import { 
   Pagamento
 } from '@/types';
-import { 
-  createPagamento, 
-  updatePagamento, 
-  deletePagamento,
-  getResumoFinanceiroEvento 
-} from '@/lib/mockData';
+import { dataService } from '@/lib/data-service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -29,18 +24,61 @@ interface PagamentoHistoricoProps {
   eventoId: string;
   pagamentos: Pagamento[];
   onPagamentosChange: () => void;
+  evento: any; // Adicionar prop evento
 }
 
 export default function PagamentoHistorico({ 
   eventoId, 
   pagamentos, 
-  onPagamentosChange 
+  onPagamentosChange,
+  evento 
 }: PagamentoHistoricoProps) {
   const [showForm, setShowForm] = useState(false);
   const [pagamentoEditando, setPagamentoEditando] = useState<Pagamento | null>(null);
   const [pagamentoParaExcluir, setPagamentoParaExcluir] = useState<Pagamento | null>(null);
+  const [resumoFinanceiro, setResumoFinanceiro] = useState({
+    valorTotal: 0,
+    valorPago: 0,
+    valorPendenteOuAtrasado: 0,
+    valorPendente: 0,
+    valorAtrasado: 0,
+    isAtrasado: false,
+    diaFinalPagamento: null
+  });
 
-  const resumoFinanceiro = getResumoFinanceiroEvento(eventoId);
+  // Carregar resumo financeiro do Firestore
+  useEffect(() => {
+    const carregarResumoFinanceiro = async () => {
+      try {
+        console.log('PagamentoHistorico: Carregando resumo financeiro para evento:', eventoId);
+        const valorTotal = evento?.valorTotal || 0;
+        const dataFinalPagamento = evento?.diaFinalPagamento ? 
+          (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
+          undefined;
+        const resumo = await dataService.getResumoFinanceiroPorEvento(eventoId, valorTotal, dataFinalPagamento);
+        
+        console.log('PagamentoHistorico - Resumo do Firestore:', resumo);
+        console.log('PagamentoHistorico - Valor total do evento:', valorTotal);
+        console.log('PagamentoHistorico - Data final de pagamento:', dataFinalPagamento);
+        
+        setResumoFinanceiro({
+          valorTotal: valorTotal,
+          valorPago: resumo.totalPago,
+          valorPendenteOuAtrasado: resumo.valorPendente + resumo.valorAtrasado,
+          valorPendente: resumo.valorPendente,
+          valorAtrasado: resumo.valorAtrasado,
+          isAtrasado: resumo.isAtrasado,
+          diaFinalPagamento: dataFinalPagamento
+        });
+      } catch (error) {
+        console.error('Erro ao carregar resumo financeiro:', error);
+      }
+    };
+
+    if (eventoId) {
+      carregarResumoFinanceiro();
+    }
+  }, [eventoId, evento?.valorTotal, evento?.diaFinalPagamento]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -74,13 +112,37 @@ export default function PagamentoHistorico({
     setPagamentoParaExcluir(pagamento);
   };
 
-  const handleSalvarPagamento = (pagamentoData: Pagamento) => {
+  const handleSalvarPagamento = async (pagamentoData: Pagamento) => {
     try {
+      console.log('PagamentoHistorico: Salvando pagamento:', pagamentoData);
+      
       if (pagamentoEditando) {
-        updatePagamento(pagamentoEditando.id, pagamentoData);
+        console.log('PagamentoHistorico: Atualizando pagamento existente');
+        await dataService.updatePagamento(eventoId, pagamentoEditando.id, pagamentoData);
       } else {
-        createPagamento(pagamentoData);
+        console.log('PagamentoHistorico: Criando novo pagamento');
+        const resultado = await dataService.createPagamento(eventoId, pagamentoData);
+        console.log('PagamentoHistorico: Pagamento criado:', resultado);
       }
+      
+      // Recarregar resumo financeiro após salvar
+      const valorTotal = evento?.valorTotal || 0;
+      const dataFinalPagamento = evento?.diaFinalPagamento ? 
+        (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
+        undefined;
+      const resumo = await dataService.getResumoFinanceiroPorEvento(eventoId, valorTotal, dataFinalPagamento);
+      
+      setResumoFinanceiro({
+        valorTotal: valorTotal,
+        valorPago: resumo.totalPago,
+        valorPendenteOuAtrasado: resumo.valorPendente + resumo.valorAtrasado,
+        valorPendente: resumo.valorPendente,
+        valorAtrasado: resumo.valorAtrasado,
+        isAtrasado: resumo.isAtrasado,
+        diaFinalPagamento: dataFinalPagamento
+      });
+      
+      console.log('PagamentoHistorico: Chamando onPagamentosChange');
       onPagamentosChange();
       setShowForm(false);
       setPagamentoEditando(null);
@@ -89,12 +151,32 @@ export default function PagamentoHistorico({
     }
   };
 
-  const handleConfirmarExclusao = () => {
+  const handleConfirmarExclusao = async () => {
     if (pagamentoParaExcluir) {
-      const sucesso = deletePagamento(pagamentoParaExcluir.id);
-      if (sucesso) {
+      try {
+        await dataService.deletePagamento(eventoId, pagamentoParaExcluir.id);
+        
+        // Recarregar resumo financeiro após excluir
+        const valorTotal = evento?.valorTotal || 0;
+        const dataFinalPagamento = evento?.diaFinalPagamento ? 
+          (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
+          undefined;
+        const resumo = await dataService.getResumoFinanceiroPorEvento(eventoId, valorTotal, dataFinalPagamento);
+        
+        setResumoFinanceiro({
+          valorTotal: valorTotal,
+          valorPago: resumo.totalPago,
+          valorPendenteOuAtrasado: resumo.valorPendente + resumo.valorAtrasado,
+          valorPendente: resumo.valorPendente,
+          valorAtrasado: resumo.valorAtrasado,
+          isAtrasado: resumo.isAtrasado,
+          diaFinalPagamento: dataFinalPagamento
+        });
+        
         onPagamentosChange();
         setPagamentoParaExcluir(null);
+      } catch (error) {
+        console.error('Erro ao excluir pagamento:', error);
       }
     }
   };
@@ -118,7 +200,7 @@ export default function PagamentoHistorico({
         <CardContent>
           <PagamentoForm
             pagamento={pagamentoEditando || undefined}
-            evento={pagamentos[0]?.evento}
+            evento={evento}
             onSave={handleSalvarPagamento}
             onCancel={handleCancelarForm}
           />
@@ -165,7 +247,7 @@ export default function PagamentoHistorico({
             <div className="mt-6 text-center">
               <div className="text-sm text-gray-500">Dia Final de Pagamento</div>
               <div className="text-lg font-semibold text-gray-900">
-                {format(resumoFinanceiro.diaFinalPagamento, 'dd/MM/yyyy', { locale: ptBR })}
+                {format(new Date(resumoFinanceiro.diaFinalPagamento), 'dd/MM/yyyy', { locale: ptBR })}
               </div>
             </div>
           )}
@@ -227,7 +309,7 @@ export default function PagamentoHistorico({
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                           <div className="flex items-center">
                             <CalendarIcon className="h-4 w-4 mr-1" />
-                            {format(pagamento.dataPagamento, 'dd/MM/yyyy', { locale: ptBR })}
+                            {pagamento.dataPagamento ? format(new Date(pagamento.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
                           </div>
                           <div className="flex items-center">
                             <span className="mr-1">Forma:</span>
@@ -281,7 +363,7 @@ export default function PagamentoHistorico({
                 <br />
                 <strong>Valor:</strong> R$ {pagamentoParaExcluir.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 <br />
-                <strong>Data:</strong> {format(pagamentoParaExcluir.dataPagamento, 'dd/MM/yyyy', { locale: ptBR })}
+                <strong>Data:</strong> {pagamentoParaExcluir.dataPagamento ? format(new Date(pagamentoParaExcluir.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
                 <br />
                 Esta ação não pode ser desfeita.
               </CardDescription>

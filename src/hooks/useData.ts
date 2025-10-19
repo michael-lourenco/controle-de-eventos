@@ -191,7 +191,7 @@ export function usePagamentos(): UseDataResult<Pagamento[]> {
   return { data, loading, error, refetch: fetchData };
 }
 
-export function usePagamentosPorEvento(eventoId: string): UseDataResult<Pagamento[]> {
+export function usePagamentosPorEvento(eventoId: string, refreshKey?: number): UseDataResult<Pagamento[]> {
   const [data, setData] = useState<Pagamento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -209,7 +209,7 @@ export function usePagamentosPorEvento(eventoId: string): UseDataResult<Pagament
     } finally {
       setLoading(false);
     }
-  }, [eventoId]);
+  }, [eventoId, refreshKey]);
 
   useEffect(() => {
     fetchData();

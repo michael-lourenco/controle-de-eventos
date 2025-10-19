@@ -113,10 +113,10 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
     try {
       const pagamentoData = {
         eventoId: evento.id,
-        evento,
         valor: formData.valor,
         dataPagamento: new Date(formData.dataPagamento),
         formaPagamento: formData.formaPagamento,
+        status: 'Pago' as const,
         observacoes: formData.observacoes || undefined,
         comprovante: formData.comprovante || undefined
       };
@@ -244,6 +244,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
             onChange={(e) => handleInputChange('formaPagamento', e.target.value)}
             error={errors.formaPagamento}
           />
+
 
           <Input
             label="Comprovante"

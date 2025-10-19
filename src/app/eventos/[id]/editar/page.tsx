@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import Layout from '@/components/Layout';
 import EventoForm from '@/components/forms/EventoForm';
-import { getEventoById } from '@/lib/mockData';
+import { dataService } from '@/lib/data-service';
 import { Evento } from '@/types';
 import {
   ArrowLeftIcon,
@@ -20,16 +20,31 @@ export default function EditarEventoPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (params.id) {
-      const eventoEncontrado = getEventoById(params.id as string);
-      setEvento(eventoEncontrado || null);
-      setLoading(false);
-    }
+    const carregarEvento = async () => {
+      if (params.id) {
+        try {
+          setLoading(true);
+          const eventoEncontrado = await dataService.getEventoById(params.id as string);
+          setEvento(eventoEncontrado);
+        } catch (error) {
+          console.error('Erro ao carregar evento:', error);
+          setEvento(null);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    carregarEvento();
   }, [params.id]);
 
-  const handleSave = (eventoAtualizado: Evento) => {
-    // O evento já foi atualizado no mockData pela função updateEvento
-    router.push(`/eventos/${eventoAtualizado.id}`);
+  const handleSave = async (eventoAtualizado: Evento) => {
+    try {
+      // O evento já foi atualizado no Firestore pela função updateEvento no EventoForm
+      router.push(`/eventos/${eventoAtualizado.id}`);
+    } catch (error) {
+      console.error('Erro ao salvar evento:', error);
+    }
   };
 
   const handleCancel = () => {

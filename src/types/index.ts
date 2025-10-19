@@ -89,7 +89,6 @@ export interface ContratoServico {
 export interface Pagamento {
   id: string;
   eventoId: string;
-  evento: Evento;
   valor: number;
   dataPagamento: Date;
   formaPagamento: 'Dinheiro' | 'Cartão de crédito' | 'Depósito bancário' | 'PIX' | 'Transferência';

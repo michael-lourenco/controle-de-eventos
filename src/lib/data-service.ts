@@ -119,16 +119,16 @@ export class DataService {
     return this.pagamentoRepo.findById(id);
   }
 
-  async createPagamento(pagamento: Omit<Pagamento, 'id'>): Promise<Pagamento> {
-    return this.pagamentoRepo.create(pagamento);
+  async createPagamento(eventoId: string, pagamento: Omit<Pagamento, 'id'>): Promise<Pagamento> {
+    return this.pagamentoRepo.createPagamento(eventoId, pagamento);
   }
 
-  async updatePagamento(id: string, pagamento: Partial<Pagamento>): Promise<Pagamento> {
-    return this.pagamentoRepo.update(id, pagamento);
+  async updatePagamento(eventoId: string, pagamentoId: string, pagamento: Partial<Pagamento>): Promise<Pagamento> {
+    return this.pagamentoRepo.updatePagamento(eventoId, pagamentoId, pagamento);
   }
 
-  async deletePagamento(id: string): Promise<void> {
-    return this.pagamentoRepo.delete(id);
+  async deletePagamento(eventoId: string, pagamentoId: string): Promise<void> {
+    return this.pagamentoRepo.deletePagamento(eventoId, pagamentoId);
   }
 
   async getPagamentosPorEvento(eventoId: string): Promise<Pagamento[]> {
@@ -151,13 +151,14 @@ export class DataService {
     return this.pagamentoRepo.getTotalRecebidoPorPeriodo(inicio, fim);
   }
 
-  async getResumoFinanceiroPorEvento(eventoId: string): Promise<{
+  async getResumoFinanceiroPorEvento(eventoId: string, valorTotalEvento: number, dataFinalPagamento?: Date): Promise<{
     totalPago: number;
-    totalAtrasado: number;
     valorPendente: number;
+    valorAtrasado: number;
     quantidadePagamentos: number;
+    isAtrasado: boolean;
   }> {
-    return this.pagamentoRepo.getResumoFinanceiroPorEvento(eventoId);
+    return this.pagamentoRepo.getResumoFinanceiroPorEvento(eventoId, valorTotalEvento, dataFinalPagamento);
   }
 
   // Métodos para Tipos de Custo
