@@ -43,25 +43,21 @@ export default function CustosEvento({
 
   const resumoCustos = getResumoCustosEvento(evento.id);
 
-  const getCategoriaColor = (categoria: string) => {
-    switch (categoria) {
-      case 'Serviço':
-        return 'bg-blue-100 text-blue-800';
-      case 'Promoter':
-        return 'bg-green-100 text-green-800';
-      case 'Motorista':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Frete':
-        return 'bg-purple-100 text-purple-800';
-      case 'Insumos':
-        return 'bg-orange-100 text-orange-800';
-      case 'Impostos':
-        return 'bg-red-100 text-red-800';
-      case 'Outros':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getTipoCustoColor = (nome: string) => {
+    // Gera uma cor baseada no nome do tipo de custo
+    const colors = [
+      'bg-blue-100 text-blue-800',
+      'bg-green-100 text-green-800',
+      'bg-yellow-100 text-yellow-800',
+      'bg-purple-100 text-purple-800',
+      'bg-orange-100 text-orange-800',
+      'bg-red-100 text-red-800',
+      'bg-pink-100 text-pink-800',
+      'bg-indigo-100 text-indigo-800'
+    ];
+    
+    const hash = nome.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[hash % colors.length];
   };
 
   const handleNovoCusto = () => {
@@ -159,19 +155,19 @@ export default function CustosEvento({
               <div className="text-2xl font-bold text-green-600">
                 {Object.keys(resumoCustos.porCategoria).length}
               </div>
-              <div className="text-sm text-gray-500">Categorias</div>
+              <div className="text-sm text-gray-500">Tipos</div>
             </div>
           </div>
           
-          {/* Custos por Categoria */}
+          {/* Custos por Tipo */}
           {Object.keys(resumoCustos.porCategoria).length > 0 && (
             <div className="mt-6">
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Custos por Categoria</h4>
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Custos por Tipo</h4>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {Object.entries(resumoCustos.porCategoria).map(([categoria, valor]) => (
-                  <div key={categoria} className="text-center">
-                    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCategoriaColor(categoria)}`}>
-                      {categoria}
+                {Object.entries(resumoCustos.porCategoria).map(([tipoCusto, valor]) => (
+                  <div key={tipoCusto} className="text-center">
+                    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoCustoColor(tipoCusto)}`}>
+                      {tipoCusto}
                     </div>
                     <div className="mt-1 text-sm font-semibold text-gray-900">
                       R$ {valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -230,8 +226,8 @@ export default function CustosEvento({
                           <span className="font-medium text-gray-900">
                             {custo.tipoCusto.nome}
                           </span>
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getCategoriaColor(custo.tipoCusto.categoria)}`}>
-                            {custo.tipoCusto.categoria}
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTipoCustoColor(custo.tipoCusto.nome)}`}>
+                            {custo.tipoCusto.nome}
                           </span>
                         </div>
                         <div className="flex items-center space-x-4 text-sm text-gray-500">

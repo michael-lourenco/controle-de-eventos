@@ -239,7 +239,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '1',
     nome: 'TOTEM',
     descricao: 'Custo do serviço de totem',
-    categoria: 'Serviço',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -247,7 +246,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '2',
     nome: 'PROMOTER',
     descricao: 'Custo com promoters',
-    categoria: 'Promoter',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -255,7 +253,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '3',
     nome: 'MOTORISTA',
     descricao: 'Custo com motorista',
-    categoria: 'Motorista',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -263,7 +260,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '4',
     nome: 'FRETE',
     descricao: 'Custo de frete',
-    categoria: 'Frete',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -271,7 +267,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '5',
     nome: 'INSUMOS',
     descricao: 'Custo com insumos',
-    categoria: 'Insumos',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -279,7 +274,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '6',
     nome: 'IMPOSTOS',
     descricao: 'Custo com impostos',
-    categoria: 'Impostos',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -287,7 +281,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '7',
     nome: 'P360',
     descricao: 'Custo do serviço P360',
-    categoria: 'Serviço',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -295,7 +288,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '8',
     nome: 'LAMBE-LAMBE',
     descricao: 'Custo do serviço lambe-lambe',
-    categoria: 'Serviço',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -303,7 +295,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '9',
     nome: 'INSTACLICK',
     descricao: 'Custo do serviço Instaclick',
-    categoria: 'Serviço',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   },
@@ -311,7 +302,6 @@ export const tiposCusto: TipoCusto[] = [
     id: '10',
     nome: 'CLICKBOOK',
     descricao: 'Custo do serviço Clickbook',
-    categoria: 'Serviço',
     ativo: true,
     dataCadastro: new Date('2023-01-01')
   }
@@ -942,16 +932,16 @@ export const getResumoCustosEvento = (eventoId: string): ResumoCustosEvento => {
   
   const total = custos.reduce((sum, custo) => sum + custo.valor, 0);
   
-  const porCategoria = custos.reduce((acc, custo) => {
-    const categoria = custo.tipoCusto.categoria;
-    acc[categoria] = (acc[categoria] || 0) + custo.valor;
+  const porTipoCusto = custos.reduce((acc, custo) => {
+    const tipoCusto = custo.tipoCusto.nome;
+    acc[tipoCusto] = (acc[tipoCusto] || 0) + custo.valor;
     return acc;
   }, {} as Record<string, number>);
   
   return {
     custos,
     total,
-    porCategoria,
+    porCategoria: porTipoCusto,
     quantidadeItens: custos.length
   };
 };

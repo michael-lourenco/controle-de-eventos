@@ -221,8 +221,7 @@ export enum FormaPagamento {
 export interface TipoCusto {
   id: string;
   nome: string;
-  descricao?: string;
-  categoria: 'Serviço' | 'Promoter' | 'Motorista' | 'Frete' | 'Insumos' | 'Impostos' | 'Outros';
+  descricao: string;
   ativo: boolean;
   dataCadastro: Date;
 }

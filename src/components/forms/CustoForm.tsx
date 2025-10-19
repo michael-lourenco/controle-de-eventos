@@ -94,7 +94,6 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
       const novoTipoCusto = createTipoCusto({
         nome,
         descricao: '',
-        categoria: 'Outros',
         ativo: true
       });
       
@@ -149,7 +148,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     .map(tipo => ({
       value: tipo.id,
       label: tipo.nome,
-      description: `${tipo.categoria}${tipo.descricao ? ` - ${tipo.descricao}` : ''}`
+      description: tipo.descricao || ''
     }));
 
   return (
