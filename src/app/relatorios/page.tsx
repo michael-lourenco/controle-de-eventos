@@ -12,23 +12,44 @@ import {
   DocumentArrowDownIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { 
-  eventos, 
-  pagamentos, 
-  calcularReceitaMes,
-  getPagamentosPendentes,
-} from '@/lib/mockData';
+import { useEventos, usePagamentos, useDashboardData } from '@/hooks/useData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusPagamento } from '@/types';
 
 export default function RelatoriosPage() {
+  const { data: eventos, loading: loadingEventos } = useEventos();
+  const { data: pagamentos, loading: loadingPagamentos } = usePagamentos();
+  const { data: dashboardData, loading: loadingDashboard } = useDashboardData();
+  
   const [periodoInicio, setPeriodoInicio] = useState(
     format(startOfMonth(subMonths(new Date(), 6)), 'yyyy-MM-dd')
   );
   const [periodoFim, setPeriodoFim] = useState(
     format(endOfMonth(new Date()), 'yyyy-MM-dd')
   );
+  
+  const loading = loadingEventos || loadingPagamentos || loadingDashboard;
+  
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Carregando relatórios...</div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (!eventos || !pagamentos || !dashboardData) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Nenhum dado disponível para relatórios</div>
+        </div>
+      </Layout>
+    );
+  }
 
   // Cálculos para o período selecionado
   const dataInicio = new Date(periodoInicio);
@@ -48,7 +69,7 @@ export default function RelatoriosPage() {
   });
 
   const receitaTotal = pagamentosPeriodo.reduce((total, pagamento) => total + pagamento.valor, 0);
-  const pagamentosPendentes = getPagamentosPendentes();
+  const pagamentosPendentes = dashboardData.pagamentosPendentes;
   const pagamentosAtrasados = []; // Com a nova lógica, não há mais status "Atrasado" nos pagamentos
 
   // Estatísticas por tipo de evento
@@ -58,22 +79,14 @@ export default function RelatoriosPage() {
   }, {} as Record<string, number>);
 
   // Receita por mês no período
-  const receitaPorMes: Array<{ mes: string; valor: number }> = [];
-  for (let i = 0; i < 12; i++) {
-    const data = subMonths(new Date(), 11 - i);
-    const receita = calcularReceitaMes(data.getFullYear(), data.getMonth() + 1);
-    receitaPorMes.push({
-      mes: format(data, 'MMM/yy', { locale: ptBR }),
-      valor: receita
-    });
-  }
+  const receitaPorMes = dashboardData.graficos.receitaMensal;
 
   // Status dos pagamentos
   const statusPagamentos = {
-    pago: pagamentos.filter(p => p.status === 'Pago').length,
-    pendente: 0, // Com a nova lógica, não há mais status "Pendente"
-    atrasado: 0, // Com a nova lógica, não há mais status "Atrasado" nos pagamentos
-    cancelado: 0 // Com a nova lógica, não há mais status "Cancelado"
+    pago: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Pago')?.quantidade || 0,
+    pendente: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Pendente')?.quantidade || 0,
+    atrasado: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Atrasado')?.quantidade || 0,
+    cancelado: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Cancelado')?.quantidade || 0
   };
 
   const handleGerarRelatorio = () => {

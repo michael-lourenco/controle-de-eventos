@@ -164,11 +164,13 @@ export interface RelatorioFinanceiro {
 
 export interface DashboardData {
   eventosHoje: number;
+  eventosHojeLista: Evento[];
   eventosMes: number;
   receitaMes: number;
   receitaAno: number;
   pagamentosPendentes: number;
   valorPendente: number;
+  valorAtrasado: number;
   eventosProximos: Evento[];
   pagamentosVencendo: Pagamento[];
   graficos: {

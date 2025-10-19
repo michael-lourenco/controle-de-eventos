@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, logout } from '@/lib/auth';
+import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
 import {
   HomeIcon,
@@ -29,25 +29,27 @@ const navigation = [
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
 ];
 
+const adminNavigation = [
+  { name: 'Collections', href: '/admin/collections', icon: CogIcon },
+  { name: 'Usuários', href: '/admin/users', icon: UserIcon },
+];
+
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  const loading = status === 'loading';
+  const user = session?.user ? {
+    name: session.user.name || 'Usuário',
+    email: session.user.email || ''
+  } : null;
 
   React.useEffect(() => {
-    const checkAuth = () => {
-      const currentUser = getCurrentUser();
-      setUser(currentUser ? { name: currentUser.nome || 'Usuário', email: currentUser.email || '' } : null);
-      setLoading(false);
-      
-      if (!currentUser) {
-        router.push('/login');
-      }
-    };
-    
-    checkAuth();
-  }, [router]);
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
 
   if (loading) {
     return (
@@ -62,8 +64,7 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   const handleLogout = () => {
-    logout();
-    router.push('/login');
+    signOut({ callbackUrl: '/login' });
   };
 
   return (
@@ -93,6 +94,28 @@ export default function Layout({ children }: LayoutProps) {
                 {item.name}
               </Link>
             ))}
+            
+            {/* Seção de Administração - Mobile */}
+            {user && (
+              <>
+                <div className="border-t border-gray-200 my-4"></div>
+                <div className="px-2">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Administração
+                  </h3>
+                  {adminNavigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    >
+                      <item.icon className="mr-3 h-5 w-5" />
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
           </nav>
         </div>
       </div>
@@ -114,6 +137,28 @@ export default function Layout({ children }: LayoutProps) {
                 {item.name}
               </Link>
             ))}
+            
+            {/* Seção de Administração */}
+            {user && (
+              <>
+                <div className="border-t border-gray-200 my-4"></div>
+                <div className="px-2">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                    Administração
+                  </h3>
+                  {adminNavigation.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    >
+                      <item.icon className="mr-3 h-5 w-5" />
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
           </nav>
           <div className="flex-shrink-0 border-t border-gray-200 p-4">
             <div className="flex items-center">

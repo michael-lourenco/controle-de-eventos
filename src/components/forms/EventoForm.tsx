@@ -12,13 +12,8 @@ import {
   StatusEvento, 
   TipoEvento 
 } from '@/types';
-import { 
-  clientes, 
-  createEvento, 
-  updateEvento, 
-  createCliente,
-  searchClientes 
-} from '@/lib/mockData';
+import { useClientes } from '@/hooks/useData';
+import { dataService } from '@/lib/data-service';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -81,6 +76,8 @@ const statusOptions = [
 const diasSemana = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
 
 export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps) {
+  const { data: clientes, loading: loadingClientes } = useClientes();
+  
   const [formData, setFormData] = useState<FormData>({
     clienteId: '',
     novoCliente: {
@@ -160,12 +157,15 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   }, [evento]);
 
   useEffect(() => {
-    if (clienteSearch.length > 2) {
-      setClientesFiltrados(searchClientes(clienteSearch));
+    if (clienteSearch.length > 2 && clientes) {
+      const filtrados = clientes.filter(cliente => 
+        cliente.nome.toLowerCase().includes(clienteSearch.toLowerCase())
+      );
+      setClientesFiltrados(filtrados);
     } else {
       setClientesFiltrados([]);
     }
-  }, [clienteSearch]);
+  }, [clienteSearch, clientes]);
 
   const handleInputChange = (field: string, value: string | number | undefined) => {
     setFormData(prev => ({
@@ -242,18 +242,24 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('EventoForm: handleSubmit chamado');
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      console.log('EventoForm: Validação falhou');
+      return;
+    }
+    
+    console.log('EventoForm: Validação passou, processando...');
 
     try {
       let cliente: Cliente;
       
       if (isNovoCliente) {
-        cliente = createCliente(formData.novoCliente);
+        cliente = await dataService.createCliente(formData.novoCliente);
       } else {
-        const clienteExistente = clientes.find(c => c.id === formData.clienteId);
+        const clienteExistente = clientes?.find(c => c.id === formData.clienteId);
         if (!clienteExistente) {
           setErrors({ clienteId: 'Cliente não encontrado' });
           return;
@@ -286,16 +292,18 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         observacoes: formData.observacoes || undefined,
         status: formData.status,
         valorTotal: formData.valorTotal,
-        diaFinalPagamento: new Date(formData.diaFinalPagamento)
+        diaFinalPagamento: new Date(formData.diaFinalPagamento),
+        dataCadastro: new Date(),
+        dataAtualizacao: new Date()
       };
 
       if (evento) {
-        const eventoAtualizado = updateEvento(evento.id, eventoData);
-        if (eventoAtualizado) {
-          onSave(eventoAtualizado);
-        }
+        const eventoAtualizado = await dataService.updateEvento(evento.id, eventoData);
+        onSave(eventoAtualizado);
       } else {
-        const novoEvento = createEvento(eventoData);
+        console.log('EventoForm: Criando novo evento com dados:', eventoData);
+        const novoEvento = await dataService.createEvento(eventoData);
+        console.log('EventoForm: Evento criado:', novoEvento);
         onSave(novoEvento);
       }
     } catch (error) {

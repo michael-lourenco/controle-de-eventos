@@ -16,7 +16,7 @@ export default function NovoEventoPage() {
   const router = useRouter();
 
   const handleSave = (novoEvento: Evento) => {
-    // O evento já foi criado no mockData pela função createEvento
+    // O evento foi criado no Firestore via dataService
     router.push(`/eventos/${novoEvento.id}`);
   };
 

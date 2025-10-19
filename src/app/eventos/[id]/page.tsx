@@ -20,13 +20,8 @@ import {
   PrinterIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
-import { 
-  getEventoById, 
-  deleteEvento, 
-  getPagamentosByEventoId, 
-  getCustosByEventoId,
-  getAnexosByEventoId
-} from '@/lib/mockData';
+import { useEvento, usePagamentosPorEvento, useCustosPorEvento } from '@/hooks/useData';
+import { dataService } from '@/lib/data-service';
 import { Evento, Pagamento, CustoEvento, AnexoEvento } from '@/types';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
 import CustosEvento from '@/components/CustosEvento';
@@ -37,63 +32,78 @@ import { ptBR } from 'date-fns/locale';
 export default function EventoViewPage() {
   const params = useParams();
   const router = useRouter();
-  const [evento, setEvento] = useState<Evento | null>(null);
-  const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
-  const [custos, setCustos] = useState<CustoEvento[]>([]);
-  const [anexos, setAnexos] = useState<AnexoEvento[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
+  const { data: pagamentos, loading: loadingPagamentos } = usePagamentosPorEvento(params.id as string);
+  const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string);
+  
+  // Por enquanto, anexos como array vazio até implementar o hook
+  const anexos: AnexoEvento[] = [];
+  
+  const loading = loadingEvento || loadingPagamentos || loadingCustos;
 
-  useEffect(() => {
-    if (params.id) {
-      const eventoEncontrado = getEventoById(params.id as string);
-      setEvento(eventoEncontrado || null);
-      
-      if (eventoEncontrado) {
-        const pagamentosEvento = getPagamentosByEventoId(eventoEncontrado.id);
-        const custosEvento = getCustosByEventoId(eventoEncontrado.id);
-        const anexosEvento = getAnexosByEventoId(eventoEncontrado.id);
-        setPagamentos(pagamentosEvento);
-        setCustos(custosEvento);
-        setAnexos(anexosEvento);
-      }
-      
-      setLoading(false);
-    }
-  }, [params.id]);
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Carregando evento...</div>
+        </div>
+      </Layout>
+    );
+  }
 
-  const handlePagamentosChange = () => {
-    if (params.id) {
-      const pagamentosEvento = getPagamentosByEventoId(params.id as string);
-      setPagamentos(pagamentosEvento);
-    }
-  };
+  if (errorEvento) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-600">Erro ao carregar evento: {errorEvento}</div>
+        </div>
+      </Layout>
+    );
+  }
 
-  const handleCustosChange = () => {
-    if (params.id) {
-      const custosEvento = getCustosByEventoId(params.id as string);
-      setCustos(custosEvento);
-    }
-  };
-
-  const handleAnexosChange = () => {
-    if (params.id) {
-      const anexosEvento = getAnexosByEventoId(params.id as string);
-      setAnexos(anexosEvento);
-    }
-  };
+  if (!evento) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Evento não encontrado</div>
+        </div>
+      </Layout>
+    );
+  }
 
   const handleEdit = () => {
     router.push(`/eventos/${params.id}/editar`);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (evento) {
-      const sucesso = deleteEvento(evento.id);
-      if (sucesso) {
+      try {
+        await dataService.deleteEvento(evento.id);
         router.push('/eventos');
+      } catch (error) {
+        console.error('Erro ao excluir evento:', error);
       }
     }
+  };
+
+  const handlePagamentosChange = () => {
+    // Função para recarregar pagamentos quando houver mudanças
+    // Por enquanto, apenas um placeholder
+    console.log('Pagamentos foram alterados');
+  };
+
+  const handleCustosChange = () => {
+    // Função para recarregar custos quando houver mudanças
+    // Por enquanto, apenas um placeholder
+    console.log('Custos foram alterados');
+  };
+
+  const handleAnexosChange = () => {
+    // Função para recarregar anexos quando houver mudanças
+    // Por enquanto, apenas um placeholder
+    console.log('Anexos foram alterados');
   };
 
   const getStatusColor = (status: string) => {
