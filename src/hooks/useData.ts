@@ -245,7 +245,7 @@ export function useTiposCusto(): UseDataResult<TipoCusto[]> {
 }
 
 // Hook para custos de evento
-export function useCustosPorEvento(eventoId: string): UseDataResult<CustoEvento[]> {
+export function useCustosPorEvento(eventoId: string, refreshKey?: number): UseDataResult<CustoEvento[]> {
   const [data, setData] = useState<CustoEvento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -263,7 +263,7 @@ export function useCustosPorEvento(eventoId: string): UseDataResult<CustoEvento[
     } finally {
       setLoading(false);
     }
-  }, [eventoId]);
+  }, [eventoId, refreshKey]); // refreshKey added here
 
   useEffect(() => {
     fetchData();

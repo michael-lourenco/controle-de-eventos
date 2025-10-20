@@ -37,7 +37,7 @@ export default function EventoViewPage() {
   
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos } = usePagamentosPorEvento(params.id as string, refreshKey);
-  const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string);
+  const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string, refreshKey);
   
   // Por enquanto, anexos como array vazio até implementar o hook
   const anexos: AnexoEvento[] = [];
@@ -96,9 +96,7 @@ export default function EventoViewPage() {
   };
 
   const handleCustosChange = () => {
-    // Função para recarregar custos quando houver mudanças
-    // Por enquanto, apenas um placeholder
-    console.log('Custos foram alterados');
+    setRefreshKey(prev => prev + 1);
   };
 
   const handleAnexosChange = () => {

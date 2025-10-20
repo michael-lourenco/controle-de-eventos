@@ -59,10 +59,77 @@ export async function isCollectionEmpty(collectionName: string): Promise<boolean
   }
 }
 
+// Função para inicializar tipos de custo se não existirem
+export async function initializeTiposCusto(): Promise<void> {
+  try {
+    const { repositoryFactory } = await import('./repositories/repository-factory');
+    const tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
+    
+    // Verificar se já existem tipos de custo
+    const existingTipos = await tipoCustoRepo.findAll();
+    if (existingTipos.length > 0) {
+      console.log('Tipos de custo já existem no Firestore');
+      return;
+    }
+    
+    // Dados dos tipos de custo do mock
+    const tiposCustoData = [
+      {
+        nome: 'TOTEM',
+        descricao: 'Custo do serviço de totem',
+        ativo: true,
+        dataCadastro: new Date('2023-01-01')
+      },
+      {
+        nome: 'PROMOTER',
+        descricao: 'Custo com promoters',
+        ativo: true,
+        dataCadastro: new Date('2023-01-01')
+      },
+      {
+        nome: 'MOTORISTA',
+        descricao: 'Custo com motorista',
+        ativo: true,
+        dataCadastro: new Date('2023-01-01')
+      },
+      {
+        nome: 'COMBUSTÍVEL',
+        descricao: 'Custo com combustível',
+        ativo: true,
+        dataCadastro: new Date('2023-01-01')
+      },
+      {
+        nome: 'ALIMENTAÇÃO',
+        descricao: 'Custo com alimentação',
+        ativo: true,
+        dataCadastro: new Date('2023-01-01')
+      },
+      {
+        nome: 'HOSPEDAGEM',
+        descricao: 'Custo com hospedagem',
+        ativo: true,
+        dataCadastro: new Date('2023-01-01')
+      }
+    ];
+    
+    console.log('Inserindo tipos de custo no Firestore...');
+    for (const tipoCusto of tiposCustoData) {
+      await tipoCustoRepo.create(tipoCusto);
+    }
+    
+    console.log('Tipos de custo inicializados com sucesso!');
+  } catch (error) {
+    console.error('Erro ao inicializar tipos de custo:', error);
+  }
+}
+
 // Função para criar collections com dados de teste se estiverem vazias
 export async function initializeCollectionsWithTestData(): Promise<void> {
   try {
     await initializeAllCollections();
+    
+    // Inicializar tipos de custo primeiro
+    await initializeTiposCusto();
     
     // Criar dados de teste para collections vazias
     const testData = {

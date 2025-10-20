@@ -10,11 +10,7 @@ import {
   CustoEvento, 
   Evento
 } from '@/types';
-import { 
-  tiposCusto,
-  createTipoCusto,
-  getTipoCustoById
-} from '@/lib/mockData';
+import { dataService } from '@/lib/data-service';
 
 interface CustoFormProps {
   custo?: CustoEvento;
@@ -40,6 +36,26 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [tiposCusto, setTiposCusto] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carregar tipos de custo do Firestore
+  useEffect(() => {
+    const carregarTiposCusto = async () => {
+      try {
+        setLoading(true);
+        const tipos = await dataService.getTiposCusto();
+        setTiposCusto(tipos);
+        console.log('CustoForm: Tipos de custo carregados:', tipos);
+      } catch (error) {
+        console.error('Erro ao carregar tipos de custo:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    carregarTiposCusto();
+  }, []);
 
   useEffect(() => {
     if (custo) {
@@ -89,13 +105,16 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleCreateNewTipoCusto = (nome: string) => {
+  const handleCreateNewTipoCusto = async (nome: string) => {
     try {
-      const novoTipoCusto = createTipoCusto({
+      const novoTipoCusto = await dataService.createTipoCusto({
         nome,
         descricao: '',
         ativo: true
       });
+      
+      // Atualizar a lista de tipos de custo
+      setTiposCusto(prev => [...prev, novoTipoCusto]);
       
       setFormData(prev => ({
         ...prev,
@@ -114,13 +133,13 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
 
     try {
-      const tipoCusto = getTipoCustoById(formData.tipoCustoId);
+      const tipoCusto = tiposCusto.find(tipo => tipo.id === formData.tipoCustoId);
       if (!tipoCusto) {
         setErrors({ tipoCustoId: 'Tipo de custo não encontrado' });
         return;
@@ -128,7 +147,6 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
 
       const custoData = {
         eventoId: evento.id,
-        evento,
         tipoCustoId: tipoCusto.id,
         tipoCusto,
         valor: formData.valor,
@@ -150,6 +168,17 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
       label: tipo.nome,
       description: tipo.descricao || ''
     }));
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando tipos de custo...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">

@@ -9,7 +9,7 @@ import {
   DashboardData,
   ResumoCustosEvento
 } from '@/types';
-import { initializeAllCollections } from './collections-init';
+import { initializeAllCollections, initializeTiposCusto } from './collections-init';
 
 export class DataService {
   private clienteRepo = repositoryFactory.getClienteRepository();
@@ -163,7 +163,14 @@ export class DataService {
 
   // Métodos para Tipos de Custo
   async getTiposCusto(): Promise<TipoCusto[]> {
-    return this.tipoCustoRepo.findAll();
+    try {
+      // Garantir que os tipos de custo estejam inicializados
+      await initializeTiposCusto();
+      return this.tipoCustoRepo.findAll();
+    } catch (error) {
+      console.error('Erro ao carregar tipos de custo:', error);
+      return [];
+    }
   }
 
   async getTipoCustoById(id: string): Promise<TipoCusto | null> {

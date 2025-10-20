@@ -202,7 +202,11 @@ export default function EventosPage() {
         {/* Lista de Eventos */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
           {filteredEventos.map((evento) => (
-            <Card key={evento.id} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={evento.id} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => handleView(evento)}
+            >
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -241,7 +245,10 @@ export default function EventosPage() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleView(evento)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleView(evento);
+                        }}
                         title="Visualizar"
                       >
                         <EyeIcon className="h-4 w-4" />
@@ -249,7 +256,10 @@ export default function EventosPage() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleEdit(evento)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(evento);
+                        }}
                         title="Editar"
                       >
                         <PencilIcon className="h-4 w-4" />
@@ -257,7 +267,10 @@ export default function EventosPage() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleDelete(evento)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(evento);
+                        }}
                         title="Excluir"
                         className="text-red-600 hover:text-red-700 hover:border-red-300"
                       >
