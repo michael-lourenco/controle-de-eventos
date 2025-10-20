@@ -11,6 +11,7 @@ import {
   Evento
 } from '@/types';
 import { dataService } from '@/lib/data-service';
+import { useCurrentUser } from '@/hooks/useAuth';
 
 interface CustoFormProps {
   custo?: CustoEvento;
@@ -28,6 +29,7 @@ interface FormData {
 
 
 export default function CustoForm({ custo, evento, onSave, onCancel }: CustoFormProps) {
+  const { userId } = useCurrentUser();
   const [formData, setFormData] = useState<FormData>({
     tipoCustoId: '',
     valor: 0,
@@ -42,9 +44,14 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
   // Carregar tipos de custo do Firestore
   useEffect(() => {
     const carregarTiposCusto = async () => {
+      if (!userId) {
+        console.log('CustoForm: userId não disponível ainda');
+        return;
+      }
+      
       try {
         setLoading(true);
-        const tipos = await dataService.getTiposCusto();
+        const tipos = await dataService.getTiposCusto(userId);
         setTiposCusto(tipos);
         console.log('CustoForm: Tipos de custo carregados:', tipos);
       } catch (error) {
@@ -55,7 +62,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     };
 
     carregarTiposCusto();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (custo) {
@@ -106,12 +113,17 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
   };
 
   const handleCreateNewTipoCusto = async (nome: string) => {
+    if (!userId) {
+      console.error('CustoForm: userId não disponível para criar tipo de custo');
+      return;
+    }
+    
     try {
       const novoTipoCusto = await dataService.createTipoCusto({
         nome,
         descricao: '',
         ativo: true
-      });
+      }, userId);
       
       // Atualizar a lista de tipos de custo
       setTiposCusto(prev => [...prev, novoTipoCusto]);

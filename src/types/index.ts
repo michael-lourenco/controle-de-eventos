@@ -185,6 +185,14 @@ export interface DashboardData {
   valorAtrasado: number;
   eventosProximos: Evento[];
   pagamentosVencendo: Pagamento[];
+  resumoFinanceiro: {
+    receitaTotal: number;
+    receitaMes: number;
+    valorPendente: number;
+    valorAtrasado: number;
+    totalEventos: number;
+    eventosConcluidos: number;
+  };
   graficos: {
     receitaMensal: Array<{ mes: string; valor: number }>;
     eventosPorTipo: Array<{ tipo: string; quantidade: number }>;

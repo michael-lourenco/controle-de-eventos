@@ -12,14 +12,13 @@ import {
   DocumentArrowDownIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { useEventos, usePagamentos, useDashboardData } from '@/hooks/useData';
+import { useEventos, useDashboardData } from '@/hooks/useData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusPagamento } from '@/types';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
-  const { data: pagamentos, loading: loadingPagamentos } = usePagamentos();
   const { data: dashboardData, loading: loadingDashboard } = useDashboardData();
   
   const [periodoInicio, setPeriodoInicio] = useState(
@@ -29,7 +28,7 @@ export default function RelatoriosPage() {
     format(endOfMonth(new Date()), 'yyyy-MM-dd')
   );
   
-  const loading = loadingEventos || loadingPagamentos || loadingDashboard;
+  const loading = loadingEventos || loadingDashboard;
   
   if (loading) {
     return (
@@ -41,7 +40,7 @@ export default function RelatoriosPage() {
     );
   }
   
-  if (!eventos || !pagamentos || !dashboardData) {
+  if (!eventos || !dashboardData) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
@@ -60,15 +59,7 @@ export default function RelatoriosPage() {
     return dataEvento >= dataInicio && dataEvento <= dataFim;
   });
 
-  const pagamentosPeriodo = pagamentos.filter(pagamento => {
-    if (pagamento.status === StatusPagamento.PAGO && pagamento.dataPagamento) {
-      const dataPagamento = new Date(pagamento.dataPagamento);
-      return dataPagamento >= dataInicio && dataPagamento <= dataFim;
-    }
-    return false;
-  });
-
-  const receitaTotal = pagamentosPeriodo.reduce((total, pagamento) => total + pagamento.valor, 0);
+  const receitaTotal = dashboardData.resumoFinanceiro.receitaTotal;
   const pagamentosPendentes = dashboardData.pagamentosPendentes;
   const pagamentosAtrasados = []; // Com a nova lógica, não há mais status "Atrasado" nos pagamentos
 

@@ -11,6 +11,9 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
 
   // Métodos específicos para subcollections de pagamentos por evento
   private getPagamentosCollection(userId: string, eventoId: string) {
+    if (!userId || !eventoId) {
+      throw new Error('userId e eventoId são obrigatórios para acessar pagamentos');
+    }
     return collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.PAGAMENTOS);
   }
 

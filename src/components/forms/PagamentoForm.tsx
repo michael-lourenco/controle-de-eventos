@@ -114,8 +114,6 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
 
     try {
       const pagamentoData = {
-        userId: userId || '',
-        eventoId: evento.id,
         valor: formData.valor,
         dataPagamento: new Date(formData.dataPagamento),
         formaPagamento: formData.formaPagamento,

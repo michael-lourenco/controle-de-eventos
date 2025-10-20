@@ -21,6 +21,7 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline';
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento } from '@/hooks/useData';
+import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { Evento, Pagamento, CustoEvento, AnexoEvento } from '@/types';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
@@ -81,7 +82,14 @@ export default function EventoViewPage() {
   const handleDelete = async () => {
     if (evento) {
       try {
-        await dataService.deleteEvento(evento.id);
+        // Buscar userId do usuário atual
+        const { userId } = useCurrentUser();
+        if (!userId) {
+          console.error('Usuário não autenticado');
+          return;
+        }
+        
+        await dataService.deleteEvento(evento.id, userId);
         router.push('/eventos');
       } catch (error) {
         console.error('Erro ao excluir evento:', error);

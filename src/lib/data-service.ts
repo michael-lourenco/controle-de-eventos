@@ -186,7 +186,7 @@ export class DataService {
     }
     try {
       // Garantir que os tipos de custo estejam inicializados
-      await initializeTiposCusto();
+      await initializeTiposCusto(userId);
       
       // Buscar apenas tipos do usuário (agora personalizados)
       return this.tipoCustoRepo.findAll(userId);
@@ -329,13 +329,35 @@ export class DataService {
         .filter(p => p.status === 'Pago')
         .reduce((total, p) => total + p.valor, 0);
 
-      // Calcular pagamentos pendentes (todos os pagamentos são 'Pago' agora)
-      const pagamentosPendentes = []; // Não há mais pagamentos pendentes
-      const valorPendente = 0; // Calculado dinamicamente por evento
+      // Calcular pagamentos pendentes e atrasados baseados nos eventos
+      let valorPendente = 0;
+      let valorAtrasado = 0;
+      let pagamentosPendentes = 0;
+      let pagamentosAtrasados = 0;
 
-      // Calcular pagamentos atrasados (todos os pagamentos são 'Pago' agora)
-      const pagamentosAtrasados = []; // Não há mais pagamentos atrasados
-      const valorAtrasado = 0; // Calculado dinamicamente por evento
+      // Para cada evento, calcular o resumo financeiro
+      for (const evento of todosEventos) {
+        try {
+          const resumoEvento = await this.getResumoFinanceiroPorEvento(
+            userId, 
+            evento.id, 
+            evento.valorTotal, 
+            evento.diaFinalPagamento
+          );
+          
+          valorPendente += resumoEvento.valorPendente;
+          valorAtrasado += resumoEvento.valorAtrasado;
+          
+          if (resumoEvento.valorPendente > 0) {
+            pagamentosPendentes++;
+          }
+          if (resumoEvento.valorAtrasado > 0) {
+            pagamentosAtrasados++;
+          }
+        } catch (error) {
+          console.error(`Erro ao calcular resumo financeiro do evento ${evento.id}:`, error);
+        }
+      }
 
       // Calcular gráficos
       const receitaMensal = [];
@@ -376,17 +398,28 @@ export class DataService {
         statusPagamentos[pagamento.status] = (statusPagamentos[pagamento.status] || 0) + 1;
       });
 
+      // Calcular resumo financeiro geral
+      const resumoFinanceiro = {
+        receitaTotal: receitaAno,
+        receitaMes,
+        valorPendente,
+        valorAtrasado,
+        totalEventos: todosEventos.length,
+        eventosConcluidos: todosEventos.filter(e => e.status === 'Concluído').length
+      };
+
       return {
         eventosHoje: eventosHoje.length,
         eventosHojeLista: eventosHoje,
         eventosMes: eventosMes.length,
         receitaMes,
         receitaAno,
-        pagamentosPendentes: pagamentosPendentes.length,
+        pagamentosPendentes,
         valorPendente,
         valorAtrasado,
         eventosProximos,
         pagamentosVencendo: [], // Implementar lógica para pagamentos vencendo
+        resumoFinanceiro,
         graficos: {
           receitaMensal,
           eventosPorTipo: Object.entries(eventosPorTipo).map(([tipo, quantidade]) => ({
@@ -414,6 +447,14 @@ export class DataService {
         valorAtrasado: 0,
         eventosProximos: [],
         pagamentosVencendo: [],
+        resumoFinanceiro: {
+          receitaTotal: 0,
+          receitaMes: 0,
+          valorPendente: 0,
+          valorAtrasado: 0,
+          totalEventos: 0,
+          eventosConcluidos: 0
+        },
         graficos: {
           receitaMensal: [],
           eventosPorTipo: [],

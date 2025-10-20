@@ -9,6 +9,7 @@ import {
   Evento
 } from '@/types';
 import { dataService } from '@/lib/data-service';
+import { useCurrentUser } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -32,6 +33,7 @@ export default function CustosEvento({
   custos, 
   onCustosChange 
 }: CustosEventoProps) {
+  const { userId } = useCurrentUser();
   const [showForm, setShowForm] = useState(false);
   const [custoEditando, setCustoEditando] = useState<CustoEvento | null>(null);
   const [custoParaExcluir, setCustoParaExcluir] = useState<CustoEvento | null>(null);
@@ -44,9 +46,14 @@ export default function CustosEvento({
   // Carregar resumo de custos do Firestore
   useEffect(() => {
     const carregarResumoCustos = async () => {
+      if (!userId) {
+        console.log('CustosEvento: userId não disponível ainda');
+        return;
+      }
+      
       try {
         console.log('CustosEvento: Carregando resumo de custos para evento:', evento.id);
-        const resumo = await dataService.getResumoCustosPorEvento(evento.id);
+        const resumo = await dataService.getResumoCustosPorEvento(userId, evento.id);
         setResumoCustos(resumo);
         console.log('CustosEvento - Resumo do Firestore:', resumo);
       } catch (error) {
@@ -54,10 +61,10 @@ export default function CustosEvento({
       }
     };
 
-    if (evento.id) {
+    if (evento.id && userId) {
       carregarResumoCustos();
     }
-  }, [evento.id, custos]);
+  }, [evento.id, custos, userId]);
 
   const getTipoCustoColor = (nome: string) => {
     // Gera uma cor baseada no nome do tipo de custo
@@ -91,15 +98,20 @@ export default function CustosEvento({
   };
 
   const handleSalvarCusto = async (custoData: CustoEvento) => {
+    if (!userId) {
+      console.error('CustosEvento: userId não disponível para salvar custo');
+      return;
+    }
+    
     try {
       if (custoEditando) {
-        await dataService.updateCustoEvento(evento.id, custoEditando.id, custoData);
+        await dataService.updateCustoEvento(userId, evento.id, custoEditando.id, custoData);
       } else {
-        await dataService.createCustoEvento(evento.id, custoData);
+        await dataService.createCustoEvento(userId, evento.id, custoData);
       }
       
       // Recarregar resumo de custos
-      const resumo = await dataService.getResumoCustosPorEvento(evento.id);
+      const resumo = await dataService.getResumoCustosPorEvento(userId, evento.id);
       setResumoCustos(resumo);
       
       onCustosChange();
@@ -111,12 +123,17 @@ export default function CustosEvento({
   };
 
   const handleConfirmarExclusao = async () => {
+    if (!userId) {
+      console.error('CustosEvento: userId não disponível para excluir custo');
+      return;
+    }
+    
     if (custoParaExcluir) {
       try {
-        await dataService.deleteCustoEvento(evento.id, custoParaExcluir.id);
+        await dataService.deleteCustoEvento(userId, evento.id, custoParaExcluir.id);
         
         // Recarregar resumo de custos
-        const resumo = await dataService.getResumoCustosPorEvento(evento.id);
+        const resumo = await dataService.getResumoCustosPorEvento(userId, evento.id);
         setResumoCustos(resumo);
         
         onCustosChange();

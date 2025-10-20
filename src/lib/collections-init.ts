@@ -60,15 +60,20 @@ export async function isCollectionEmpty(collectionName: string): Promise<boolean
 }
 
 // Função para inicializar tipos de custo se não existirem
-export async function initializeTiposCusto(): Promise<void> {
+export async function initializeTiposCusto(userId?: string): Promise<void> {
+  if (!userId) {
+    console.log('initializeTiposCusto: userId não fornecido, pulando inicialização');
+    return;
+  }
+  
   try {
     const { repositoryFactory } = await import('./repositories/repository-factory');
     const tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
     
-    // Verificar se já existem tipos de custo
-    const existingTipos = await tipoCustoRepo.findAll();
+    // Verificar se já existem tipos de custo para este usuário
+    const existingTipos = await tipoCustoRepo.findAll(userId);
     if (existingTipos.length > 0) {
-      console.log('Tipos de custo já existem no Firestore');
+      console.log('Tipos de custo já existem no Firestore para o usuário');
       return;
     }
     
@@ -114,7 +119,7 @@ export async function initializeTiposCusto(): Promise<void> {
     
     console.log('Inserindo tipos de custo no Firestore...');
     for (const tipoCusto of tiposCustoData) {
-      await tipoCustoRepo.create(tipoCusto);
+      await tipoCustoRepo.create(tipoCusto, userId);
     }
     
     console.log('Tipos de custo inicializados com sucesso!');
@@ -128,8 +133,7 @@ export async function initializeCollectionsWithTestData(): Promise<void> {
   try {
     await initializeAllCollections();
     
-    // Inicializar tipos de custo primeiro
-    await initializeTiposCusto();
+    // Tipos de custo serão inicializados quando necessário com userId
     
     // Criar dados de teste para collections vazias
     const testData = {

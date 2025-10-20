@@ -19,6 +19,7 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { useEventos } from '@/hooks/useData';
+import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -86,7 +87,14 @@ export default function EventosPage() {
   const confirmDelete = async () => {
     if (eventoParaExcluir) {
       try {
-        await dataService.deleteEvento(eventoParaExcluir.id);
+        // Buscar userId do usuário atual
+        const { userId } = useCurrentUser();
+        if (!userId) {
+          console.error('Usuário não autenticado');
+          return;
+        }
+        
+        await dataService.deleteEvento(eventoParaExcluir.id, userId);
         await refetch(); // Recarrega os dados
         setEventoParaExcluir(null);
       } catch (error) {

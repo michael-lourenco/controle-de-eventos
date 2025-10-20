@@ -310,7 +310,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       };
 
       if (evento) {
-        const eventoAtualizado = await dataService.updateEvento(evento.id, eventoData);
+        const eventoAtualizado = await dataService.updateEvento(evento.id, eventoData, userId);
         onSave(eventoAtualizado);
       } else {
         console.log('EventoForm: Criando novo evento com dados:', eventoData);

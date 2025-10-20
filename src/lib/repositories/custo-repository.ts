@@ -12,6 +12,9 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
 
   // Métodos específicos para subcollections de custos por evento
   private getCustosCollection(userId: string, eventoId: string) {
+    if (!userId || !eventoId) {
+      throw new Error('userId e eventoId são obrigatórios para acessar custos');
+    }
     return collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.CUSTOS);
   }
 

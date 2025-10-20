@@ -56,32 +56,39 @@ export default function DashboardPage() {
       bgColor: 'bg-blue-100'
     },
     {
-      name: 'Receita do Mês',
-      value: `R$ ${dashboardData.receitaMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      name: 'Receita Total',
+      value: `R$ ${dashboardData.resumoFinanceiro.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: CurrencyDollarIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
     {
       name: 'Valor Pendente',
-      value: `R$ ${dashboardData.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${dashboardData.resumoFinanceiro.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ClockIcon,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100'
     },
     {
       name: 'Valor Atrasado',
-      value: `R$ ${dashboardData.valorAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: `R$ ${dashboardData.resumoFinanceiro.valorAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ExclamationTriangleIcon,
       color: 'text-red-600',
       bgColor: 'bg-red-100'
     },
     {
-      name: 'Eventos do Mês',
-      value: dashboardData.eventosMes,
-      icon: ExclamationTriangleIcon,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
+      name: 'Total de Eventos',
+      value: dashboardData.resumoFinanceiro.totalEventos,
+      icon: CalendarIcon,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100'
+    },
+    {
+      name: 'Eventos Concluídos',
+      value: dashboardData.resumoFinanceiro.eventosConcluidos,
+      icon: CalendarIcon,
+      color: 'text-green-600',
+      bgColor: 'bg-green-100'
     }
   ];
 
@@ -97,7 +104,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {stats.map((stat) => (
             <Card key={stat.name}>
               <CardContent className="p-6">

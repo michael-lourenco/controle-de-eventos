@@ -8,6 +8,7 @@ import {
   Pagamento
 } from '@/types';
 import { dataService } from '@/lib/data-service';
+import { useCurrentUser } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -33,6 +34,7 @@ export default function PagamentoHistorico({
   onPagamentosChange,
   evento 
 }: PagamentoHistoricoProps) {
+  const { userId } = useCurrentUser();
   const [showForm, setShowForm] = useState(false);
   const [pagamentoEditando, setPagamentoEditando] = useState<Pagamento | null>(null);
   const [pagamentoParaExcluir, setPagamentoParaExcluir] = useState<Pagamento | null>(null);
@@ -49,13 +51,18 @@ export default function PagamentoHistorico({
   // Carregar resumo financeiro do Firestore
   useEffect(() => {
     const carregarResumoFinanceiro = async () => {
+      if (!userId) {
+        console.log('PagamentoHistorico: userId não disponível ainda');
+        return;
+      }
+      
       try {
         console.log('PagamentoHistorico: Carregando resumo financeiro para evento:', eventoId);
         const valorTotal = evento?.valorTotal || 0;
         const dataFinalPagamento = evento?.diaFinalPagamento ? 
           (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
           undefined;
-        const resumo = await dataService.getResumoFinanceiroPorEvento(eventoId, valorTotal, dataFinalPagamento);
+        const resumo = await dataService.getResumoFinanceiroPorEvento(userId, eventoId, valorTotal, dataFinalPagamento);
         
         console.log('PagamentoHistorico - Resumo do Firestore:', resumo);
         console.log('PagamentoHistorico - Valor total do evento:', valorTotal);
@@ -75,10 +82,10 @@ export default function PagamentoHistorico({
       }
     };
 
-    if (eventoId) {
+    if (eventoId && userId) {
       carregarResumoFinanceiro();
     }
-  }, [eventoId, evento?.valorTotal, evento?.diaFinalPagamento]);
+  }, [eventoId, evento?.valorTotal, evento?.diaFinalPagamento, userId]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,15 +120,20 @@ export default function PagamentoHistorico({
   };
 
   const handleSalvarPagamento = async (pagamentoData: Pagamento) => {
+    if (!userId) {
+      console.error('PagamentoHistorico: userId não disponível para salvar pagamento');
+      return;
+    }
+    
     try {
       console.log('PagamentoHistorico: Salvando pagamento:', pagamentoData);
       
       if (pagamentoEditando) {
         console.log('PagamentoHistorico: Atualizando pagamento existente');
-        await dataService.updatePagamento(eventoId, pagamentoEditando.id, pagamentoData);
+        await dataService.updatePagamento(userId, eventoId, pagamentoEditando.id, pagamentoData);
       } else {
         console.log('PagamentoHistorico: Criando novo pagamento');
-        const resultado = await dataService.createPagamento(eventoId, pagamentoData);
+        const resultado = await dataService.createPagamento(userId, eventoId, pagamentoData);
         console.log('PagamentoHistorico: Pagamento criado:', resultado);
       }
       
@@ -152,16 +164,21 @@ export default function PagamentoHistorico({
   };
 
   const handleConfirmarExclusao = async () => {
+    if (!userId) {
+      console.error('PagamentoHistorico: userId não disponível para excluir pagamento');
+      return;
+    }
+    
     if (pagamentoParaExcluir) {
       try {
-        await dataService.deletePagamento(eventoId, pagamentoParaExcluir.id);
+        await dataService.deletePagamento(userId, eventoId, pagamentoParaExcluir.id);
         
         // Recarregar resumo financeiro após excluir
         const valorTotal = evento?.valorTotal || 0;
         const dataFinalPagamento = evento?.diaFinalPagamento ? 
           (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
           undefined;
-        const resumo = await dataService.getResumoFinanceiroPorEvento(eventoId, valorTotal, dataFinalPagamento);
+        const resumo = await dataService.getResumoFinanceiroPorEvento(userId!, eventoId, valorTotal, dataFinalPagamento);
         
         setResumoFinanceiro({
           valorTotal: valorTotal,
