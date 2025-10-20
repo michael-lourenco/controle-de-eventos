@@ -18,10 +18,16 @@ export function useClientes(): UseDataResult<Cliente[]> {
   const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getClientes(userId || undefined);
+      const result = await dataService.getClientes(userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar clientes');
@@ -72,10 +78,16 @@ export function useEventos(): UseDataResult<Evento[]> {
   const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getEventos(userId || undefined);
+      const result = await dataService.getEventos(userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar eventos');
@@ -229,10 +241,16 @@ export function useTiposCusto(): UseDataResult<TipoCusto[]> {
   const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getTiposCusto(userId || undefined);
+      const result = await dataService.getTiposCusto(userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar tipos de custo');
@@ -281,19 +299,26 @@ export function useDashboardData(): UseDataResult<DashboardData> {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getDashboardData();
+      const result = await dataService.getDashboardData(userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados do dashboard');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchData();

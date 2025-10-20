@@ -29,16 +29,32 @@ export class DataService {
   }
 
   // Métodos para Clientes
-  async getClientes(): Promise<Cliente[]> {
-    return this.clienteRepo.findAll();
+  async getClientes(userId: string): Promise<Cliente[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar clientes');
+    }
+    return this.clienteRepo.findByUserId(userId);
   }
 
   async getClienteById(id: string): Promise<Cliente | null> {
     return this.clienteRepo.findById(id);
   }
 
-  async createCliente(cliente: Omit<Cliente, 'id'>): Promise<Cliente> {
-    return this.clienteRepo.create(cliente);
+  async createCliente(
+    cliente: Omit<Cliente, 'id' | 'userId' | 'dataCadastro'>,
+    userId: string
+  ): Promise<Cliente> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para criar cliente');
+    }
+    const clienteWithMeta = {
+      ...cliente,
+      dataCadastro: new Date()
+    } as Omit<Cliente, 'id'>;
+    return this.clienteRepo.create({
+      ...clienteWithMeta,
+      userId
+    } as Omit<Cliente, 'id'>);
   }
 
   async updateCliente(id: string, cliente: Partial<Cliente>): Promise<Cliente> {
@@ -54,18 +70,35 @@ export class DataService {
   }
 
   // Métodos para Eventos
-  async getEventos(): Promise<Evento[]> {
-    return this.eventoRepo.findAll();
+  async getEventos(userId: string): Promise<Evento[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar eventos');
+    }
+    return this.eventoRepo.findByUserId(userId);
   }
 
   async getEventoById(id: string): Promise<Evento | null> {
     return this.eventoRepo.findById(id);
   }
 
-  async createEvento(evento: Omit<Evento, 'id'>): Promise<Evento> {
+  async createEvento(
+    evento: Omit<Evento, 'id' | 'userId' | 'dataCadastro' | 'dataAtualizacao'>,
+    userId: string
+  ): Promise<Evento> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para criar evento');
+    }
     console.log('DataService: Criando evento:', evento);
     try {
-      const resultado = await this.eventoRepo.create(evento);
+      const eventoWithMeta = {
+        ...evento,
+        dataCadastro: new Date(),
+        dataAtualizacao: new Date()
+      } as Omit<Evento, 'id'>;
+      const resultado = await this.eventoRepo.create({
+        ...eventoWithMeta,
+        userId
+      } as Omit<Evento, 'id'>);
       console.log('DataService: Evento criado com sucesso:', resultado);
       return resultado;
     } catch (error) {
@@ -162,11 +195,20 @@ export class DataService {
   }
 
   // Métodos para Tipos de Custo
-  async getTiposCusto(): Promise<TipoCusto[]> {
+  async getTiposCusto(userId: string): Promise<TipoCusto[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar tipos de custo');
+    }
     try {
       // Garantir que os tipos de custo estejam inicializados
       await initializeTiposCusto();
-      return this.tipoCustoRepo.findAll();
+      
+      // Buscar tipos do usuário + tipos do sistema
+      const [tiposUsuario, tiposSistema] = await Promise.all([
+        this.tipoCustoRepo.findByUserId(userId),
+        this.tipoCustoRepo.findByUserId('system')
+      ]);
+      return [...tiposUsuario, ...tiposSistema];
     } catch (error) {
       console.error('Erro ao carregar tipos de custo:', error);
       return [];
@@ -177,8 +219,15 @@ export class DataService {
     return this.tipoCustoRepo.findById(id);
   }
 
-  async createTipoCusto(tipoCusto: Omit<TipoCusto, 'id'>): Promise<TipoCusto> {
-    return this.tipoCustoRepo.create(tipoCusto);
+  async createTipoCusto(tipoCusto: Omit<TipoCusto, 'id' | 'userId' | 'dataCadastro'>, userId: string): Promise<TipoCusto> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para criar tipo de custo');
+    }
+    return this.tipoCustoRepo.create({
+      ...tipoCusto,
+      userId,
+      dataCadastro: new Date()
+    } as Omit<TipoCusto, 'id'>);
   }
 
   async updateTipoCusto(id: string, tipoCusto: Partial<TipoCusto>): Promise<TipoCusto> {
@@ -227,7 +276,10 @@ export class DataService {
   }
 
   // Métodos para Dashboard
-  async getDashboardData(): Promise<DashboardData> {
+  async getDashboardData(userId: string): Promise<DashboardData> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar dados do dashboard');
+    }
     try {
       // Garantir que as collections estejam inicializadas
       await this.ensureCollectionsInitialized();
@@ -243,9 +295,9 @@ export class DataService {
         pagamentos,
         todosEventos
       ] = await Promise.all([
-        this.getEventos().catch(() => []),
+        this.getEventos(userId).catch(() => []),
         this.getPagamentos().catch(() => []),
-        this.getEventos().catch(() => [])
+        this.getEventos(userId).catch(() => [])
       ]);
 
       // Calcular eventos de hoje

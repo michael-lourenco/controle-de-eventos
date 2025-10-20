@@ -14,6 +14,7 @@ import {
 } from '@/types';
 import { useClientes } from '@/hooks/useData';
 import { dataService } from '@/lib/data-service';
+import { useCurrentUser } from '@/hooks/useAuth';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -77,6 +78,7 @@ const diasSemana = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA',
 
 export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps) {
   const { data: clientes, loading: loadingClientes } = useClientes();
+  const { userId, isLoading } = useCurrentUser();
   
   const [formData, setFormData] = useState<FormData>({
     clienteId: '',
@@ -246,6 +248,16 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     e.preventDefault();
     console.log('EventoForm: handleSubmit chamado');
     
+    if (isLoading) {
+      console.log('EventoForm: sessão ainda carregando');
+      return;
+    }
+    if (!userId) {
+      console.error('EventoForm: usuário não autenticado, abortando criação');
+      setErrors({ general: 'Usuário não autenticado' });
+      return;
+    }
+
     if (!validateForm()) {
       console.log('EventoForm: Validação falhou');
       return;
@@ -257,7 +269,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       let cliente: Cliente;
       
       if (isNovoCliente) {
-        cliente = await dataService.createCliente(formData.novoCliente);
+        cliente = await dataService.createCliente(formData.novoCliente, userId);
       } else {
         const clienteExistente = clientes?.find(c => c.id === formData.clienteId);
         if (!clienteExistente) {
@@ -302,7 +314,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         onSave(eventoAtualizado);
       } else {
         console.log('EventoForm: Criando novo evento com dados:', eventoData);
-        const novoEvento = await dataService.createEvento(eventoData);
+        const novoEvento = await dataService.createEvento(eventoData, userId);
         console.log('EventoForm: Evento criado:', novoEvento);
         onSave(novoEvento);
       }
