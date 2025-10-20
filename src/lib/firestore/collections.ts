@@ -1,29 +1,25 @@
 // Definição das collections do Firestore com prefixo controle_
 
 export const COLLECTIONS = {
-  // Usuários do sistema (NextAuth)
+  // Usuários do sistema (NextAuth) - Collection principal
   USERS: 'controle_users',
   
-  // Entidades principais
-  CLIENTES: 'controle_clientes',
-  EVENTOS: 'controle_eventos',
-  PAGAMENTOS: 'controle_pagamentos',
+  // Subcollections de controle_users
+  CLIENTES: 'clientes',
+  EVENTOS: 'eventos',
+  TIPO_CUSTOS: 'tipo_custos',
   
-  // Custos e tipos
-  TIPO_CUSTOS: 'controle_tipo_custos',
-  CUSTOS: 'controle_custos',
+  // Subcollections de eventos
+  PAGAMENTOS: 'pagamentos',
+  CUSTOS: 'custos',
+  
+  // Collections globais (mantidas)
   HISTORICO_PAGAMENTOS: 'controle_historico_pagamentos',
-  
-  // Serviços e contratos
   SERVICOS: 'controle_servicos',
   PACOTES_SERVICOS: 'controle_pacotes_servicos',
   CONTRATOS_SERVICOS: 'controle_contratos_servicos',
-  
-  // Profissionais e recursos
   PROMOTERS: 'controle_promoters',
   INSUMOS: 'controle_insumos',
-  
-  // Anexos e documentos
   ANEXOS_EVENTOS: 'controle_anexos_eventos',
 } as const;
 
@@ -49,6 +45,7 @@ export const COLLECTION_SCHEMAS = {
     instagram: 'string?',
     comoConheceu: 'string?',
     dataCadastro: 'timestamp'
+    // userId removido - agora é parte do path da subcollection
   },
   
   [COLLECTIONS.EVENTOS]: {
@@ -76,11 +73,11 @@ export const COLLECTION_SCHEMAS = {
     diaFinalPagamento: 'timestamp',
     dataCadastro: 'timestamp',
     dataAtualizacao: 'timestamp'
+    // userId removido - agora é parte do path da subcollection
   },
   
   [COLLECTIONS.PAGAMENTOS]: {
     id: 'string',
-    eventoId: 'string',
     valor: 'number',
     dataPagamento: 'timestamp',
     formaPagamento: 'string',
@@ -89,6 +86,7 @@ export const COLLECTION_SCHEMAS = {
     comprovante: 'string?',
     dataCadastro: 'timestamp',
     dataAtualizacao: 'timestamp'
+    // eventoId removido - agora é parte do path da subcollection
   },
   
   [COLLECTIONS.TIPO_CUSTOS]: {
@@ -97,16 +95,17 @@ export const COLLECTION_SCHEMAS = {
     descricao: 'string',
     ativo: 'boolean',
     dataCadastro: 'timestamp'
+    // userId removido - agora é parte do path da subcollection
   },
   
   [COLLECTIONS.CUSTOS]: {
     id: 'string',
-    eventoId: 'string',
     tipoCustoId: 'string',
     valor: 'number',
     quantidade: 'number?',
     observacoes: 'string?',
     dataCadastro: 'timestamp'
+    // eventoId removido - agora é parte do path da subcollection
   },
   
   [COLLECTIONS.ANEXOS_EVENTOS]: {

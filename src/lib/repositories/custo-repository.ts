@@ -1,20 +1,22 @@
 import { FirestoreRepository } from './firestore-repository';
+import { SubcollectionRepository } from './subcollection-repository';
 import { CustoEvento, TipoCusto } from '@/types';
 import { where, orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { COLLECTIONS } from '../firestore/collections';
 
-export class CustoEventoRepository extends FirestoreRepository<CustoEvento> {
+export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> {
   constructor() {
-    super('controle_custos'); // Mantido para compatibilidade, mas não será usado
+    super(COLLECTIONS.EVENTOS, COLLECTIONS.CUSTOS);
   }
 
   // Métodos específicos para subcollections de custos por evento
-  private getCustosCollection(eventoId: string) {
-    return collection(db, 'controle_eventos', eventoId, 'controle_custos');
+  private getCustosCollection(userId: string, eventoId: string) {
+    return collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.CUSTOS);
   }
 
-  async createCustoEvento(eventoId: string, custo: Omit<CustoEvento, 'id'>): Promise<CustoEvento> {
-    const custosCollection = this.getCustosCollection(eventoId);
+  async createCustoEvento(userId: string, eventoId: string, custo: Omit<CustoEvento, 'id'>): Promise<CustoEvento> {
+    const custosCollection = this.getCustosCollection(userId, eventoId);
     
     // Remover campos undefined antes de enviar para o Firestore
     const cleanData = { ...custo };
@@ -36,8 +38,8 @@ export class CustoEventoRepository extends FirestoreRepository<CustoEvento> {
     } as CustoEvento;
   }
 
-  async updateCustoEvento(eventoId: string, custoId: string, custo: Partial<CustoEvento>): Promise<CustoEvento> {
-    const custoRef = doc(db, 'controle_eventos', eventoId, 'controle_custos', custoId);
+  async updateCustoEvento(userId: string, eventoId: string, custoId: string, custo: Partial<CustoEvento>): Promise<CustoEvento> {
+    const custoRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.CUSTOS, custoId);
     
     // Remover campos undefined antes de enviar para o Firestore
     const cleanData = { ...custo };
@@ -52,13 +54,13 @@ export class CustoEventoRepository extends FirestoreRepository<CustoEvento> {
     return { id: custoId, ...custo } as CustoEvento;
   }
 
-  async deleteCustoEvento(eventoId: string, custoId: string): Promise<void> {
-    const custoRef = doc(db, 'controle_eventos', eventoId, 'controle_custos', custoId);
+  async deleteCustoEvento(userId: string, eventoId: string, custoId: string): Promise<void> {
+    const custoRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.CUSTOS, custoId);
     await deleteDoc(custoRef);
   }
 
-  async findByEventoId(eventoId: string): Promise<CustoEvento[]> {
-    const custosCollection = this.getCustosCollection(eventoId);
+  async findByEventoId(userId: string, eventoId: string): Promise<CustoEvento[]> {
+    const custosCollection = this.getCustosCollection(userId, eventoId);
     const q = query(custosCollection, orderBy('dataCadastro', 'desc'));
     const querySnapshot = await getDocs(q);
     
@@ -81,22 +83,22 @@ export class CustoEventoRepository extends FirestoreRepository<CustoEvento> {
     }) as CustoEvento[];
   }
 
-  async findByTipoCustoId(tipoCustoId: string): Promise<CustoEvento[]> {
-    return this.findWhere('tipoCustoId', '==', tipoCustoId);
+  async findByTipoCustoId(userId: string, eventoId: string, tipoCustoId: string): Promise<CustoEvento[]> {
+    return this.findWhere('tipoCustoId', '==', tipoCustoId, eventoId);
   }
 
-  async getTotalCustosPorEvento(eventoId: string): Promise<number> {
-    const custos = await this.findByEventoId(eventoId);
+  async getTotalCustosPorEvento(userId: string, eventoId: string): Promise<number> {
+    const custos = await this.findByEventoId(userId, eventoId);
     return custos.reduce((total, custo) => total + custo.valor, 0);
   }
 
-  async getResumoCustosPorEvento(eventoId: string): Promise<{
+  async getResumoCustosPorEvento(userId: string, eventoId: string): Promise<{
     custos: CustoEvento[];
     total: number;
     porCategoria: Record<string, number>;
     quantidadeItens: number;
   }> {
-    const custos = await this.findByEventoId(eventoId);
+    const custos = await this.findByEventoId(userId, eventoId);
     const total = custos.reduce((sum, custo) => sum + custo.valor, 0);
     
     const porCategoria: Record<string, number> = {};
@@ -114,38 +116,49 @@ export class CustoEventoRepository extends FirestoreRepository<CustoEvento> {
   }
 }
 
-export class TipoCustoRepository extends FirestoreRepository<TipoCusto> {
+export class TipoCustoRepository extends SubcollectionRepository<TipoCusto> {
   constructor() {
-    super('controle_tipo_custos');
+    super(COLLECTIONS.USERS, COLLECTIONS.TIPO_CUSTOS);
   }
 
-  async findByUserId(userId: string): Promise<TipoCusto[]> {
-    return this.findWhere('userId', '==', userId);
-  }
-
-  async findByNome(nome: string): Promise<TipoCusto | null> {
-    const tipos = await this.findWhere('nome', '==', nome);
+  // Métodos específicos para tipos de custo (agora sem userId pois é parte do path)
+  async findByNome(nome: string, userId: string): Promise<TipoCusto | null> {
+    const tipos = await this.findWhere('nome', '==', nome, userId);
     return tipos.length > 0 ? tipos[0] : null;
   }
 
-  async findByUserIdAndNome(userId: string, nome: string): Promise<TipoCusto | null> {
-    const tipos = await this.query([
-      where('userId', '==', userId),
-      where('nome', '==', nome)
-    ]);
-    return tipos.length > 0 ? tipos[0] : null;
+  async getAtivos(userId: string): Promise<TipoCusto[]> {
+    return this.findWhere('ativo', '==', true, userId);
   }
 
-  async getAtivos(): Promise<TipoCusto[]> {
-    return this.findWhere('ativo', '==', true);
-  }
-
-  async searchByName(name: string): Promise<TipoCusto[]> {
+  async searchByName(name: string, userId: string): Promise<TipoCusto[]> {
     // Busca simples - em produção seria melhor usar Algolia
-    const allTipos = await this.findAll();
+    const allTipos = await this.findAll(userId);
     return allTipos.filter(tipo => 
       tipo.nome.toLowerCase().includes(name.toLowerCase()) ||
       tipo.descricao.toLowerCase().includes(name.toLowerCase())
     );
+  }
+
+  // Métodos de conveniência que mantêm a interface original
+  async createTipoCusto(tipoCusto: Omit<TipoCusto, 'id' | 'dataCadastro'>, userId: string): Promise<TipoCusto> {
+    const tipoWithMeta = {
+      ...tipoCusto,
+      dataCadastro: new Date()
+    } as Omit<TipoCusto, 'id'>;
+    
+    return this.create(tipoWithMeta, userId);
+  }
+
+  async updateTipoCusto(id: string, tipoCusto: Partial<TipoCusto>, userId: string): Promise<TipoCusto> {
+    return this.update(id, tipoCusto, userId);
+  }
+
+  async deleteTipoCusto(id: string, userId: string): Promise<void> {
+    return this.delete(id, userId);
+  }
+
+  async getTipoCustoById(id: string, userId: string): Promise<TipoCusto | null> {
+    return this.findById(id, userId);
   }
 }

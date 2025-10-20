@@ -1,49 +1,60 @@
-import { FirestoreRepository } from './firestore-repository';
+import { SubcollectionRepository } from './subcollection-repository';
 import { Cliente } from '@/types';
 import { where, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { COLLECTIONS } from '../firestore/collections';
 
-export class ClienteRepository extends FirestoreRepository<Cliente> {
+export class ClienteRepository extends SubcollectionRepository<Cliente> {
   constructor() {
-    super('controle_clientes');
+    super(COLLECTIONS.USERS, COLLECTIONS.CLIENTES);
   }
 
-  async findByUserId(userId: string): Promise<Cliente[]> {
-    return this.findWhere('userId', '==', userId);
-  }
-
-  async findByEmail(email: string): Promise<Cliente | null> {
-    const clientes = await this.findWhere('email', '==', email);
+  // Métodos específicos para clientes (agora sem userId pois é parte do path)
+  async findByEmail(email: string, userId: string): Promise<Cliente | null> {
+    const clientes = await this.findWhere('email', '==', email, userId);
     return clientes.length > 0 ? clientes[0] : null;
   }
 
-  async findByUserIdAndEmail(userId: string, email: string): Promise<Cliente | null> {
-    const clientes = await this.query([
-      where('userId', '==', userId),
-      where('email', '==', email)
-    ]);
+  async findByCpf(cpf: string, userId: string): Promise<Cliente | null> {
+    const clientes = await this.findWhere('cpf', '==', cpf, userId);
     return clientes.length > 0 ? clientes[0] : null;
   }
 
-  async findByCpf(cpf: string): Promise<Cliente | null> {
-    const clientes = await this.findWhere('cpf', '==', cpf);
-    return clientes.length > 0 ? clientes[0] : null;
-  }
-
-  async searchByName(name: string): Promise<Cliente[]> {
+  async searchByName(name: string, userId: string): Promise<Cliente[]> {
     // Firestore não suporta busca por substring nativamente
     // Para uma busca mais eficiente, seria necessário usar Algolia ou similar
     // Por enquanto, vamos buscar todos e filtrar no cliente
-    const allClientes = await this.findAll();
+    const allClientes = await this.findAll(userId);
     return allClientes.filter(cliente => 
       cliente.nome.toLowerCase().includes(name.toLowerCase())
     );
   }
 
-  async getRecentClientes(limit: number = 10): Promise<Cliente[]> {
-    const q = this.query([
+  async getRecentClientes(userId: string, limit: number = 10): Promise<Cliente[]> {
+    return this.query([
       orderBy('dataCadastro', 'desc'),
       firestoreLimit(limit)
-    ]);
-    return q;
+    ], userId);
+  }
+
+  // Métodos de conveniência que mantêm a interface original
+  async createCliente(cliente: Omit<Cliente, 'id' | 'dataCadastro'>, userId: string): Promise<Cliente> {
+    const clienteWithMeta = {
+      ...cliente,
+      dataCadastro: new Date()
+    } as Omit<Cliente, 'id'>;
+    
+    return this.create(clienteWithMeta, userId);
+  }
+
+  async updateCliente(id: string, cliente: Partial<Cliente>, userId: string): Promise<Cliente> {
+    return this.update(id, cliente, userId);
+  }
+
+  async deleteCliente(id: string, userId: string): Promise<void> {
+    return this.delete(id, userId);
+  }
+
+  async getClienteById(id: string, userId: string): Promise<Cliente | null> {
+    return this.findById(id, userId);
   }
 }

@@ -33,40 +33,33 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar clientes');
     }
-    return this.clienteRepo.findByUserId(userId);
+    return this.clienteRepo.findAll(userId);
   }
 
-  async getClienteById(id: string): Promise<Cliente | null> {
-    return this.clienteRepo.findById(id);
+  async getClienteById(id: string, userId: string): Promise<Cliente | null> {
+    return this.clienteRepo.getClienteById(id, userId);
   }
 
   async createCliente(
-    cliente: Omit<Cliente, 'id' | 'userId' | 'dataCadastro'>,
+    cliente: Omit<Cliente, 'id' | 'dataCadastro'>,
     userId: string
   ): Promise<Cliente> {
     if (!userId) {
       throw new Error('userId é obrigatório para criar cliente');
     }
-    const clienteWithMeta = {
-      ...cliente,
-      dataCadastro: new Date()
-    } as Omit<Cliente, 'id'>;
-    return this.clienteRepo.create({
-      ...clienteWithMeta,
-      userId
-    } as Omit<Cliente, 'id'>);
+    return this.clienteRepo.createCliente(cliente, userId);
   }
 
-  async updateCliente(id: string, cliente: Partial<Cliente>): Promise<Cliente> {
-    return this.clienteRepo.update(id, cliente);
+  async updateCliente(id: string, cliente: Partial<Cliente>, userId: string): Promise<Cliente> {
+    return this.clienteRepo.updateCliente(id, cliente, userId);
   }
 
-  async deleteCliente(id: string): Promise<void> {
-    return this.clienteRepo.delete(id);
+  async deleteCliente(id: string, userId: string): Promise<void> {
+    return this.clienteRepo.deleteCliente(id, userId);
   }
 
-  async searchClientesByName(name: string): Promise<Cliente[]> {
-    return this.clienteRepo.searchByName(name);
+  async searchClientesByName(name: string, userId: string): Promise<Cliente[]> {
+    return this.clienteRepo.searchByName(name, userId);
   }
 
   // Métodos para Eventos
@@ -74,15 +67,15 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar eventos');
     }
-    return this.eventoRepo.findByUserId(userId);
+    return this.eventoRepo.findAll(userId);
   }
 
-  async getEventoById(id: string): Promise<Evento | null> {
-    return this.eventoRepo.findById(id);
+  async getEventoById(id: string, userId: string): Promise<Evento | null> {
+    return this.eventoRepo.getEventoById(id, userId);
   }
 
   async createEvento(
-    evento: Omit<Evento, 'id' | 'userId' | 'dataCadastro' | 'dataAtualizacao'>,
+    evento: Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'>,
     userId: string
   ): Promise<Evento> {
     if (!userId) {
@@ -90,15 +83,7 @@ export class DataService {
     }
     console.log('DataService: Criando evento:', evento);
     try {
-      const eventoWithMeta = {
-        ...evento,
-        dataCadastro: new Date(),
-        dataAtualizacao: new Date()
-      } as Omit<Evento, 'id'>;
-      const resultado = await this.eventoRepo.create({
-        ...eventoWithMeta,
-        userId
-      } as Omit<Evento, 'id'>);
+      const resultado = await this.eventoRepo.createEvento(evento, userId);
       console.log('DataService: Evento criado com sucesso:', resultado);
       return resultado;
     } catch (error) {
@@ -107,91 +92,91 @@ export class DataService {
     }
   }
 
-  async updateEvento(id: string, evento: Partial<Evento>): Promise<Evento> {
-    return this.eventoRepo.update(id, evento);
+  async updateEvento(id: string, evento: Partial<Evento>, userId: string): Promise<Evento> {
+    return this.eventoRepo.updateEvento(id, evento, userId);
   }
 
-  async deleteEvento(id: string): Promise<void> {
-    return this.eventoRepo.delete(id);
+  async deleteEvento(id: string, userId: string): Promise<void> {
+    return this.eventoRepo.deleteEvento(id, userId);
   }
 
-  async getEventosHoje(): Promise<Evento[]> {
-    return this.eventoRepo.getEventosHoje();
+  async getEventosHoje(userId: string): Promise<Evento[]> {
+    return this.eventoRepo.getEventosHoje(userId);
   }
 
-  async getProximosEventos(limit?: number): Promise<Evento[]> {
-    return this.eventoRepo.getProximosEventos(limit);
+  async getProximosEventos(userId: string, limit?: number): Promise<Evento[]> {
+    return this.eventoRepo.getProximosEventos(userId, limit);
   }
 
-  async getEventosPorMes(mes: number, ano: number): Promise<Evento[]> {
-    return this.eventoRepo.getEventosPorMes(mes, ano);
+  async getEventosPorMes(mes: number, ano: number, userId: string): Promise<Evento[]> {
+    return this.eventoRepo.getEventosPorMes(mes, ano, userId);
   }
 
-  async getEventosPorStatus(status: string): Promise<Evento[]> {
-    return this.eventoRepo.findByStatus(status);
+  async getEventosPorStatus(status: string, userId: string): Promise<Evento[]> {
+    return this.eventoRepo.findByStatus(status, userId);
   }
 
-  async getEventosPorTipo(tipoEvento: string): Promise<Evento[]> {
-    return this.eventoRepo.findByTipoEvento(tipoEvento);
+  async getEventosPorTipo(tipoEvento: string, userId: string): Promise<Evento[]> {
+    return this.eventoRepo.findByTipoEvento(tipoEvento, userId);
   }
 
-  async searchEventosByLocal(local: string): Promise<Evento[]> {
-    return this.eventoRepo.searchByLocal(local);
+  async searchEventosByLocal(local: string, userId: string): Promise<Evento[]> {
+    return this.eventoRepo.searchByLocal(local, userId);
   }
 
-  async getEventosPorPeriodo(inicio: Date, fim: Date): Promise<Evento[]> {
-    return this.eventoRepo.getEventosPorPeriodo(inicio, fim);
+  async getEventosPorPeriodo(inicio: Date, fim: Date, userId: string): Promise<Evento[]> {
+    return this.eventoRepo.getEventosPorPeriodo(inicio, fim, userId);
   }
 
   // Métodos para Pagamentos
-  async getPagamentos(): Promise<Pagamento[]> {
-    return this.pagamentoRepo.findAll();
+  async getPagamentos(userId: string, eventoId: string): Promise<Pagamento[]> {
+    return this.pagamentoRepo.findByEventoId(userId, eventoId);
   }
 
-  async getPagamentoById(id: string): Promise<Pagamento | null> {
-    return this.pagamentoRepo.findById(id);
+  async getPagamentoById(userId: string, eventoId: string, pagamentoId: string): Promise<Pagamento | null> {
+    return this.pagamentoRepo.findById(pagamentoId, eventoId);
   }
 
-  async createPagamento(eventoId: string, pagamento: Omit<Pagamento, 'id'>): Promise<Pagamento> {
-    return this.pagamentoRepo.createPagamento(eventoId, pagamento);
+  async createPagamento(userId: string, eventoId: string, pagamento: Omit<Pagamento, 'id'>): Promise<Pagamento> {
+    return this.pagamentoRepo.createPagamento(userId, eventoId, pagamento);
   }
 
-  async updatePagamento(eventoId: string, pagamentoId: string, pagamento: Partial<Pagamento>): Promise<Pagamento> {
-    return this.pagamentoRepo.updatePagamento(eventoId, pagamentoId, pagamento);
+  async updatePagamento(userId: string, eventoId: string, pagamentoId: string, pagamento: Partial<Pagamento>): Promise<Pagamento> {
+    return this.pagamentoRepo.updatePagamento(userId, eventoId, pagamentoId, pagamento);
   }
 
-  async deletePagamento(eventoId: string, pagamentoId: string): Promise<void> {
-    return this.pagamentoRepo.deletePagamento(eventoId, pagamentoId);
+  async deletePagamento(userId: string, eventoId: string, pagamentoId: string): Promise<void> {
+    return this.pagamentoRepo.deletePagamento(userId, eventoId, pagamentoId);
   }
 
-  async getPagamentosPorEvento(eventoId: string): Promise<Pagamento[]> {
-    return this.pagamentoRepo.findByEventoId(eventoId);
+  async getPagamentosPorEvento(userId: string, eventoId: string): Promise<Pagamento[]> {
+    return this.pagamentoRepo.findByEventoId(userId, eventoId);
   }
 
-  async getPagamentosPorStatus(status: string): Promise<Pagamento[]> {
-    return this.pagamentoRepo.findByStatus(status);
+  async getPagamentosPorStatus(userId: string, eventoId: string, status: string): Promise<Pagamento[]> {
+    return this.pagamentoRepo.findByStatus(userId, eventoId, status);
   }
 
-  async getPagamentosPorForma(formaPagamento: string): Promise<Pagamento[]> {
-    return this.pagamentoRepo.findByFormaPagamento(formaPagamento);
+  async getPagamentosPorForma(userId: string, eventoId: string, formaPagamento: string): Promise<Pagamento[]> {
+    return this.pagamentoRepo.findByFormaPagamento(userId, eventoId, formaPagamento);
   }
 
-  async getPagamentosPorMes(mes: number, ano: number): Promise<Pagamento[]> {
-    return this.pagamentoRepo.getPagamentosPorMes(mes, ano);
+  async getPagamentosPorMes(userId: string, eventoId: string, mes: number, ano: number): Promise<Pagamento[]> {
+    return this.pagamentoRepo.getPagamentosPorMes(userId, eventoId, mes, ano);
   }
 
-  async getTotalRecebidoPorPeriodo(inicio: Date, fim: Date): Promise<number> {
-    return this.pagamentoRepo.getTotalRecebidoPorPeriodo(inicio, fim);
+  async getTotalRecebidoPorPeriodo(userId: string, eventoId: string, inicio: Date, fim: Date): Promise<number> {
+    return this.pagamentoRepo.getTotalRecebidoPorPeriodo(userId, eventoId, inicio, fim);
   }
 
-  async getResumoFinanceiroPorEvento(eventoId: string, valorTotalEvento: number, dataFinalPagamento?: Date): Promise<{
+  async getResumoFinanceiroPorEvento(userId: string, eventoId: string, valorTotalEvento: number, dataFinalPagamento?: Date): Promise<{
     totalPago: number;
     valorPendente: number;
     valorAtrasado: number;
     quantidadePagamentos: number;
     isAtrasado: boolean;
   }> {
-    return this.pagamentoRepo.getResumoFinanceiroPorEvento(eventoId, valorTotalEvento, dataFinalPagamento);
+    return this.pagamentoRepo.getResumoFinanceiroPorEvento(userId, eventoId, valorTotalEvento, dataFinalPagamento);
   }
 
   // Métodos para Tipos de Custo
@@ -203,76 +188,68 @@ export class DataService {
       // Garantir que os tipos de custo estejam inicializados
       await initializeTiposCusto();
       
-      // Buscar tipos do usuário + tipos do sistema
-      const [tiposUsuario, tiposSistema] = await Promise.all([
-        this.tipoCustoRepo.findByUserId(userId),
-        this.tipoCustoRepo.findByUserId('system')
-      ]);
-      return [...tiposUsuario, ...tiposSistema];
+      // Buscar apenas tipos do usuário (agora personalizados)
+      return this.tipoCustoRepo.findAll(userId);
     } catch (error) {
       console.error('Erro ao carregar tipos de custo:', error);
       return [];
     }
   }
 
-  async getTipoCustoById(id: string): Promise<TipoCusto | null> {
-    return this.tipoCustoRepo.findById(id);
+  async getTipoCustoById(id: string, userId: string): Promise<TipoCusto | null> {
+    return this.tipoCustoRepo.getTipoCustoById(id, userId);
   }
 
-  async createTipoCusto(tipoCusto: Omit<TipoCusto, 'id' | 'userId' | 'dataCadastro'>, userId: string): Promise<TipoCusto> {
+  async createTipoCusto(tipoCusto: Omit<TipoCusto, 'id' | 'dataCadastro'>, userId: string): Promise<TipoCusto> {
     if (!userId) {
       throw new Error('userId é obrigatório para criar tipo de custo');
     }
-    return this.tipoCustoRepo.create({
-      ...tipoCusto,
-      userId,
-      dataCadastro: new Date()
-    } as Omit<TipoCusto, 'id'>);
+    return this.tipoCustoRepo.createTipoCusto(tipoCusto, userId);
   }
 
-  async updateTipoCusto(id: string, tipoCusto: Partial<TipoCusto>): Promise<TipoCusto> {
-    return this.tipoCustoRepo.update(id, tipoCusto);
+  async updateTipoCusto(id: string, tipoCusto: Partial<TipoCusto>, userId: string): Promise<TipoCusto> {
+    return this.tipoCustoRepo.updateTipoCusto(id, tipoCusto, userId);
   }
 
-  async deleteTipoCusto(id: string): Promise<void> {
-    return this.tipoCustoRepo.delete(id);
+  async deleteTipoCusto(id: string, userId: string): Promise<void> {
+    return this.tipoCustoRepo.deleteTipoCusto(id, userId);
   }
 
-  async getTiposCustoAtivos(): Promise<TipoCusto[]> {
-    return this.tipoCustoRepo.getAtivos();
+  async getTiposCustoAtivos(userId: string): Promise<TipoCusto[]> {
+    return this.tipoCustoRepo.getAtivos(userId);
   }
 
   // Métodos para Custos de Evento
-  async getCustosEvento(): Promise<CustoEvento[]> {
-    return this.custoEventoRepo.findAll();
+  async getCustosEvento(userId: string, eventoId: string): Promise<CustoEvento[]> {
+    return this.custoEventoRepo.findByEventoId(userId, eventoId);
   }
 
-  async getCustoEventoById(id: string): Promise<CustoEvento | null> {
-    return this.custoEventoRepo.findById(id);
+  async getCustoEventoById(userId: string, eventoId: string, custoId: string): Promise<CustoEvento | null> {
+    return this.custoEventoRepo.findById(custoId, eventoId);
   }
 
-  async createCustoEvento(eventoId: string, custoEvento: Omit<CustoEvento, 'id'>): Promise<CustoEvento> {
-    return this.custoEventoRepo.createCustoEvento(eventoId, custoEvento);
+  async createCustoEvento(userId: string, eventoId: string, custoEvento: Omit<CustoEvento, 'id'>): Promise<CustoEvento> {
+    return this.custoEventoRepo.createCustoEvento(userId, eventoId, custoEvento);
   }
 
-  async updateCustoEvento(eventoId: string, custoId: string, custoEvento: Partial<CustoEvento>): Promise<CustoEvento> {
-    return this.custoEventoRepo.updateCustoEvento(eventoId, custoId, custoEvento);
+  async updateCustoEvento(userId: string, eventoId: string, custoId: string, custoEvento: Partial<CustoEvento>): Promise<CustoEvento> {
+    return this.custoEventoRepo.updateCustoEvento(userId, eventoId, custoId, custoEvento);
   }
 
-  async deleteCustoEvento(eventoId: string, custoId: string): Promise<void> {
-    return this.custoEventoRepo.deleteCustoEvento(eventoId, custoId);
+  async deleteCustoEvento(userId: string, eventoId: string, custoId: string): Promise<void> {
+    return this.custoEventoRepo.deleteCustoEvento(userId, eventoId, custoId);
   }
 
-  async getCustosPorEvento(eventoId: string): Promise<CustoEvento[]> {
-    return this.custoEventoRepo.findByEventoId(eventoId);
+  async getCustosPorEvento(userId: string, eventoId: string): Promise<CustoEvento[]> {
+    return this.custoEventoRepo.findByEventoId(userId, eventoId);
   }
 
-  async getTotalCustosPorEvento(eventoId: string): Promise<number> {
-    return this.custoEventoRepo.getTotalCustosPorEvento(eventoId);
+  async getTotalCustosPorEvento(userId: string, eventoId: string): Promise<number> {
+    return this.custoEventoRepo.getTotalCustosPorEvento(userId, eventoId);
   }
 
-  async getResumoCustosPorEvento(eventoId: string): Promise<ResumoCustosEvento> {
-    return this.custoEventoRepo.getResumoCustosPorEvento(eventoId);
+  async getResumoCustosPorEvento(userId: string, eventoId: string): Promise<ResumoCustosEvento> {
+    return this.custoEventoRepo.getResumoCustosPorEvento(userId, eventoId);
   }
 
   // Métodos para Dashboard
@@ -290,15 +267,21 @@ export class DataService {
       const fimAno = new Date(hoje.getFullYear(), 11, 31);
 
       // Buscar dados com tratamento de erro para collections vazias
-      const [
-        eventos,
-        pagamentos,
-        todosEventos
-      ] = await Promise.all([
-        this.getEventos(userId).catch(() => []),
-        this.getPagamentos().catch(() => []),
-        this.getEventos(userId).catch(() => [])
-      ]);
+      const eventos = await this.getEventos(userId).catch(() => []);
+      
+      // Para pagamentos, precisamos buscar de todos os eventos
+      const todosEventos = await this.getEventos(userId).catch(() => []);
+      const pagamentos = [];
+      
+      // Buscar pagamentos de todos os eventos
+      for (const evento of todosEventos) {
+        try {
+          const pagamentosEvento = await this.getPagamentosPorEvento(userId, evento.id);
+          pagamentos.push(...pagamentosEvento);
+        } catch (error) {
+          console.error(`Erro ao buscar pagamentos do evento ${evento.id}:`, error);
+        }
+      }
 
       // Calcular eventos de hoje
       const eventosHoje = eventos.filter(evento => {

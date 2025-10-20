@@ -47,21 +47,22 @@ export function useCliente(id: string): UseDataResult<Cliente> {
   const [data, setData] = useState<Cliente | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
-    if (!id) return;
+    if (!id || !userId) return;
     
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getClienteById(id);
+      const result = await dataService.getClienteById(id, userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar cliente');
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, userId]);
 
   useEffect(() => {
     fetchData();
@@ -107,21 +108,22 @@ export function useEvento(id: string): UseDataResult<Evento> {
   const [data, setData] = useState<Evento | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
-    if (!id) return;
+    if (!id || !userId) return;
     
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getEventoById(id);
+      const result = await dataService.getEventoById(id, userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar evento');
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, userId]);
 
   useEffect(() => {
     fetchData();
@@ -134,19 +136,26 @@ export function useEventosHoje(): UseDataResult<Evento[]> {
   const [data, setData] = useState<Evento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getEventosHoje();
+      const result = await dataService.getEventosHoje(userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar eventos de hoje');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchData();
@@ -159,19 +168,26 @@ export function useProximosEventos(limit?: number): UseDataResult<Evento[]> {
   const [data, setData] = useState<Evento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getProximosEventos(limit);
+      const result = await dataService.getProximosEventos(userId, limit);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar próximos eventos');
     } finally {
       setLoading(false);
     }
-  }, [limit]);
+  }, [userId, limit]);
 
   useEffect(() => {
     fetchData();
@@ -181,50 +197,26 @@ export function useProximosEventos(limit?: number): UseDataResult<Evento[]> {
 }
 
 // Hook para pagamentos
-export function usePagamentos(): UseDataResult<Pagamento[]> {
-  const [data, setData] = useState<Pagamento[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await dataService.getPagamentos();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar pagamentos');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { data, loading, error, refetch: fetchData };
-}
-
 export function usePagamentosPorEvento(eventoId: string, refreshKey?: number): UseDataResult<Pagamento[]> {
   const [data, setData] = useState<Pagamento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
-    if (!eventoId) return;
+    if (!eventoId || !userId) return;
     
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getPagamentosPorEvento(eventoId);
+      const result = await dataService.getPagamentosPorEvento(userId, eventoId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar pagamentos do evento');
     } finally {
       setLoading(false);
     }
-  }, [eventoId, refreshKey]);
+  }, [eventoId, userId, refreshKey]);
 
   useEffect(() => {
     fetchData();
@@ -271,21 +263,22 @@ export function useCustosPorEvento(eventoId: string, refreshKey?: number): UseDa
   const [data, setData] = useState<CustoEvento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
-    if (!eventoId) return;
+    if (!eventoId || !userId) return;
     
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getCustosPorEvento(eventoId);
+      const result = await dataService.getCustosPorEvento(userId, eventoId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar custos do evento');
     } finally {
       setLoading(false);
     }
-  }, [eventoId, refreshKey]); // refreshKey added here
+  }, [eventoId, userId, refreshKey]); // refreshKey added here
 
   useEffect(() => {
     fetchData();

@@ -32,6 +32,7 @@ const navigation = [
 const adminNavigation = [
   { name: 'Collections', href: '/admin/collections', icon: CogIcon },
   { name: 'Usuários', href: '/admin/users', icon: UserIcon },
+  { name: 'Migração', href: '/admin/migration', icon: CogIcon },
 ];
 
 export default function Layout({ children }: LayoutProps) {
