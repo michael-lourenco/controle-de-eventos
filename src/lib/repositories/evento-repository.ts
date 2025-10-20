@@ -7,8 +7,19 @@ export class EventoRepository extends FirestoreRepository<Evento> {
     super('controle_eventos');
   }
 
+  async findByUserId(userId: string): Promise<Evento[]> {
+    return this.findWhere('userId', '==', userId);
+  }
+
   async findByClienteId(clienteId: string): Promise<Evento[]> {
     return this.findWhere('clienteId', '==', clienteId);
+  }
+
+  async findByUserIdAndClienteId(userId: string, clienteId: string): Promise<Evento[]> {
+    return this.query([
+      where('userId', '==', userId),
+      where('clienteId', '==', clienteId)
+    ]);
   }
 
   async findByStatus(status: string): Promise<Evento[]> {

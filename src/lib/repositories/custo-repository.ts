@@ -119,8 +119,20 @@ export class TipoCustoRepository extends FirestoreRepository<TipoCusto> {
     super('controle_tipo_custos');
   }
 
+  async findByUserId(userId: string): Promise<TipoCusto[]> {
+    return this.findWhere('userId', '==', userId);
+  }
+
   async findByNome(nome: string): Promise<TipoCusto | null> {
     const tipos = await this.findWhere('nome', '==', nome);
+    return tipos.length > 0 ? tipos[0] : null;
+  }
+
+  async findByUserIdAndNome(userId: string, nome: string): Promise<TipoCusto | null> {
+    const tipos = await this.query([
+      where('userId', '==', userId),
+      where('nome', '==', nome)
+    ]);
     return tipos.length > 0 ? tipos[0] : null;
   }
 

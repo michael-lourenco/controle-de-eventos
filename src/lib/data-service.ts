@@ -294,19 +294,13 @@ export class DataService {
         .filter(p => p.status === 'Pago')
         .reduce((total, p) => total + p.valor, 0);
 
-      // Calcular pagamentos pendentes
-      const pagamentosPendentes = pagamentos.filter(p => p.status === 'Pendente');
-      const valorPendente = pagamentosPendentes.reduce((total, p) => total + p.valor, 0);
+      // Calcular pagamentos pendentes (todos os pagamentos são 'Pago' agora)
+      const pagamentosPendentes = []; // Não há mais pagamentos pendentes
+      const valorPendente = 0; // Calculado dinamicamente por evento
 
-      // Calcular pagamentos atrasados
-      const pagamentosAtrasados = pagamentos.filter(p => {
-        if (p.status === 'Pendente' && p.dataPagamento) {
-          const dataPagamento = new Date(p.dataPagamento);
-          return dataPagamento < hoje;
-        }
-        return false;
-      });
-      const valorAtrasado = pagamentosAtrasados.reduce((total, p) => total + p.valor, 0);
+      // Calcular pagamentos atrasados (todos os pagamentos são 'Pago' agora)
+      const pagamentosAtrasados = []; // Não há mais pagamentos atrasados
+      const valorAtrasado = 0; // Calculado dinamicamente por evento
 
       // Calcular gráficos
       const receitaMensal = [];

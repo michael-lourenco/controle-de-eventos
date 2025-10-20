@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '@/lib/data-service';
 import { Cliente, Evento, Pagamento, TipoCusto, CustoEvento, DashboardData } from '@/types';
+import { useCurrentUser } from './useAuth';
 
 export interface UseDataResult<T> {
   data: T | null;
@@ -14,19 +15,20 @@ export function useClientes(): UseDataResult<Cliente[]> {
   const [data, setData] = useState<Cliente[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getClientes();
+      const result = await dataService.getClientes(userId || undefined);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar clientes');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchData();
@@ -67,19 +69,20 @@ export function useEventos(): UseDataResult<Evento[]> {
   const [data, setData] = useState<Evento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getEventos();
+      const result = await dataService.getEventos(userId || undefined);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar eventos');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchData();
@@ -223,19 +226,20 @@ export function useTiposCusto(): UseDataResult<TipoCusto[]> {
   const [data, setData] = useState<TipoCusto[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await dataService.getTiposCusto();
+      const result = await dataService.getTiposCusto(userId || undefined);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar tipos de custo');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchData();

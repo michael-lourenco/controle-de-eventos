@@ -12,6 +12,7 @@ import {
 } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useCurrentUser } from '@/hooks/useAuth';
 
 interface PagamentoFormProps {
   pagamento?: Pagamento;
@@ -37,6 +38,7 @@ const formaPagamentoOptions = [
 ];
 
 export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: PagamentoFormProps) {
+  const { userId } = useCurrentUser();
   const [formData, setFormData] = useState<FormData>({
     valor: 0,
     dataPagamento: '',
@@ -112,6 +114,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
 
     try {
       const pagamentoData = {
+        userId: userId || '',
         eventoId: evento.id,
         valor: formData.valor,
         dataPagamento: new Date(formData.dataPagamento),

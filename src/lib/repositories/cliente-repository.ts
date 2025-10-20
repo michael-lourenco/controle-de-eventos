@@ -7,8 +7,20 @@ export class ClienteRepository extends FirestoreRepository<Cliente> {
     super('controle_clientes');
   }
 
+  async findByUserId(userId: string): Promise<Cliente[]> {
+    return this.findWhere('userId', '==', userId);
+  }
+
   async findByEmail(email: string): Promise<Cliente | null> {
     const clientes = await this.findWhere('email', '==', email);
+    return clientes.length > 0 ? clientes[0] : null;
+  }
+
+  async findByUserIdAndEmail(userId: string, email: string): Promise<Cliente | null> {
+    const clientes = await this.query([
+      where('userId', '==', userId),
+      where('email', '==', email)
+    ]);
     return clientes.length > 0 ? clientes[0] : null;
   }
 
