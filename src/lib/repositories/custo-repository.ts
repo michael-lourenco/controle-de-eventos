@@ -1,14 +1,84 @@
 import { FirestoreRepository } from './firestore-repository';
 import { CustoEvento, TipoCusto } from '@/types';
-import { where, orderBy } from 'firebase/firestore';
+import { where, orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export class CustoEventoRepository extends FirestoreRepository<CustoEvento> {
   constructor() {
-    super('controle_custos');
+    super('controle_custos'); // Mantido para compatibilidade, mas não será usado
+  }
+
+  // Métodos específicos para subcollections de custos por evento
+  private getCustosCollection(eventoId: string) {
+    return collection(db, 'controle_eventos', eventoId, 'controle_custos');
+  }
+
+  async createCustoEvento(eventoId: string, custo: Omit<CustoEvento, 'id'>): Promise<CustoEvento> {
+    const custosCollection = this.getCustosCollection(eventoId);
+    
+    // Remover campos undefined antes de enviar para o Firestore
+    const cleanData = { ...custo };
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key] === undefined) {
+        delete cleanData[key];
+      }
+    });
+    
+    const docRef = await addDoc(custosCollection, {
+      ...cleanData,
+      dataCadastro: new Date()
+    });
+    
+    return {
+      id: docRef.id,
+      ...custo,
+      dataCadastro: new Date()
+    } as CustoEvento;
+  }
+
+  async updateCustoEvento(eventoId: string, custoId: string, custo: Partial<CustoEvento>): Promise<CustoEvento> {
+    const custoRef = doc(db, 'controle_eventos', eventoId, 'controle_custos', custoId);
+    
+    // Remover campos undefined antes de enviar para o Firestore
+    const cleanData = { ...custo };
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key] === undefined) {
+        delete cleanData[key];
+      }
+    });
+    
+    await updateDoc(custoRef, cleanData);
+    
+    return { id: custoId, ...custo } as CustoEvento;
+  }
+
+  async deleteCustoEvento(eventoId: string, custoId: string): Promise<void> {
+    const custoRef = doc(db, 'controle_eventos', eventoId, 'controle_custos', custoId);
+    await deleteDoc(custoRef);
   }
 
   async findByEventoId(eventoId: string): Promise<CustoEvento[]> {
-    return this.findWhere('eventoId', '==', eventoId);
+    const custosCollection = this.getCustosCollection(eventoId);
+    const q = query(custosCollection, orderBy('dataCadastro', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    console.log('CustoEventoRepository: Buscando custos para evento:', eventoId);
+    console.log('CustoEventoRepository: Documentos encontrados:', querySnapshot.docs.length);
+    
+    return querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log('CustoEventoRepository: Dados do documento:', data);
+      
+      // Converter Timestamps do Firestore para Date
+      const custo = {
+        id: doc.id,
+        ...data,
+        dataCadastro: data.dataCadastro?.toDate ? data.dataCadastro.toDate() : new Date(data.dataCadastro)
+      };
+      
+      console.log('CustoEventoRepository: Custo convertido:', custo);
+      return custo;
+    }) as CustoEvento[];
   }
 
   async findByTipoCustoId(tipoCustoId: string): Promise<CustoEvento[]> {
@@ -23,22 +93,22 @@ export class CustoEventoRepository extends FirestoreRepository<CustoEvento> {
   async getResumoCustosPorEvento(eventoId: string): Promise<{
     custos: CustoEvento[];
     total: number;
-    porTipo: Record<string, number>;
+    porCategoria: Record<string, number>;
     quantidadeItens: number;
   }> {
     const custos = await this.findByEventoId(eventoId);
     const total = custos.reduce((sum, custo) => sum + custo.valor, 0);
     
-    const porTipo: Record<string, number> = {};
+    const porCategoria: Record<string, number> = {};
     custos.forEach(custo => {
       const tipoNome = custo.tipoCusto?.nome || 'Sem tipo';
-      porTipo[tipoNome] = (porTipo[tipoNome] || 0) + custo.valor;
+      porCategoria[tipoNome] = (porCategoria[tipoNome] || 0) + custo.valor;
     });
 
     return {
       custos,
       total,
-      porTipo,
+      porCategoria,
       quantidadeItens: custos.length
     };
   }

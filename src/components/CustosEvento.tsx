@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import CustoForm from '@/components/forms/CustoForm';
@@ -8,12 +8,7 @@ import {
   CustoEvento, 
   Evento
 } from '@/types';
-import { 
-  createCustoEvento, 
-  updateCustoEvento, 
-  deleteCustoEvento,
-  getResumoCustosEvento 
-} from '@/lib/mockData';
+import { dataService } from '@/lib/data-service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -40,8 +35,29 @@ export default function CustosEvento({
   const [showForm, setShowForm] = useState(false);
   const [custoEditando, setCustoEditando] = useState<CustoEvento | null>(null);
   const [custoParaExcluir, setCustoParaExcluir] = useState<CustoEvento | null>(null);
+  const [resumoCustos, setResumoCustos] = useState({
+    total: 0,
+    quantidadeItens: 0,
+    porCategoria: {} as Record<string, number>
+  });
 
-  const resumoCustos = getResumoCustosEvento(evento.id);
+  // Carregar resumo de custos do Firestore
+  useEffect(() => {
+    const carregarResumoCustos = async () => {
+      try {
+        console.log('CustosEvento: Carregando resumo de custos para evento:', evento.id);
+        const resumo = await dataService.getResumoCustosPorEvento(evento.id);
+        setResumoCustos(resumo);
+        console.log('CustosEvento - Resumo do Firestore:', resumo);
+      } catch (error) {
+        console.error('Erro ao carregar resumo de custos:', error);
+      }
+    };
+
+    if (evento.id) {
+      carregarResumoCustos();
+    }
+  }, [evento.id, custos]);
 
   const getTipoCustoColor = (nome: string) => {
     // Gera uma cor baseada no nome do tipo de custo
@@ -74,13 +90,18 @@ export default function CustosEvento({
     setCustoParaExcluir(custo);
   };
 
-  const handleSalvarCusto = (custoData: CustoEvento) => {
+  const handleSalvarCusto = async (custoData: CustoEvento) => {
     try {
       if (custoEditando) {
-        updateCustoEvento(custoEditando.id, custoData);
+        await dataService.updateCustoEvento(evento.id, custoEditando.id, custoData);
       } else {
-        createCustoEvento(custoData);
+        await dataService.createCustoEvento(evento.id, custoData);
       }
+      
+      // Recarregar resumo de custos
+      const resumo = await dataService.getResumoCustosPorEvento(evento.id);
+      setResumoCustos(resumo);
+      
       onCustosChange();
       setShowForm(false);
       setCustoEditando(null);
@@ -89,12 +110,19 @@ export default function CustosEvento({
     }
   };
 
-  const handleConfirmarExclusao = () => {
+  const handleConfirmarExclusao = async () => {
     if (custoParaExcluir) {
-      const sucesso = deleteCustoEvento(custoParaExcluir.id);
-      if (sucesso) {
+      try {
+        await dataService.deleteCustoEvento(evento.id, custoParaExcluir.id);
+        
+        // Recarregar resumo de custos
+        const resumo = await dataService.getResumoCustosPorEvento(evento.id);
+        setResumoCustos(resumo);
+        
         onCustosChange();
         setCustoParaExcluir(null);
+      } catch (error) {
+        console.error('Erro ao excluir custo:', error);
       }
     }
   };

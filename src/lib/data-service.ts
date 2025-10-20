@@ -195,16 +195,16 @@ export class DataService {
     return this.custoEventoRepo.findById(id);
   }
 
-  async createCustoEvento(custoEvento: Omit<CustoEvento, 'id'>): Promise<CustoEvento> {
-    return this.custoEventoRepo.create(custoEvento);
+  async createCustoEvento(eventoId: string, custoEvento: Omit<CustoEvento, 'id'>): Promise<CustoEvento> {
+    return this.custoEventoRepo.createCustoEvento(eventoId, custoEvento);
   }
 
-  async updateCustoEvento(id: string, custoEvento: Partial<CustoEvento>): Promise<CustoEvento> {
-    return this.custoEventoRepo.update(id, custoEvento);
+  async updateCustoEvento(eventoId: string, custoId: string, custoEvento: Partial<CustoEvento>): Promise<CustoEvento> {
+    return this.custoEventoRepo.updateCustoEvento(eventoId, custoId, custoEvento);
   }
 
-  async deleteCustoEvento(id: string): Promise<void> {
-    return this.custoEventoRepo.delete(id);
+  async deleteCustoEvento(eventoId: string, custoId: string): Promise<void> {
+    return this.custoEventoRepo.deleteCustoEvento(eventoId, custoId);
   }
 
   async getCustosPorEvento(eventoId: string): Promise<CustoEvento[]> {
