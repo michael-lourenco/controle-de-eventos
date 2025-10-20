@@ -1,6 +1,6 @@
 import { SubcollectionRepository } from './subcollection-repository';
 import { Cliente } from '@/types';
-import { where, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { orderBy, limit as firestoreLimit } from 'firebase/firestore';
 import { COLLECTIONS } from '../firestore/collections';
 
 export class ClienteRepository extends SubcollectionRepository<Cliente> {

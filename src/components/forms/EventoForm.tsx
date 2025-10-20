@@ -77,7 +77,7 @@ const statusOptions = [
 const diasSemana = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
 
 export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps) {
-  const { data: clientes, loading: loadingClientes } = useClientes();
+  const { data: clientes } = useClientes();
   const { userId, isLoading } = useCurrentUser();
   
   const [formData, setFormData] = useState<FormData>({

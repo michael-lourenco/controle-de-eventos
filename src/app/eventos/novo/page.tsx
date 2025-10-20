@@ -8,8 +8,7 @@ import Layout from '@/components/Layout';
 import EventoForm from '@/components/forms/EventoForm';
 import { Evento } from '@/types';
 import {
-  ArrowLeftIcon,
-  PlusIcon
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 
 export default function NovoEventoPage() {

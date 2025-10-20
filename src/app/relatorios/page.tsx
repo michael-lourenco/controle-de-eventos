@@ -14,8 +14,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { useEventos, useDashboardData } from '@/hooks/useData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { StatusPagamento } from '@/types';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();

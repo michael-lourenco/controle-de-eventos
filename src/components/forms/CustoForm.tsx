@@ -38,7 +38,12 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [tiposCusto, setTiposCusto] = useState<any[]>([]);
+  const [tiposCusto, setTiposCusto] = useState<Array<{
+    id: string;
+    nome: string;
+    descricao?: string;
+    ativo: boolean;
+  }>>([]);
   const [loading, setLoading] = useState(true);
 
   // Carregar tipos de custo do Firestore

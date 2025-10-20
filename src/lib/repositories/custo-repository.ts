@@ -1,7 +1,6 @@
-import { FirestoreRepository } from './firestore-repository';
 import { SubcollectionRepository } from './subcollection-repository';
 import { CustoEvento, TipoCusto } from '@/types';
-import { where, orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query } from 'firebase/firestore';
+import { orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '../firestore/collections';
 

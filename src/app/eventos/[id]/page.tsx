@@ -38,8 +38,8 @@ export default function EventoViewPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
-  const { data: pagamentos, loading: loadingPagamentos } = usePagamentosPorEvento(params.id as string, refreshKey);
-  const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string, refreshKey);
+  const { data: pagamentos, loading: loadingPagamentos } = usePagamentosPorEvento(params.id as string);
+  const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string);
   
   // Por enquanto, anexos como array vazio até implementar o hook
   const anexos: AnexoEvento[] = [];

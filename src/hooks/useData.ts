@@ -197,7 +197,7 @@ export function useProximosEventos(limit?: number): UseDataResult<Evento[]> {
 }
 
 // Hook para pagamentos
-export function usePagamentosPorEvento(eventoId: string, refreshKey?: number): UseDataResult<Pagamento[]> {
+export function usePagamentosPorEvento(eventoId: string): UseDataResult<Pagamento[]> {
   const [data, setData] = useState<Pagamento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -216,7 +216,7 @@ export function usePagamentosPorEvento(eventoId: string, refreshKey?: number): U
     } finally {
       setLoading(false);
     }
-  }, [eventoId, userId, refreshKey]);
+  }, [eventoId, userId]);
 
   useEffect(() => {
     fetchData();
@@ -259,7 +259,7 @@ export function useTiposCusto(): UseDataResult<TipoCusto[]> {
 }
 
 // Hook para custos de evento
-export function useCustosPorEvento(eventoId: string, refreshKey?: number): UseDataResult<CustoEvento[]> {
+export function useCustosPorEvento(eventoId: string): UseDataResult<CustoEvento[]> {
   const [data, setData] = useState<CustoEvento[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -278,7 +278,7 @@ export function useCustosPorEvento(eventoId: string, refreshKey?: number): UseDa
     } finally {
       setLoading(false);
     }
-  }, [eventoId, userId, refreshKey]); // refreshKey added here
+  }, [eventoId, userId]); // refreshKey added here
 
   useEffect(() => {
     fetchData();

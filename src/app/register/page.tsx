@@ -70,7 +70,7 @@ export default function RegisterPage() {
       } else {
         setError(result.error || 'Erro ao criar conta');
       }
-    } catch (err) {
+    } catch {
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);

@@ -11,7 +11,6 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  PlusIcon,
   TrashIcon,
   DocumentIcon,
   EyeIcon,
@@ -26,7 +25,6 @@ interface AnexosEventoProps {
 }
 
 export default function AnexosEvento({ 
-  evento, 
   anexos, 
   onAnexosChange 
 }: AnexosEventoProps) {

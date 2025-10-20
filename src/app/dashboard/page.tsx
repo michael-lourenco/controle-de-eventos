@@ -10,7 +10,6 @@ import {
   ClockIcon
 } from '@heroicons/react/24/outline';
 import { useDashboardData } from '@/hooks/useData';
-import { Pagamento } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

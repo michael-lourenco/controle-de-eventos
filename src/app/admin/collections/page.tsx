@@ -3,13 +3,29 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { initializeCollections, seedInitialData, resetCollections } from '@/lib/firestore/init-collections';
+import { initializeCollections, seedInitialData } from '@/lib/firestore/init-collections';
 import { migrationService } from '@/lib/migration/migration-service';
 
 export default function CollectionsAdminPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [migrationResult, setMigrationResult] = useState<any>(null);
+  const [migrationResult, setMigrationResult] = useState<{
+    success: boolean;
+    message: string;
+    migratedCount?: number;
+    errors?: string[];
+    details?: Array<{
+      collection: string;
+      inserted: number;
+      errors?: string[];
+    }>;
+    validation?: Array<{
+      collection: string;
+      expected: number;
+      actual: number;
+      status: string;
+    }>;
+  } | null>(null);
 
   const handleInitialize = async () => {
     setLoading(true);
@@ -18,7 +34,7 @@ export default function CollectionsAdminPage() {
     try {
       const success = await initializeCollections();
       setMessage(success ? '✅ Collections inicializadas com sucesso!' : '❌ Erro ao inicializar collections');
-    } catch (error) {
+    } catch {
       setMessage('❌ Erro ao inicializar collections');
     } finally {
       setLoading(false);
@@ -32,30 +48,13 @@ export default function CollectionsAdminPage() {
     try {
       const success = await seedInitialData();
       setMessage(success ? '✅ Dados iniciais inseridos com sucesso!' : '❌ Erro ao inserir dados iniciais');
-    } catch (error) {
+    } catch {
       setMessage('❌ Erro ao inserir dados iniciais');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleReset = async () => {
-    if (!confirm('⚠️ Tem certeza que deseja resetar todas as collections? Esta ação não pode ser desfeita!')) {
-      return;
-    }
-
-    setLoading(true);
-    setMessage('');
-    
-    try {
-      const success = await resetCollections();
-      setMessage(success ? '✅ Collections resetadas com sucesso!' : '❌ Erro ao resetar collections');
-    } catch (error) {
-      setMessage('❌ Erro ao resetar collections');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFullMigration = async () => {
     setLoading(true);
@@ -66,7 +65,7 @@ export default function CollectionsAdminPage() {
       const result = await migrationService.migrateToSubcollections();
       setMigrationResult(result);
       setMessage(result.success ? '✅ Migração completa concluída!' : '❌ Migração concluída com erros');
-    } catch (error) {
+    } catch {
       setMessage('❌ Erro durante migração completa');
     } finally {
       setLoading(false);
@@ -86,7 +85,7 @@ export default function CollectionsAdminPage() {
         migratedCount: 0,
         errors: []
       });
-    } catch (error) {
+    } catch {
       setMessage('❌ Erro durante validação');
     } finally {
       setLoading(false);
@@ -211,7 +210,7 @@ export default function CollectionsAdminPage() {
                     <div>
                       <h4 className="font-semibold mb-2">Detalhes por Collection:</h4>
                       <div className="space-y-2">
-                        {migrationResult.details.map((detail: any, index: number) => (
+                        {migrationResult.details.map((detail, index: number) => (
                           <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                             <span className="font-medium">{detail.collection}</span>
                             <div className="flex items-center space-x-2">
@@ -234,7 +233,7 @@ export default function CollectionsAdminPage() {
                     <div>
                       <h4 className="font-semibold mb-2">Validação:</h4>
                       <div className="space-y-2">
-                        {migrationResult.validation.map((validation: any, index: number) => (
+                        {migrationResult.validation.map((validation, index: number) => (
                           <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                             <span className="font-medium">{validation.collection}</span>
                             <div className="flex items-center space-x-2">
