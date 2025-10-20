@@ -82,7 +82,6 @@ export default function EventoViewPage() {
   const handleDelete = async () => {
     if (evento) {
       try {
-        // Buscar userId do usuário atual
         const { userId } = useCurrentUser();
         if (!userId) {
           console.error('Usuário não autenticado');

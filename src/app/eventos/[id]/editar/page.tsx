@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Layout from '@/components/Layout';
 import EventoForm from '@/components/forms/EventoForm';
-import { useCurrentUser } from '@/hooks/useAuth';
-import { dataService } from '@/lib/data-service';
-import { Evento } from '@/types';
+import { useEvento } from '@/hooks/useData';
 import {
   ArrowLeftIcon,
   CalendarIcon
@@ -17,35 +15,7 @@ import {
 export default function EditarEventoPage() {
   const params = useParams();
   const router = useRouter();
-  const [evento, setEvento] = useState<Evento | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const carregarEvento = async () => {
-      if (params.id) {
-        try {
-          setLoading(true);
-          // Buscar userId do usuário atual
-          const { userId } = useCurrentUser();
-          if (!userId) {
-            console.error('Usuário não autenticado');
-            setEvento(null);
-            return;
-          }
-          
-          const eventoEncontrado = await dataService.getEventoById(params.id as string, userId);
-          setEvento(eventoEncontrado);
-        } catch (error) {
-          console.error('Erro ao carregar evento:', error);
-          setEvento(null);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    carregarEvento();
-  }, [params.id]);
+  const { data: evento, loading, error } = useEvento(params.id as string);
 
   const handleSave = async (eventoAtualizado: Evento) => {
     try {
@@ -68,6 +38,16 @@ export default function EditarEventoPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Carregando evento...</p>
           </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-600">Erro ao carregar evento: {error}</div>
         </div>
       </Layout>
     );

@@ -142,7 +142,7 @@ export default function PagamentoHistorico({
       const dataFinalPagamento = evento?.diaFinalPagamento ? 
         (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
         undefined;
-      const resumo = await dataService.getResumoFinanceiroPorEvento(eventoId, valorTotal, dataFinalPagamento);
+      const resumo = await dataService.getResumoFinanceiroPorEvento(userId, eventoId, valorTotal, dataFinalPagamento);
       
       setResumoFinanceiro({
         valorTotal: valorTotal,
