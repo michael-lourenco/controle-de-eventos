@@ -8,7 +8,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   
-  // build the home page
   useEffect(() => {
     const checkAuth = () => {
       const user = getCurrentUser();
