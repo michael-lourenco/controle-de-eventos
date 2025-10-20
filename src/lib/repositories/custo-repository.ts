@@ -22,7 +22,7 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
     const custosCollection = this.getCustosCollection(userId, eventoId);
     
     // Remover campos undefined antes de enviar para o Firestore
-    const cleanData = { ...custo };
+    const cleanData = { ...custo } as any;
     Object.keys(cleanData).forEach(key => {
       if (cleanData[key] === undefined) {
         delete cleanData[key];
@@ -45,7 +45,7 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
     const custoRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.CUSTOS, custoId);
     
     // Remover campos undefined antes de enviar para o Firestore
-    const cleanData = { ...custo };
+    const cleanData = { ...custo } as any;
     Object.keys(cleanData).forEach(key => {
       if (cleanData[key] === undefined) {
         delete cleanData[key];

@@ -28,7 +28,7 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
   }
 
   protected convertFirestoreData(data: DocumentData, id: string): T {
-    const converted = { ...data, id };
+    const converted = { ...data, id } as any;
     
     // Converter Timestamps para Date
     Object.keys(converted).forEach(key => {
@@ -41,7 +41,7 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
   }
 
   protected convertToFirestoreData(data: Partial<T>): any {
-    const converted = { ...data };
+    const converted = { ...data } as any;
     
     // Remover campos undefined e converter Dates para Timestamps
     Object.keys(converted).forEach(key => {
@@ -63,9 +63,12 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
     return doc(db, this.parentCollection, parentId, this.subcollectionName, docId);
   }
 
-  async create(entity: Omit<T, 'id'>, parentId: string): Promise<T> {
+  async create(entity: Omit<T, 'id'>, parentId?: string): Promise<T> {
+    if (!parentId) {
+      throw new Error('parentId is required for subcollection operations');
+    }
     try {
-      const docRef = await addDoc(this.getSubcollectionRef(parentId), this.convertToFirestoreData(entity));
+      const docRef = await addDoc(this.getSubcollectionRef(parentId), this.convertToFirestoreData(entity as Partial<T>));
       const docSnap = await getDoc(docRef);
       
       if (!docSnap.exists()) {
@@ -79,7 +82,10 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
     }
   }
 
-  async findById(id: string, parentId: string): Promise<T | null> {
+  async findById(id: string, parentId?: string): Promise<T | null> {
+    if (!parentId) {
+      throw new Error('parentId is required for subcollection operations');
+    }
     try {
       const docRef = this.getSubcollectionDocRef(parentId, id);
       const docSnap = await getDoc(docRef);
@@ -95,7 +101,10 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
     }
   }
 
-  async findAll(parentId: string): Promise<T[]> {
+  async findAll(parentId?: string): Promise<T[]> {
+    if (!parentId) {
+      throw new Error('parentId is required for subcollection operations');
+    }
     try {
       const querySnapshot = await getDocs(this.getSubcollectionRef(parentId));
       return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
@@ -105,7 +114,10 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
     }
   }
 
-  async update(id: string, entity: Partial<T>, parentId: string): Promise<T> {
+  async update(id: string, entity: Partial<T>, parentId?: string): Promise<T> {
+    if (!parentId) {
+      throw new Error('parentId is required for subcollection operations');
+    }
     try {
       const docRef = this.getSubcollectionDocRef(parentId, id);
       await updateDoc(docRef, this.convertToFirestoreData(entity));
@@ -122,7 +134,10 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
     }
   }
 
-  async delete(id: string, parentId: string): Promise<void> {
+  async delete(id: string, parentId?: string): Promise<void> {
+    if (!parentId) {
+      throw new Error('parentId is required for subcollection operations');
+    }
     try {
       const docRef = this.getSubcollectionDocRef(parentId, id);
       await deleteDoc(docRef);
@@ -132,7 +147,10 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
     }
   }
 
-  async findWhere(field: string, operator: any, value: any, parentId: string): Promise<T[]> {
+  async findWhere(field: string, operator: any, value: any, parentId?: string): Promise<T[]> {
+    if (!parentId) {
+      throw new Error('parentId is required for subcollection operations');
+    }
     try {
       const q = query(this.getSubcollectionRef(parentId), where(field, operator, value));
       const querySnapshot = await getDocs(q);

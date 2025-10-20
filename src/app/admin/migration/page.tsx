@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { subcollectionMigrationService, MigrationResult } from '@/lib/migration/subcollection-migration';
-import Layout from '@/components/layout';
+import Layout from '@/components/Layout';
 
 export default function MigrationPage() {
   const [loading, setLoading] = useState(false);
@@ -85,29 +83,29 @@ export default function MigrationPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-green-600">✓</Badge>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">✓</span>
                     <span className="text-sm">Dados isolados por usuário</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-green-600">✓</Badge>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">✓</span>
                     <span className="text-sm">Queries mais rápidas</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-green-600">✓</Badge>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">✓</span>
                     <span className="text-sm">Segurança aprimorada</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-green-600">✓</Badge>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">✓</span>
                     <span className="text-sm">Tipos de custo personalizados</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-green-600">✓</Badge>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">✓</span>
                     <span className="text-sm">Melhor escalabilidade</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-green-600">✓</Badge>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">✓</span>
                     <span className="text-sm">Menos campos userId</span>
                   </div>
                 </div>
@@ -116,13 +114,13 @@ export default function MigrationPage() {
           </Card>
 
           {/* Aviso importante */}
-          <Alert>
-            <AlertDescription>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+            <div className="text-yellow-800">
               <strong>⚠️ ATENÇÃO:</strong> Esta migração irá mover todos os dados existentes para a nova estrutura 
               e remover as collections antigas. Certifique-se de que não há dados importantes que possam ser perdidos.
               Como estamos em desenvolvimento, não há backup automático.
-            </AlertDescription>
-          </Alert>
+            </div>
+          </div>
 
           {/* Botão de migração */}
           <Card>
@@ -150,9 +148,13 @@ export default function MigrationPage() {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <span>Resultado da Migração</span>
-                  <Badge variant={result.success ? "default" : "destructive"}>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    result.success 
+                      ? 'bg-green-100 text-green-800 border border-green-200' 
+                      : 'bg-red-100 text-red-800 border border-red-200'
+                  }`}>
                     {result.success ? 'Sucesso' : 'Erro'}
-                  </Badge>
+                  </span>
                 </CardTitle>
               </CardHeader>
               <CardContent>

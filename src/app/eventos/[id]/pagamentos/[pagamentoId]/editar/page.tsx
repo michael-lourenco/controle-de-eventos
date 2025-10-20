@@ -6,10 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import Layout from '@/components/Layout';
 import PagamentoForm from '@/components/forms/PagamentoForm';
-import { 
-  getPagamentoById,
-  getEventoById
-} from '@/lib/mockData';
+// Funções de busca serão implementadas via dataService
 import { Pagamento, Evento } from '@/types';
 import {
   ArrowLeftIcon,
@@ -25,11 +22,12 @@ export default function EditarPagamentoPage() {
 
   useEffect(() => {
     if (params.pagamentoId && params.id) {
-      const pagamentoEncontrado = getPagamentoById(params.pagamentoId as string);
-      const eventoEncontrado = getEventoById(params.id as string);
+      // TODO: Implementar busca via dataService
+      // const pagamentoEncontrado = await dataService.getPagamentoById(params.pagamentoId as string, userId);
+      // const eventoEncontrado = await dataService.getEventoById(params.id as string, userId);
       
-      setPagamento(pagamentoEncontrado || null);
-      setEvento(eventoEncontrado || null);
+      setPagamento(null);
+      setEvento(null);
       setLoading(false);
     }
   }, [params.pagamentoId, params.id]);

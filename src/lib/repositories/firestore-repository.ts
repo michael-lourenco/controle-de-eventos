@@ -26,7 +26,7 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
   }
 
   protected convertFirestoreData(data: DocumentData, id: string): T {
-    const converted = { ...data, id };
+    const converted = { ...data, id } as any;
     
     // Converter Timestamps para Date
     Object.keys(converted).forEach(key => {
@@ -39,7 +39,7 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
   }
 
   protected convertToFirestoreData(data: Partial<T>): any {
-    const converted = { ...data };
+    const converted = { ...data } as any;
     
     // Remover campos undefined e converter Dates para Timestamps
     Object.keys(converted).forEach(key => {
@@ -55,7 +55,7 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
 
   async create(entity: Omit<T, 'id'>): Promise<T> {
     try {
-      const docRef = await addDoc(collection(db, this.collectionName), this.convertToFirestoreData(entity));
+      const docRef = await addDoc(collection(db, this.collectionName), this.convertToFirestoreData(entity as Partial<T>));
       const docSnap = await getDoc(docRef);
       
       if (!docSnap.exists()) {

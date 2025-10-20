@@ -12,7 +12,6 @@ export interface User {
 
 export interface Cliente {
   id: string;
-  userId: string; // ID do usuário que criou o cliente
   nome: string;
   cpf: string;
   email: string;
@@ -26,7 +25,6 @@ export interface Cliente {
 
 export interface Evento {
   id: string;
-  userId: string; // ID do usuário que criou o evento
   clienteId: string;
   cliente: Cliente;
   dataEvento: Date;
@@ -242,7 +240,6 @@ export enum FormaPagamento {
 
 export interface TipoCusto {
   id: string;
-  userId: string; // ID do usuário que criou o tipo de custo
   nome: string;
   descricao: string;
   ativo: boolean;
@@ -251,7 +248,6 @@ export interface TipoCusto {
 
 export interface CustoEvento {
   id: string;
-  userId: string; // ID do usuário que criou o custo
   eventoId: string;
   evento: Evento;
   tipoCustoId: string;

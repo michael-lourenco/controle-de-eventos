@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -23,7 +23,7 @@ import {
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
-import { Evento, Pagamento, CustoEvento, AnexoEvento } from '@/types';
+import { AnexoEvento } from '@/types';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
 import CustosEvento from '@/components/CustosEvento';
 import AnexosEvento from '@/components/AnexosEvento';
@@ -33,6 +33,7 @@ import { ptBR } from 'date-fns/locale';
 export default function EventoViewPage() {
   const params = useParams();
   const router = useRouter();
+  const { userId } = useCurrentUser();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   
@@ -82,7 +83,6 @@ export default function EventoViewPage() {
   const handleDelete = async () => {
     if (evento) {
       try {
-        const { userId } = useCurrentUser();
         if (!userId) {
           console.error('Usuário não autenticado');
           return;
@@ -356,7 +356,7 @@ export default function EventoViewPage() {
         {/* Histórico de Pagamentos */}
         <PagamentoHistorico
           eventoId={evento.id}
-          pagamentos={pagamentos}
+          pagamentos={pagamentos || []}
           onPagamentosChange={handlePagamentosChange}
           evento={evento}
         />
@@ -364,7 +364,7 @@ export default function EventoViewPage() {
         {/* Custos do Evento */}
         <CustosEvento
           evento={evento}
-          custos={custos}
+          custos={custos || []}
           onCustosChange={handleCustosChange}
         />
 

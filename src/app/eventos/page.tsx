@@ -27,6 +27,7 @@ import { StatusEvento, TipoEvento, Evento } from '@/types';
 
 export default function EventosPage() {
   const router = useRouter();
+  const { userId } = useCurrentUser();
   const { data: eventos, loading, error, refetch } = useEventos();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
@@ -87,8 +88,6 @@ export default function EventosPage() {
   const confirmDelete = async () => {
     if (eventoParaExcluir) {
       try {
-        // Buscar userId do usuário atual
-        const { userId } = useCurrentUser();
         if (!userId) {
           console.error('Usuário não autenticado');
           return;

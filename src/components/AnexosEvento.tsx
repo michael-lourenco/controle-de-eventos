@@ -7,11 +7,7 @@ import {
   AnexoEvento, 
   Evento
 } from '@/types';
-import { 
-  createAnexoEvento, 
-  updateAnexoEvento, 
-  deleteAnexoEvento
-} from '@/lib/mockData';
+// Funções de anexo serão implementadas via dataService
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -68,15 +64,16 @@ export default function AnexosEvento({
       // Simular upload (em produção, enviaria para servidor)
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const novoAnexo = createAnexoEvento({
-        eventoId: evento.id,
-        evento,
-        nome: file.name,
-        tipo: file.type === 'application/pdf' ? 'PDF' : 
-              file.type.startsWith('image/') ? 'Imagem' : 'Documento',
-        url: URL.createObjectURL(file), // Em produção, seria URL do servidor
-        tamanho: file.size
-      });
+      // TODO: Implementar criação via dataService
+      // const novoAnexo = await dataService.createAnexoEvento({
+      //   eventoId: evento.id,
+      //   evento,
+      //   nome: file.name,
+      //   tipo: file.type === 'application/pdf' ? 'PDF' : 
+      //         file.type.startsWith('image/') ? 'Imagem' : 'Documento',
+      //   url: URL.createObjectURL(file), // Em produção, seria URL do servidor
+      //   tamanho: file.size
+      // }, userId);
       
       onAnexosChange();
     } catch (error) {
@@ -92,11 +89,14 @@ export default function AnexosEvento({
 
   const handleConfirmarExclusao = () => {
     if (anexoParaExcluir) {
-      const sucesso = deleteAnexoEvento(anexoParaExcluir.id);
-      if (sucesso) {
-        onAnexosChange();
-        setAnexoParaExcluir(null);
-      }
+      // TODO: Implementar exclusão via dataService
+      // const sucesso = await dataService.deleteAnexoEvento(anexoParaExcluir.id, userId);
+      // if (sucesso) {
+      //   onAnexosChange();
+      //   setAnexoParaExcluir(null);
+      // }
+      onAnexosChange();
+      setAnexoParaExcluir(null);
     }
   };
 

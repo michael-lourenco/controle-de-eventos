@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import Layout from '@/components/Layout';
 import EventoForm from '@/components/forms/EventoForm';
 import { useEvento } from '@/hooks/useData';
+import { Evento } from '@/types';
 import {
   ArrowLeftIcon,
   CalendarIcon

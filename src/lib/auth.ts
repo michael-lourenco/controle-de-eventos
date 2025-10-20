@@ -125,7 +125,7 @@ export const useAuth = () => {
     nome: session.user.name || '',
     email: session.user.email || '',
     role: (session.user.role as 'admin' | 'user') || 'user',
-    avatar: session.user.image || undefined
+    avatar: undefined
   } : null;
   
   const loginUser = async (email: string, senha: string) => {

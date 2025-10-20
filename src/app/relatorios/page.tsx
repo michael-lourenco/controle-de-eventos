@@ -80,6 +80,9 @@ export default function RelatoriosPage() {
     cancelado: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Cancelado')?.quantidade || 0
   };
 
+  // Total de pagamentos para cálculo de porcentagem
+  const totalPagamentos = Object.values(statusPagamentos).reduce((total, quantidade) => total + quantidade, 0);
+
   const handleGerarRelatorio = () => {
     // Aqui seria implementada a geração do relatório em PDF/Excel
     console.log('Gerando relatório para o período:', periodoInicio, 'até', periodoFim);
@@ -175,7 +178,7 @@ export default function RelatoriosPage() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Pagamentos Pendentes</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {pagamentosPendentes.length}
+                    {pagamentosPendentes}
                   </p>
                 </div>
               </div>
@@ -256,7 +259,7 @@ export default function RelatoriosPage() {
                             status === 'atrasado' ? 'bg-red-600' : 'bg-gray-600'
                           }`}
                           style={{ 
-                            width: `${(quantidade / pagamentos.length) * 100}%` 
+                            width: totalPagamentos > 0 ? `${(quantidade / totalPagamentos) * 100}%` : '0%'
                           }}
                         />
                       </div>

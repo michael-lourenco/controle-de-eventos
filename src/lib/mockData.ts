@@ -50,312 +50,212 @@ export const clientes: Cliente[] = [
     cpf: '12345678903',
     email: 'vinicius.nathalia@email.com',
     telefone: '21999999997',
-    endereco: 'Rua dos Lírios, 789',
+    endereco: 'Rua das Rosas, 789',
     cep: '23000-002',
     instagram: '@viniciusnathalia',
     comoConheceu: 'Facebook',
     dataCadastro: new Date('2023-01-01')
-  }
-];
-
-export const servicos: Servico[] = [
-  {
-    id: '1',
-    nome: 'TOTEM - 4 HORAS',
-    descricao: 'Totem personalizado para fotos com 4 horas de duração',
-    categoria: 'Totem',
-    duracao: 4,
-    precoBase: 1100,
-    ativo: true
-  },
-  {
-    id: '2',
-    nome: 'P 360 - 4 HORAS',
-    descricao: 'Plataforma 360 graus com 4 horas de duração',
-    categoria: 'P360',
-    duracao: 4,
-    precoBase: 990,
-    ativo: true
-  },
-  {
-    id: '3',
-    nome: 'LAMBE-LAMBE',
-    descricao: 'Serviço de lambe-lambe para fotos instantâneas',
-    categoria: 'Lambe-lambe',
-    duracao: 4,
-    precoBase: 1235,
-    ativo: true
   },
   {
     id: '4',
-    nome: 'INSTACLICK',
-    descricao: 'Sistema de fotos instantâneas com hashtag personalizada',
-    categoria: 'Instaclick',
-    duracao: 4,
-    precoBase: 800,
-    ativo: true
-  },
-  {
-    id: '5',
-    nome: 'CLICKBOOK',
-    descricao: 'Livro de fotos personalizado',
-    categoria: 'Clickbook',
-    duracao: 0,
-    precoBase: 400,
-    ativo: true
-  },
-  {
-    id: '6',
-    nome: 'PERSONALIZAÇÃO DO TOTEM',
-    descricao: 'Personalização completa do totem',
-    categoria: 'Personalização',
-    duracao: 0,
-    precoBase: 200,
-    ativo: true
-  }
-];
-
-export const pacotes: PacoteServico[] = [
-  {
-    id: '1',
-    nome: 'PACOTE DIAMANTE (T + I + P + C)',
-    descricao: 'Totem + Instaclick + Personalização + Clickbook',
-    servicos: [servicos[0], servicos[3], servicos[5], servicos[4]],
-    precoTotal: 1680,
-    desconto: 0,
-    ativo: true
-  },
-  {
-    id: '2',
-    nome: 'PACOTE OURO (T + I + P)',
-    descricao: 'Totem + Instaclick + Personalização',
-    servicos: [servicos[0], servicos[3], servicos[5]],
-    precoTotal: 1390,
-    desconto: 0,
-    ativo: true
-  },
-  {
-    id: '3',
-    nome: 'PACOTE PRATA (T + I)',
-    descricao: 'Totem + Instaclick',
-    servicos: [servicos[0], servicos[3]],
-    precoTotal: 1380,
-    desconto: 0,
-    ativo: true
-  },
-  {
-    id: '4',
-    nome: 'PACOTE BRONZE - ATÉ 220 IMP.',
-    descricao: 'Pacote básico com até 220 impressões',
-    servicos: [servicos[0]],
-    precoTotal: 968,
-    desconto: 0,
-    ativo: true
-  }
-];
-
-export const promoters: Promoter[] = [
-  {
-    id: '1',
-    nome: 'JÚLIO',
-    telefone: '21999999999',
-    email: 'julio@email.com',
-    especialidades: ['Totem', 'P360', 'Lambe-lambe'],
-    custoHora: 62.5,
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '2',
-    nome: 'MARLON',
-    telefone: '21999999998',
-    email: 'marlon@email.com',
-    especialidades: ['Totem', 'Instaclick', 'Lambe-lambe'],
-    custoHora: 50,
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '3',
-    nome: 'LETÍCIA',
-    telefone: '21999999997',
-    email: 'leticia@email.com',
-    especialidades: ['Totem', 'Instaclick', 'Clickbook'],
-    custoHora: 45,
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '4',
-    nome: 'MAYARA',
+    nome: 'MARIA E JOÃO',
+    cpf: '12345678904',
+    email: 'maria.joao@email.com',
     telefone: '21999999996',
-    email: 'mayara@email.com',
-    especialidades: ['P360', 'Lambe-lambe', 'Instaclick'],
-    custoHora: 40,
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '5',
-    nome: 'TATIANA',
-    telefone: '21999999995',
-    email: 'tatiana@email.com',
-    especialidades: ['P360', 'Totem'],
-    custoHora: 35,
-    ativo: true,
+    endereco: 'Rua das Margaridas, 321',
+    cep: '23000-003',
+    instagram: '@mariajoao',
+    comoConheceu: 'Google',
     dataCadastro: new Date('2023-01-01')
   }
 ];
-
-export const insumos: Insumo[] = [
-  {
-    id: '1',
-    nome: 'Papel Fotográfico',
-    descricao: 'Papel para impressão de fotos instantâneas',
-    custo: 0.5,
-    unidade: 'unidade',
-    ativo: true
-  },
-  {
-    id: '2',
-    nome: 'Tinta para Impressora',
-    descricao: 'Tinta especial para impressão de fotos',
-    custo: 25,
-    unidade: 'cartucho',
-    ativo: true
-  },
-  {
-    id: '3',
-    nome: 'Energia Elétrica',
-    descricao: 'Consumo de energia elétrica dos equipamentos',
-    custo: 0.8,
-    unidade: 'kWh',
-    ativo: true
-  }
-];
-
-export const tiposCusto: TipoCusto[] = [
-  {
-    id: '1',
-    nome: 'TOTEM',
-    descricao: 'Custo do serviço de totem',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '2',
-    nome: 'PROMOTER',
-    descricao: 'Custo com promoters',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '3',
-    nome: 'MOTORISTA',
-    descricao: 'Custo com motorista',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '4',
-    nome: 'FRETE',
-    descricao: 'Custo de frete',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '5',
-    nome: 'INSUMOS',
-    descricao: 'Custo com insumos',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '6',
-    nome: 'IMPOSTOS',
-    descricao: 'Custo com impostos',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '7',
-    nome: 'P360',
-    descricao: 'Custo do serviço P360',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '8',
-    nome: 'LAMBE-LAMBE',
-    descricao: 'Custo do serviço lambe-lambe',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '9',
-    nome: 'INSTACLICK',
-    descricao: 'Custo do serviço Instaclick',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '10',
-    nome: 'CLICKBOOK',
-    descricao: 'Custo do serviço Clickbook',
-    ativo: true,
-    dataCadastro: new Date('2023-01-01')
-  }
-];
-
 
 export const eventos: Evento[] = [
   {
     id: '1',
     clienteId: '1',
     cliente: clientes[0],
-    dataEvento: new Date('2023-01-07'),
-    diaSemana: 'SÁBADO',
-    local: 'ESPAÇO DAS PALMEIRAS - C G',
-    endereco: 'Estr. do Lameirão Pequeno, 550 - Campo Grande, Rio de Janeiro - RJ, 23017-325',
-    tipoEvento: TipoEvento.CASAMENTO,
-    horarioInicio: '19:30',
-    horarioInicioServico: '17:30',
-    horarioTerminoServico: '22:30',
-    horarioDesmontagem: '22:30',
-    tempoEvento: '3 HORAS',
-    contratante: 'GIOVANNA',
-    numeroConvidados: 150,
-    hashtag: '#giovanna2023',
-    numeroImpressoes: 500,
-    status: StatusEvento.CONCLUIDO,
-    valorTotal: 2500, // Valor total a ser pago
-    diaFinalPagamento: new Date('2023-01-15'), // 8 dias após o evento
+    dataEvento: new Date('2023-01-15'),
+    diaSemana: 'Domingo',
+    local: 'Salão de Festas Jardim',
+    endereco: 'Rua das Flores, 123',
+    tipoEvento: 'Aniversário adulto',
+    horarioInicio: '14:00',
+    horarioInicioServico: '13:00',
+    horarioTerminoServico: '22:00',
+    horarioDesmontagem: '23:00',
+    tempoEvento: '8 horas',
+    contratante: 'Giovanna',
+    numeroConvidados: 50,
+    observacoes: 'Festa de aniversário de 15 anos',
+    status: 'Confirmado',
+    valorTotal: 2000,
+    diaFinalPagamento: new Date('2023-01-15'),
     dataCadastro: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-01-07')
+    dataAtualizacao: new Date('2023-01-01')
   },
   {
     id: '2',
     clienteId: '2',
     cliente: clientes[1],
-    dataEvento: new Date('2023-01-07'),
-    diaSemana: 'SÁBADO',
-    local: 'SALÃO DE FESTAS',
-    endereco: 'Rua das Flores, 123 - Centro',
-    tipoEvento: TipoEvento.CASAMENTO,
-    horarioInicio: '20:00',
-    horarioInicioServico: '18:00',
-    horarioTerminoServico: '23:00',
-    horarioDesmontagem: '23:00',
-    tempoEvento: '5 HORAS',
-    contratante: 'DANIELLE',
+    dataEvento: new Date('2023-02-15'),
+    diaSemana: 'Quarta-feira',
+    local: 'Casa da Danielle',
+    endereco: 'Rua das Palmeiras, 456',
+    tipoEvento: 'Casamento',
+    horarioInicio: '16:00',
+    horarioInicioServico: '15:00',
+    horarioTerminoServico: '02:00',
+    horarioDesmontagem: '03:00',
+    tempoEvento: '10 horas',
+    contratante: 'Danielle',
     numeroConvidados: 100,
-    hashtag: '#danielle2023',
-    numeroImpressoes: 300,
-    status: StatusEvento.CONCLUIDO,
-    valorTotal: 1800, // Valor total a ser pago
-    diaFinalPagamento: new Date('2023-01-15'), // 8 dias após o evento
+    observacoes: 'Cerimônia e recepção',
+    status: 'Confirmado',
+    valorTotal: 5000,
+    diaFinalPagamento: new Date('2023-02-15'),
     dataCadastro: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-01-07')
+    dataAtualizacao: new Date('2023-01-01')
+  },
+  {
+    id: '3',
+    clienteId: '3',
+    cliente: clientes[2],
+    dataEvento: new Date('2023-03-15'),
+    diaSemana: 'Quarta-feira',
+    local: 'Salão de Festas Central',
+    endereco: 'Rua das Rosas, 789',
+    tipoEvento: 'Casamento',
+    horarioInicio: '18:00',
+    horarioInicioServico: '17:00',
+    horarioTerminoServico: '04:00',
+    horarioDesmontagem: '05:00',
+    tempoEvento: '11 horas',
+    contratante: 'Vinícius e Nathália',
+    numeroConvidados: 150,
+    observacoes: 'Cerimônia religiosa e recepção',
+    status: 'Confirmado',
+    valorTotal: 8000,
+    diaFinalPagamento: new Date('2023-03-15'),
+    dataCadastro: new Date('2023-01-01'),
+    dataAtualizacao: new Date('2023-01-01')
+  },
+  {
+    id: '4',
+    clienteId: '4',
+    cliente: clientes[3],
+    dataEvento: new Date('2023-04-15'),
+    diaSemana: 'Sábado',
+    local: 'Fazenda dos Sonhos',
+    endereco: 'Rua das Margaridas, 321',
+    tipoEvento: 'Casamento',
+    horarioInicio: '17:00',
+    horarioInicioServico: '16:00',
+    horarioTerminoServico: '03:00',
+    horarioDesmontagem: '04:00',
+    tempoEvento: '11 horas',
+    contratante: 'Maria e João',
+    numeroConvidados: 200,
+    observacoes: 'Cerimônia ao ar livre e recepção',
+    status: 'Confirmado',
+    valorTotal: 12000,
+    diaFinalPagamento: new Date('2023-04-15'),
+    dataCadastro: new Date('2023-01-01'),
+    dataAtualizacao: new Date('2023-01-01')
+  }
+];
+
+export const pagamentos: Pagamento[] = [
+  {
+    id: '1',
+    userId: 'user1',
+    eventoId: '1',
+    valor: 500,
+    dataPagamento: new Date('2023-01-05'),
+    formaPagamento: 'PIX',
+    status: 'Pago',
+    observacoes: 'Primeiro pagamento',
+    dataCadastro: new Date('2023-01-05'),
+    dataAtualizacao: new Date('2023-01-05')
+  },
+  {
+    id: '2',
+    userId: 'user1',
+    eventoId: '1',
+    valor: 800,
+    dataPagamento: new Date('2023-01-10'),
+    formaPagamento: 'Depósito bancário',
+    status: 'Pago',
+    observacoes: 'Segundo pagamento',
+    dataCadastro: new Date('2023-01-10'),
+    dataAtualizacao: new Date('2023-01-10')
+  },
+  {
+    id: '3',
+    userId: 'user1',
+    eventoId: '1',
+    valor: 700,
+    dataPagamento: new Date('2023-01-15'),
+    formaPagamento: 'Cartão de crédito',
+    status: 'Pago',
+    observacoes: 'Terceiro pagamento',
+    dataCadastro: new Date('2023-01-15'),
+    dataAtualizacao: new Date('2023-01-15')
+  },
+  {
+    id: '4',
+    userId: 'user1',
+    eventoId: '2',
+    valor: 600,
+    dataPagamento: new Date('2023-01-08'),
+    formaPagamento: 'PIX',
+    status: 'Pago',
+    observacoes: 'Primeiro pagamento',
+    dataCadastro: new Date('2023-01-08'),
+    dataAtualizacao: new Date('2023-01-08')
+  },
+  {
+    id: '5',
+    userId: 'user1',
+    eventoId: '2',
+    valor: 400,
+    dataPagamento: new Date('2023-01-18'),
+    formaPagamento: 'Transferência',
+    status: 'Pago',
+    observacoes: 'Segundo pagamento',
+    dataCadastro: new Date('2023-01-18'),
+    dataAtualizacao: new Date('2023-01-18')
+  }
+];
+
+export const tiposCusto: TipoCusto[] = [
+  {
+    id: '1',
+    nome: 'Decoração',
+    descricao: 'Itens de decoração para eventos',
+    ativo: true,
+    dataCadastro: new Date('2023-01-01')
+  },
+  {
+    id: '2',
+    nome: 'Alimentação',
+    descricao: 'Catering e alimentação',
+    ativo: true,
+    dataCadastro: new Date('2023-01-01')
+  },
+  {
+    id: '3',
+    nome: 'Som e Iluminação',
+    descricao: 'Equipamentos de som e iluminação',
+    ativo: true,
+    dataCadastro: new Date('2023-01-01')
+  },
+  {
+    id: '4',
+    nome: 'Fotografia',
+    descricao: 'Serviços de fotografia e filmagem',
+    ativo: true,
+    dataCadastro: new Date('2023-01-01')
   }
 ];
 
@@ -379,73 +279,29 @@ export const custosEvento: CustoEvento[] = [
     tipoCusto: tiposCusto[1],
     valor: 50,
     quantidade: 1,
-    observacoes: 'Júlio - 4 horas',
+    observacoes: 'Custo base do buffet',
     dataCadastro: new Date('2023-01-01')
   },
   {
     id: '3',
-    eventoId: '1',
-    evento: eventos[0],
-    tipoCustoId: '2',
-    tipoCusto: tiposCusto[1],
-    valor: 100,
+    eventoId: '2',
+    evento: eventos[1],
+    tipoCustoId: '1',
+    tipoCusto: tiposCusto[0],
+    valor: 80,
     quantidade: 1,
-    observacoes: 'Marlon - 4 horas',
+    observacoes: 'Decoração especial para casamento',
     dataCadastro: new Date('2023-01-01')
   },
   {
     id: '4',
-    eventoId: '1',
-    evento: eventos[0],
-    tipoCustoId: '2',
-    tipoCusto: tiposCusto[1],
-    valor: 20,
-    quantidade: 1,
-    observacoes: 'Letícia - 2 horas',
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '5',
-    eventoId: '1',
-    evento: eventos[0],
+    eventoId: '2',
+    evento: eventos[1],
     tipoCustoId: '3',
     tipoCusto: tiposCusto[2],
-    valor: 100,
+    valor: 120,
     quantidade: 1,
-    observacoes: 'Transporte dos equipamentos',
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '6',
-    eventoId: '1',
-    evento: eventos[0],
-    tipoCustoId: '4',
-    tipoCusto: tiposCusto[3],
-    valor: 60,
-    quantidade: 1,
-    observacoes: 'Frete para o local do evento',
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '7',
-    eventoId: '1',
-    evento: eventos[0],
-    tipoCustoId: '5',
-    tipoCusto: tiposCusto[4],
-    valor: 40,
-    quantidade: 1,
-    observacoes: 'Papel fotográfico e tinta',
-    dataCadastro: new Date('2023-01-01')
-  },
-  {
-    id: '8',
-    eventoId: '1',
-    evento: eventos[0],
-    tipoCustoId: '6',
-    tipoCusto: tiposCusto[5],
-    valor: 30,
-    quantidade: 1,
-    observacoes: 'Impostos sobre o serviço',
+    observacoes: 'Som e iluminação profissional',
     dataCadastro: new Date('2023-01-01')
   }
 ];
@@ -473,522 +329,10 @@ export const anexosEvento: AnexoEvento[] = [
   }
 ];
 
-export const contratos: ContratoServico[] = [
-  {
-    id: '1',
-    eventoId: '1',
-    evento: eventos[0],
-    pacoteId: '1',
-    pacote: pacotes[0],
-    servicosContratados: pacotes[0].servicos,
-    valorTotal: 3060,
-    valorSinal: 312,
-    valorRestante: 500,
-    formaPagamento: FormaPagamento.PARCELADO,
-    parcelas: 10,
-    dataInicioParcelas: new Date('2023-02-01'),
-    diaVencimento: 7,
-    status: StatusContrato.ATIVO,
-    dataContrato: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-01-01')
-  },
-  {
-    id: '2',
-    eventoId: '2',
-    evento: eventos[1],
-    servicoId: '2',
-    servico: servicos[1],
-    servicosContratados: [servicos[1]],
-    valorTotal: 2400,
-    valorSinal: 520,
-    valorRestante: 1880,
-    formaPagamento: FormaPagamento.PARCELADO,
-    parcelas: 6,
-    dataInicioParcelas: new Date('2023-02-01'),
-    diaVencimento: 7,
-    status: StatusContrato.ATIVO,
-    dataContrato: new Date('2023-01-01'),
-    dataAtualizacao: new Date('2023-01-01')
-  }
-];
-
-export const pagamentos: Pagamento[] = [
-  {
-    id: '1',
-    eventoId: '1',
-    evento: eventos[0],
-    valor: 500,
-    dataPagamento: new Date('2023-01-05'), // Antes do dia final (15/01)
-    formaPagamento: 'PIX',
-    status: 'Pago',
-    observacoes: 'Primeiro pagamento',
-    dataCadastro: new Date('2023-01-05'),
-    dataAtualizacao: new Date('2023-01-05')
-  },
-  {
-    id: '2',
-    eventoId: '1',
-    evento: eventos[0],
-    valor: 800,
-    dataPagamento: new Date('2023-01-10'), // Antes do dia final (15/01)
-    formaPagamento: 'Depósito bancário',
-    status: 'Pago',
-    observacoes: 'Segundo pagamento',
-    dataCadastro: new Date('2023-01-10'),
-    dataAtualizacao: new Date('2023-01-10')
-  },
-  {
-    id: '3',
-    eventoId: '1',
-    evento: eventos[0],
-    valor: 700,
-    dataPagamento: new Date('2023-01-20'), // Após o dia final (15/01)
-    formaPagamento: 'Cartão de crédito',
-    status: 'Atrasado',
-    observacoes: 'Pagamento atrasado',
-    dataCadastro: new Date('2023-01-20'),
-    dataAtualizacao: new Date('2023-01-20')
-  },
-  {
-    id: '4',
-    eventoId: '2',
-    evento: eventos[1],
-    valor: 600,
-    dataPagamento: new Date('2023-01-08'), // Antes do dia final (15/01)
-    formaPagamento: 'PIX',
-    status: 'Pago',
-    observacoes: 'Primeiro pagamento',
-    dataCadastro: new Date('2023-01-08'),
-    dataAtualizacao: new Date('2023-01-08')
-  },
-  {
-    id: '5',
-    eventoId: '2',
-    evento: eventos[1],
-    valor: 400,
-    dataPagamento: new Date('2023-01-18'), // Após o dia final (15/01)
-    formaPagamento: 'Depósito bancário',
-    status: 'Atrasado',
-    observacoes: 'Pagamento atrasado',
-    dataCadastro: new Date('2023-01-18'),
-    dataAtualizacao: new Date('2023-01-18')
-  }
-];
-
-// Funções utilitárias para trabalhar com os dados mockados
-export const getClienteById = (id: string): Cliente | undefined => {
-  return clientes.find(cliente => cliente.id === id);
-};
-
-export const getEventoById = (id: string): Evento | undefined => {
-  return eventos.find(evento => evento.id === id);
-};
-
-export const getContratoById = (id: string): ContratoServico | undefined => {
-  return contratos.find(contrato => contrato.id === id);
-};
-
-export const getPagamentosByContratoId = (contratoId: string): Pagamento[] => {
-  // Esta função não é mais necessária com a nova estrutura
-  // Os pagamentos agora são vinculados diretamente aos eventos
-  return [];
-};
-
-export const getEventosByClienteId = (clienteId: string): Evento[] => {
-  return eventos.filter(evento => evento.clienteId === clienteId);
-};
-
-export const getPagamentosPendentes = (): Pagamento[] => {
-  // Com a nova lógica, não há mais status "Pendente" nos pagamentos
-  // Esta função retorna uma lista vazia pois todos os pagamentos são considerados "Pago"
-  // O conceito de "pendente" agora se refere ao valor restante do evento, não aos pagamentos
-  return [];
-};
-
-export const getPagamentosAtrasados = (): Pagamento[] => {
-  return pagamentos.filter(pagamento => pagamento.status === 'Atrasado');
-};
-
-export const getEventosHoje = (): Evento[] => {
-  const hoje = new Date();
-  return eventos.filter(evento => {
-    const dataEvento = new Date(evento.dataEvento);
-    return dataEvento.toDateString() === hoje.toDateString();
-  });
-};
-
-export const getEventosProximos = (dias: number = 7): Evento[] => {
-  const hoje = new Date();
-  const dataLimite = new Date();
-  dataLimite.setDate(hoje.getDate() + dias);
-  
-  return eventos.filter(evento => {
-    const dataEvento = new Date(evento.dataEvento);
-    return dataEvento >= hoje && dataEvento <= dataLimite;
-  });
-};
-
-export const calcularValorTotalPendente = (): number => {
-  // Calcula o valor total pendente de todos os eventos que ainda não passaram do dia final de pagamento
-  const hoje = new Date();
-  let valorTotalPendente = 0;
-
-  eventos.forEach(evento => {
-    const diaFinalPagamento = new Date(evento.diaFinalPagamento);
-    
-    // Só considera eventos que ainda não passaram do dia final de pagamento
-    if (hoje <= diaFinalPagamento) {
-      const pagamentosEvento = getPagamentosByEventoId(evento.id);
-      const valorPago = pagamentosEvento.reduce((total, p) => total + p.valor, 0);
-      const valorRestante = evento.valorTotal - valorPago;
-      valorTotalPendente += Math.max(0, valorRestante);
-    }
-  });
-
-  return valorTotalPendente;
-};
-
-export const calcularValorTotalAtrasado = (): number => {
-  // Calcula o valor total atrasado de todos os eventos que já passaram do dia final de pagamento
-  const hoje = new Date();
-  let valorTotalAtrasado = 0;
-
-  eventos.forEach(evento => {
-    const diaFinalPagamento = new Date(evento.diaFinalPagamento);
-    
-    // Só considera eventos que já passaram do dia final de pagamento
-    if (hoje > diaFinalPagamento) {
-      const pagamentosEvento = getPagamentosByEventoId(evento.id);
-      const valorPago = pagamentosEvento.reduce((total, p) => total + p.valor, 0);
-      const valorRestante = evento.valorTotal - valorPago;
-      valorTotalAtrasado += Math.max(0, valorRestante);
-    }
-  });
-
-  return valorTotalAtrasado;
-};
-
-export const calcularReceitaMes = (ano: number, mes: number): number => {
-  return pagamentos
-    .filter(pagamento => {
-      // Considera todos os pagamentos que têm data de pagamento (independente do status)
-      if (!pagamento.dataPagamento) return false;
-      const dataPagamento = new Date(pagamento.dataPagamento);
-      return dataPagamento.getFullYear() === ano && dataPagamento.getMonth() === mes - 1;
-    })
-    .reduce((total, pagamento) => total + pagamento.valor, 0);
-};
-
-export const calcularReceitaAno = (ano: number): number => {
-  return pagamentos
-    .filter(pagamento => {
-      // Considera todos os pagamentos que têm data de pagamento (independente do status)
-      if (!pagamento.dataPagamento) return false;
-      const dataPagamento = new Date(pagamento.dataPagamento);
-      return dataPagamento.getFullYear() === ano;
-    })
-    .reduce((total, pagamento) => total + pagamento.valor, 0);
-};
-
-// Funções CRUD para Eventos
-export const createEvento = (eventoData: Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'>): Evento => {
-  const novoEvento: Evento = {
-    ...eventoData,
-    id: (eventos.length + 1).toString(),
-    dataCadastro: new Date(),
-    dataAtualizacao: new Date()
-  };
-  
-  eventos.push(novoEvento);
-  return novoEvento;
-};
-
-export const updateEvento = (id: string, eventoData: Partial<Omit<Evento, 'id' | 'dataCadastro'>>): Evento | null => {
-  const index = eventos.findIndex(evento => evento.id === id);
-  if (index === -1) return null;
-  
-  eventos[index] = {
-    ...eventos[index],
-    ...eventoData,
-    dataAtualizacao: new Date()
-  };
-  
-  return eventos[index];
-};
-
-export const deleteEvento = (id: string): boolean => {
-  const index = eventos.findIndex(evento => evento.id === id);
-  if (index === -1) return false;
-  
-  eventos.splice(index, 1);
-  return true;
-};
-
-// Funções CRUD para Clientes
-export const createCliente = (clienteData: Omit<Cliente, 'id' | 'dataCadastro'>): Cliente => {
-  const novoCliente: Cliente = {
-    ...clienteData,
-    id: (clientes.length + 1).toString(),
-    dataCadastro: new Date()
-  };
-  
-  clientes.push(novoCliente);
-  return novoCliente;
-};
-
-export const updateCliente = (id: string, clienteData: Partial<Omit<Cliente, 'id' | 'dataCadastro'>>): Cliente | null => {
-  const index = clientes.findIndex(cliente => cliente.id === id);
-  if (index === -1) return null;
-  
-  clientes[index] = {
-    ...clientes[index],
-    ...clienteData
-  };
-  
-  return clientes[index];
-};
-
-export const deleteCliente = (id: string): boolean => {
-  const index = clientes.findIndex(cliente => cliente.id === id);
-  if (index === -1) return false;
-  
-  clientes.splice(index, 1);
-  return true;
-};
-
-// Função para buscar clientes por nome (para autocomplete)
-export const searchClientes = (query: string): Cliente[] => {
-  return clientes.filter(cliente => 
-    cliente.nome.toLowerCase().includes(query.toLowerCase()) ||
-    cliente.email.toLowerCase().includes(query.toLowerCase())
-  );
-};
-
-
-// Funções CRUD para Pagamentos
-export const createPagamento = (pagamentoData: Omit<Pagamento, 'id' | 'status' | 'dataCadastro' | 'dataAtualizacao'>): Pagamento => {
-  const evento = getEventoById(pagamentoData.eventoId);
-  if (!evento) {
-    throw new Error('Evento não encontrado');
-  }
-
-  const novoPagamento: Pagamento = {
-    ...pagamentoData,
-    status: 'Pago', // Todos os pagamentos são considerados pagos
-    id: (pagamentos.length + 1).toString(),
-    dataCadastro: new Date(),
-    dataAtualizacao: new Date()
-  };
-  
-  pagamentos.push(novoPagamento);
-  return novoPagamento;
-};
-
-export const updatePagamento = (id: string, pagamentoData: Partial<Omit<Pagamento, 'id' | 'dataCadastro'>>): Pagamento | null => {
-  const index = pagamentos.findIndex(pagamento => pagamento.id === id);
-  if (index === -1) return null;
-  
-  pagamentos[index] = {
-    ...pagamentos[index],
-    ...pagamentoData,
-    status: 'Pago', // Todos os pagamentos são considerados pagos
-    dataAtualizacao: new Date()
-  };
-  
-  return pagamentos[index];
-};
-
-export const deletePagamento = (id: string): boolean => {
-  const index = pagamentos.findIndex(pagamento => pagamento.id === id);
-  if (index === -1) return false;
-  
-  pagamentos.splice(index, 1);
-  return true;
-};
-
-// Função para buscar pagamentos por evento
-export const getPagamentosByEventoId = (eventoId: string): Pagamento[] => {
-  return pagamentos.filter(pagamento => pagamento.eventoId === eventoId);
-};
-
-// Função para buscar contrato por evento
-export const getContratoByEventoId = (eventoId: string): ContratoServico | null => {
-  return contratos.find(contrato => contrato.eventoId === eventoId) || null;
-};
-
-// Função para buscar pagamento por ID
-export const getPagamentoById = (id: string): Pagamento | undefined => {
-  return pagamentos.find(pagamento => pagamento.id === id);
-};
-
-// Função para calcular resumo financeiro do evento
-export const getResumoFinanceiroEvento = (eventoId: string) => {
-  const evento = getEventoById(eventoId);
-  const pagamentosEvento = getPagamentosByEventoId(eventoId);
-  
-  if (!evento) {
-    return {
-      valorTotal: 0,
-      valorPago: 0,
-      valorPendenteOuAtrasado: 0,
-      isAtrasado: false,
-      diaFinalPagamento: null
-    };
-  }
-
-  // Valor Pago: soma de todos os pagamentos, independente da data
-  const valorPago = pagamentosEvento
-    .reduce((total, p) => total + p.valor, 0);
-
-  // Verificar se já passou do dia final de pagamento
-  const hoje = new Date();
-  const diaFinalPagamento = new Date(evento.diaFinalPagamento);
-  const jaPassouDiaFinal = hoje > diaFinalPagamento;
-
-  // Calcular valor restante
-  const valorRestante = Math.max(0, evento.valorTotal - valorPago);
-
-  return {
-    valorTotal: evento.valorTotal,
-    valorPago,
-    valorPendenteOuAtrasado: valorRestante,
-    isAtrasado: jaPassouDiaFinal,
-    diaFinalPagamento: evento.diaFinalPagamento
-  };
-};
-
-// Funções CRUD para Tipos de Custo
-export const createTipoCusto = (tipoCustoData: Omit<TipoCusto, 'id' | 'dataCadastro'>): TipoCusto => {
-  const novoTipoCusto: TipoCusto = {
-    ...tipoCustoData,
-    id: (tiposCusto.length + 1).toString(),
-    dataCadastro: new Date()
-  };
-  
-  tiposCusto.push(novoTipoCusto);
-  return novoTipoCusto;
-};
-
-export const updateTipoCusto = (id: string, tipoCustoData: Partial<Omit<TipoCusto, 'id' | 'dataCadastro'>>): TipoCusto | null => {
-  const index = tiposCusto.findIndex(tipo => tipo.id === id);
-  if (index === -1) return null;
-  
-  tiposCusto[index] = {
-    ...tiposCusto[index],
-    ...tipoCustoData
-  };
-  
-  return tiposCusto[index];
-};
-
-export const deleteTipoCusto = (id: string): boolean => {
-  const index = tiposCusto.findIndex(tipo => tipo.id === id);
-  if (index === -1) return false;
-  
-  tiposCusto.splice(index, 1);
-  return true;
-};
-
-// Funções CRUD para Custos de Evento
-export const createCustoEvento = (custoData: Omit<CustoEvento, 'id' | 'dataCadastro'>): CustoEvento => {
-  const novoCusto: CustoEvento = {
-    ...custoData,
-    id: (custosEvento.length + 1).toString(),
-    dataCadastro: new Date()
-  };
-  
-  custosEvento.push(novoCusto);
-  return novoCusto;
-};
-
-export const updateCustoEvento = (id: string, custoData: Partial<Omit<CustoEvento, 'id' | 'dataCadastro'>>): CustoEvento | null => {
-  const index = custosEvento.findIndex(custo => custo.id === id);
-  if (index === -1) return null;
-  
-  custosEvento[index] = {
-    ...custosEvento[index],
-    ...custoData
-  };
-  
-  return custosEvento[index];
-};
-
-export const deleteCustoEvento = (id: string): boolean => {
-  const index = custosEvento.findIndex(custo => custo.id === id);
-  if (index === -1) return false;
-  
-  custosEvento.splice(index, 1);
-  return true;
-};
-
-// Função para buscar custos por evento
-export const getCustosByEventoId = (eventoId: string): CustoEvento[] => {
-  return custosEvento.filter(custo => custo.eventoId === eventoId);
-};
-
-// Função para calcular resumo de custos do evento
-export const getResumoCustosEvento = (eventoId: string): ResumoCustosEvento => {
-  const custos = getCustosByEventoId(eventoId);
-  
-  const total = custos.reduce((sum, custo) => sum + custo.valor, 0);
-  
-  const porTipoCusto = custos.reduce((acc, custo) => {
-    const tipoCusto = custo.tipoCusto.nome;
-    acc[tipoCusto] = (acc[tipoCusto] || 0) + custo.valor;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  return {
-    custos,
-    total,
-    porCategoria: porTipoCusto,
-    quantidadeItens: custos.length
-  };
-};
-
-// Funções CRUD para Anexos de Evento
-export const createAnexoEvento = (anexoData: Omit<AnexoEvento, 'id' | 'dataUpload'>): AnexoEvento => {
-  const novoAnexo: AnexoEvento = {
-    ...anexoData,
-    id: (anexosEvento.length + 1).toString(),
-    dataUpload: new Date()
-  };
-  
-  anexosEvento.push(novoAnexo);
-  return novoAnexo;
-};
-
-export const updateAnexoEvento = (id: string, anexoData: Partial<Omit<AnexoEvento, 'id' | 'dataUpload'>>): AnexoEvento | null => {
-  const index = anexosEvento.findIndex(anexo => anexo.id === id);
-  if (index === -1) return null;
-  
-  anexosEvento[index] = {
-    ...anexosEvento[index],
-    ...anexoData
-  };
-  
-  return anexosEvento[index];
-};
-
-export const deleteAnexoEvento = (id: string): boolean => {
-  const index = anexosEvento.findIndex(anexo => anexo.id === id);
-  if (index === -1) return false;
-  
-  anexosEvento.splice(index, 1);
-  return true;
-};
-
-// Função para buscar anexos por evento
-export const getAnexosByEventoId = (eventoId: string): AnexoEvento[] => {
-  return anexosEvento.filter(anexo => anexo.eventoId === eventoId);
-};
-
-// Função para buscar tipo de custo por ID
-export const getTipoCustoById = (id: string): TipoCusto | undefined => {
-  return tiposCusto.find(tipo => tipo.id === id);
-};
-
-// Função para buscar custo por ID
-export const getCustoEventoById = (id: string): CustoEvento | undefined => {
-  return custosEvento.find(custo => custo.id === id);
-};
+// Dados adicionais para completar as interfaces
+export const servicos: Servico[] = [];
+export const pacotesServico: PacoteServico[] = [];
+export const contratos: ContratoServico[] = [];
+export const promoters: Promoter[] = [];
+export const insumos: Insumo[] = [];
+export const resumosCustosEvento: ResumoCustosEvento[] = [];

@@ -1,6 +1,6 @@
 import { SubcollectionRepository } from './subcollection-repository';
 import { Evento } from '@/types';
-import { where, orderBy, limit as firestoreLimit, and, gte, lte } from 'firebase/firestore';
+import { where, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 import { COLLECTIONS } from '../firestore/collections';
 
 export class EventoRepository extends SubcollectionRepository<Evento> {
@@ -23,10 +23,8 @@ export class EventoRepository extends SubcollectionRepository<Evento> {
 
   async findByDataEvento(dataInicio: Date, dataFim: Date, userId: string): Promise<Evento[]> {
     return this.query([
-      and(
-        where('dataEvento', '>=', dataInicio),
-        where('dataEvento', '<=', dataFim)
-      ),
+      where('dataEvento', '>=', dataInicio),
+      where('dataEvento', '<=', dataFim),
       orderBy('dataEvento', 'asc')
     ], userId);
   }

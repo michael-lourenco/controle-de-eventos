@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import PagamentoForm from '@/components/forms/PagamentoForm';
 import { 
-  Pagamento
+  Pagamento,
+  Evento
 } from '@/types';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -25,7 +26,7 @@ interface PagamentoHistoricoProps {
   eventoId: string;
   pagamentos: Pagamento[];
   onPagamentosChange: () => void;
-  evento: any; // Adicionar prop evento
+  evento: Evento; // Adicionar prop evento
 }
 
 export default function PagamentoHistorico({ 
@@ -45,7 +46,7 @@ export default function PagamentoHistorico({
     valorPendente: 0,
     valorAtrasado: 0,
     isAtrasado: false,
-    diaFinalPagamento: null
+    diaFinalPagamento: null as Date | null
   });
 
   // Carregar resumo financeiro do Firestore
@@ -60,7 +61,7 @@ export default function PagamentoHistorico({
         console.log('PagamentoHistorico: Carregando resumo financeiro para evento:', eventoId);
         const valorTotal = evento?.valorTotal || 0;
         const dataFinalPagamento = evento?.diaFinalPagamento ? 
-          (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
+          (evento.diaFinalPagamento instanceof Date ? evento.diaFinalPagamento : new Date(evento.diaFinalPagamento)) : 
           undefined;
         const resumo = await dataService.getResumoFinanceiroPorEvento(userId, eventoId, valorTotal, dataFinalPagamento);
         
@@ -75,7 +76,7 @@ export default function PagamentoHistorico({
           valorPendente: resumo.valorPendente,
           valorAtrasado: resumo.valorAtrasado,
           isAtrasado: resumo.isAtrasado,
-          diaFinalPagamento: dataFinalPagamento
+          diaFinalPagamento: dataFinalPagamento || null || null
         });
       } catch (error) {
         console.error('Erro ao carregar resumo financeiro:', error);
@@ -140,7 +141,7 @@ export default function PagamentoHistorico({
       // Recarregar resumo financeiro após salvar
       const valorTotal = evento?.valorTotal || 0;
       const dataFinalPagamento = evento?.diaFinalPagamento ? 
-        (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
+        (evento.diaFinalPagamento instanceof Date ? evento.diaFinalPagamento : new Date(evento.diaFinalPagamento)) : 
         undefined;
       const resumo = await dataService.getResumoFinanceiroPorEvento(userId, eventoId, valorTotal, dataFinalPagamento);
       
@@ -151,7 +152,7 @@ export default function PagamentoHistorico({
         valorPendente: resumo.valorPendente,
         valorAtrasado: resumo.valorAtrasado,
         isAtrasado: resumo.isAtrasado,
-        diaFinalPagamento: dataFinalPagamento
+        diaFinalPagamento: dataFinalPagamento || null
       });
       
       console.log('PagamentoHistorico: Chamando onPagamentosChange');
@@ -176,7 +177,7 @@ export default function PagamentoHistorico({
         // Recarregar resumo financeiro após excluir
         const valorTotal = evento?.valorTotal || 0;
         const dataFinalPagamento = evento?.diaFinalPagamento ? 
-          (evento.diaFinalPagamento?.toDate ? evento.diaFinalPagamento.toDate() : new Date(evento.diaFinalPagamento)) : 
+          (evento.diaFinalPagamento instanceof Date ? evento.diaFinalPagamento : new Date(evento.diaFinalPagamento)) : 
           undefined;
         const resumo = await dataService.getResumoFinanceiroPorEvento(userId!, eventoId, valorTotal, dataFinalPagamento);
         
@@ -187,7 +188,7 @@ export default function PagamentoHistorico({
           valorPendente: resumo.valorPendente,
           valorAtrasado: resumo.valorAtrasado,
           isAtrasado: resumo.isAtrasado,
-          diaFinalPagamento: dataFinalPagamento
+          diaFinalPagamento: dataFinalPagamento || null || null
         });
         
         onPagamentosChange();
