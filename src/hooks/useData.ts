@@ -225,6 +225,35 @@ export function usePagamentosPorEvento(eventoId: string): UseDataResult<Pagament
   return { data, loading, error, refetch: fetchData };
 }
 
+// Hook para todos os pagamentos do usuário
+export function useAllPagamentos(): UseDataResult<any[]> {
+  const [data, setData] = useState<any[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getAllPagamentos(userId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar pagamentos');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
 // Hook para tipos de custo
 export function useTiposCusto(): UseDataResult<TipoCusto[]> {
   const [data, setData] = useState<TipoCusto[] | null>(null);

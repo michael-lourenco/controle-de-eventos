@@ -169,6 +169,48 @@ export class DataService {
     return this.pagamentoRepo.getTotalRecebidoPorPeriodo(userId, eventoId, inicio, fim);
   }
 
+  // Método para buscar todos os pagamentos de todos os eventos do usuário
+  async getAllPagamentos(userId: string): Promise<Pagamento[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar pagamentos');
+    }
+    
+    try {
+      // Buscar todos os eventos do usuário
+      const eventos = await this.getEventos(userId);
+      const todosPagamentos: Pagamento[] = [];
+      
+      // Buscar pagamentos de todos os eventos
+      for (const evento of eventos) {
+        try {
+          const pagamentosEvento = await this.getPagamentosPorEvento(userId, evento.id);
+          // Adicionar informações do evento a cada pagamento
+          const pagamentosComEvento = pagamentosEvento.map(pagamento => ({
+            ...pagamento,
+            evento: {
+              id: evento.id,
+              nome: evento.nome,
+              dataEvento: evento.dataEvento,
+              local: evento.local,
+              cliente: evento.cliente
+            }
+          }));
+          todosPagamentos.push(...pagamentosComEvento);
+        } catch (error) {
+          console.error(`Erro ao buscar pagamentos do evento ${evento.id}:`, error);
+        }
+      }
+      
+      // Ordenar por data de pagamento (mais recente primeiro)
+      return todosPagamentos.sort((a, b) => 
+        new Date(b.dataPagamento).getTime() - new Date(a.dataPagamento).getTime()
+      );
+    } catch (error) {
+      console.error('Erro ao buscar todos os pagamentos:', error);
+      return [];
+    }
+  }
+
   async getResumoFinanceiroPorEvento(userId: string, eventoId: string, valorTotalEvento: number, dataFinalPagamento?: Date): Promise<{
     totalPago: number;
     valorPendente: number;
