@@ -2,28 +2,28 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser } from '@/lib/auth';
+import { useSession } from 'next-auth/react';
 
 export default function HomePage() {
-  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
   
   useEffect(() => {
-    const checkAuth = () => {
-      const user = getCurrentUser();
-      setLoading(false);
-      
-      if (user) {
-        router.push('/dashboard');
-      } else {
-        router.push('/login');
-      }
-    };
+    setMounted(true);
+  }, []);
+  
+  useEffect(() => {
+    if (!mounted || status === 'loading') return;
     
-    checkAuth();
-  }, [router]);
+    if (session) {
+      router.push('/dashboard');
+    } else {
+      router.push('/login');
+    }
+  }, [session, status, router, mounted]);
 
-  if (loading) {
+  if (!mounted || status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>

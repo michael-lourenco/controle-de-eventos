@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Layout from '@/components/Layout';
 import {
-  MagnifyingGlassIcon,
   PlusIcon,
   CalendarIcon,
   MapPinIcon,
@@ -24,6 +23,7 @@ import { dataService } from '@/lib/data-service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusEvento, TipoEvento, Evento } from '@/types';
+import DateRangeFilter, { DateFilter, isDateInFilter } from '@/components/filters/DateRangeFilter';
 
 export default function EventosPage() {
   const router = useRouter();
@@ -32,6 +32,7 @@ export default function EventosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
+  const [dateFilter, setDateFilter] = useState<DateFilter | null>(null);
   const [eventoParaExcluir, setEventoParaExcluir] = useState<Evento | null>(null);
   
   if (loading) {
@@ -69,8 +70,20 @@ export default function EventosPage() {
                          evento.local.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
     const matchesTipo = filterTipo === 'todos' || evento.tipoEvento === filterTipo;
+    const matchesDate = isDateInFilter(evento.dataEvento, dateFilter);
     
-    return matchesSearch && matchesStatus && matchesTipo;
+    // Debug para verificar filtro de data
+    if (dateFilter && dateFilter.range.startDate && dateFilter.range.endDate) {
+      console.log('Filtro de data ativo:', {
+        eventDate: evento.dataEvento,
+        eventDateFormatted: format(evento.dataEvento, 'dd/MM/yyyy'),
+        filterStart: dateFilter.range.startDate,
+        filterEnd: dateFilter.range.endDate,
+        matchesDate
+      });
+    }
+    
+    return matchesSearch && matchesStatus && matchesTipo && matchesDate;
   });
 
   const handleView = (evento: Evento) => {
@@ -151,60 +164,106 @@ export default function EventosPage() {
         </div>
 
         {/* Filtros */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-              <div>
-                <Input
-                  label="Buscar"
-                  placeholder="Nome do cliente ou local..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Filtro por Período */}
+          <div>
+            <DateRangeFilter 
+              onFilterChange={setDateFilter}
+              className="w-full"
+            />
+          </div>
+
+          {/* Filtros Básicos */}
+          <Card className="lg:col-span-2">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <Input
+                    label="Buscar"
+                    placeholder="Nome do cliente ou local..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
+                    <option value="todos">Todos</option>
+                    <option value={StatusEvento.AGENDADO}>Agendado</option>
+                    <option value={StatusEvento.CONFIRMADO}>Confirmado</option>
+                    <option value={StatusEvento.EM_ANDAMENTO}>Em andamento</option>
+                    <option value={StatusEvento.CONCLUIDO}>Concluído</option>
+                    <option value={StatusEvento.CANCELADO}>Cancelado</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tipo
+                  </label>
+                  <select
+                    value={filterTipo}
+                    onChange={(e) => setFilterTipo(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
+                    <option value="todos">Todos</option>
+                    <option value={TipoEvento.CASAMENTO}>Casamento</option>
+                    <option value={TipoEvento.ANIVERSARIO_INFANTIL}>Aniversário Infantil</option>
+                    <option value={TipoEvento.ANIVERSARIO_ADULTO}>Aniversário Adulto</option>
+                    <option value={TipoEvento.QUINZE_ANOS}>15 Anos</option>
+                    <option value={TipoEvento.OUTROS}>Outros</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                >
-                  <option value="todos">Todos</option>
-                  <option value={StatusEvento.AGENDADO}>Agendado</option>
-                  <option value={StatusEvento.CONFIRMADO}>Confirmado</option>
-                  <option value={StatusEvento.EM_ANDAMENTO}>Em andamento</option>
-                  <option value={StatusEvento.CONCLUIDO}>Concluído</option>
-                  <option value={StatusEvento.CANCELADO}>Cancelado</option>
-                </select>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Resumo dos Filtros Ativos */}
+        {(searchTerm || filterStatus !== 'todos' || filterTipo !== 'todos' || dateFilter) && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm font-medium text-gray-700">Filtros ativos:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {searchTerm && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Busca: &quot;{searchTerm}&quot;
+                      </span>
+                    )}
+                    {filterStatus !== 'todos' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Status: {filterStatus}
+                      </span>
+                    )}
+                    {filterTipo !== 'todos' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        Tipo: {filterTipo}
+                      </span>
+                    )}
+                    {dateFilter && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        {dateFilter.type === 'quick' 
+                          ? `Período: ${dateFilter.quickFilter}`
+                          : `Período: ${format(dateFilter.range.startDate!, 'dd/MM/yyyy', { locale: ptBR })} - ${format(dateFilter.range.endDate!, 'dd/MM/yyyy', { locale: ptBR })}`
+                        }
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {filteredEventos.length} evento{filteredEventos.length !== 1 ? 's' : ''} encontrado{filteredEventos.length !== 1 ? 's' : ''}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo
-                </label>
-                <select
-                  value={filterTipo}
-                  onChange={(e) => setFilterTipo(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                >
-                  <option value="todos">Todos</option>
-                  <option value={TipoEvento.CASAMENTO}>Casamento</option>
-                  <option value={TipoEvento.ANIVERSARIO_INFANTIL}>Aniversário Infantil</option>
-                  <option value={TipoEvento.ANIVERSARIO_ADULTO}>Aniversário Adulto</option>
-                  <option value={TipoEvento.QUINZE_ANOS}>15 Anos</option>
-                  <option value={TipoEvento.OUTROS}>Outros</option>
-                </select>
-              </div>
-              <div className="flex items-end">
-                <Button variant="outline" className="w-full">
-                  <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
-                  Filtrar
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Lista de Eventos */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
