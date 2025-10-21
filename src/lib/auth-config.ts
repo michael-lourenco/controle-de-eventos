@@ -16,33 +16,42 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        try {
-          // Tentar autenticar com Firebase Auth
-          const userCredential = await signInWithEmailAndPassword(
-            auth,
-            credentials.email,
-            credentials.password
-          );
+        // Verificar se o Firebase está configurado
+        const isFirebaseConfigured = process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
+                                     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+        if (isFirebaseConfigured) {
+          try {
+            // Tentar autenticar com Firebase Auth
+            const userCredential = await signInWithEmailAndPassword(
+              auth,
+              credentials.email,
+              credentials.password
+            );
+            
+            const user = userCredential.user;
+            
+            // Buscar dados do usuário no Firestore
+            const { db } = await import('./firebase');
+            const { doc, getDoc } = await import('firebase/firestore');
+            
+            const userDoc = await getDoc(doc(db, 'controle_users', user.uid));
+            const userData = userDoc.data();
+            
+            return {
+              id: user.uid,
+              email: user.email!,
+              name: userData?.nome || user.displayName || 'Usuário',
+              role: userData?.role || 'user'
+            };
+          } catch (error) {
+            console.error('Erro na autenticação Firebase:', error);
+            return null;
+          }
+        } else {
+          // Fallback para usuários de desenvolvimento (quando Firebase não estiver configurado)
+          console.warn('Firebase não configurado, usando modo de desenvolvimento');
           
-          const user = userCredential.user;
-          
-          // Buscar dados do usuário no Firestore
-          const { db } = await import('./firebase');
-          const { doc, getDoc } = await import('firebase/firestore');
-          
-          const userDoc = await getDoc(doc(db, 'controle_users', user.uid));
-          const userData = userDoc.data();
-          
-          return {
-            id: user.uid,
-            email: user.email!,
-            name: userData?.nome || user.displayName || 'Usuário',
-            role: userData?.role || 'user'
-          };
-        } catch (error) {
-          console.error('Erro na autenticação Firebase:', error);
-          
-          // Fallback para usuários de desenvolvimento (se Firebase não estiver configurado)
           if (credentials?.email === 'admin@clickse.com' && credentials?.password.length >= 3) {
             return {
               id: '1',
@@ -69,6 +78,7 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
