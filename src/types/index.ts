@@ -32,9 +32,9 @@ export interface Evento {
   local: string;
   endereco: string;
   tipoEvento: 'Casamento' | 'Aniversário infantil' | 'Aniversário adulto' | '15 anos' | 'Outros';
+  saida: string;
+  chegadaNoLocal: string;
   horarioInicio: string;
-  horarioInicioServico: string;
-  horarioTerminoServico: string;
   horarioDesmontagem: string;
   tempoEvento: string;
   contratante: string;
@@ -103,7 +103,7 @@ export interface Pagamento {
   valor: number;
   dataPagamento: Date;
   formaPagamento: 'Dinheiro' | 'Cartão de crédito' | 'Depósito bancário' | 'PIX' | 'Transferência';
-  status: 'Pago'; // Todos os pagamentos são considerados pagos
+  status: 'Pago' | 'Pendente' | 'Atrasado' | 'Cancelado';
   observacoes?: string;
   comprovante?: string;
   dataCadastro: Date;

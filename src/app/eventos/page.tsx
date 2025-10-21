@@ -296,7 +296,7 @@ export default function EventosPage() {
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <ClockIcon className="h-4 w-4 mr-2" />
-                    {evento.horarioInicioServico} - {evento.horarioTerminoServico}
+                    {evento.chegadaNoLocal} - {evento.horarioInicio}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <UserGroupIcon className="h-4 w-4 mr-2" />

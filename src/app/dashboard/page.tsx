@@ -143,7 +143,7 @@ export default function DashboardPage() {
                       <div>
                         <p className="font-medium text-gray-900">{evento.cliente.nome}</p>
                         <p className="text-sm text-gray-600">{evento.local}</p>
-                        <p className="text-sm text-gray-500">{evento.horarioInicioServico}</p>
+                        <p className="text-sm text-gray-500">{evento.chegadaNoLocal}</p>
                       </div>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {evento.tipoEvento}

@@ -264,7 +264,7 @@ export default function EventoViewPage() {
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <ClockIcon className="h-4 w-4 mr-2 text-gray-400" />
-                {evento.horarioInicio} - {evento.horarioTerminoServico}
+                {evento.saida} - {evento.horarioInicio}
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />
@@ -284,15 +284,19 @@ export default function EventoViewPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium text-gray-900">Início do Serviço:</span>
-                  <div className="text-gray-600">{evento.horarioInicioServico}</div>
+                  <span className="font-medium text-gray-900">Saída:</span>
+                  <div className="text-gray-600">{evento.saida}</div>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-900">Término do Serviço:</span>
-                  <div className="text-gray-600">{evento.horarioTerminoServico}</div>
+                  <span className="font-medium text-gray-900">Chegada no local:</span>
+                  <div className="text-gray-600">{evento.chegadaNoLocal}</div>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-900">Desmontagem:</span>
+                  <span className="font-medium text-gray-900">Horário de início:</span>
+                  <div className="text-gray-600">{evento.horarioInicio}</div>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-900">Horário de Desmontagem:</span>
                   <div className="text-gray-600">{evento.horarioDesmontagem}</div>
                 </div>
                 <div>

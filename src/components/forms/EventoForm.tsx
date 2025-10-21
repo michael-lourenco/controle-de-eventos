@@ -38,9 +38,9 @@ interface FormData {
   local: string;
   endereco: string;
   tipoEvento: TipoEvento;
+  saida: string;
+  chegadaNoLocal: string;
   horarioInicio: string;
-  horarioInicioServico: string;
-  horarioTerminoServico: string;
   horarioDesmontagem: string;
   tempoEvento: string;
   contratante: string;
@@ -96,9 +96,9 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     local: '',
     endereco: '',
     tipoEvento: TipoEvento.CASAMENTO,
+    saida: '',
+    chegadaNoLocal: '',
     horarioInicio: '',
-    horarioInicioServico: '',
-    horarioTerminoServico: '',
     horarioDesmontagem: '',
     tempoEvento: '',
     contratante: '',
@@ -139,9 +139,9 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         local: evento.local,
         endereco: evento.endereco,
         tipoEvento: evento.tipoEvento as TipoEvento,
+        saida: evento.saida,
+        chegadaNoLocal: evento.chegadaNoLocal,
         horarioInicio: evento.horarioInicio,
-        horarioInicioServico: evento.horarioInicioServico,
-        horarioTerminoServico: evento.horarioTerminoServico,
         horarioDesmontagem: evento.horarioDesmontagem,
         tempoEvento: evento.tempoEvento,
         contratante: evento.contratante,
@@ -287,9 +287,9 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         local: formData.local,
         endereco: formData.endereco,
         tipoEvento: formData.tipoEvento,
+        saida: formData.saida,
+        chegadaNoLocal: formData.chegadaNoLocal,
         horarioInicio: formData.horarioInicio,
-        horarioInicioServico: formData.horarioInicioServico,
-        horarioTerminoServico: formData.horarioTerminoServico,
         horarioDesmontagem: formData.horarioDesmontagem,
         tempoEvento: formData.tempoEvento,
         contratante: formData.contratante,
@@ -535,25 +535,25 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
-              label="Horário de Início do Evento"
+              label="Saída"
               type="time"
-              value={formData.horarioInicio}
-              onChange={(e) => handleInputChange('horarioInicio', e.target.value)}
+              value={formData.saida}
+              onChange={(e) => handleInputChange('saida', e.target.value)}
             />
             <Input
-              label="Horário de Início do Serviço"
+              label="Chegada no local"
               type="time"
-              value={formData.horarioInicioServico}
-              onChange={(e) => handleInputChange('horarioInicioServico', e.target.value)}
+              value={formData.chegadaNoLocal}
+              onChange={(e) => handleInputChange('chegadaNoLocal', e.target.value)}
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Input
-              label="Horário de Término do Serviço"
+              label="Horário de início"
               type="time"
-              value={formData.horarioTerminoServico}
-              onChange={(e) => handleInputChange('horarioTerminoServico', e.target.value)}
+              value={formData.horarioInicio}
+              onChange={(e) => handleInputChange('horarioInicio', e.target.value)}
             />
             <Input
               label="Horário de Desmontagem"
