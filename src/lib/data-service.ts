@@ -189,7 +189,7 @@ export class DataService {
             ...pagamento,
             evento: {
               id: evento.id,
-              nome: evento.nome,
+              nome: evento.cliente.nome, // Usar nome do cliente como identificador do evento
               dataEvento: evento.dataEvento,
               local: evento.local,
               cliente: evento.cliente
