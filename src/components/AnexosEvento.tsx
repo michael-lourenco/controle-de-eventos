@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { 
   AnexoEvento, 
   Evento
 } from '@/types';
-// Funções de anexo serão implementadas via dataService
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -25,11 +24,13 @@ interface AnexosEventoProps {
 }
 
 export default function AnexosEvento({ 
+  evento,
   anexos, 
   onAnexosChange 
 }: AnexosEventoProps) {
   const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoEvento | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -57,25 +58,34 @@ export default function AnexosEvento({
     if (!file) return;
 
     setIsUploading(true);
+    setUploadError(null);
     
     try {
-      // Simular upload (em produção, enviaria para servidor)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // TODO: Implementar criação via dataService
-      // const novoAnexo = await dataService.createAnexoEvento({
-      //   eventoId: evento.id,
-      //   evento,
-      //   nome: file.name,
-      //   tipo: file.type === 'application/pdf' ? 'PDF' : 
-      //         file.type.startsWith('image/') ? 'Imagem' : 'Documento',
-      //   url: URL.createObjectURL(file), // Em produção, seria URL do servidor
-      //   tamanho: file.size
-      // }, userId);
-      
-      onAnexosChange();
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('eventoId', evento.id);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro no upload');
+      }
+
+      if (result.success) {
+        onAnexosChange();
+        // Limpar o input
+        event.target.value = '';
+      } else {
+        throw new Error(result.error || 'Erro no upload');
+      }
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
+      setUploadError(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
       setIsUploading(false);
     }
@@ -85,16 +95,29 @@ export default function AnexosEvento({
     setAnexoParaExcluir(anexo);
   };
 
-  const handleConfirmarExclusao = () => {
-    if (anexoParaExcluir) {
-      // TODO: Implementar exclusão via dataService
-      // const sucesso = await dataService.deleteAnexoEvento(anexoParaExcluir.id, userId);
-      // if (sucesso) {
-      //   onAnexosChange();
-      //   setAnexoParaExcluir(null);
-      // }
-      onAnexosChange();
-      setAnexoParaExcluir(null);
+  const handleConfirmarExclusao = async () => {
+    if (!anexoParaExcluir) return;
+
+    try {
+      const response = await fetch(`/api/upload?arquivoId=${anexoParaExcluir.id}&eventoId=${evento.id}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao excluir arquivo');
+      }
+
+      if (result.success) {
+        onAnexosChange();
+        setAnexoParaExcluir(null);
+      } else {
+        throw new Error(result.error || 'Erro ao excluir arquivo');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir arquivo:', error);
+      setUploadError(error instanceof Error ? error.message : 'Erro ao excluir arquivo');
     }
   };
 
@@ -116,10 +139,15 @@ export default function AnexosEvento({
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {uploadError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{uploadError}</p>
+            </div>
+          )}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
             <input
               type="file"
-              accept=".pdf"
+              accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.txt"
               onChange={handleFileUpload}
               disabled={isUploading}
               className="hidden"
@@ -142,7 +170,9 @@ export default function AnexosEvento({
                       Clique para fazer upload
                     </span>
                     <span className="block">ou arraste o arquivo aqui</span>
-                    <span className="text-xs text-gray-500 mt-1">Apenas arquivos PDF</span>
+                    <span className="text-xs text-gray-500 mt-1">
+                      PDF, JPG, PNG, GIF, DOC, DOCX, TXT (máx. 10MB)
+                    </span>
                   </>
                 )}
               </div>

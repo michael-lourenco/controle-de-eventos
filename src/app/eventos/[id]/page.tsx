@@ -21,6 +21,7 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline';
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento } from '@/hooks/useData';
+import { useAnexos } from '@/hooks/useAnexos';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { AnexoEvento } from '@/types';
@@ -40,11 +41,9 @@ export default function EventoViewPage() {
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos } = usePagamentosPorEvento(params.id as string);
   const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string);
+  const { anexos, loading: loadingAnexos, refetch: refetchAnexos } = useAnexos(params.id as string);
   
-  // Por enquanto, anexos como array vazio até implementar o hook
-  const anexos: AnexoEvento[] = [];
-  
-  const loading = loadingEvento || loadingPagamentos || loadingCustos;
+  const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingAnexos;
 
   if (loading) {
     return (
@@ -107,9 +106,7 @@ export default function EventoViewPage() {
   };
 
   const handleAnexosChange = () => {
-    // Função para recarregar anexos quando houver mudanças
-    // Por enquanto, apenas um placeholder
-    console.log('Anexos foram alterados');
+    refetchAnexos();
   };
 
   const getStatusColor = (status: string) => {
@@ -375,7 +372,7 @@ export default function EventoViewPage() {
         {/* Anexos do Evento */}
         <AnexosEvento
           evento={evento}
-          anexos={anexos}
+          anexos={anexos || []}
           onAnexosChange={handleAnexosChange}
         />
 
