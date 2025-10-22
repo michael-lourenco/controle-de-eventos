@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import Layout from '@/components/Layout';
 import {
   PlusIcon,
@@ -186,38 +187,34 @@ export default function EventosPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">
-                    Status
-                  </label>
-                  <select
+                  <Select
+                    label="Status"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                  >
-                    <option value="todos">Todos</option>
-                    <option value={StatusEvento.AGENDADO}>Agendado</option>
-                    <option value={StatusEvento.CONFIRMADO}>Confirmado</option>
-                    <option value={StatusEvento.EM_ANDAMENTO}>Em andamento</option>
-                    <option value={StatusEvento.CONCLUIDO}>Concluído</option>
-                    <option value={StatusEvento.CANCELADO}>Cancelado</option>
-                  </select>
+                    options={[
+                      { value: 'todos', label: 'Todos' },
+                      { value: StatusEvento.AGENDADO, label: 'Agendado' },
+                      { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
+                      { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' },
+                      { value: StatusEvento.CONCLUIDO, label: 'Concluído' },
+                      { value: StatusEvento.CANCELADO, label: 'Cancelado' }
+                    ]}
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-1">
-                    Tipo
-                  </label>
-                  <select
+                  <Select
+                    label="Tipo"
                     value={filterTipo}
                     onChange={(e) => setFilterTipo(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                  >
-                    <option value="todos">Todos</option>
-                    <option value={TipoEvento.CASAMENTO}>Casamento</option>
-                    <option value={TipoEvento.ANIVERSARIO_INFANTIL}>Aniversário Infantil</option>
-                    <option value={TipoEvento.ANIVERSARIO_ADULTO}>Aniversário Adulto</option>
-                    <option value={TipoEvento.QUINZE_ANOS}>15 Anos</option>
-                    <option value={TipoEvento.OUTROS}>Outros</option>
-                  </select>
+                    options={[
+                      { value: 'todos', label: 'Todos' },
+                      { value: TipoEvento.CASAMENTO, label: 'Casamento' },
+                      { value: TipoEvento.ANIVERSARIO_INFANTIL, label: 'Aniversário Infantil' },
+                      { value: TipoEvento.ANIVERSARIO_ADULTO, label: 'Aniversário Adulto' },
+                      { value: TipoEvento.QUINZE_ANOS, label: '15 Anos' },
+                      { value: TipoEvento.OUTROS, label: 'Outros' }
+                    ]}
+                  />
                 </div>
               </div>
             </CardContent>
