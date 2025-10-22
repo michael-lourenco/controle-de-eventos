@@ -60,10 +60,10 @@ Ajustadas as cores do dark mode para criar uma hierarquia visual melhor:
 11. **src/components/ui/Textarea.tsx** - Corrigido para usar variáveis do tema
 12. **src/components/ui/SelectWithSearch.tsx** - Corrigido para usar variáveis do tema
 13. **src/components/filters/DateRangeFilter.tsx** - Corrigido para usar variáveis do tema
+14. **src/app/eventos/[id]/page.tsx** - Corrigidas cores de texto, ícones e status para usar variáveis do tema
 
 ### 🔄 Próximos Arquivos a Corrigir:
 - src/components/AnexosEvento.tsx
-- src/app/eventos/[id]/page.tsx
 - src/components/PagamentoHistorico.tsx
 - src/components/forms/PagamentoForm.tsx
 - src/app/pagamentos/page.tsx

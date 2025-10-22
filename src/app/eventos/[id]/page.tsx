@@ -49,7 +49,7 @@ export default function EventoViewPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Carregando evento...</div>
+          <div className="text-text-secondary">Carregando evento...</div>
         </div>
       </Layout>
     );
@@ -59,7 +59,7 @@ export default function EventoViewPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-red-600">Erro ao carregar evento: {errorEvento}</div>
+          <div className="text-error">Erro ao carregar evento: {errorEvento}</div>
         </div>
       </Layout>
     );
@@ -69,7 +69,7 @@ export default function EventoViewPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Evento não encontrado</div>
+          <div className="text-text-secondary">Evento não encontrado</div>
         </div>
       </Layout>
     );
@@ -114,17 +114,17 @@ export default function EventoViewPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Agendado':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-info-bg text-info-text';
       case 'Confirmado':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-bg text-success-text';
       case 'Em andamento':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning-bg text-warning-text';
       case 'Concluído':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-surface text-text-secondary';
       case 'Cancelado':
-        return 'bg-red-100 text-red-800';
+        return 'bg-error-bg text-error-text';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-surface text-text-secondary';
     }
   };
 
@@ -133,8 +133,8 @@ export default function EventoViewPage() {
       <Layout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Carregando evento...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-text-secondary">Carregando evento...</p>
           </div>
         </div>
       </Layout>
@@ -145,9 +145,9 @@ export default function EventoViewPage() {
     return (
       <Layout>
         <div className="text-center py-12">
-          <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Evento não encontrado</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <CalendarIcon className="mx-auto h-12 w-12 text-text-muted" />
+          <h3 className="mt-2 text-sm font-medium text-text-primary">Evento não encontrado</h3>
+          <p className="mt-1 text-sm text-text-secondary">
             O evento que você está procurando não existe ou foi removido.
           </p>
           <div className="mt-6">
@@ -175,8 +175,8 @@ export default function EventoViewPage() {
               Voltar
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{evento.cliente.nome}</h1>
-              <p className="text-gray-600">{evento.contratante}</p>
+              <h1 className="text-2xl font-bold text-text-primary">{evento.cliente.nome}</h1>
+              <p className="text-text-secondary">{evento.contratante}</p>
             </div>
           </div>
           <div className="flex space-x-2">
@@ -185,7 +185,7 @@ export default function EventoViewPage() {
               Editar
             </Button>
             <Button 
-              variant="destructive" 
+              variant="outline" 
               onClick={() => setShowDeleteConfirm(true)}
             >
               <TrashIcon className="h-4 w-4 mr-2" />
@@ -199,7 +199,7 @@ export default function EventoViewPage() {
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(evento.status)}`}>
             {evento.status}
           </span>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-text-muted">
             Criado em {format(evento.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
           </span>
         </div>
@@ -212,29 +212,29 @@ export default function EventoViewPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center text-sm">
-                <UserIcon className="h-4 w-4 mr-2 text-gray-400" />
+                <UserIcon className="h-4 w-4 mr-2 text-text-muted" />
                 <span className="font-medium">{evento.cliente.nome}</span>
               </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+              <div className="flex items-center text-sm text-text-secondary">
+                <EnvelopeIcon className="h-4 w-4 mr-2 text-text-muted" />
                 {evento.cliente.email}
               </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+              <div className="flex items-center text-sm text-text-secondary">
+                <PhoneIcon className="h-4 w-4 mr-2 text-text-muted" />
                 {evento.cliente.telefone}
               </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <HomeIcon className="h-4 w-4 mr-2 text-gray-400" />
+              <div className="flex items-center text-sm text-text-secondary">
+                <HomeIcon className="h-4 w-4 mr-2 text-text-muted" />
                 {evento.cliente.endereco}
               </div>
               {evento.cliente.instagram && (
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-text-secondary">
                   <span className="mr-2">📷</span>
                   {evento.cliente.instagram}
                 </div>
               )}
               {evento.cliente.comoConheceu && (
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-text-secondary">
                   <span className="font-medium">Como conheceu:</span> {evento.cliente.comoConheceu}
                 </div>
               )}
@@ -248,29 +248,29 @@ export default function EventoViewPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center text-sm">
-                <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
+                <CalendarIcon className="h-4 w-4 mr-2 text-text-muted" />
                 <span className="font-medium">
                   {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} - {evento.diaSemana}
                 </span>
               </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <MapPinIcon className="h-4 w-4 mr-2 text-gray-400" />
+              <div className="flex items-center text-sm text-text-secondary">
+                <MapPinIcon className="h-4 w-4 mr-2 text-text-muted" />
                 {evento.local}
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-text-secondary">
                 <div className="font-medium">Endereço:</div>
                 {evento.endereco}
               </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <ClockIcon className="h-4 w-4 mr-2 text-gray-400" />
+              <div className="flex items-center text-sm text-text-secondary">
+                <ClockIcon className="h-4 w-4 mr-2 text-text-muted" />
                 {evento.saida} - {evento.horarioInicio}
               </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />
+              <div className="flex items-center text-sm text-text-secondary">
+                <UserGroupIcon className="h-4 w-4 mr-2 text-text-muted" />
                 {evento.numeroConvidados} convidados
               </div>
               <div className="text-sm">
-                <span className="font-medium text-gray-900">Tipo:</span> {evento.tipoEvento}
+                <span className="font-medium text-text-primary">Tipo:</span> {evento.tipoEvento}
               </div>
             </CardContent>
           </Card>
@@ -283,43 +283,43 @@ export default function EventoViewPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="font-medium text-gray-900">Saída:</span>
-                  <div className="text-gray-600">{evento.saida}</div>
+                  <span className="font-medium text-text-primary">Saída:</span>
+                  <div className="text-text-secondary">{evento.saida}</div>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-900">Chegada no local:</span>
-                  <div className="text-gray-600">{evento.chegadaNoLocal}</div>
+                  <span className="font-medium text-text-primary">Chegada no local:</span>
+                  <div className="text-text-secondary">{evento.chegadaNoLocal}</div>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-900">Horário de início:</span>
-                  <div className="text-gray-600">{evento.horarioInicio}</div>
+                  <span className="font-medium text-text-primary">Horário de início:</span>
+                  <div className="text-text-secondary">{evento.horarioInicio}</div>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-900">Horário de Desmontagem:</span>
-                  <div className="text-gray-600">{evento.horarioDesmontagem}</div>
+                  <span className="font-medium text-text-primary">Horário de Desmontagem:</span>
+                  <div className="text-text-secondary">{evento.horarioDesmontagem}</div>
                 </div>
                 <div>
-                  <span className="font-medium text-gray-900">Duração:</span>
-                  <div className="text-gray-600">{evento.tempoEvento}</div>
+                  <span className="font-medium text-text-primary">Duração:</span>
+                  <div className="text-text-secondary">{evento.tempoEvento}</div>
                 </div>
               </div>
               
               {evento.quantidadeMesas && (
                 <div className="text-sm">
-                  <span className="font-medium text-gray-900">Mesas:</span> {evento.quantidadeMesas}
+                  <span className="font-medium text-text-primary">Mesas:</span> {evento.quantidadeMesas}
                 </div>
               )}
               
               {evento.numeroImpressoes && (
-                <div className="flex items-center text-sm text-gray-600">
-                  <PrinterIcon className="h-4 w-4 mr-2 text-gray-400" />
+                <div className="flex items-center text-sm text-text-secondary">
+                  <PrinterIcon className="h-4 w-4 mr-2 text-text-muted" />
                   {evento.numeroImpressoes} impressões
                 </div>
               )}
               
               {evento.hashtag && (
-                <div className="flex items-center text-sm text-gray-600">
-                  <HashtagIcon className="h-4 w-4 mr-2 text-gray-400" />
+                <div className="flex items-center text-sm text-text-secondary">
+                  <HashtagIcon className="h-4 w-4 mr-2 text-text-muted" />
                   {evento.hashtag}
                 </div>
               )}
@@ -334,9 +334,9 @@ export default function EventoViewPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="text-sm">
-                  <span className="font-medium text-gray-900">Nome:</span> {evento.cerimonialista.nome}
+                  <span className="font-medium text-text-primary">Nome:</span> {evento.cerimonialista.nome}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-text-secondary">
                   <span className="font-medium">Telefone:</span> {evento.cerimonialista.telefone}
                 </div>
               </CardContent>
@@ -350,7 +350,7 @@ export default function EventoViewPage() {
                 <CardTitle>Observações</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap">{evento.observacoes}</p>
+                <p className="text-sm text-text-secondary whitespace-pre-wrap">{evento.observacoes}</p>
               </CardContent>
             </Card>
           )}

@@ -337,22 +337,22 @@ export default function PagamentoHistorico({
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-3xl font-bold text-text-primary">
                 R$ {resumoFinanceiro.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <div className="text-sm text-gray-500">Valor Total</div>
+              <div className="text-sm text-text-secondary">Valor Total</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">
                 R$ {resumoFinanceiro.valorPago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <div className="text-sm text-gray-500">Valor Pago</div>
+              <div className="text-sm text-text-secondary">Valor Pago</div>
             </div>
             <div className="text-center">
               <div className={`text-3xl font-bold ${resumoFinanceiro.isAtrasado ? 'text-red-600' : 'text-yellow-600'}`}>
                 R$ {resumoFinanceiro.valorPendenteOuAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-text-secondary">
                 {resumoFinanceiro.isAtrasado ? 'Valor Atrasado' : 'Valor Pendente'}
               </div>
             </div>
@@ -360,8 +360,8 @@ export default function PagamentoHistorico({
           
           {resumoFinanceiro.diaFinalPagamento && (
             <div className="mt-6 text-center">
-              <div className="text-sm text-gray-500">Dia Final de Pagamento</div>
-              <div className="text-lg font-semibold text-gray-900">
+              <div className="text-sm text-text-secondary">Dia Final de Pagamento</div>
+              <div className="text-lg font-semibold text-text-primary">
                 {format(new Date(resumoFinanceiro.diaFinalPagamento), 'dd/MM/yyyy', { locale: ptBR })}
               </div>
             </div>
@@ -388,9 +388,9 @@ export default function PagamentoHistorico({
         <CardContent>
           {pagamentos.length === 0 ? (
             <div className="text-center py-8">
-              <CurrencyDollarIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum pagamento registrado</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <CurrencyDollarIcon className="mx-auto h-12 w-12 text-text-secondary" />
+              <h3 className="mt-2 text-sm font-medium text-text-primary">Nenhum pagamento registrado</h3>
+              <p className="mt-1 text-sm text-text-secondary">
                 Comece adicionando o primeiro pagamento para este evento.
               </p>
               <div className="mt-6">
@@ -414,14 +414,14 @@ export default function PagamentoHistorico({
                       {getStatusIcon(pagamento.status)}
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-text-primary">
                             R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pagamento.status)}`}>
                             {pagamento.status}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-4 text-sm text-text-secondary">
                           <div className="flex items-center">
                             <CalendarIcon className="h-4 w-4 mr-1" />
                             {pagamento.dataPagamento ? format(new Date(pagamento.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
@@ -470,7 +470,7 @@ export default function PagamentoHistorico({
                   </div>
                   
                   {pagamento.observacoes && (
-                    <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <div className="mt-2 text-sm text-text-primary p-2 rounded">
                       <strong>Observações:</strong> {pagamento.observacoes}
                     </div>
                   )}
@@ -480,7 +480,7 @@ export default function PagamentoHistorico({
                     <div className="mt-3 border-t pt-3">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-sm font-medium text-gray-700">Comprovantes</h4>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-text-secondary">
                           {anexosPorPagamento[pagamento.id]?.length || 0} arquivo(s)
                         </span>
                       </div>
@@ -492,7 +492,7 @@ export default function PagamentoHistorico({
                               <div className="flex items-center space-x-2">
                                 <DocumentIcon className="h-4 w-4 text-blue-600" />
                                 <span className="text-sm text-gray-700">{anexo.nome}</span>
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-text-secondary">
                                   ({(anexo.tamanho / 1024 / 1024).toFixed(2)} MB)
                                 </span>
                               </div>
@@ -520,7 +520,7 @@ export default function PagamentoHistorico({
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-4 text-gray-500">
+                        <div className="text-center py-4 text-text-secondary">
                           <DocumentIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                           <p className="text-sm">Nenhum comprovante anexado</p>
                         </div>
