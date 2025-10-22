@@ -39,7 +39,7 @@ export default function EventoViewPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
-  const { data: pagamentos, loading: loadingPagamentos } = usePagamentosPorEvento(params.id as string);
+  const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
   const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string);
   const { anexos, loading: loadingAnexos, refetch: refetchAnexos } = useAnexos(params.id as string);
   
@@ -98,7 +98,7 @@ export default function EventoViewPage() {
   const handlePagamentosChange = () => {
     // Função para recarregar pagamentos quando houver mudanças
     console.log('Pagamentos foram alterados - recarregando dados');
-    setRefreshKey(prev => prev + 1);
+    refetchPagamentos();
   };
 
   const handleCustosChange = () => {
