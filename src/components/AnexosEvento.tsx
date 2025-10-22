@@ -258,23 +258,7 @@ export default function AnexosEvento({
             </div>
           )}
         </CardContent>
-      </Card>
-
-      {/* Aviso sobre Contrato */}
-      <Card className="border-amber-200 bg-amber-50">
-        <CardContent className="p-4">
-          <div className="flex items-start">
-            <ExclamationTriangleIcon className="h-5 w-5 text-amber-500 mt-0.5 mr-3" />
-            <div>
-              <h4 className="text-sm font-medium text-amber-800">Importante</h4>
-              <p className="text-sm text-amber-700 mt-1">
-                O contrato PDF é essencial para verificação rápida dos termos acordados. 
-                Certifique-se de que o arquivo esteja legível e contenha todas as informações necessárias.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      </Card> 
 
       {/* Modal de Confirmação de Exclusão */}
       {anexoParaExcluir && (

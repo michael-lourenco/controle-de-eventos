@@ -103,17 +103,24 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {stats.map((stat) => (
-            <Card key={stat.name}>
-              <CardContent className="p-6">
-                <div className="flex items-center">
-                  <div className={`flex-shrink-0 rounded-md p-3 ${stat.bgColor}`}>
-                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
+            <Card key={stat.name} className="hover:shadow-lg transition-shadow duration-200">
+              <CardContent className="p-6 pt-8">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  {/* Ícone */}
+                  <div className={`flex-shrink-0 rounded-full p-6 ${stat.bgColor}`}>
+                    <stat.icon className={`h-8 w-8 ${stat.color}`} />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">{stat.name}</p>
-                    <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                  
+                  {/* Conteúdo */}
+                  <div className="space-y-2 w-full">
+                    <p className="text-sm font-medium text-gray-600 leading-tight">
+                      {stat.name}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 leading-none">
+                      {stat.value}
+                    </p>
                   </div>
                 </div>
               </CardContent>
