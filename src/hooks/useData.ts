@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '@/lib/data-service';
-import { Cliente, Evento, Pagamento, TipoCusto, CustoEvento, DashboardData } from '@/types';
+import { Cliente, Evento, Pagamento, TipoCusto, CustoEvento, ServicoEvento, DashboardData } from '@/types';
 import { useCurrentUser } from './useAuth';
 
 export interface UseDataResult<T> {
@@ -308,6 +308,35 @@ export function useCustosPorEvento(eventoId: string): UseDataResult<CustoEvento[
       setLoading(false);
     }
   }, [eventoId, userId]); // refreshKey added here
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
+// Hook para serviços de evento
+export function useServicosPorEvento(eventoId: string): UseDataResult<ServicoEvento[]> {
+  const [data, setData] = useState<ServicoEvento[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!eventoId || !userId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getServicosPorEvento(userId, eventoId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar serviços do evento');
+    } finally {
+      setLoading(false);
+    }
+  }, [eventoId, userId]);
 
   useEffect(() => {
     fetchData();

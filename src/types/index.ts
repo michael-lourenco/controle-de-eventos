@@ -290,3 +290,30 @@ export interface ResumoCustosEvento {
   porCategoria: Record<string, number>;
   quantidadeItens: number;
 }
+
+export interface TipoServico {
+  id: string;
+  nome: string;
+  descricao: string;
+  ativo: boolean;
+  dataCadastro: Date;
+}
+
+export interface ServicoEvento {
+  id: string;
+  eventoId: string;
+  evento: Evento;
+  tipoServicoId: string;
+  tipoServico: TipoServico;
+  valor: number;
+  quantidade?: number;
+  observacoes?: string;
+  dataCadastro: Date;
+}
+
+export interface ResumoServicosEvento {
+  servicos: ServicoEvento[];
+  total: number;
+  porCategoria: Record<string, number>;
+  quantidadeItens: number;
+}

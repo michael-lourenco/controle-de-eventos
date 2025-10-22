@@ -8,10 +8,12 @@ export const COLLECTIONS = {
   CLIENTES: 'clientes',
   EVENTOS: 'eventos',
   TIPO_CUSTOS: 'tipo_custos',
+  TIPO_SERVICOS: 'tipo_servicos',
   
   // Subcollections de eventos
   PAGAMENTOS: 'pagamentos',
   CUSTOS: 'custos',
+  SERVICOS_EVENTO: 'servicos',
   
   // Collections globais (mantidas)
   HISTORICO_PAGAMENTOS: 'controle_historico_pagamentos',
@@ -101,6 +103,25 @@ export const COLLECTION_SCHEMAS = {
   [COLLECTIONS.CUSTOS]: {
     id: 'string',
     tipoCustoId: 'string',
+    valor: 'number',
+    quantidade: 'number?',
+    observacoes: 'string?',
+    dataCadastro: 'timestamp'
+    // eventoId removido - agora é parte do path da subcollection
+  },
+  
+  [COLLECTIONS.TIPO_SERVICOS]: {
+    id: 'string',
+    nome: 'string',
+    descricao: 'string',
+    ativo: 'boolean',
+    dataCadastro: 'timestamp'
+    // userId removido - agora é parte do path da subcollection
+  },
+  
+  [COLLECTIONS.SERVICOS_EVENTO]: {
+    id: 'string',
+    tipoServicoId: 'string',
     valor: 'number',
     quantidade: 'number?',
     observacoes: 'string?',

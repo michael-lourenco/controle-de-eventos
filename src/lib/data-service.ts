@@ -5,9 +5,12 @@ import {
   Pagamento, 
   TipoCusto, 
   CustoEvento, 
+  TipoServico,
+  ServicoEvento,
   AnexoEvento,
   DashboardData,
-  ResumoCustosEvento
+  ResumoCustosEvento,
+  ResumoServicosEvento
 } from '@/types';
 import { initializeAllCollections, initializeTiposCusto } from './collections-init';
 
@@ -17,6 +20,8 @@ export class DataService {
   private pagamentoRepo = repositoryFactory.getPagamentoRepository();
   private tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
   private custoEventoRepo = repositoryFactory.getCustoEventoRepository();
+  private tipoServicoRepo = repositoryFactory.getTipoServicoRepository();
+  private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
 
   // Método para inicializar collections automaticamente
   private async ensureCollectionsInitialized(): Promise<void> {
@@ -292,6 +297,73 @@ export class DataService {
 
   async getResumoCustosPorEvento(userId: string, eventoId: string): Promise<ResumoCustosEvento> {
     return this.custoEventoRepo.getResumoCustosPorEvento(userId, eventoId);
+  }
+
+  // Métodos para Tipos de Serviço
+  async getTiposServico(userId: string): Promise<TipoServico[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar tipos de serviço');
+    }
+    try {
+      await this.ensureCollectionsInitialized();
+      return this.tipoServicoRepo.findAll(userId);
+    } catch (error) {
+      console.error('Erro ao buscar tipos de serviço:', error);
+      throw error;
+    }
+  }
+
+  async getTipoServicoById(id: string, userId: string): Promise<TipoServico | null> {
+    return this.tipoServicoRepo.getTipoServicoById(id, userId);
+  }
+
+  async createTipoServico(tipoServico: Omit<TipoServico, 'id' | 'dataCadastro'>, userId: string): Promise<TipoServico> {
+    return this.tipoServicoRepo.createTipoServico(tipoServico, userId);
+  }
+
+  async updateTipoServico(id: string, tipoServico: Partial<TipoServico>, userId: string): Promise<TipoServico> {
+    return this.tipoServicoRepo.updateTipoServico(id, tipoServico, userId);
+  }
+
+  async deleteTipoServico(id: string, userId: string): Promise<void> {
+    return this.tipoServicoRepo.deleteTipoServico(id, userId);
+  }
+
+  async getTiposServicoAtivos(userId: string): Promise<TipoServico[]> {
+    return this.tipoServicoRepo.getAtivos(userId);
+  }
+
+  // Métodos para Serviços de Evento
+  async getServicosEvento(userId: string, eventoId: string): Promise<ServicoEvento[]> {
+    return this.servicoEventoRepo.findByEventoId(userId, eventoId);
+  }
+
+  async getServicoEventoById(userId: string, eventoId: string, servicoId: string): Promise<ServicoEvento | null> {
+    return this.servicoEventoRepo.findById(servicoId, eventoId);
+  }
+
+  async createServicoEvento(userId: string, eventoId: string, servicoEvento: Omit<ServicoEvento, 'id'>): Promise<ServicoEvento> {
+    return this.servicoEventoRepo.createServicoEvento(userId, eventoId, servicoEvento);
+  }
+
+  async updateServicoEvento(userId: string, eventoId: string, servicoId: string, servicoEvento: Partial<ServicoEvento>): Promise<ServicoEvento> {
+    return this.servicoEventoRepo.updateServicoEvento(userId, eventoId, servicoId, servicoEvento);
+  }
+
+  async deleteServicoEvento(userId: string, eventoId: string, servicoId: string): Promise<void> {
+    return this.servicoEventoRepo.deleteServicoEvento(userId, eventoId, servicoId);
+  }
+
+  async getServicosPorEvento(userId: string, eventoId: string): Promise<ServicoEvento[]> {
+    return this.servicoEventoRepo.findByEventoId(userId, eventoId);
+  }
+
+  async getTotalServicosPorEvento(userId: string, eventoId: string): Promise<number> {
+    return this.servicoEventoRepo.getTotalServicosPorEvento(userId, eventoId);
+  }
+
+  async getResumoServicosPorEvento(userId: string, eventoId: string): Promise<ResumoServicosEvento> {
+    return this.servicoEventoRepo.getResumoServicosPorEvento(userId, eventoId);
   }
 
   // Métodos para Dashboard

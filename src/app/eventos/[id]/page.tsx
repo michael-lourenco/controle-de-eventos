@@ -20,13 +20,14 @@ import {
   PrinterIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
-import { useEvento, usePagamentosPorEvento, useCustosPorEvento } from '@/hooks/useData';
+import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { AnexoEvento } from '@/types';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
 import CustosEvento from '@/components/CustosEvento';
+import ServicosEvento from '@/components/ServicosEvento';
 import AnexosEvento from '@/components/AnexosEvento';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -41,9 +42,10 @@ export default function EventoViewPage() {
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
   const { data: custos, loading: loadingCustos, refetch: refetchCustos } = useCustosPorEvento(params.id as string);
+  const { data: servicos, loading: loadingServicos, refetch: refetchServicos } = useServicosPorEvento(params.id as string);
   const { anexos, loading: loadingAnexos, refetch: refetchAnexos } = useAnexos(params.id as string);
   
-  const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingAnexos;
+  const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingServicos || loadingAnexos;
 
   if (loading) {
     return (
@@ -105,6 +107,12 @@ export default function EventoViewPage() {
     // Função para recarregar custos quando houver mudanças
     console.log('Custos foram alterados - recarregando dados');
     refetchCustos();
+  };
+
+  const handleServicosChange = () => {
+    // Função para recarregar serviços quando houver mudanças
+    console.log('Serviços foram alterados - recarregando dados');
+    refetchServicos();
   };
 
   const handleAnexosChange = () => {
@@ -241,6 +249,21 @@ export default function EventoViewPage() {
               className="text-text-primary hover:bg-surface-hover"
             >
               CUSTOS
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('servicos');
+                if (element) {
+                  const offset = 120; // Altura do submenu + margem
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              SERVIÇOS
             </Button>
             <Button
               variant="outline"
@@ -438,6 +461,15 @@ export default function EventoViewPage() {
           evento={evento}
           custos={custos || []}
           onCustosChange={handleCustosChange}
+        />
+        </div>
+
+        {/* Serviços do Evento */}
+        <div id="servicos" className="pt-4">
+          <ServicosEvento
+          evento={evento}
+          servicos={servicos || []}
+          onServicosChange={handleServicosChange}
         />
         </div>
 

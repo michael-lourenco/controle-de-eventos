@@ -26,6 +26,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Eventos', href: '/eventos', icon: CalendarIcon },
   { name: 'Pagamentos', href: '/pagamentos', icon: CurrencyDollarIcon },
+  { name: 'Serviços', href: '/servicos', icon: CurrencyDollarIcon },
   { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
 ];
@@ -33,6 +34,8 @@ const navigation = [
 const adminNavigation = [
   { name: 'Collections', href: '/admin/collections', icon: CogIcon },
   { name: 'Usuários', href: '/admin/users', icon: UserIcon },
+  { name: 'Tipos de Custo', href: '/tipos-custos', icon: CogIcon },
+  { name: 'Tipos de Serviço', href: '/tipos-servicos', icon: CogIcon },
   { name: 'Migração', href: '/admin/migration', icon: CogIcon },
 ];
 
@@ -98,7 +101,7 @@ export default function Layout({ children }: LayoutProps) {
             ))}
             
             {/* Seção de Administração - Mobile */}
-            {/* {user && (
+            {user && (
               <>
                 <div className="border-t border-border my-4"></div>
                 <div className="px-2">
@@ -117,7 +120,7 @@ export default function Layout({ children }: LayoutProps) {
                   ))}
                 </div>
               </>
-            )} */}
+            )}
           </nav>
         </div>
       </div>
@@ -141,7 +144,7 @@ export default function Layout({ children }: LayoutProps) {
             ))}
             
             {/* Seção de Administração */}
-            {/* {user && (
+            {user && (
               <>
                 <div className="border-t border-border my-4"></div>
                 <div className="px-2">
@@ -160,7 +163,7 @@ export default function Layout({ children }: LayoutProps) {
                   ))}
                 </div>
               </>
-            )} */}
+            )}
           </nav>
           <div className="flex-shrink-0 border-t border-border p-4">
             <div className="flex items-center">
