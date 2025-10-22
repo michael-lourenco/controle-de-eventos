@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/Button';
 import PagamentoForm from '@/components/forms/PagamentoForm';
 import { 
   Pagamento,
-  Evento
+  Evento,
+  AnexoPagamento
 } from '@/types';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -20,6 +21,11 @@ import {
   CalendarIcon,
   ClockIcon,
   CheckCircleIcon,
+  DocumentIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  EyeIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 interface PagamentoHistoricoProps {
@@ -39,6 +45,8 @@ export default function PagamentoHistorico({
   const [showForm, setShowForm] = useState(false);
   const [pagamentoEditando, setPagamentoEditando] = useState<Pagamento | null>(null);
   const [pagamentoParaExcluir, setPagamentoParaExcluir] = useState<Pagamento | null>(null);
+  const [anexosExpandidos, setAnexosExpandidos] = useState<Set<string>>(new Set());
+  const [anexosPorPagamento, setAnexosPorPagamento] = useState<Record<string, AnexoPagamento[]>>({});
   const [resumoFinanceiro, setResumoFinanceiro] = useState({
     valorTotal: 0,
     valorPago: 0,
@@ -87,6 +95,88 @@ export default function PagamentoHistorico({
       carregarResumoFinanceiro();
     }
   }, [eventoId, evento?.valorTotal, evento?.diaFinalPagamento, userId]);
+
+  // Carregar anexos dos pagamentos
+  const carregarAnexos = async (pagamentoId: string) => {
+    if (!userId) return;
+    
+    try {
+      // Primeiro, tentar migrar anexos da pasta temp se existirem
+      await migrarAnexosTemp(pagamentoId);
+      
+      const response = await fetch(
+        `/api/comprovantes?eventoId=${eventoId}&pagamentoId=${pagamentoId}`
+      );
+      
+      if (response.ok) {
+        const result = await response.json();
+        setAnexosPorPagamento(prev => ({
+          ...prev,
+          [pagamentoId]: result.anexos
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar anexos:', error);
+    }
+  };
+
+  const migrarAnexosTemp = async (pagamentoId: string) => {
+    try {
+      const response = await fetch('/api/migrar-anexos-temp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventoId,
+          pagamentoIdTemp: 'temp',
+          pagamentoIdReal: pagamentoId
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.migrados > 0) {
+          console.log(`${result.migrados} anexos migrados da pasta temp`);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao migrar anexos temp:', error);
+    }
+  };
+
+  const toggleAnexos = (pagamentoId: string) => {
+    const novoSet = new Set(anexosExpandidos);
+    if (novoSet.has(pagamentoId)) {
+      novoSet.delete(pagamentoId);
+    } else {
+      novoSet.add(pagamentoId);
+      // Carregar anexos se ainda não foram carregados
+      if (!anexosPorPagamento[pagamentoId]) {
+        carregarAnexos(pagamentoId);
+      }
+    }
+    setAnexosExpandidos(novoSet);
+  };
+
+  const deletarAnexo = async (pagamentoId: string, anexoId: string) => {
+    try {
+      const response = await fetch(
+        `/api/comprovantes?eventoId=${eventoId}&pagamentoId=${pagamentoId}&anexoId=${anexoId}`,
+        { method: 'DELETE' }
+      );
+
+      if (response.ok) {
+        // Atualizar lista local
+        setAnexosPorPagamento(prev => ({
+          ...prev,
+          [pagamentoId]: prev[pagamentoId]?.filter(anexo => anexo.id !== anexoId) || []
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao deletar anexo:', error);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -341,6 +431,20 @@ export default function PagamentoHistorico({
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => toggleAnexos(pagamento.id)}
+                        title="Ver comprovantes"
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <DocumentIcon className="h-4 w-4" />
+                        {anexosExpandidos.has(pagamento.id) ? (
+                          <ChevronDownIcon className="h-3 w-3 ml-1" />
+                        ) : (
+                          <ChevronRightIcon className="h-3 w-3 ml-1" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleEditarPagamento(pagamento)}
                         title="Editar pagamento"
                       >
@@ -361,6 +465,59 @@ export default function PagamentoHistorico({
                   {pagamento.observacoes && (
                     <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
                       <strong>Observações:</strong> {pagamento.observacoes}
+                    </div>
+                  )}
+
+                  {/* Seção de Anexos Expandível */}
+                  {anexosExpandidos.has(pagamento.id) && (
+                    <div className="mt-3 border-t pt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-gray-700">Comprovantes</h4>
+                        <span className="text-xs text-gray-500">
+                          {anexosPorPagamento[pagamento.id]?.length || 0} arquivo(s)
+                        </span>
+                      </div>
+                      
+                      {anexosPorPagamento[pagamento.id]?.length > 0 ? (
+                        <div className="space-y-2">
+                          {anexosPorPagamento[pagamento.id].map((anexo) => (
+                            <div key={anexo.id} className="flex items-center justify-between p-2 bg-blue-50 rounded border">
+                              <div className="flex items-center space-x-2">
+                                <DocumentIcon className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm text-gray-700">{anexo.nome}</span>
+                                <span className="text-xs text-gray-500">
+                                  ({(anexo.tamanho / 1024 / 1024).toFixed(2)} MB)
+                                </span>
+                              </div>
+                              <div className="flex space-x-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(anexo.url, '_blank')}
+                                  title="Visualizar arquivo"
+                                  className="text-blue-600 hover:text-blue-700"
+                                >
+                                  <EyeIcon className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deletarAnexo(pagamento.id, anexo.id)}
+                                  title="Remover arquivo"
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <XMarkIcon className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-gray-500">
+                          <DocumentIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                          <p className="text-sm">Nenhum comprovante anexado</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

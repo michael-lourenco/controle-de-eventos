@@ -37,6 +37,17 @@ export class S3Service {
     return `users/${userId}/eventos/${eventoId}/${timestamp}_${sanitizedFileName}`;
   }
 
+  private generateS3KeyPagamento(
+    userId: string, 
+    eventoId: string, 
+    pagamentoId: string, 
+    fileName: string
+  ): string {
+    const timestamp = Date.now();
+    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    return `users/${userId}/eventos/${eventoId}/pagamentos/${pagamentoId}/comprovantes/${timestamp}_${sanitizedFileName}`;
+  }
+
   async uploadFile(
     file: File,
     userId: string,
@@ -115,6 +126,57 @@ export class S3Service {
     }
   }
 
+  async uploadFilePagamento(
+    file: File,
+    userId: string,
+    eventoId: string,
+    pagamentoId: string
+  ): Promise<UploadResult> {
+    try {
+      const s3Key = this.generateS3KeyPagamento(userId, eventoId, pagamentoId, file.name);
+      
+      // Converter File para ArrayBuffer e depois para Buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: s3Key,
+        Body: buffer,
+        ContentType: file.type,
+        Metadata: {
+          userId,
+          eventoId,
+          pagamentoId,
+          originalName: file.name,
+          uploadedAt: new Date().toISOString(),
+        },
+      });
+
+      await s3Client.send(command);
+
+      // Gerar URL assinada para acesso ao arquivo
+      const getCommand = new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: s3Key,
+      });
+
+      const url = await getSignedUrl(s3Client, getCommand, { expiresIn: 3600 * 24 * 7 }); // 7 dias
+
+      return {
+        success: true,
+        url,
+        key: s3Key,
+      };
+    } catch (error) {
+      console.error('Erro ao fazer upload de comprovante para S3:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      };
+    }
+  }
+
   async uploadMultipleFiles(
     files: File[],
     userId: string,
@@ -122,6 +184,19 @@ export class S3Service {
   ): Promise<UploadResult[]> {
     const uploadPromises = files.map(file => 
       this.uploadFile(file, userId, eventoId)
+    );
+
+    return Promise.all(uploadPromises);
+  }
+
+  async uploadMultipleFilesPagamento(
+    files: File[],
+    userId: string,
+    eventoId: string,
+    pagamentoId: string
+  ): Promise<UploadResult[]> {
+    const uploadPromises = files.map(file => 
+      this.uploadFilePagamento(file, userId, eventoId, pagamentoId)
     );
 
     return Promise.all(uploadPromises);

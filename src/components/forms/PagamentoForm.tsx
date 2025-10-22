@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -8,7 +8,8 @@ import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { 
   Pagamento, 
-  Evento
+  Evento,
+  AnexoPagamento
 } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -46,6 +47,9 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState(false);
+  const [anexos, setAnexos] = useState<AnexoPagamento[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (pagamento) {
@@ -56,6 +60,9 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         observacoes: pagamento.observacoes || '',
         comprovante: pagamento.comprovante || ''
       });
+      
+      // Carregar anexos existentes para pagamentos em edição
+      carregarAnexosExistentes();
     } else {
       // Preencher dados sugeridos para novo pagamento
       const hoje = new Date();
@@ -71,6 +78,23 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
     }
   }, [pagamento, evento]);
 
+  const carregarAnexosExistentes = async () => {
+    if (!pagamento?.id) return;
+    
+    try {
+      const response = await fetch(
+        `/api/comprovantes?eventoId=${evento.id}&pagamentoId=${pagamento.id}`
+      );
+      
+      if (response.ok) {
+        const result = await response.json();
+        setAnexos(result.anexos || []);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar anexos existentes:', error);
+    }
+  };
+
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
@@ -83,6 +107,69 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         ...prev,
         [field]: ''
       }));
+    }
+  };
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    // Para novos pagamentos, não permitir upload até que o pagamento seja salvo
+    if (!pagamento?.id) {
+      setErrors(prev => ({
+        ...prev,
+        upload: 'Salve o pagamento primeiro antes de anexar arquivos'
+      }));
+      return;
+    }
+
+    setUploading(true);
+    
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('eventoId', evento.id);
+        formData.append('pagamentoId', pagamento.id);
+
+        const response = await fetch('/api/upload-comprovante', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro no upload');
+        }
+
+        const result = await response.json();
+        return result.anexo;
+      });
+
+      const uploadedAnexos = await Promise.all(uploadPromises);
+      setAnexos(prev => [...prev, ...uploadedAnexos]);
+      
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      setErrors(prev => ({
+        ...prev,
+        upload: 'Erro ao fazer upload dos arquivos'
+      }));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteAnexo = async (anexoId: string) => {
+    try {
+      const response = await fetch(
+        `/api/comprovantes?eventoId=${evento.id}&pagamentoId=${pagamento?.id}&anexoId=${anexoId}`,
+        { method: 'DELETE' }
+      );
+
+      if (response.ok) {
+        setAnexos(prev => prev.filter(anexo => anexo.id !== anexoId));
+      }
+    } catch (error) {
+      console.error('Erro ao deletar anexo:', error);
     }
   };
 
@@ -246,11 +333,103 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
 
 
           <Input
-            label="Comprovante"
+            label="Comprovante (Texto)"
             value={formData.comprovante || ''}
             onChange={(e) => handleInputChange('comprovante', e.target.value)}
             placeholder="Número do comprovante ou referência"
           />
+
+          {/* Seção de Upload de Arquivos */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-gray-700">
+              Comprovantes (Arquivos)
+            </label>
+            
+            {!pagamento?.id ? (
+              <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 bg-gray-50">
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 mb-2">
+                    Salve o pagamento primeiro para anexar comprovantes
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled
+                    className="mb-2"
+                  >
+                    Selecionar Arquivos
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <div className="text-center">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt"
+                    onChange={(e) => handleFileUpload(e.target.files)}
+                    className="hidden"
+                  />
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="mb-2"
+                  >
+                    {uploading ? 'Enviando...' : 'Selecionar Arquivos'}
+                  </Button>
+                  
+                  <p className="text-xs text-gray-500">
+                    Tipos aceitos: JPG, PNG, PDF, DOC, DOCX, TXT (máx. 5MB cada)
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Lista de Anexos */}
+            {anexos.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">Arquivos Anexados:</h4>
+                {anexos.map((anexo) => (
+                  <div key={anexo.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">{anexo.nome}</span>
+                      <span className="text-xs text-gray-400">
+                        ({(anexo.tamanho / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(anexo.url, '_blank')}
+                      >
+                        Ver
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteAnexo(anexo.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {errors.upload && (
+              <p className="text-sm text-red-600">{errors.upload}</p>
+            )}
+          </div>
 
           <Textarea
             label="Observações"

@@ -105,9 +105,24 @@ export interface Pagamento {
   formaPagamento: 'Dinheiro' | 'Cartão de crédito' | 'Depósito bancário' | 'PIX' | 'Transferência';
   status: 'Pago' | 'Pendente' | 'Atrasado' | 'Cancelado';
   observacoes?: string;
-  comprovante?: string;
+  comprovante?: string; // Campo texto mantido para compatibilidade
+  anexoId?: string; // Referência para subcollection de anexos
   dataCadastro: Date;
   dataAtualizacao: Date;
+}
+
+export interface AnexoPagamento {
+  id: string;
+  userId: string;
+  eventoId: string;
+  pagamentoId: string;
+  nome: string;
+  tipo: string;
+  tamanho: number;
+  s3Key: string;
+  url: string;
+  dataUpload: Date;
+  dataCadastro: Date;
 }
 
 export interface Promoter {
