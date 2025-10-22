@@ -32,9 +32,10 @@ export default function EditarPagamentoPage() {
     }
   }, [params.pagamentoId, params.id]);
 
-  const handleSave = (pagamentoAtualizado: Pagamento) => {
+  const handleSave = async (pagamentoAtualizado: Pagamento): Promise<Pagamento> => {
     // O pagamento já foi atualizado no mockData pela função updatePagamento
     router.push(`/eventos/${params.id}`);
+    return pagamentoAtualizado;
   };
 
   const handleCancel = () => {
