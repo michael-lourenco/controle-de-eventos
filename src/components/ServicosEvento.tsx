@@ -137,7 +137,7 @@ export default function ServicosEvento({
   if (showForm) {
     return (
       <ServicoForm
-        servico={servicoEditando}
+        servico={servicoEditando || undefined}
         evento={evento}
         onSave={handleSalvarServico}
         onCancel={handleCancelar}

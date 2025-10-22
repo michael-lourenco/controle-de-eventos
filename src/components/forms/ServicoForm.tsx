@@ -235,21 +235,20 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <SelectWithSearch
-              label="Tipo de Serviço"
-              placeholder="Selecione ou crie um tipo de serviço"
-              value={formData.tipoServicoId}
-              onChange={(value) => handleInputChange('tipoServicoId', value)}
-              options={tiposServico.map(tipo => ({
-                value: tipo.id,
-                label: tipo.nome,
-                description: tipo.descricao
-              }))}
-              onCreateNew={handleCreateNewTipoServico}
-              allowCreate={true}
-              error={errors.tipoServicoId}
-              required
-            />
+                <SelectWithSearch
+                  label="Tipo de Serviço"
+                  placeholder="Selecione ou crie um tipo de serviço"
+                  value={formData.tipoServicoId}
+                  onChange={(value) => handleInputChange('tipoServicoId', value)}
+                  options={tiposServico.map(tipo => ({
+                    value: tipo.id,
+                    label: tipo.nome,
+                    description: tipo.descricao
+                  }))}
+                  onCreateNew={handleCreateNewTipoServico}
+                  allowCreate={true}
+                  error={errors.tipoServicoId}
+                />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
