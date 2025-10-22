@@ -10,14 +10,14 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', loading = false, disabled, children, ...props }, ref) => {
-    const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer';
+    const baseClasses = 'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer';
     
     const variants = {
-      primary: 'bg-primary text-white hover:bg-primary/90',
-      secondary: 'bg-secondary text-text-primary hover:bg-secondary/80',
-      outline: 'border border-border bg-transparent hover:bg-surface',
-      ghost: 'hover:bg-surface',
-      destructive: 'bg-error text-white hover:bg-error/90'
+      primary: 'bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5',
+      secondary: 'bg-surface border border-border text-text-primary hover:bg-surface-hover hover:shadow-md hover:-translate-y-0.5',
+      outline: 'border border-border bg-transparent text-text-primary hover:bg-surface hover:shadow-md hover:-translate-y-0.5',
+      ghost: 'text-text-primary hover:bg-surface-hover hover:shadow-sm',
+      destructive: 'bg-error text-white hover:bg-error/90 hover:shadow-lg hover:-translate-y-0.5'
     };
     
     const sizes = {

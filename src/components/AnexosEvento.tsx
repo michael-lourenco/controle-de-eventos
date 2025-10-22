@@ -262,7 +262,7 @@ export default function AnexosEvento({
 
       {/* Modal de Confirmação de Exclusão */}
       {anexoParaExcluir && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
           <Card className="w-full max-w-md mx-4 modal-card">
             <CardHeader>
               <CardTitle>Confirmar Exclusão</CardTitle>

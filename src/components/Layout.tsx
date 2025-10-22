@@ -70,11 +70,11 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-black/80" onClick={() => setSidebarOpen(false)} />
-        <div className="relative flex w-64 flex-col bg-surface shadow-xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+        <div className="relative flex w-64 flex-col bg-surface/95 backdrop-blur-md shadow-2xl border-r border-border">
           <div className="flex h-16 items-center justify-between px-4">
             <h1 className="text-xl font-bold text-primary">Click-se</h1>
             <button
@@ -90,7 +90,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
+                className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 {item.name}
@@ -109,7 +109,7 @@ export default function Layout({ children }: LayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
+                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}
@@ -124,7 +124,7 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-grow flex-col overflow-y-auto bg-surface border-r border-border">
+        <div className="flex flex-grow flex-col overflow-y-auto bg-surface/95 backdrop-blur-md border-r border-border shadow-xl">
           <div className="flex h-16 items-center px-4">
             <h1 className="text-xl font-bold text-primary">Click-se</h1>
           </div>
@@ -133,7 +133,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
+                className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 {item.name}
@@ -152,7 +152,7 @@ export default function Layout({ children }: LayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
+                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}
@@ -188,7 +188,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-surface/80 backdrop-blur-md px-4 shadow-lg sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
             className="-m-2.5 p-2.5 text-text-primary lg:hidden cursor-pointer"
@@ -210,7 +210,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Page content */}
-        <main className="py-6">
+        <main className="py-8">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {children}
           </div>

@@ -1,31 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  /* Cores Light Mode */
-  --primary: #2563eb;
+  --background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --foreground: #1e293b;
+  /* Cores Light Mode - Tons mais suaves */
+  --primary: #3b82f6;
   --secondary: #64748b;
   --accent: #06b6d4;
-  --surface: #f8fafc;
-  --surface-hover: #e2e8f0;
-  --border: #cbd5e1;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
   
-  /* Cores semânticas Light Mode */
-  --success: #16a34a;
-  --success-bg: #dcfce7;
-  --success-text: #166534;
-  --error: #dc2626;
+  /* Cores semânticas Light Mode - Tons mais suaves */
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --success-text: #065f46;
+  --error: #ef4444;
   --error-bg: #fef2f2;
   --error-text: #991b1b;
-  --warning: #d97706;
-  --warning-bg: #fef3c7;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
   --warning-text: #92400e;
-  --info: #2563eb;
-  --info-bg: #dbeafe;
+  --info: #3b82f6;
+  --info-bg: #eff6ff;
   --info-text: #1e40af;
 }
 
@@ -37,28 +37,28 @@
 }
 
 .dark {
-  --background: #0a0f1a;
-  --foreground: #f8fafc;
-  /* Cores Dark Mode */
+  --background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --foreground: #f1f5f9;
+  /* Cores Dark Mode - Tons mais suaves */
   --primary: #60a5fa;
   --secondary: #94a3b8;
   --accent: #22d3ee;
   --surface: #1e293b;
-  --surface-hover: #475569;
-  --border: #334155;
-  --text-primary: #f8fafc;
+  --surface-hover: #334155;
+  --border: #475569;
+  --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
   
-  /* Cores semânticas Dark Mode */
-  --success: #4ade80;
-  --success-bg: #1e3a2d;
-  --success-text: #bbf7d0;
+  /* Cores semânticas Dark Mode - Tons mais suaves */
+  --success: #34d399;
+  --success-bg: #064e3b;
+  --success-text: #a7f3d0;
   --error: #f87171;
-  --error-bg: #3d1a1a;
+  --error-bg: #450a0a;
   --error-text: #fecaca;
   --warning: #fbbf24;
-  --warning-bg: #3d2f1a;
+  --warning-bg: #451a03;
   --warning-text: #fde68a;
   --info: #60a5fa;
   --info-bg: #1e3a5f;
@@ -67,9 +67,11 @@
 
 body {
   background: var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  transition: all 0.3s ease;
+  min-height: 100vh;
 }
 
 /* Estilos para ícones de data e hora no modo dark */
@@ -99,6 +101,59 @@ svg {
   background-color: var(--surface) !important;
   border-color: var(--border) !important;
   opacity: 1 !important;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+}
+
+/* Modal overlay com gradiente sutil */
+.modal-overlay {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+  backdrop-filter: blur(8px);
+}
+
+/* Estilos suaves para componentes */
+.card-soft {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+
+.card-soft:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Botões suaves */
+.btn-soft {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.btn-soft:hover {
+  background-color: var(--surface-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Inputs suaves */
+.input-soft {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.input-soft:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
 }
 
 /* Estilos específicos para ícones de input */

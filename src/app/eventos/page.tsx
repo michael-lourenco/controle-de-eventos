@@ -175,7 +175,7 @@ export default function EventosPage() {
           </div>
 
           {/* Filtros Básicos */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 bg-surface/50 backdrop-blur-sm">
             <CardContent className="p-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
@@ -223,7 +223,7 @@ export default function EventosPage() {
 
         {/* Resumo dos Filtros Ativos */}
         {(searchTerm || filterStatus !== 'todos' || filterTipo !== 'todos' || dateFilter) && (
-          <Card>
+          <Card className="bg-surface/50 backdrop-blur-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -267,7 +267,7 @@ export default function EventosPage() {
           {filteredEventos.map((evento) => (
             <Card 
               key={evento.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer"
+              className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
               onClick={() => handleView(evento)}
             >
               <CardHeader>
@@ -304,38 +304,40 @@ export default function EventosPage() {
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-text-primary">{evento.tipoEvento}</span>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleView(evento);
                         }}
                         title="Visualizar"
+                        className="hover:bg-primary/10 hover:text-primary"
                       >
                         <EyeIcon className="h-4 w-4" />
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEdit(evento);
                         }}
                         title="Editar"
+                        className="hover:bg-accent/10 hover:text-accent"
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(evento);
                         }}
                         title="Excluir"
-                        className="text-error hover:text-error/80 hover:border-error/50"
+                        className="hover:bg-error/10 hover:text-error"
                       >
                         <TrashIcon className="h-4 w-4" />
                       </Button>
@@ -348,7 +350,7 @@ export default function EventosPage() {
         </div>
 
         {filteredEventos.length === 0 && (
-          <Card>
+          <Card className="bg-surface/50 backdrop-blur-sm">
             <CardContent className="text-center py-12">
               <CalendarIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">Nenhum evento encontrado</h3>
@@ -367,7 +369,7 @@ export default function EventosPage() {
 
         {/* Modal de Confirmação de Exclusão */}
         {eventoParaExcluir && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
             <Card className="w-full max-w-md mx-4 modal-card">
               <CardHeader>
                 <CardTitle>Confirmar Exclusão</CardTitle>
