@@ -10,7 +10,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg bg-surface hover:bg-border transition-colors duration-200"
+      className="p-2 rounded-lg bg-surface hover:bg-border transition-colors duration-200 cursor-pointer"
       title={`Alternar para ${theme === 'light' ? 'modo escuro' : 'modo claro'}`}
     >
       {theme === 'light' ? (

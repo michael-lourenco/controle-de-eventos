@@ -79,7 +79,7 @@ export default function Layout({ children }: LayoutProps) {
             <h1 className="text-xl font-bold text-primary">Click-se</h1>
             <button
               type="button"
-              className="text-text-muted hover:text-text-secondary"
+              className="text-text-muted hover:text-text-secondary cursor-pointer"
               onClick={() => setSidebarOpen(false)}
             >
               <XMarkIcon className="h-6 w-6" />
@@ -191,7 +191,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-text-primary lg:hidden"
+            className="-m-2.5 p-2.5 text-text-primary lg:hidden cursor-pointer"
             onClick={() => setSidebarOpen(true)}
           >
             <Bars3Icon className="h-6 w-6" />

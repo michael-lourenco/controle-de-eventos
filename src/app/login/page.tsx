@@ -108,7 +108,7 @@ export default function LoginPage() {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -142,7 +142,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => router.push('/register')}
-                  className="font-medium text-primary hover:text-primary/80"
+                  className="font-medium text-primary hover:text-primary/80 cursor-pointer"
                 >
                   Criar conta
                 </button>

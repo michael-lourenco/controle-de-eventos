@@ -130,7 +130,7 @@ export default function RegisterPage() {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -215,7 +215,7 @@ export default function RegisterPage() {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
@@ -259,7 +259,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => router.push('/login')}
-                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                    className="font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer"
                   >
                     Faça login
                   </button>
