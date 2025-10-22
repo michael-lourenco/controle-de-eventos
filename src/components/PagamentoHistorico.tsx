@@ -379,7 +379,7 @@ export default function PagamentoHistorico({
                 {pagamentos.length} pagamento(s) registrado(s)
               </CardDescription>
             </div>
-            <Button onClick={handleNovoPagamento}>
+            <Button variant='outline' onClick={handleNovoPagamento}>
               <PlusIcon className="h-4 w-4 mr-2" />
               Novo Pagamento
             </Button>
@@ -394,7 +394,7 @@ export default function PagamentoHistorico({
                 Comece adicionando o primeiro pagamento para este evento.
               </p>
               <div className="mt-6">
-                <Button onClick={handleNovoPagamento}>
+                <Button variant='outline' onClick={handleNovoPagamento}>
                   <PlusIcon className="h-4 w-4 mr-2" />
                   Novo Pagamento
                 </Button>

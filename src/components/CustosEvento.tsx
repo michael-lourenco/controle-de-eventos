@@ -235,7 +235,7 @@ export default function CustosEvento({
                 {custos.length} custo(s) registrado(s)
               </CardDescription>
             </div>
-            <Button onClick={handleNovoCusto}>
+            <Button variant='outline' onClick={handleNovoCusto}>
               <PlusIcon className="h-4 w-4 mr-2" />
               Novo Custo
             </Button>
@@ -250,7 +250,7 @@ export default function CustosEvento({
                 Comece adicionando o primeiro custo para este evento.
               </p>
               <div className="mt-6">
-                <Button onClick={handleNovoCusto}>
+                <Button variant='outline' onClick={handleNovoCusto}>
                   <PlusIcon className="h-4 w-4 mr-2" />
                   Novo Custo
                 </Button>
