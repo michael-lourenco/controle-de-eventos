@@ -20,7 +20,7 @@ export default function DashboardPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Carregando dados do dashboard...</div>
+          <div className="text-text-secondary">Carregando dados do dashboard...</div>
         </div>
       </Layout>
     );
@@ -40,7 +40,7 @@ export default function DashboardPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Nenhum dado disponível</div>
+          <div className="text-text-secondary">Nenhum dado disponível</div>
         </div>
       </Layout>
     );
@@ -96,18 +96,18 @@ export default function DashboardPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">
+          <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+          <p className="text-text-secondary">
             Visão geral do sistema Click-se
           </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {stats.map((stat) => (
-            <Card key={stat.name} className="hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="p-6 pt-8">
-                <div className="flex flex-col items-center text-center space-y-4">
+            <Card key={stat.name}>
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4 p-6">
                   {/* Ícone */}
                   <div className={`flex-shrink-0 rounded-full p-6 ${stat.bgColor}`}>
                     <stat.icon className={`h-8 w-8 ${stat.color}`} />
@@ -115,10 +115,10 @@ export default function DashboardPage() {
                   
                   {/* Conteúdo */}
                   <div className="space-y-2 w-full">
-                    <p className="text-sm font-medium text-gray-600 leading-tight">
+                    <p className="text-sm font-medium text-text-secondary leading-tight">
                       {stat.name}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900 leading-none">
+                    <p className="text-2xl font-bold text-text-primary leading-none">
                       {stat.value}
                     </p>
                   </div>
@@ -142,17 +142,17 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {dashboardData.eventosHoje === 0 ? (
-                <p className="text-gray-500 text-center py-4">Nenhum evento agendado para hoje</p>
+                <p className="text-text-muted text-center py-4">Nenhum evento agendado para hoje</p>
               ) : (
                 <div className="space-y-3">
                   {dashboardData.eventosHojeLista?.map((evento) => (
-                    <div key={evento.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={evento.id} className="flex items-center justify-between p-3 bg-surface rounded-lg border border-border">
                       <div>
-                        <p className="font-medium text-gray-900">{evento.cliente.nome}</p>
-                        <p className="text-sm text-gray-600">{evento.local}</p>
-                        <p className="text-sm text-gray-500">{evento.chegadaNoLocal}</p>
+                        <p className="font-medium text-text-primary">{evento.cliente.nome}</p>
+                        <p className="text-sm text-text-secondary">{evento.local}</p>
+                        <p className="text-sm text-text-muted">{evento.chegadaNoLocal}</p>
                       </div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                         {evento.tipoEvento}
                       </span>
                     </div>
@@ -175,13 +175,13 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {dashboardData.pagamentosPendentes === 0 ? (
-                <p className="text-gray-500 text-center py-4">Nenhum pagamento pendente</p>
+                <p className="text-text-muted text-center py-4">Nenhum pagamento pendente</p>
               ) : (
                 <div className="text-center">
                   <div className="text-3xl font-bold text-red-600">
                     {dashboardData.pagamentosPendentes}
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="text-sm text-text-secondary mt-2">
                     Pagamentos pendentes
                   </p>
                 </div>
@@ -203,42 +203,42 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {dashboardData.eventosProximos.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">Nenhum evento nos próximos 7 dias</p>
+              <p className="text-text-muted text-center py-4">Nenhum evento nos próximos 7 dias</p>
             ) : (
               <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-surface">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Cliente
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Data
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Local
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Tipo
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Status
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-background divide-y divide-border">
                     {dashboardData.eventosProximos.map((evento) => (
                       <tr key={evento.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
                           {evento.cliente.nome}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                           {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                           {evento.local}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                           {evento.tipoEvento}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

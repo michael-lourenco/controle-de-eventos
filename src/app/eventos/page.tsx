@@ -39,7 +39,7 @@ export default function EventosPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Carregando eventos...</div>
+          <div className="text-text-secondary">Carregando eventos...</div>
         </div>
       </Layout>
     );
@@ -59,7 +59,7 @@ export default function EventosPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Nenhum evento encontrado</div>
+          <div className="text-text-secondary">Nenhum evento encontrado</div>
         </div>
       </Layout>
     );
@@ -142,8 +142,8 @@ export default function EventosPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Eventos</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl font-bold text-text-primary">Eventos</h1>
+            <p className="text-text-secondary">
               Gerencie todos os eventos agendados
             </p>
           </div>

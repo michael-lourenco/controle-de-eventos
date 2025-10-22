@@ -56,21 +56,21 @@ export default function LoginPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-blue-600 mb-2">Click-se</h1>
-          <h2 className="text-2xl font-semibold text-gray-900">
+          <h1 className="text-4xl font-bold text-primary mb-2">Click-se</h1>
+          <h2 className="text-2xl font-semibold text-text-primary">
             Sistema de Controle
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-text-secondary">
             Faça login para acessar o sistema
           </p>
         </div>
@@ -112,9 +112,9 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                      <EyeSlashIcon className="h-5 w-5 text-text-muted" />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                      <EyeIcon className="h-5 w-5 text-text-muted" />
                     )}
                   </button>
                 </div>
@@ -137,23 +137,23 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-text-secondary">
                 Não tem uma conta?{' '}
                 <button
                   type="button"
                   onClick={() => router.push('/register')}
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                  className="font-medium text-primary hover:text-primary/80"
                 >
                   Criar conta
                 </button>
               </p>
             </div>
 
-            <div className="mt-4 p-4 bg-blue-50 rounded-md">
-              <h3 className="text-sm font-medium text-blue-800 mb-2">
+            <div className="mt-4 p-4 bg-primary/10 rounded-md">
+              <h3 className="text-sm font-medium text-primary mb-2">
                 Credenciais para teste (desenvolvimento):
               </h3>
-              <div className="text-xs text-blue-700 space-y-1">
+              <div className="text-xs text-primary/80 space-y-1">
                 <p><strong>Admin:</strong> admin@clickse.com / qualquer senha</p>
                 <p><strong>Usuário:</strong> user@clickse.com / qualquer senha</p>
               </div>

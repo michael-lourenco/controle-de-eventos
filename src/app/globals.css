@@ -3,6 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Cores Light Mode */
+  --primary: #2563eb;
+  --secondary: #64748b;
+  --accent: #06b6d4;
+  --surface: #f8fafc;
+  --border: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
 }
 
 @theme inline {
@@ -12,15 +21,23 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  /* Cores Dark Mode */
+  --primary: #60a5fa;
+  --secondary: #94a3b8;
+  --accent: #22d3ee;
+  --surface: #1e293b;
+  --border: #475569;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

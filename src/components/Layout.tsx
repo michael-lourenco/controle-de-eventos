@@ -123,16 +123,16 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-grow flex-col overflow-y-auto bg-white border-r border-gray-200">
+        <div className="flex flex-grow flex-col overflow-y-auto bg-surface border-r border-border">
           <div className="flex h-16 items-center px-4">
-            <h1 className="text-xl font-bold text-blue-600">Click-se</h1>
+            <h1 className="text-xl font-bold text-primary">Click-se</h1>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 {item.name}
@@ -142,16 +142,16 @@ export default function Layout({ children }: LayoutProps) {
             {/* Seção de Administração */}
             {user && (
               <>
-                <div className="border-t border-gray-200 my-4"></div>
+                <div className="border-t border-border my-4"></div>
                 <div className="px-2">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
                     Administração
                   </h3>
                   {adminNavigation.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}
@@ -187,10 +187,10 @@ export default function Layout({ children }: LayoutProps) {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+            className="-m-2.5 p-2.5 text-text-primary lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <Bars3Icon className="h-6 w-6" />
@@ -198,10 +198,10 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
-              <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-200" />
+              <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" />
               <div className="flex items-center gap-x-2">
-                <UserIcon className="h-6 w-6 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">{user?.name}</span>
+                <UserIcon className="h-6 w-6 text-text-muted" />
+                <span className="text-sm font-medium text-text-primary">{user?.name}</span>
               </div>
             </div>
           </div>
