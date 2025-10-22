@@ -210,22 +210,24 @@ export default function PagamentoHistorico({
     setPagamentoParaExcluir(pagamento);
   };
 
-  const handleSalvarPagamento = async (pagamentoData: Pagamento) => {
+  const handleSalvarPagamento = async (pagamentoData: Pagamento): Promise<Pagamento> => {
     if (!userId) {
       console.error('PagamentoHistorico: userId não disponível para salvar pagamento');
-      return;
+      throw new Error('UserId não disponível');
     }
     
     try {
       console.log('PagamentoHistorico: Salvando pagamento:', pagamentoData);
       
+      let pagamentoSalvo: Pagamento;
+      
       if (pagamentoEditando) {
         console.log('PagamentoHistorico: Atualizando pagamento existente');
-        await dataService.updatePagamento(userId, eventoId, pagamentoEditando.id, pagamentoData);
+        pagamentoSalvo = await dataService.updatePagamento(userId, eventoId, pagamentoEditando.id, pagamentoData);
       } else {
         console.log('PagamentoHistorico: Criando novo pagamento');
-        const resultado = await dataService.createPagamento(userId, eventoId, pagamentoData);
-        console.log('PagamentoHistorico: Pagamento criado:', resultado);
+        pagamentoSalvo = await dataService.createPagamento(userId, eventoId, pagamentoData);
+        console.log('PagamentoHistorico: Pagamento criado:', pagamentoSalvo);
       }
       
       // Recarregar resumo financeiro após salvar
@@ -247,10 +249,15 @@ export default function PagamentoHistorico({
       
       console.log('PagamentoHistorico: Chamando onPagamentosChange');
       onPagamentosChange();
+      
+      // Fechar formulário
       setShowForm(false);
       setPagamentoEditando(null);
+      
+      return pagamentoSalvo;
     } catch (error) {
       console.error('Erro ao salvar pagamento:', error);
+      throw error;
     }
   };
 

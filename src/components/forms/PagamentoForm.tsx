@@ -17,7 +17,7 @@ import { ptBR } from 'date-fns/locale';
 interface PagamentoFormProps {
   pagamento?: Pagamento;
   evento: Evento;
-  onSave: (pagamento: Pagamento) => void;
+  onSave: (pagamento: Pagamento) => Promise<Pagamento>;
   onCancel: () => void;
 }
 
@@ -49,6 +49,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
   const [anexos, setAnexos] = useState<AnexoPagamento[]>([]);
+  const [anexosTemporarios, setAnexosTemporarios] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -113,15 +114,14 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
-    // Para novos pagamentos, não permitir upload até que o pagamento seja salvo
+    // Para novos pagamentos, armazenar arquivos temporariamente
     if (!pagamento?.id) {
-      setErrors(prev => ({
-        ...prev,
-        upload: 'Salve o pagamento primeiro antes de anexar arquivos'
-      }));
+      const novosArquivos = Array.from(files);
+      setAnexosTemporarios(prev => [...prev, ...novosArquivos]);
       return;
     }
 
+    // Para pagamentos existentes, fazer upload imediato
     setUploading(true);
     
     try {
@@ -173,6 +173,50 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
     }
   };
 
+  const handleDeleteAnexoTemporario = (index: number) => {
+    setAnexosTemporarios(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadAnexosTemporarios = async (pagamentoId: string) => {
+    if (anexosTemporarios.length === 0) return;
+
+    setUploading(true);
+    
+    try {
+      const uploadPromises = anexosTemporarios.map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('eventoId', evento.id);
+        formData.append('pagamentoId', pagamentoId);
+
+        const response = await fetch('/api/upload-comprovante', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro no upload');
+        }
+
+        const result = await response.json();
+        return result.anexo;
+      });
+
+      const uploadedAnexos = await Promise.all(uploadPromises);
+      setAnexos(prev => [...prev, ...uploadedAnexos]);
+      setAnexosTemporarios([]); // Limpar arquivos temporários
+      
+    } catch (error) {
+      console.error('Erro no upload de anexos temporários:', error);
+      setErrors(prev => ({
+        ...prev,
+        upload: 'Erro ao fazer upload dos arquivos'
+      }));
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -192,7 +236,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
@@ -207,7 +251,13 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         comprovante: formData.comprovante || undefined
       };
 
-      onSave(pagamentoData as Pagamento);
+      // Salvar pagamento
+      const pagamentoSalvo = await onSave(pagamentoData as Pagamento);
+      
+      // Se há anexos temporários, fazer upload após salvar
+      if (anexosTemporarios.length > 0 && pagamentoSalvo?.id) {
+        await uploadAnexosTemporarios(pagamentoSalvo.id);
+      }
     } catch (error) {
       console.error('Erro ao salvar pagamento:', error);
     }
@@ -345,52 +395,60 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
               Comprovantes (Arquivos)
             </label>
             
-            {!pagamento?.id ? (
-              <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 bg-gray-50">
-                <div className="text-center">
-                  <p className="text-sm text-gray-500 mb-2">
-                    Salve o pagamento primeiro para anexar comprovantes
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled
-                    className="mb-2"
-                  >
-                    Selecionar Arquivos
-                  </Button>
-                </div>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+              <div className="text-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt"
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                  className="hidden"
+                />
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="mb-2"
+                >
+                  {uploading ? 'Enviando...' : 'Selecionar Arquivos'}
+                </Button>
+                
+                <p className="text-xs text-gray-500">
+                  Tipos aceitos: JPG, PNG, PDF, DOC, DOCX, TXT (máx. 5MB cada)
+                </p>
               </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                <div className="text-center">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt"
-                    onChange={(e) => handleFileUpload(e.target.files)}
-                    className="hidden"
-                  />
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="mb-2"
-                  >
-                    {uploading ? 'Enviando...' : 'Selecionar Arquivos'}
-                  </Button>
-                  
-                  <p className="text-xs text-gray-500">
-                    Tipos aceitos: JPG, PNG, PDF, DOC, DOCX, TXT (máx. 5MB cada)
-                  </p>
-                </div>
+            </div>
+
+            {/* Lista de Anexos Temporários (para novos pagamentos) */}
+            {anexosTemporarios.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-700">Arquivos Selecionados (serão anexados após salvar):</h4>
+                {anexosTemporarios.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-blue-50 rounded border">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">{file.name}</span>
+                      <span className="text-xs text-gray-400">
+                        ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteAnexoTemporario(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Lista de Anexos */}
+            {/* Lista de Anexos Existentes (para pagamentos em edição) */}
             {anexos.length > 0 && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium text-gray-700">Arquivos Anexados:</h4>
