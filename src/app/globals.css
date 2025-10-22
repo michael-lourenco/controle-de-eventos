@@ -94,6 +94,13 @@ svg {
   color: inherit;
 }
 
+/* Modal background fix */
+.modal-card {
+  background-color: var(--surface) !important;
+  border-color: var(--border) !important;
+  opacity: 1 !important;
+}
+
 /* Estilos específicos para ícones de input */
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator,

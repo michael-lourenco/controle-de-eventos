@@ -265,7 +265,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit">
+        <Button type="submit" variant="outline">
           {custo ? 'Atualizar Custo' : 'Adicionar Custo'}
         </Button>
       </div>

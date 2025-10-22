@@ -337,14 +337,14 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           <div className="flex items-center space-x-4">
             <Button
               type="button"
-              variant={!isNovoCliente ? 'primary' : 'outline'}
+              variant={!isNovoCliente ? 'secondary' : 'outline'}
               onClick={() => setIsNovoCliente(false)}
             >
               Cliente Existente
             </Button>
             <Button
               type="button"
-              variant={isNovoCliente ? 'primary' : 'outline'}
+              variant={isNovoCliente ? 'secondary' : 'outline'}
               onClick={() => setIsNovoCliente(true)}
             >
               Novo Cliente

@@ -73,7 +73,7 @@ export default function Layout({ children }: LayoutProps) {
     <div className="min-h-screen bg-background">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/80" onClick={() => setSidebarOpen(false)} />
         <div className="relative flex w-64 flex-col bg-surface shadow-xl">
           <div className="flex h-16 items-center justify-between px-4">
             <h1 className="text-xl font-bold text-primary">Click-se</h1>
