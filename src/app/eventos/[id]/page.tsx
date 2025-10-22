@@ -40,7 +40,7 @@ export default function EventoViewPage() {
   
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
-  const { data: custos, loading: loadingCustos } = useCustosPorEvento(params.id as string);
+  const { data: custos, loading: loadingCustos, refetch: refetchCustos } = useCustosPorEvento(params.id as string);
   const { anexos, loading: loadingAnexos, refetch: refetchAnexos } = useAnexos(params.id as string);
   
   const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingAnexos;
@@ -102,7 +102,9 @@ export default function EventoViewPage() {
   };
 
   const handleCustosChange = () => {
-    setRefreshKey(prev => prev + 1);
+    // Função para recarregar custos quando houver mudanças
+    console.log('Custos foram alterados - recarregando dados');
+    refetchCustos();
   };
 
   const handleAnexosChange = () => {
