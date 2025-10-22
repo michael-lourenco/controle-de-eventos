@@ -122,7 +122,7 @@ export default function SelectWithSearch({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
+      <label className="block text-sm font-medium text-text-primary mb-1">
         {label}
       </label>
       
@@ -132,23 +132,23 @@ export default function SelectWithSearch({
           onClick={() => setIsOpen(!isOpen)}
           onKeyDown={handleKeyDown}
           className={`
-            w-full flex items-center justify-between px-3 py-2 border rounded-md shadow-sm bg-white text-left cursor-pointer
-            ${error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'}
+            w-full flex items-center justify-between px-3 py-2 border rounded-md shadow-sm bg-surface text-left cursor-pointer
+            ${error ? 'border-error focus:ring-error focus:border-error' : 'border-border focus:ring-primary focus:border-primary'}
             focus:outline-none focus:ring-1
           `}
         >
-          <span className={`block truncate ${selectedOption ? 'text-gray-900' : 'text-gray-500'}`}>
+          <span className={`block truncate ${selectedOption ? 'text-text-primary' : 'text-text-muted'}`}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
-          <ChevronDownIcon className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDownIcon className={`h-5 w-5 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen && (
-          <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+          <div className="absolute z-10 mt-1 w-full bg-surface shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-border overflow-auto focus:outline-none">
             {/* Campo de busca */}
-            <div className="px-3 py-2 border-b border-gray-200">
+            <div className="px-3 py-2 border-b border-border">
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -159,7 +159,7 @@ export default function SelectWithSearch({
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder="Buscar tipo de custo..."
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-sm text-text-primary bg-background focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
             </div>
@@ -172,19 +172,19 @@ export default function SelectWithSearch({
                   onClick={() => handleOptionClick(option)}
                   className={`
                     px-3 py-2 cursor-pointer select-none relative
-                    ${highlightedIndex === index ? 'bg-blue-50 text-blue-900' : 'text-gray-900 hover:bg-gray-50'}
+                    ${highlightedIndex === index ? 'bg-primary/10 text-primary' : 'text-text-primary hover:bg-surface'}
                   `}
                 >
                   <div className="flex flex-col">
                     <span className="font-medium">{option.label}</span>
                     {option.description && (
-                      <span className="text-sm text-gray-500">{option.description}</span>
+                      <span className="text-sm text-text-muted">{option.description}</span>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="px-3 py-2 text-gray-500 text-sm">
+              <div className="px-3 py-2 text-text-muted text-sm">
                 Nenhum tipo encontrado
               </div>
             )}
@@ -194,8 +194,8 @@ export default function SelectWithSearch({
               <div
                 onClick={handleCreateNew}
                 className={`
-                  px-3 py-2 cursor-pointer select-none relative border-t border-gray-200
-                  ${highlightedIndex === filteredOptions.length ? 'bg-blue-50 text-blue-900' : 'text-blue-600 hover:bg-blue-50'}
+                  px-3 py-2 cursor-pointer select-none relative border-t border-border
+                  ${highlightedIndex === filteredOptions.length ? 'bg-primary/10 text-primary' : 'text-primary hover:bg-primary/10'}
                 `}
               >
                 <div className="flex items-center">
@@ -209,7 +209,7 @@ export default function SelectWithSearch({
       </div>
 
       {error && (
-        <p className="mt-1 text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-sm text-error">{error}</p>
       )}
     </div>
   );

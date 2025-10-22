@@ -183,7 +183,7 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
       <Button
         variant="outline"
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`w-full justify-between ${isFilterActive ? 'bg-blue-50 border-blue-300 text-blue-700' : ''}`}
+        className={`w-full justify-between ${isFilterActive ? 'bg-primary/10 border-primary text-primary' : ''}`}
       >
         <div className="flex items-center">
           <FunnelIcon className="h-4 w-4 mr-2" />
@@ -211,7 +211,7 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
           <CardContent className="space-y-6">
             {/* Filtros Rápidos */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+              <h4 className="text-sm font-medium text-text-primary mb-3 flex items-center">
                 <ClockIcon className="h-4 w-4 mr-2" />
                 Filtros Rápidos
               </h4>
@@ -222,7 +222,7 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
                     variant={selectedQuickFilter === filter.key ? "primary" : "outline"}
                     size="sm"
                     onClick={() => handleQuickFilterSelect(filter.key)}
-                    className={`text-xs ${selectedQuickFilter === filter.key ? 'bg-blue-600 text-white' : ''}`}
+                    className={`text-xs ${selectedQuickFilter === filter.key ? 'bg-primary text-white' : ''}`}
                   >
                     <span className="mr-1">{filter.icon}</span>
                     {filter.label}
@@ -233,7 +233,7 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
 
             {/* Separador */}
             <div className="border-t pt-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">
+              <h4 className="text-sm font-medium text-text-primary mb-3">
                 Período Personalizado
               </h4>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -265,14 +265,14 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
             {isFilterActive && (
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-text-secondary">
                     {filterType === 'quick' ? 'Filtro rápido ativo' : 'Filtro personalizado ativo'}
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={clearFilter}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-error hover:text-error/80"
                   >
                     <XMarkIcon className="h-4 w-4 mr-1" />
                     Limpar Filtro
