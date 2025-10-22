@@ -425,12 +425,12 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
             {/* Lista de Anexos Temporários (para novos pagamentos) */}
             {anexosTemporarios.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">Arquivos Selecionados (serão anexados após salvar):</h4>
+                <h4 className="text-sm font-medium text-text-primary">Arquivos Selecionados (serão anexados após salvar):</h4>
                 {anexosTemporarios.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-blue-50 rounded border">
+                  <div key={index} className="flex items-center justify-between p-2 bg-surface rounded border border-border">
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{file.name}</span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-sm text-text-primary">{file.name}</span>
+                      <span className="text-xs text-text-muted">
                         ({(file.size / 1024 / 1024).toFixed(2)} MB)
                       </span>
                     </div>
@@ -451,12 +451,12 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
             {/* Lista de Anexos Existentes (para pagamentos em edição) */}
             {anexos.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700">Arquivos Anexados:</h4>
+                <h4 className="text-sm font-medium text-text-primary">Arquivos Anexados:</h4>
                 {anexos.map((anexo) => (
-                  <div key={anexo.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div key={anexo.id} className="flex items-center justify-between p-2 bg-surface rounded border border-border">
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">{anexo.nome}</span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-sm text-text-primary">{anexo.nome}</span>
+                      <span className="text-xs text-text-muted">
                         ({(anexo.tamanho / 1024 / 1024).toFixed(2)} MB)
                       </span>
                     </div>
@@ -501,7 +501,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
 
       {/* Aviso sobre Status */}
       <Card className="border-blue-200 bg-blue-50">
-        <CardContent className="p-4">
+        <CardContent>
           <div className="text-sm text-blue-800">
             <strong>Informação:</strong> Todos os pagamentos são considerados como &quot;Pago&quot; independente da data.
             <br />
@@ -517,7 +517,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit">
+        <Button type="submit" variant="outline">
           {pagamento ? 'Atualizar Pagamento' : 'Adicionar Pagamento'}
         </Button>
       </div>

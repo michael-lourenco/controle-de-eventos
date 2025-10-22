@@ -239,7 +239,7 @@ export default function PagamentosPage() {
                 {filteredPagamentos.map((pagamento) => (
                   <div
                     key={pagamento.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    className="border border-border rounded-lg p-4"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">

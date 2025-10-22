@@ -623,7 +623,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit">
+        <Button type="submit" variant="outline">
           {evento ? 'Atualizar Evento' : 'Criar Evento'}
         </Button>
       </div>
