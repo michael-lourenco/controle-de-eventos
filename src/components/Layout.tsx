@@ -98,7 +98,7 @@ export default function Layout({ children }: LayoutProps) {
             ))}
             
             {/* Seção de Administração - Mobile */}
-            {user && (
+            {/* {user && (
               <>
                 <div className="border-t border-border my-4"></div>
                 <div className="px-2">
@@ -117,7 +117,7 @@ export default function Layout({ children }: LayoutProps) {
                   ))}
                 </div>
               </>
-            )}
+            )} */}
           </nav>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function Layout({ children }: LayoutProps) {
             ))}
             
             {/* Seção de Administração */}
-            {user && (
+            {/* {user && (
               <>
                 <div className="border-t border-border my-4"></div>
                 <div className="px-2">
@@ -160,7 +160,7 @@ export default function Layout({ children }: LayoutProps) {
                   ))}
                 </div>
               </>
-            )}
+            )} */}
           </nav>
           <div className="flex-shrink-0 border-t border-border p-4">
             <div className="flex items-center">

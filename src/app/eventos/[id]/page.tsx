@@ -194,6 +194,72 @@ export default function EventoViewPage() {
           </div>
         </div>
 
+        {/* Submenu de Navegação Rápida */}
+        <div className="sticky top-16 z-30 bg-surface/95 backdrop-blur-sm border border-border rounded-lg p-4 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('basico');
+                if (element) {
+                  const offset = 120; // Altura do submenu + margem
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              BÁSICO
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('pagamentos');
+                if (element) {
+                  const offset = 120; // Altura do submenu + margem
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              PAGAMENTOS
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('custos');
+                if (element) {
+                  const offset = 120; // Altura do submenu + margem
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              CUSTOS
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('anexos');
+                if (element) {
+                  const offset = 120; // Altura do submenu + margem
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              ANEXOS
+            </Button>
+          </div>
+        </div>
+
         {/* Status */}
         <div className="flex justify-between items-center">
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(evento.status)}`}>
@@ -204,7 +270,7 @@ export default function EventoViewPage() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div id="basico" className="grid grid-cols-1 gap-6 lg:grid-cols-2 pt-4">
           {/* Informações do Cliente */}
           <Card>
             <CardHeader>
@@ -357,26 +423,32 @@ export default function EventoViewPage() {
         </div>
 
         {/* Histórico de Pagamentos */}
-        <PagamentoHistorico
+        <div id="pagamentos" className="pt-4">
+          <PagamentoHistorico
           eventoId={evento.id}
           pagamentos={pagamentos || []}
           onPagamentosChange={handlePagamentosChange}
           evento={evento}
         />
+        </div>
 
         {/* Custos do Evento */}
-        <CustosEvento
+        <div id="custos" className="pt-4">
+          <CustosEvento
           evento={evento}
           custos={custos || []}
           onCustosChange={handleCustosChange}
         />
+        </div>
 
         {/* Anexos do Evento */}
-        <AnexosEvento
+        <div id="anexos" className="pt-4">
+          <AnexosEvento
           evento={evento}
           anexos={anexos || []}
           onAnexosChange={handleAnexosChange}
         />
+        </div>
 
         {/* Modal de Confirmação de Exclusão */}
         {showDeleteConfirm && (

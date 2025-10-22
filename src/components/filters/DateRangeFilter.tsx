@@ -252,6 +252,7 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
               </div>
               <div className="mt-4 flex justify-end">
                 <Button
+                  variant="outline"
                   onClick={handleCustomFilterApply}
                   disabled={!customStartDate || !customEndDate}
                   size="sm"
