@@ -8,6 +8,7 @@
   --secondary: #64748b;
   --accent: #06b6d4;
   --surface: #f8fafc;
+  --surface-hover: #e2e8f0;
   --border: #cbd5e1;
   --text-primary: #0f172a;
   --text-secondary: #475569;
@@ -43,6 +44,7 @@
   --secondary: #94a3b8;
   --accent: #22d3ee;
   --surface: #1e293b;
+  --surface-hover: #475569;
   --border: #334155;
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;

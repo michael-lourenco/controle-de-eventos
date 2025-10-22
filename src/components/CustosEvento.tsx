@@ -185,36 +185,36 @@ export default function CustosEvento({
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="text-center">
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-3xl font-bold text-text-primary">
                 R$ {resumoCustos.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <div className="text-sm text-gray-500">Total de Custos</div>
+              <div className="text-sm text-text-secondary">Total de Custos</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
                 {resumoCustos.quantidadeItens}
               </div>
-              <div className="text-sm text-gray-500">Itens de Custo</div>
+              <div className="text-sm text-text-secondary">Itens de Custo</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
                 {Object.keys(resumoCustos.porCategoria).length}
               </div>
-              <div className="text-sm text-gray-500">Tipos</div>
+              <div className="text-sm text-text-secondary">Tipos</div>
             </div>
           </div>
           
           {/* Custos por Tipo */}
           {Object.keys(resumoCustos.porCategoria).length > 0 && (
             <div className="mt-6">
-              <h4 className="text-sm font-medium text-gray-900 mb-3">Custos por Tipo</h4>
+              <h4 className="text-sm font-medium text-text-primary mb-3">Custos por Tipo</h4>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {Object.entries(resumoCustos.porCategoria).map(([tipoCusto, valor]) => (
                   <div key={tipoCusto} className="text-center">
                     <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoCustoColor(tipoCusto)}`}>
                       {tipoCusto}
                     </div>
-                    <div className="mt-1 text-sm font-semibold text-gray-900">
+                    <div className="mt-1 text-sm font-semibold text-text-primary">
                       R$ {valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </div>
                   </div>
@@ -245,8 +245,8 @@ export default function CustosEvento({
           {custos.length === 0 ? (
             <div className="text-center py-8">
               <CurrencyDollarIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum custo registrado</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <h3 className="mt-2 text-sm font-medium text-text-primary">Nenhum custo registrado</h3>
+              <p className="mt-1 text-sm text-text-secondary">
                 Comece adicionando o primeiro custo para este evento.
               </p>
               <div className="mt-6">
@@ -261,21 +261,21 @@ export default function CustosEvento({
               {custos.map((custo) => (
                 <div
                   key={custo.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  className="border border-border rounded-lg p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <TagIcon className="h-5 w-5 text-gray-400" />
                       <div>
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-text-primary">
                             {custo.tipoCusto.nome}
                           </span>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTipoCustoColor(custo.tipoCusto.nome)}`}>
                             {custo.tipoCusto.nome}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-4 text-sm text-text-secondary">
                           <div className="flex items-center">
                             <CurrencyDollarIcon className="h-4 w-4 mr-1" />
                             R$ {custo.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}

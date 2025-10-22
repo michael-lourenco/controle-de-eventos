@@ -60,8 +60,8 @@ export default function EditarPagamentoPage() {
       <Layout>
         <div className="text-center py-12">
           <CurrencyDollarIcon className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Pagamento não encontrado</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <h3 className="mt-2 text-sm font-medium text-text-primary">Pagamento não encontrado</h3>
+          <p className="mt-1 text-sm text-text-secondary">
             O pagamento que você está tentando editar não existe ou foi removido.
           </p>
           <div className="mt-6">
@@ -89,7 +89,7 @@ export default function EditarPagamentoPage() {
               Voltar
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Editar Pagamento</h1>
+              <h1 className="text-2xl font-bold text-text-primary">Editar Pagamento</h1>
               <p className="text-gray-600">
                 R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} - {pagamento.status}
               </p>

@@ -16,6 +16,7 @@ const config: Config = {
         accent: "var(--accent)",
         background: "var(--background)",
         surface: "var(--surface)",
+        "surface-hover": "var(--surface-hover)",
         border: "var(--border)",
         "text-primary": "var(--text-primary)",
         "text-secondary": "var(--text-secondary)",

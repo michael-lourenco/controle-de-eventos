@@ -12,7 +12,7 @@ O tema dark está parcialmente aplicado. Apenas o background do menu superior e 
 ## Cores Hardcoded Encontradas
 ### Cores de Texto:
 - `text-red-600`, `text-green-600`, `text-blue-600`, `text-orange-600`
-- `text-gray-500`, `text-gray-600`, `text-gray-700`, `text-gray-900`
+- `text-text-secondary`, `text-gray-600`, `text-gray-700`, `text-text-primary`
 - `text-yellow-600`, `text-purple-600`
 
 ### Cores de Background:

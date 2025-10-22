@@ -91,7 +91,7 @@ export default function RelatoriosPage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
+          <h1 className="text-2xl font-bold text-text-primary">Relatórios</h1>
           <p className="text-gray-600">
             Análise financeira e estatísticas do negócio
           </p>
@@ -142,8 +142,8 @@ export default function RelatoriosPage() {
                   <CurrencyDollarIcon className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Receita Total</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-sm font-medium text-text-secondary">Receita Total</p>
+                  <p className="text-2xl font-semibold text-text-primary">
                     R$ {receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
@@ -158,8 +158,8 @@ export default function RelatoriosPage() {
                   <CalendarIcon className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Eventos Realizados</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-sm font-medium text-text-secondary">Eventos Realizados</p>
+                  <p className="text-2xl font-semibold text-text-primary">
                     {eventosPeriodo.length}
                   </p>
                 </div>
@@ -174,8 +174,8 @@ export default function RelatoriosPage() {
                   <ChartBarIcon className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Pagamentos Pendentes</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-sm font-medium text-text-secondary">Pagamentos Pendentes</p>
+                  <p className="text-2xl font-semibold text-text-primary">
                     {pagamentosPendentes}
                   </p>
                 </div>
@@ -190,8 +190,8 @@ export default function RelatoriosPage() {
                   <ChartBarIcon className="h-6 w-6 text-red-600" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Pagamentos Atrasados</p>
-                  <p className="text-2xl font-semibold text-gray-900">
+                  <p className="text-sm font-medium text-text-secondary">Pagamentos Atrasados</p>
+                  <p className="text-2xl font-semibold text-text-primary">
                     {pagamentosAtrasados.length}
                   </p>
                 </div>
@@ -223,7 +223,7 @@ export default function RelatoriosPage() {
                           }}
                         />
                       </div>
-                      <span className="text-sm font-medium text-gray-900 w-8 text-right">
+                      <span className="text-sm font-medium text-text-primary w-8 text-right">
                         {quantidade}
                       </span>
                     </div>
@@ -261,7 +261,7 @@ export default function RelatoriosPage() {
                           }}
                         />
                       </div>
-                      <span className="text-sm font-medium text-gray-900 w-8 text-right">
+                      <span className="text-sm font-medium text-text-primary w-8 text-right">
                         {quantidade}
                       </span>
                     </div>
@@ -297,7 +297,7 @@ export default function RelatoriosPage() {
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-900 w-24 text-right">
+                  <span className="text-sm font-medium text-text-primary w-24 text-right">
                     R$ {item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>

@@ -369,7 +369,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
                       onClick={() => handleClienteSelect(cliente)}
                     >
                       <div className="font-medium">{cliente.nome}</div>
-                      <div className="text-sm text-gray-500">{cliente.email}</div>
+                      <div className="text-sm text-text-secondary">{cliente.email}</div>
                     </div>
                   ))}
                 </div>
@@ -417,7 +417,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
                 onChange={(e) => handleNovoClienteChange('instagram', e.target.value)}
               />
               <Input
-                label="Como conheceu"
+                label="Como nos encontrou?"
                 value={formData.novoCliente.comoConheceu || ''}
                 onChange={(e) => handleNovoClienteChange('comoConheceu', e.target.value)}
               />

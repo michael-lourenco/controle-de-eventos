@@ -37,7 +37,7 @@ export default function NovoEventoPage() {
               Voltar
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Novo Evento</h1>
+              <h1 className="text-2xl font-bold text-text-primary">Novo Evento</h1>
               <p className="text-gray-600">Cadastre um novo evento no sistema</p>
             </div>
           </div>

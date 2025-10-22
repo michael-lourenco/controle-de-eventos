@@ -47,7 +47,7 @@ export default function AnexosEvento({
       case 'Imagem':
         return <DocumentIcon className="h-8 w-8 text-blue-500" />;
       case 'Documento':
-        return <DocumentIcon className="h-8 w-8 text-gray-500" />;
+        return <DocumentIcon className="h-8 w-8 text-text-secondary" />;
       default:
         return <DocumentIcon className="h-8 w-8 text-gray-400" />;
     }
@@ -132,10 +132,10 @@ export default function AnexosEvento({
         <CardHeader>
           <CardTitle className="flex items-center">
             <CloudArrowUpIcon className="h-5 w-5 mr-2" />
-            Anexar Contrato PDF
+            Anexar Arquivo
           </CardTitle>
           <CardDescription>
-            Faça upload do contrato em PDF para verificação rápida
+            Faça upload de um arquivo
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -170,7 +170,7 @@ export default function AnexosEvento({
                       Clique para fazer upload
                     </span>
                     <span className="block">ou arraste o arquivo aqui</span>
-                    <span className="text-xs text-gray-500 mt-1">
+                    <span className="text-xs text-text-secondary mt-1">
                       PDF, JPG, PNG, GIF, DOC, DOCX, TXT (máx. 10MB)
                     </span>
                   </>
@@ -197,8 +197,8 @@ export default function AnexosEvento({
           {anexos.length === 0 ? (
             <div className="text-center py-8">
               <DocumentIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum anexo registrado</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <h3 className="mt-2 text-sm font-medium text-text-primary">Nenhum anexo registrado</h3>
+              <p className="mt-1 text-sm text-text-secondary">
                 Faça upload do contrato PDF para começar.
               </p>
             </div>
@@ -207,16 +207,16 @@ export default function AnexosEvento({
               {anexos.map((anexo) => (
                 <div
                   key={anexo.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  className="border border-border rounded-lg p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       {getTipoIcon(anexo.tipo)}
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-text-primary">
                           {anexo.nome}
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center space-x-4 text-sm text-text-secondary">
                           <div className="flex items-center">
                             <span className="mr-1">Tipo:</span>
                             {anexo.tipo}

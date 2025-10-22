@@ -407,7 +407,7 @@ export default function PagamentoHistorico({
                 .map((pagamento) => (
                 <div
                   key={pagamento.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  className="border border-border rounded-lg p-4"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
@@ -479,7 +479,7 @@ export default function PagamentoHistorico({
                   {anexosExpandidos.has(pagamento.id) && (
                     <div className="mt-3 border-t pt-3">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium text-gray-700">Comprovantes</h4>
+                        <h4 className="text-sm font-medium text-text-primary">Comprovantes</h4>
                         <span className="text-xs text-text-secondary">
                           {anexosPorPagamento[pagamento.id]?.length || 0} arquivo(s)
                         </span>
@@ -488,10 +488,10 @@ export default function PagamentoHistorico({
                       {anexosPorPagamento[pagamento.id]?.length > 0 ? (
                         <div className="space-y-2">
                           {anexosPorPagamento[pagamento.id].map((anexo) => (
-                            <div key={anexo.id} className="flex items-center justify-between p-2 bg-blue-50 rounded border">
+                            <div key={anexo.id} className="flex items-center justify-between p-2 bg-surface rounded border border-border">
                               <div className="flex items-center space-x-2">
                                 <DocumentIcon className="h-4 w-4 text-blue-600" />
-                                <span className="text-sm text-gray-700">{anexo.nome}</span>
+                                <span className="text-sm text-text-primary">{anexo.nome}</span>
                                 <span className="text-xs text-text-secondary">
                                   ({(anexo.tamanho / 1024 / 1024).toFixed(2)} MB)
                                 </span>
@@ -521,7 +521,7 @@ export default function PagamentoHistorico({
                         </div>
                       ) : (
                         <div className="text-center py-4 text-text-secondary">
-                          <DocumentIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                          <DocumentIcon className="h-8 w-8 mx-auto mb-2 text-text-muted" />
                           <p className="text-sm">Nenhum comprovante anexado</p>
                         </div>
                       )}

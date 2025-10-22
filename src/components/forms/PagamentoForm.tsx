@@ -274,19 +274,19 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="text-sm font-medium text-gray-700">Evento</label>
-              <div className="mt-1 text-sm text-gray-900">
+              <div className="mt-1 text-sm text-text-primary">
                 {evento.contratante} - {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}
               </div>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Valor Total</label>
-              <div className="mt-1 text-sm text-gray-900">
+              <div className="mt-1 text-sm text-text-primary">
                 R$ {evento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700">Dia Final de Pagamento</label>
-              <div className="mt-1 text-sm text-gray-900">
+              <div className="mt-1 text-sm text-text-primary">
                 {format(evento.diaFinalPagamento, 'dd/MM/yyyy', { locale: ptBR })}
               </div>
             </div>
@@ -416,7 +416,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
                   {uploading ? 'Enviando...' : 'Selecionar Arquivos'}
                 </Button>
                 
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-text-secondary">
                   Tipos aceitos: JPG, PNG, PDF, DOC, DOCX, TXT (máx. 5MB cada)
                 </p>
               </div>
