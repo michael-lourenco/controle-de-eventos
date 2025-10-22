@@ -10,13 +10,13 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-lg bg-surface hover:bg-surface-hover transition-colors duration-200"
+      className="p-2 rounded-lg bg-surface hover:bg-border transition-colors duration-200"
       title={`Alternar para ${theme === 'light' ? 'modo escuro' : 'modo claro'}`}
     >
       {theme === 'light' ? (
-        <MoonIcon className="h-5 w-5 text-text-primary" />
+        <MoonIcon className="h-5 w-5 text-text-secondary" />
       ) : (
-        <SunIcon className="h-5 w-5 text-text-primary" />
+        <SunIcon className="h-5 w-5 text-text-secondary" />
       )}
     </button>
   );

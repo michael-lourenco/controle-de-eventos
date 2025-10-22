@@ -12,6 +12,20 @@
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
+  
+  /* Cores semânticas Light Mode */
+  --success: #16a34a;
+  --success-bg: #dcfce7;
+  --success-text: #166534;
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --error-text: #991b1b;
+  --warning: #d97706;
+  --warning-bg: #fef3c7;
+  --warning-text: #92400e;
+  --info: #2563eb;
+  --info-bg: #dbeafe;
+  --info-text: #1e40af;
 }
 
 @theme inline {
@@ -33,6 +47,20 @@
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
+  
+  /* Cores semânticas Dark Mode */
+  --success: #4ade80;
+  --success-bg: #14532d;
+  --success-text: #bbf7d0;
+  --error: #f87171;
+  --error-bg: #7f1d1d;
+  --error-text: #fecaca;
+  --warning: #fbbf24;
+  --warning-bg: #78350f;
+  --warning-text: #fde68a;
+  --info: #60a5fa;
+  --info-bg: #1e3a8a;
+  --info-text: #dbeafe;
 }
 
 body {

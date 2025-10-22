@@ -94,7 +94,7 @@ export default function LoginPage() {
               />
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-primary mb-1">
                   Senha
                 </label>
                 <div className="relative">
@@ -121,7 +121,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+                <div className="text-error text-sm bg-error-bg p-3 rounded-md">
                   {error}
                 </div>
               )}

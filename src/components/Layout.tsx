@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/Button';
+import ThemeToggle from '@/components/ThemeToggle';
 import {
   HomeIcon,
   CalendarIcon,
@@ -55,7 +56,7 @@ export default function Layout({ children }: LayoutProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -69,16 +70,16 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="relative flex w-64 flex-col bg-white shadow-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+        <div className="relative flex w-64 flex-col bg-surface shadow-xl">
           <div className="flex h-16 items-center justify-between px-4">
-            <h1 className="text-xl font-bold text-blue-600">Click-se</h1>
+            <h1 className="text-xl font-bold text-primary">Click-se</h1>
             <button
               type="button"
-              className="text-gray-400 hover:text-gray-600"
+              className="text-text-muted hover:text-text-secondary"
               onClick={() => setSidebarOpen(false)}
             >
               <XMarkIcon className="h-6 w-6" />
@@ -89,7 +90,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 {item.name}
@@ -99,16 +100,16 @@ export default function Layout({ children }: LayoutProps) {
             {/* Seção de Administração - Mobile */}
             {user && (
               <>
-                <div className="border-t border-gray-200 my-4"></div>
+                <div className="border-t border-border my-4"></div>
                 <div className="px-2">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
                     Administração
                   </h3>
                   {adminNavigation.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                      className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-text-secondary hover:bg-surface hover:text-text-primary"
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}
@@ -161,14 +162,14 @@ export default function Layout({ children }: LayoutProps) {
               </>
             )}
           </nav>
-          <div className="flex-shrink-0 border-t border-gray-200 p-4">
+          <div className="flex-shrink-0 border-t border-border p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <UserIcon className="h-8 w-8 rounded-full bg-gray-300" />
+                <UserIcon className="h-8 w-8 rounded-full bg-surface" />
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">{user?.name}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+                <p className="text-sm font-medium text-text-primary">{user?.name}</p>
+                <p className="text-xs text-text-muted">{user?.email}</p>
               </div>
             </div>
             <Button
@@ -199,6 +200,7 @@ export default function Layout({ children }: LayoutProps) {
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
               <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-border" />
+              <ThemeToggle />
               <div className="flex items-center gap-x-2">
                 <UserIcon className="h-6 w-6 text-text-muted" />
                 <span className="text-sm font-medium text-text-primary">{user?.name}</span>

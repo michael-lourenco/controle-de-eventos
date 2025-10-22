@@ -30,7 +30,7 @@ export default function DashboardPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-red-600">Erro ao carregar dados: {error}</div>
+          <div className="text-error">Erro ao carregar dados: {error}</div>
         </div>
       </Layout>
     );
@@ -51,43 +51,43 @@ export default function DashboardPage() {
       name: 'Eventos Hoje',
       value: dashboardData.eventosHoje,
       icon: CalendarIcon,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+      color: 'text-primary',
+      bgColor: 'bg-primary/10'
     },
     {
       name: 'Receita Total',
       value: `R$ ${dashboardData.resumoFinanceiro.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: CurrencyDollarIcon,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
+      color: 'text-success',
+      bgColor: 'bg-success-bg'
     },
     {
       name: 'Valor Pendente',
       value: `R$ ${dashboardData.resumoFinanceiro.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ClockIcon,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100'
+      color: 'text-warning',
+      bgColor: 'bg-warning-bg'
     },
     {
       name: 'Valor Atrasado',
       value: `R$ ${dashboardData.resumoFinanceiro.valorAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ExclamationTriangleIcon,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
+      color: 'text-error',
+      bgColor: 'bg-error-bg'
     },
     {
       name: 'Total de Eventos',
       value: dashboardData.resumoFinanceiro.totalEventos,
       icon: CalendarIcon,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
+      color: 'text-accent',
+      bgColor: 'bg-accent/10'
     },
     {
       name: 'Eventos Concluídos',
       value: dashboardData.resumoFinanceiro.eventosConcluidos,
       icon: CalendarIcon,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
+      color: 'text-success',
+      bgColor: 'bg-success-bg'
     }
   ];
 
@@ -133,7 +133,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <CalendarIcon className="h-5 w-5 mr-2 text-blue-600" />
+                <CalendarIcon className="h-5 w-5 mr-2 text-info" />
                 Eventos de Hoje
               </CardTitle>
               <CardDescription>
@@ -166,7 +166,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
-                <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-red-600" />
+                <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-error" />
                 Valores Atrasados
               </CardTitle>
               <CardDescription>
@@ -178,7 +178,7 @@ export default function DashboardPage() {
                 <p className="text-text-muted text-center py-4">Nenhum pagamento pendente</p>
               ) : (
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-red-600">
+                  <div className="text-3xl font-bold text-error">
                     {dashboardData.pagamentosPendentes}
                   </div>
                   <p className="text-sm text-text-secondary mt-2">
@@ -194,7 +194,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <ClockIcon className="h-5 w-5 mr-2 text-green-600" />
+              <ClockIcon className="h-5 w-5 mr-2 text-success" />
               Próximos Eventos (7 dias)
             </CardTitle>
             <CardDescription>
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                           {evento.tipoEvento}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-bg text-success-text">
                             {evento.status}
                           </span>
                         </td>
@@ -262,10 +262,10 @@ export default function DashboardPage() {
               <CardTitle className="text-lg">Receita do Mês</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">
+              <div className="text-3xl font-bold text-success">
                 R$ {dashboardData.receitaMes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-text-muted mt-1">
                 {format(new Date(), 'MMMM yyyy', { locale: ptBR })}
               </p>
             </CardContent>
@@ -276,10 +276,10 @@ export default function DashboardPage() {
               <CardTitle className="text-lg">Receita do Ano</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-3xl font-bold text-info">
                 R$ {dashboardData.receitaAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-text-muted mt-1">
                 {new Date().getFullYear()}
               </p>
             </CardContent>
@@ -290,10 +290,10 @@ export default function DashboardPage() {
               <CardTitle className="text-lg">Total de Pagamentos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-900">
+              <div className="text-3xl font-bold text-text-primary">
                 {dashboardData.pagamentosPendentes}
               </div>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-text-muted mt-1">
                 Registros no sistema
               </p>
             </CardContent>

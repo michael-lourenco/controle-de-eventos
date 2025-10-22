@@ -49,7 +49,7 @@ export default function EventosPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-red-600">Erro ao carregar eventos: {error}</div>
+          <div className="text-error">Erro ao carregar eventos: {error}</div>
         </div>
       </Layout>
     );
@@ -122,17 +122,17 @@ export default function EventosPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Agendado':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-info-bg text-info-text';
       case 'Confirmado':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-bg text-success-text';
       case 'Em andamento':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning-bg text-warning-text';
       case 'Concluído':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-surface text-text-secondary';
       case 'Cancelado':
-        return 'bg-red-100 text-red-800';
+        return 'bg-error-bg text-error-text';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-surface text-text-secondary';
     }
   };
 
@@ -186,7 +186,7 @@ export default function EventosPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-text-primary mb-1">
                     Status
                   </label>
                   <select
@@ -203,7 +203,7 @@ export default function EventosPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-text-primary mb-1">
                     Tipo
                   </label>
                   <select
@@ -230,25 +230,25 @@ export default function EventosPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm font-medium text-gray-700">Filtros ativos:</span>
+                  <span className="text-sm font-medium text-text-primary">Filtros ativos:</span>
                   <div className="flex flex-wrap gap-2">
                     {searchTerm && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-bg text-info-text">
                         Busca: &quot;{searchTerm}&quot;
                       </span>
                     )}
                     {filterStatus !== 'todos' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-bg text-success-text">
                         Status: {filterStatus}
                       </span>
                     )}
                     {filterTipo !== 'todos' && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
                         Tipo: {filterTipo}
                       </span>
                     )}
                     {dateFilter && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-bg text-warning-text">
                         {dateFilter.type === 'quick' 
                           ? `Período: ${dateFilter.quickFilter}`
                           : `Período: ${format(dateFilter.range.startDate!, 'dd/MM/yyyy', { locale: ptBR })} - ${format(dateFilter.range.endDate!, 'dd/MM/yyyy', { locale: ptBR })}`
@@ -257,7 +257,7 @@ export default function EventosPage() {
                     )}
                   </div>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-text-secondary">
                   {filteredEventos.length} evento{filteredEventos.length !== 1 ? 's' : ''} encontrado{filteredEventos.length !== 1 ? 's' : ''}
                 </div>
               </div>
@@ -286,19 +286,19 @@ export default function EventosPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-text-secondary">
                     <CalendarIcon className="h-4 w-4 mr-2" />
                     {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} - {evento.diaSemana}
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-text-secondary">
                     <MapPinIcon className="h-4 w-4 mr-2" />
                     {evento.local}
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-text-secondary">
                     <ClockIcon className="h-4 w-4 mr-2" />
                     {evento.chegadaNoLocal} - {evento.horarioInicio}
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
+                  <div className="flex items-center text-sm text-text-secondary">
                     <UserGroupIcon className="h-4 w-4 mr-2" />
                     {evento.numeroConvidados} convidados
                   </div>
@@ -306,7 +306,7 @@ export default function EventosPage() {
 
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-900">{evento.tipoEvento}</span>
+                    <span className="text-sm font-medium text-text-primary">{evento.tipoEvento}</span>
                     <div className="flex space-x-2">
                       <Button 
                         variant="outline" 
@@ -338,7 +338,7 @@ export default function EventosPage() {
                           handleDelete(evento);
                         }}
                         title="Excluir"
-                        className="text-red-600 hover:text-red-700 hover:border-red-300"
+                        className="text-error hover:text-error/80 hover:border-error/50"
                       >
                         <TrashIcon className="h-4 w-4" />
                       </Button>
@@ -353,9 +353,9 @@ export default function EventosPage() {
         {filteredEventos.length === 0 && (
           <Card>
             <CardContent className="text-center py-12">
-              <CalendarIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum evento encontrado</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <CalendarIcon className="mx-auto h-12 w-12 text-text-muted" />
+              <h3 className="mt-2 text-sm font-medium text-text-primary">Nenhum evento encontrado</h3>
+              <p className="mt-1 text-sm text-text-secondary">
                 Tente ajustar os filtros ou criar um novo evento.
               </p>
               <div className="mt-6">
