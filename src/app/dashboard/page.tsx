@@ -1,19 +1,23 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import Layout from '@/components/Layout';
 import {
   CalendarIcon,
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
-  ClockIcon
+  ClockIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { useDashboardData } from '@/hooks/useData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { data: dashboardData, loading, error } = useDashboardData();
   
   if (loading) {
@@ -147,14 +151,25 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   {dashboardData.eventosHojeLista?.map((evento) => (
                     <div key={evento.id} className="flex items-center justify-between p-3 bg-surface rounded-lg border border-border">
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium text-text-primary">{evento.cliente.nome}</p>
                         <p className="text-sm text-text-secondary">{evento.local}</p>
                         <p className="text-sm text-text-muted">{evento.chegadaNoLocal}</p>
                       </div>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        {evento.tipoEvento}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                          {evento.tipoEvento}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.push(`/eventos/${evento.id}`)}
+                          title="Visualizar"
+                          className="hover:bg-primary/10 hover:text-primary"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -224,6 +239,9 @@ export default function DashboardPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                         Status
                       </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                        Ações
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-background divide-y divide-border">
@@ -245,6 +263,17 @@ export default function DashboardPage() {
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-bg text-success-text">
                             {evento.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push(`/eventos/${evento.id}`)}
+                            title="Visualizar"
+                            className="hover:bg-primary/10 hover:text-primary"
+                          >
+                            <EyeIcon className="h-4 w-4" />
+                          </Button>
                         </td>
                       </tr>
                     ))}

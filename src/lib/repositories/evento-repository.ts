@@ -31,11 +31,16 @@ export class EventoRepository extends SubcollectionRepository<Evento> {
 
   async getEventosHoje(userId: string): Promise<Evento[]> {
     const hoje = new Date();
+    const offset = hoje.getTimezoneOffset();
     hoje.setHours(0, 0, 0, 0);
     const fimDoDia = new Date();
     fimDoDia.setHours(23, 59, 59, 999);
     
-    return this.findByDataEvento(hoje, fimDoDia, userId);
+    // Ajustar para o fuso horário local
+    const hojeLocal = new Date(hoje.getTime() - offset * 60000);
+    const fimDoDiaLocal = new Date(fimDoDia.getTime() - offset * 60000);
+    
+    return this.findByDataEvento(hojeLocal, fimDoDiaLocal, userId);
   }
 
   async getProximosEventos(userId: string, limit: number = 10): Promise<Evento[]> {

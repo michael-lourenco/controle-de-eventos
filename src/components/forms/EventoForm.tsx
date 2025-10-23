@@ -135,7 +135,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           instagram: '',
           comoConheceu: ''
         },
-        dataEvento: evento.dataEvento.toISOString().split('T')[0],
+        dataEvento: new Date(evento.dataEvento.getTime() - evento.dataEvento.getTimezoneOffset() * 60000).toISOString().split('T')[0],
         local: evento.local,
         endereco: evento.endereco,
         tipoEvento: evento.tipoEvento as TipoEvento,
@@ -282,7 +282,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       const eventoData = {
         clienteId: cliente.id,
         cliente,
-        dataEvento: new Date(formData.dataEvento),
+        dataEvento: new Date(formData.dataEvento + 'T00:00:00'),
         diaSemana: getDiaSemana(formData.dataEvento),
         local: formData.local,
         endereco: formData.endereco,

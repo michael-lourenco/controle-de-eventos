@@ -405,12 +405,18 @@ export class DataService {
         return dataEvento >= inicioMes && dataEvento <= fimMes;
       });
 
-      // Calcular eventos próximos (próximos 7 dias)
+      // Calcular eventos próximos (próximos 7 dias incluindo hoje)
       const proximos7Dias = new Date();
       proximos7Dias.setDate(hoje.getDate() + 7);
+      proximos7Dias.setHours(23, 59, 59, 999);
+      
+      // Ajustar hoje para início do dia para incluir eventos de hoje
+      const hojeInicio = new Date(hoje);
+      hojeInicio.setHours(0, 0, 0, 0);
+      
       const eventosProximos = eventos.filter(evento => {
         const dataEvento = new Date(evento.dataEvento);
-        return dataEvento >= hoje && dataEvento <= proximos7Dias;
+        return dataEvento >= hojeInicio && dataEvento <= proximos7Dias;
       });
 
       // Calcular pagamentos do mês
