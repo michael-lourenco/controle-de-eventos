@@ -177,11 +177,22 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 
 /* Estilos para dropdowns de select no modo dark */
 select option {
-  background-color: var(--surface);
-  color: var(--text-primary);
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  padding: 8px 12px !important;
 }
 
 .dark select option {
-  background-color: var(--surface);
-  color: var(--text-primary);
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  padding: 8px 12px !important;
+}
+
+/* Estilos adicionais para garantir opacidade */
+select {
+  background-color: var(--surface) !important;
+}
+
+select:focus {
+  background-color: var(--surface) !important;
 }

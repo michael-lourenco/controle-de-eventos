@@ -127,6 +127,7 @@ export default function LoginPage() {
               )}
 
               <Button
+                variant="outline"
                 type="submit"
                 className="w-full"
                 loading={loading}
