@@ -171,4 +171,39 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
       throw error;
     }
   }
+
+  async getAtivos(parentId: string): Promise<T[]> {
+    try {
+      const collectionRef = collection(db, this.parentCollection, parentId, this.subcollectionName);
+      
+      // Primeiro tentar buscar todos os documentos
+      try {
+        const q = query(collectionRef);
+        const querySnapshot = await getDocs(q);
+        
+        const allResults = querySnapshot.docs.map(doc => 
+          this.convertFirestoreData(doc.data(), doc.id)
+        );
+        
+        // Filtrar apenas os ativos e ordenar
+        const activeResults = allResults.filter((item: any) => item.ativo === true);
+        
+        return activeResults.sort((a, b) => (a as any).nome.localeCompare((b as any).nome));
+      } catch (error) {
+        // Se der erro, tentar com where
+        const q = query(collectionRef, where('ativo', '==', true));
+        const querySnapshot = await getDocs(q);
+        
+        const results = querySnapshot.docs.map(doc => 
+          this.convertFirestoreData(doc.data(), doc.id)
+        );
+        
+        // Ordenar manualmente
+        return results.sort((a, b) => (a as any).nome.localeCompare((b as any).nome));
+      }
+    } catch (error) {
+      console.error(`Error getting active documents in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
+      throw error;
+    }
+  }
 }

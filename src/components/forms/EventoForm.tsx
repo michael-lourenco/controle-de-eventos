@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
+import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import { 
   Cliente, 
   Evento, 
   StatusEvento, 
-  TipoEvento 
+  TipoEvento,
+  CanalEntrada
 } from '@/types';
-import { useClientes } from '@/hooks/useData';
+import { useClientes, useCanaisEntrada } from '@/hooks/useData';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
 
@@ -32,7 +34,7 @@ interface FormData {
     endereco: string;
     cep: string;
     instagram?: string;
-    comoConheceu?: string;
+    canalEntradaId?: string;
   };
   dataEvento: string;
   local: string;
@@ -78,8 +80,9 @@ const diasSemana = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA',
 
 export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps) {
   const { data: clientes } = useClientes();
+  const { data: canaisEntrada, refetch: refetchCanaisEntrada } = useCanaisEntrada();
   const { userId, isLoading } = useCurrentUser();
-  
+
   const [formData, setFormData] = useState<FormData>({
     clienteId: '',
     novoCliente: {
@@ -90,7 +93,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       endereco: '',
       cep: '',
       instagram: '',
-      comoConheceu: ''
+      canalEntradaId: ''
     },
     dataEvento: '',
     local: '',
@@ -121,6 +124,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+
   useEffect(() => {
     if (evento) {
       setFormData({
@@ -133,7 +137,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           endereco: '',
           cep: '',
           instagram: '',
-          comoConheceu: ''
+          canalEntradaId: evento.cliente.canalEntradaId || ''
         },
         dataEvento: new Date(evento.dataEvento.getTime() - evento.dataEvento.getTimezoneOffset() * 60000).toISOString().split('T')[0],
         local: evento.local,
@@ -217,6 +221,34 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     if (!data) return '';
     const dataObj = new Date(data);
     return diasSemana[dataObj.getDay()];
+  };
+
+
+  const handleCreateCanalEntrada = async (nome: string) => {
+    if (!userId) return;
+    
+    try {
+      const novoCanal = await dataService.createCanalEntrada({
+        nome,
+        descricao: '',
+        ativo: true,
+        dataCadastro: new Date()
+      }, userId);
+      
+      // Recarregar a lista de canais de entrada
+      await refetchCanaisEntrada();
+      
+      // Atualizar o formData com o novo canal
+      setFormData(prev => ({
+        ...prev,
+        novoCliente: {
+          ...prev.novoCliente,
+          canalEntradaId: novoCanal.id
+        }
+      }));
+    } catch (error) {
+      console.error('Erro ao criar canal de entrada:', error);
+    }
   };
 
   const validateForm = (): boolean => {
@@ -416,10 +448,17 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
                 value={formData.novoCliente.instagram || ''}
                 onChange={(e) => handleNovoClienteChange('instagram', e.target.value)}
               />
-              <Input
-                label="Como nos encontrou?"
-                value={formData.novoCliente.comoConheceu || ''}
-                onChange={(e) => handleNovoClienteChange('comoConheceu', e.target.value)}
+              <SelectWithSearch
+                label="Canal de Entrada"
+                placeholder="Selecione ou digite um canal de entrada"
+                options={canaisEntrada?.map(canal => ({
+                  value: canal.id,
+                  label: canal.nome
+                })) || []}
+                value={formData.novoCliente.canalEntradaId || ''}
+                onChange={(value) => handleNovoClienteChange('canalEntradaId', value)}
+                onCreateNew={(nome) => handleCreateCanalEntrada(nome)}
+                allowCreate={true}
               />
             </div>
           )}

@@ -353,7 +353,7 @@ export default function PagamentoHistorico({
                 R$ {resumoFinanceiro.valorPendenteOuAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <div className="text-sm text-text-secondary">
-                {resumoFinanceiro.isAtrasado ? 'Valor Atrasado' : 'Valor Pendente'}
+                {resumoFinanceiro.isAtrasado ? 'Valor Atrasado' : 'Valor a Receber'}
               </div>
             </div>
           </div>

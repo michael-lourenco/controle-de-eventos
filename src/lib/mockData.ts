@@ -14,10 +14,42 @@ import {
   StatusEvento,
   StatusContrato,
   TipoEvento,
-  FormaPagamento
+  FormaPagamento,
+  CanalEntrada
 } from '@/types';
 
 // Dados mockados baseados nas planilhas analisadas
+
+export const canaisEntrada: CanalEntrada[] = [
+  {
+    id: '1',
+    nome: 'Instagram',
+    descricao: 'Redes sociais',
+    ativo: true,
+    dataCadastro: new Date('2023-01-01')
+  },
+  {
+    id: '2',
+    nome: 'Indicação',
+    descricao: 'Boca a boca',
+    ativo: true,
+    dataCadastro: new Date('2023-01-01')
+  },
+  {
+    id: '3',
+    nome: 'Facebook',
+    descricao: 'Redes sociais',
+    ativo: true,
+    dataCadastro: new Date('2023-01-01')
+  },
+  {
+    id: '4',
+    nome: 'Google',
+    descricao: 'Busca online',
+    ativo: true,
+    dataCadastro: new Date('2023-01-01')
+  }
+];
 
 export const clientes: Cliente[] = [
   {
@@ -29,7 +61,7 @@ export const clientes: Cliente[] = [
     endereco: 'Rua das Flores, 123',
     cep: '23000-000',
     instagram: '@giovanna',
-    comoConheceu: 'Instagram',
+    canalEntradaId: '1',
     dataCadastro: new Date('2023-01-01')
   },
   {
@@ -41,7 +73,7 @@ export const clientes: Cliente[] = [
     endereco: 'Rua das Palmeiras, 456',
     cep: '23000-001',
     instagram: '@danielle',
-    comoConheceu: 'Indicação',
+    canalEntradaId: '2',
     dataCadastro: new Date('2023-01-01')
   },
   {
@@ -53,7 +85,7 @@ export const clientes: Cliente[] = [
     endereco: 'Rua das Rosas, 789',
     cep: '23000-002',
     instagram: '@viniciusnathalia',
-    comoConheceu: 'Facebook',
+    canalEntradaId: '3',
     dataCadastro: new Date('2023-01-01')
   },
   {
@@ -65,7 +97,7 @@ export const clientes: Cliente[] = [
     endereco: 'Rua das Margaridas, 321',
     cep: '23000-003',
     instagram: '@mariajoao',
-    comoConheceu: 'Google',
+    canalEntradaId: '4',
     dataCadastro: new Date('2023-01-01')
   }
 ];

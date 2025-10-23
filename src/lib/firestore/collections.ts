@@ -9,6 +9,7 @@ export const COLLECTIONS = {
   EVENTOS: 'eventos',
   TIPO_CUSTOS: 'tipo_custos',
   TIPO_SERVICOS: 'tipo_servicos',
+  CANAIS_ENTRADA: 'canais_entrada',
   
   // Subcollections de eventos
   PAGAMENTOS: 'pagamentos',
@@ -45,9 +46,17 @@ export const COLLECTION_SCHEMAS = {
     endereco: 'string',
     cep: 'string',
     instagram: 'string?',
-    comoConheceu: 'string?',
+    canalEntradaId: 'string?',
     dataCadastro: 'timestamp'
     // userId removido - agora é parte do path da subcollection
+  },
+  
+  [COLLECTIONS.CANAIS_ENTRADA]: {
+    id: 'string',
+    nome: 'string',
+    descricao: 'string',
+    ativo: 'boolean',
+    dataCadastro: 'timestamp'
   },
   
   [COLLECTIONS.EVENTOS]: {

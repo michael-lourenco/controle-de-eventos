@@ -59,7 +59,7 @@ export default function DashboardPage() {
       bgColor: 'bg-success-bg'
     },
     {
-      name: 'Valor Pendente',
+      name: 'Valor a Receber',
       value: `R$ ${dashboardData.resumoFinanceiro.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ClockIcon,
       color: 'text-warning',

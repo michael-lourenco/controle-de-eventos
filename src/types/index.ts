@@ -10,6 +10,14 @@ export interface User {
   dataAtualizacao: Date;
 }
 
+export interface CanalEntrada {
+  id: string;
+  nome: string;
+  descricao: string;
+  ativo: boolean;
+  dataCadastro: Date;
+}
+
 export interface Cliente {
   id: string;
   nome: string;
@@ -19,7 +27,8 @@ export interface Cliente {
   endereco: string;
   cep: string;
   instagram?: string;
-  comoConheceu?: string;
+  canalEntradaId?: string;
+  canalEntrada?: CanalEntrada;
   dataCadastro: Date;
 }
 

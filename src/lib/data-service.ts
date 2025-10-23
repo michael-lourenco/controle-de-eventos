@@ -7,6 +7,7 @@ import {
   CustoEvento, 
   TipoServico,
   ServicoEvento,
+  CanalEntrada,
   AnexoEvento,
   DashboardData,
   ResumoCustosEvento,
@@ -22,6 +23,7 @@ export class DataService {
   private custoEventoRepo = repositoryFactory.getCustoEventoRepository();
   private tipoServicoRepo = repositoryFactory.getTipoServicoRepository();
   private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
+  private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
 
   // Método para inicializar collections automaticamente
   private async ensureCollectionsInitialized(): Promise<void> {
@@ -578,6 +580,56 @@ export class DataService {
         }
       };
     }
+  }
+
+  // Métodos para Canais de Entrada
+  async getCanaisEntrada(userId: string): Promise<CanalEntrada[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar canais de entrada');
+    }
+    return this.canalEntradaRepo.findAll(userId);
+  }
+
+  async getCanaisEntradaAtivos(userId: string): Promise<CanalEntrada[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar canais de entrada ativos');
+    }
+    return this.canalEntradaRepo.getAtivos(userId);
+  }
+
+  async getCanalEntradaById(id: string, userId: string): Promise<CanalEntrada | null> {
+    if (!id || !userId) {
+      throw new Error('id e userId são obrigatórios para buscar canal de entrada');
+    }
+    return this.canalEntradaRepo.getCanalEntradaById(userId, id);
+  }
+
+  async createCanalEntrada(canal: Omit<CanalEntrada, 'id'>, userId: string): Promise<CanalEntrada> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para criar canal de entrada');
+    }
+    return this.canalEntradaRepo.createCanalEntrada(userId, canal);
+  }
+
+  async updateCanalEntrada(id: string, canal: Partial<CanalEntrada>, userId: string): Promise<CanalEntrada> {
+    if (!id || !userId) {
+      throw new Error('id e userId são obrigatórios para atualizar canal de entrada');
+    }
+    return this.canalEntradaRepo.updateCanalEntrada(userId, id, canal);
+  }
+
+  async deleteCanalEntrada(id: string, userId: string): Promise<void> {
+    if (!id || !userId) {
+      throw new Error('id e userId são obrigatórios para deletar canal de entrada');
+    }
+    return this.canalEntradaRepo.deleteCanalEntrada(userId, id);
+  }
+
+  async searchCanaisEntrada(searchTerm: string, userId: string): Promise<CanalEntrada[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar canais de entrada');
+    }
+    return this.canalEntradaRepo.searchByName(userId, searchTerm);
   }
 }
 

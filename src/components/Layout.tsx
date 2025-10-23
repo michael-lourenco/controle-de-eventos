@@ -36,6 +36,7 @@ const adminNavigation = [
   { name: 'Usuários', href: '/admin/users', icon: UserIcon },
   { name: 'Tipos de Custo', href: '/tipos-custos', icon: CogIcon },
   { name: 'Tipos de Serviço', href: '/tipos-servicos', icon: CogIcon },
+  { name: 'Canais de Entrada', href: '/canais-entrada', icon: CogIcon },
   { name: 'Migração', href: '/admin/migration', icon: CogIcon },
 ];
 

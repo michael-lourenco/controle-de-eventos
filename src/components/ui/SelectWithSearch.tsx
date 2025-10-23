@@ -169,7 +169,7 @@ export default function SelectWithSearch({
                     setHighlightedIndex(-1);
                   }}
                   onKeyDown={handleKeyDown}
-                  placeholder="Buscar tipo de custo..."
+                  placeholder="Buscar..."
                   className="w-full pl-9 pr-3 py-2 border border-border rounded-md text-sm text-text-primary bg-background focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>

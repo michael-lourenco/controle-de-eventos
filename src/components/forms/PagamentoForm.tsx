@@ -454,7 +454,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
           <div className="text-sm text-blue-800">
             <strong>Informação:</strong> Todos os pagamentos são considerados como &quot;Pago&quot; independente da data.
             <br />
-            <strong>Valor Pendente:</strong> Aparece até o dia final de pagamento para valores não pagos.
+            <strong>Valor a Receber:</strong> Aparece até o dia final de pagamento para valores não pagos.
             <br />
             <strong>Valor Atrasado:</strong> Aparece após o dia final de pagamento para valores não pagos.
           </div>

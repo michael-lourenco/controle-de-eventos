@@ -322,9 +322,9 @@ export default function EventoViewPage() {
                   {evento.cliente.instagram}
                 </div>
               )}
-              {evento.cliente.comoConheceu && (
+              {evento.cliente.canalEntrada && (
                 <div className="text-sm text-text-secondary">
-                  <span className="font-medium">Como conheceu:</span> {evento.cliente.comoConheceu}
+                  <span className="font-medium">Canal de Entrada:</span> {evento.cliente.canalEntrada.nome}
                 </div>
               )}
             </CardContent>

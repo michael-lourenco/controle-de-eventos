@@ -55,6 +55,19 @@ export class ClienteRepository extends SubcollectionRepository<Cliente> {
   }
 
   async getClienteById(id: string, userId: string): Promise<Cliente | null> {
-    return this.findById(id, userId);
+    const cliente = await this.findById(id, userId);
+    if (!cliente || !cliente.canalEntradaId) return cliente;
+
+    try {
+      const canalEntradaRepo = new (await import('./canal-entrada-repository')).CanalEntradaRepository();
+      const canalEntrada = await canalEntradaRepo.getCanalEntradaById(userId, cliente.canalEntradaId);
+      return {
+        ...cliente,
+        canalEntrada: canalEntrada || undefined
+      };
+    } catch (error) {
+      console.error('Erro ao carregar canal de entrada:', error);
+      return cliente;
+    }
   }
 }
