@@ -445,6 +445,38 @@ export default function EventoViewPage() {
           )}
         </div>
 
+        {/* Resumo Financeiro */}
+        <div className="pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Resumo Financeiro</CardTitle>
+              <CardDescription>Visão geral dos valores do evento</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-surface/50 rounded-lg">
+                  <div className="text-2xl font-bold text-primary">
+                    R$ {evento.valorTotal?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                  </div>
+                  <div className="text-sm text-text-secondary">Valor Total Cobrado</div>
+                </div>
+                <div className="text-center p-4 bg-surface/50 rounded-lg">
+                  <div className="text-2xl font-bold text-error">
+                    R$ {custos?.reduce((total, custo) => total + custo.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                  </div>
+                  <div className="text-sm text-text-secondary">Total de Custos</div>
+                </div>
+                <div className="text-center p-4 bg-surface/50 rounded-lg">
+                  <div className={`text-2xl font-bold ${(evento.valorTotal || 0) - (custos?.reduce((total, custo) => total + custo.valor, 0) || 0) >= 0 ? 'text-success' : 'text-error'}`}>
+                    R$ {((evento.valorTotal || 0) - (custos?.reduce((total, custo) => total + custo.valor, 0) || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-sm text-text-secondary">Estimativa de Lucro</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Histórico de Pagamentos */}
         <div id="pagamentos" className="pt-4">
           <PagamentoHistorico

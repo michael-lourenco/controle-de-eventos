@@ -331,7 +331,7 @@ export default function PagamentoHistorico({
         <CardHeader>
           <CardTitle className="flex items-center">
             <CurrencyDollarIcon className="h-5 w-5 mr-2" />
-            Resumo Financeiro
+            Resumo de Pagamentos
           </CardTitle>
         </CardHeader>
         <CardContent>

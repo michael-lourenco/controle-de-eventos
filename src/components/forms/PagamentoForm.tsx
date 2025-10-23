@@ -294,57 +294,6 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         </CardContent>
       </Card>
 
-      {/* Sugestões de Valores (apenas para novo pagamento) */}
-      {!pagamento && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-blue-900">Sugestões de Valores</CardTitle>
-            <CardDescription className="text-blue-700">
-              Valores sugeridos baseados no valor total do evento
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div className="text-center">
-                <div className="text-lg font-semibold text-blue-900">
-                  R$ {(evento.valorTotal * 0.25).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-                <div className="text-sm text-blue-700">25% (Entrada)</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-blue-900">
-                  R$ {(evento.valorTotal * 0.5).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-                <div className="text-sm text-blue-700">50% (Meio)</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-blue-900">
-                  R$ {(evento.valorTotal * 0.75).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-                <div className="text-sm text-blue-700">75% (Quase Total)</div>
-              </div>
-              <div className="text-center">
-                <div className="text-lg font-semibold text-blue-900">
-                  R$ {evento.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-                <div className="text-sm text-blue-700">100% (Total)</div>
-              </div>
-            </div>
-            <div className="mt-4 text-center">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setFormData(prev => ({ ...prev, valor: evento.valorTotal }))}
-                className="text-blue-700 border-blue-300 hover:bg-blue-100"
-              >
-                Usar Valor Total
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Dados do Pagamento */}
       <Card>
         <CardHeader>
