@@ -52,13 +52,6 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      name: 'Eventos Hoje',
-      value: dashboardData.eventosHoje,
-      icon: CalendarIcon,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10'
-    },
-    {
       name: 'Receita Total',
       value: `R$ ${dashboardData.resumoFinanceiro.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: CurrencyDollarIcon,
@@ -136,9 +129,14 @@ export default function DashboardPage() {
           {/* Eventos Hoje */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <CalendarIcon className="h-5 w-5 mr-2 text-info" />
-                Eventos de Hoje
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <CalendarIcon className="h-5 w-5 mr-2 text-info" />
+                  Eventos de Hoje
+                </div>
+                <span className="text-2xl font-bold text-primary">
+                  {dashboardData.eventosHoje}
+                </span>
               </CardTitle>
               <CardDescription>
                 {format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}

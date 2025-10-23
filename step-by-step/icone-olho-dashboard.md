@@ -4,6 +4,10 @@
 
 ## Alterações Realizadas
 
+### 0. **Remoção do Card de Estatísticas**
+- Removido item "Eventos Hoje" do array `stats`
+- Mantido apenas o card detalhado com lista de eventos
+
 ### 1. **Eventos de Hoje**
 - Adicionado botão com ícone do olho (EyeIcon) para cada evento
 - Usa componente Button com variant="ghost" e size="sm"
