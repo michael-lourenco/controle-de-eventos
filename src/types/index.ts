@@ -302,7 +302,6 @@ export interface TipoServico {
 export interface ServicoEvento {
   id: string;
   eventoId: string;
-  evento: Evento;
   tipoServicoId: string;
   tipoServico: TipoServico;
   observacoes?: string;

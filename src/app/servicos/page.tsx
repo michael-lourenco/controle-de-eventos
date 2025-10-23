@@ -209,14 +209,9 @@ export default function ServicosPage() {
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoServicoColor(servico.tipoServico.nome)}`}>
                         {servico.tipoServico.nome}
                       </span>
-                      {servico.quantidade && servico.quantidade > 1 && (
-                        <span className="text-sm text-text-muted">
-                          x{servico.quantidade}
-                        </span>
-                      )}
                     </div>
                     <p className="text-sm text-text-secondary mb-2">
-                      {servico.tipoServico.descricao}
+                      Serviço adicionado em {format(new Date(servico.dataCadastro), 'dd/MM/yyyy', { locale: ptBR })}
                     </p>
                     <div className="flex items-center gap-4 text-sm text-text-muted">
                       <span className="flex items-center gap-1">

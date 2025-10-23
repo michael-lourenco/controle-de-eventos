@@ -20,22 +20,21 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
   async createServicoEvento(userId: string, eventoId: string, servico: Omit<ServicoEvento, 'id'>): Promise<ServicoEvento> {
     const servicosCollection = this.getServicosCollection(userId, eventoId);
     
-    // Remover campos undefined antes de enviar para o Firestore
-    const cleanData = { ...servico } as any;
-    Object.keys(cleanData).forEach(key => {
-      if (cleanData[key] === undefined) {
-        delete cleanData[key];
-      }
-    });
-    
-    const docRef = await addDoc(servicosCollection, {
-      ...cleanData,
+    // Criar dados simplificados para salvar no Firestore
+    const servicoData = {
+      tipoServicoId: servico.tipoServicoId,
+      observacoes: servico.observacoes || '',
       dataCadastro: new Date()
-    });
+    };
+    
+    const docRef = await addDoc(servicosCollection, servicoData);
     
     return {
       id: docRef.id,
-      ...servico,
+      eventoId: servico.eventoId,
+      tipoServicoId: servico.tipoServicoId,
+      tipoServico: servico.tipoServico,
+      observacoes: servico.observacoes,
       dataCadastro: new Date()
     } as ServicoEvento;
   }
@@ -43,17 +42,21 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
   async updateServicoEvento(userId: string, eventoId: string, servicoId: string, servico: Partial<ServicoEvento>): Promise<ServicoEvento> {
     const servicoRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.SERVICOS_EVENTO, servicoId);
     
-    // Remover campos undefined antes de enviar para o Firestore
-    const cleanData = { ...servico } as any;
-    Object.keys(cleanData).forEach(key => {
-      if (cleanData[key] === undefined) {
-        delete cleanData[key];
-      }
-    });
+    // Criar dados simplificados para atualizar no Firestore
+    const updateData: any = {};
+    if (servico.tipoServicoId !== undefined) updateData.tipoServicoId = servico.tipoServicoId;
+    if (servico.observacoes !== undefined) updateData.observacoes = servico.observacoes;
     
-    await updateDoc(servicoRef, cleanData);
+    await updateDoc(servicoRef, updateData);
     
-    return { id: servicoId, ...servico } as ServicoEvento;
+    return {
+      id: servicoId,
+      eventoId: servico.eventoId || '',
+      tipoServicoId: servico.tipoServicoId || '',
+      tipoServico: servico.tipoServico || {} as TipoServico,
+      observacoes: servico.observacoes,
+      dataCadastro: servico.dataCadastro || new Date()
+    } as ServicoEvento;
   }
 
   async deleteServicoEvento(userId: string, eventoId: string, servicoId: string): Promise<void> {
@@ -70,20 +73,36 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
       console.log('ServicoEventoRepository: Buscando serviços para evento:', eventoId);
       console.log('ServicoEventoRepository: Documentos encontrados:', querySnapshot.docs.length);
       
+      // Carregar tipos de serviço para popular os objetos
+      const tipoServicoRepo = new TipoServicoRepository();
+      const tiposServico = await tipoServicoRepo.findAll(userId);
+      const tiposMap = new Map(tiposServico.map(tipo => [tipo.id, tipo]));
+      
       return querySnapshot.docs.map(doc => {
         const data = doc.data();
         console.log('ServicoEventoRepository: Dados do documento:', data);
         
-        // Converter Timestamps do Firestore para Date
-        const servico = {
+        // Buscar o tipo de serviço correspondente
+        const tipoServico = tiposMap.get(data.tipoServicoId) || {
+          id: data.tipoServicoId,
+          nome: 'Tipo não encontrado',
+          descricao: '',
+          ativo: false,
+          dataCadastro: new Date()
+        } as TipoServico;
+        
+        const servico: ServicoEvento = {
           id: doc.id,
-          ...data,
+          eventoId: eventoId,
+          tipoServicoId: data.tipoServicoId,
+          tipoServico: tipoServico,
+          observacoes: data.observacoes,
           dataCadastro: data.dataCadastro?.toDate ? data.dataCadastro.toDate() : new Date(data.dataCadastro)
         };
         
         console.log('ServicoEventoRepository: Serviço convertido:', servico);
         return servico;
-      }) as ServicoEvento[];
+      });
     } catch (error) {
       console.log('ServicoEventoRepository: Subcollection não existe ainda, retornando array vazio:', error);
       return [];

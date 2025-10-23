@@ -125,6 +125,7 @@ export const COLLECTION_SCHEMAS = {
     observacoes: 'string?',
     dataCadastro: 'timestamp'
     // eventoId removido - agora é parte do path da subcollection
+    // tipoServico removido - será carregado separadamente quando necessário
   },
   
   [COLLECTIONS.ANEXOS_EVENTOS]: {

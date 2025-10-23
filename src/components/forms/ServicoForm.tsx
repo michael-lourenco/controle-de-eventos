@@ -134,7 +134,6 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
       const servicoData: ServicoEvento = {
         id: servico?.id || '',
         eventoId: evento.id,
-        evento: evento,
         tipoServicoId: formData.tipoServicoId,
         tipoServico: tipoServico,
         observacoes: formData.observacoes,
