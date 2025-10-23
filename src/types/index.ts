@@ -305,15 +305,12 @@ export interface ServicoEvento {
   evento: Evento;
   tipoServicoId: string;
   tipoServico: TipoServico;
-  valor: number;
-  quantidade?: number;
   observacoes?: string;
   dataCadastro: Date;
 }
 
 export interface ResumoServicosEvento {
   servicos: ServicoEvento[];
-  total: number;
-  porCategoria: Record<string, number>;
   quantidadeItens: number;
+  porCategoria: Record<string, number>;
 }

@@ -175,9 +175,9 @@ export default function ServicosPage() {
               <div className="flex items-center">
                 <CalendarIcon className="h-8 w-8 text-success mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-text-secondary">Valor Total</p>
+                  <p className="text-sm font-medium text-text-secondary">Total de Serviços</p>
                   <p className="text-2xl font-bold text-text-primary">
-                    R$ {servicosFiltrados.reduce((total, servico) => total + servico.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {servicosFiltrados.length}
                   </p>
                 </div>
               </div>
@@ -236,10 +236,7 @@ export default function ServicosPage() {
                   </div>
                   <div className="flex items-center gap-4 ml-4">
                     <div className="text-right">
-                      <p className="text-lg font-semibold text-text-primary">
-                        R$ {servico.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                      <p className="text-xs text-text-muted">
+                      <p className="text-sm text-text-muted">
                         {format(servico.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
                       </p>
                     </div>

@@ -94,31 +94,23 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
     return this.findWhere('tipoServicoId', '==', tipoServicoId, eventoId);
   }
 
-  async getTotalServicosPorEvento(userId: string, eventoId: string): Promise<number> {
-    const servicos = await this.findByEventoId(userId, eventoId);
-    return servicos.reduce((total, servico) => total + servico.valor, 0);
-  }
-
   async getResumoServicosPorEvento(userId: string, eventoId: string): Promise<{
     servicos: ServicoEvento[];
-    total: number;
-    porCategoria: Record<string, number>;
     quantidadeItens: number;
+    porCategoria: Record<string, number>;
   }> {
     const servicos = await this.findByEventoId(userId, eventoId);
-    const total = servicos.reduce((sum, servico) => sum + servico.valor, 0);
     
     const porCategoria: Record<string, number> = {};
     servicos.forEach(servico => {
       const tipoNome = servico.tipoServico?.nome || 'Sem tipo';
-      porCategoria[tipoNome] = (porCategoria[tipoNome] || 0) + servico.valor;
+      porCategoria[tipoNome] = (porCategoria[tipoNome] || 0) + 1;
     });
 
     return {
       servicos,
-      total,
-      porCategoria,
-      quantidadeItens: servicos.length
+      quantidadeItens: servicos.length,
+      porCategoria
     };
   }
 }

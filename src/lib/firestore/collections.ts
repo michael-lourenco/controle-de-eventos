@@ -122,8 +122,6 @@ export const COLLECTION_SCHEMAS = {
   [COLLECTIONS.SERVICOS_EVENTO]: {
     id: 'string',
     tipoServicoId: 'string',
-    valor: 'number',
-    quantidade: 'number?',
     observacoes: 'string?',
     dataCadastro: 'timestamp'
     // eventoId removido - agora é parte do path da subcollection

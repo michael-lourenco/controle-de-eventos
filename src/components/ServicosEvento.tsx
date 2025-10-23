@@ -38,7 +38,6 @@ export default function ServicosEvento({
   const [servicoEditando, setServicoEditando] = useState<ServicoEvento | null>(null);
   const [servicoParaExcluir, setServicoParaExcluir] = useState<ServicoEvento | null>(null);
   const [resumoServicos, setResumoServicos] = useState({
-    total: 0,
     quantidadeItens: 0,
     porCategoria: {} as Record<string, number>
   });
@@ -192,15 +191,6 @@ export default function ServicosEvento({
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <CurrencyDollarIcon className="h-8 w-8 text-success mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-text-secondary">Valor Total</p>
-                    <p className="text-2xl font-bold text-text-primary">
-                      R$ {resumoServicos.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center">
                   <DocumentTextIcon className="h-8 w-8 text-accent mr-3" />
                   <div>
                     <p className="text-sm font-medium text-text-secondary">Tipos Diferentes</p>
@@ -241,10 +231,7 @@ export default function ServicosEvento({
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <div className="text-right">
-                          <p className="text-lg font-semibold text-text-primary">
-                            R$ {servico.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
-                          <p className="text-xs text-text-muted">
+                          <p className="text-sm text-text-muted">
                             {format(servico.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
                           </p>
                         </div>
@@ -278,11 +265,11 @@ export default function ServicosEvento({
                 <div className="mt-6">
                   <h4 className="text-sm font-medium text-text-primary mb-3">Serviços por Tipo</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {Object.entries(resumoServicos.porCategoria).map(([tipo, valor]) => (
+                    {Object.entries(resumoServicos.porCategoria).map(([tipo, quantidade]) => (
                       <div key={tipo} className="flex justify-between items-center p-2 bg-surface rounded border border-border">
                         <span className="text-sm text-text-primary">{tipo}</span>
                         <span className="text-sm font-medium text-text-primary">
-                          R$ {valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          {quantidade}
                         </span>
                       </div>
                     ))}
@@ -300,15 +287,13 @@ export default function ServicosEvento({
           <Card className="w-full max-w-md mx-4 modal-card">
             <CardHeader>
               <CardTitle>Confirmar Exclusão</CardTitle>
-              <CardDescription>
-                Tem certeza que deseja excluir este serviço?
-                <br />
-                <strong>Tipo:</strong> {servicoParaExcluir.tipoServico.nome}
-                <br />
-                <strong>Valor:</strong> R$ {servicoParaExcluir.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                <br />
-                Esta ação não pode ser desfeita.
-              </CardDescription>
+                     <CardDescription>
+                       Tem certeza que deseja excluir este serviço?
+                       <br />
+                       <strong>Tipo:</strong> {servicoParaExcluir.tipoServico.nome}
+                       <br />
+                       Esta ação não pode ser desfeita.
+                     </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex justify-end space-x-2">

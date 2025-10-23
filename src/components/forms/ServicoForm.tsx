@@ -22,8 +22,6 @@ interface ServicoFormProps {
 
 interface FormData {
   tipoServicoId: string;
-  valor: number;
-  quantidade?: number;
   observacoes?: string;
 }
 
@@ -38,8 +36,6 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
   const { userId } = useCurrentUser();
   const [formData, setFormData] = useState<FormData>({
     tipoServicoId: '',
-    valor: 0,
-    quantidade: 1,
     observacoes: ''
   });
 
@@ -83,8 +79,6 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
     if (servico) {
       setFormData({
         tipoServicoId: servico.tipoServicoId,
-        valor: servico.valor,
-        quantidade: servico.quantidade || 1,
         observacoes: servico.observacoes || ''
       });
     }
@@ -110,14 +104,6 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
 
     if (!formData.tipoServicoId) {
       newErrors.tipoServicoId = 'Tipo de serviço é obrigatório';
-    }
-
-    if (!formData.valor || formData.valor <= 0) {
-      newErrors.valor = 'Valor deve ser maior que zero';
-    }
-
-    if (formData.quantidade && formData.quantidade <= 0) {
-      newErrors.quantidade = 'Quantidade deve ser maior que zero';
     }
 
     setErrors(newErrors);
@@ -151,8 +137,6 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
         evento: evento,
         tipoServicoId: formData.tipoServicoId,
         tipoServico: tipoServico,
-        valor: formData.valor,
-        quantidade: formData.quantidade,
         observacoes: formData.observacoes,
         dataCadastro: servico?.dataCadastro || new Date()
       };
@@ -249,31 +233,6 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
                   allowCreate={true}
                   error={errors.tipoServicoId}
                 />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Input
-                label="Valor (R$)"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.valor}
-                onChange={(e) => handleInputChange('valor', parseFloat(e.target.value) || 0)}
-                error={errors.valor}
-                required
-              />
-            </div>
-            <div>
-              <Input
-                label="Quantidade"
-                type="number"
-                min="1"
-                value={formData.quantidade || 1}
-                onChange={(e) => handleInputChange('quantidade', parseInt(e.target.value) || 1)}
-                error={errors.quantidade}
-              />
-            </div>
           </div>
 
           <div>

@@ -358,10 +358,6 @@ export class DataService {
     return this.servicoEventoRepo.findByEventoId(userId, eventoId);
   }
 
-  async getTotalServicosPorEvento(userId: string, eventoId: string): Promise<number> {
-    return this.servicoEventoRepo.getTotalServicosPorEvento(userId, eventoId);
-  }
-
   async getResumoServicosPorEvento(userId: string, eventoId: string): Promise<ResumoServicosEvento> {
     return this.servicoEventoRepo.getResumoServicosPorEvento(userId, eventoId);
   }
