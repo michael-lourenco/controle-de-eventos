@@ -67,8 +67,7 @@ export default function ServicosPage() {
   // Filtrar serviços
   const servicosFiltrados = servicos.filter(servico => {
     const matchesSearch = servico.tipoServico.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         servico.observacoes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         servico.evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase());
+                         servico.observacoes?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesEvento = filterEvento === 'todos' || servico.eventoId === filterEvento;
     
     return matchesSearch && matchesEvento;
@@ -216,11 +215,7 @@ export default function ServicosPage() {
                     <div className="flex items-center gap-4 text-sm text-text-muted">
                       <span className="flex items-center gap-1">
                         <CalendarIcon className="h-4 w-4" />
-                        {format(servico.evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPinIcon className="h-4 w-4" />
-                        {servico.evento.cliente.nome}
+                        Evento ID: {servico.eventoId}
                       </span>
                     </div>
                     {servico.observacoes && (
