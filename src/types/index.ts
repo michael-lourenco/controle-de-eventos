@@ -371,3 +371,51 @@ export interface RelatorioPerformanceEventos {
     previsaoProximoMes: number;
   };
 }
+
+export interface RelatorioFluxoCaixa {
+  periodo: {
+    inicio: Date;
+    fim: Date;
+  };
+  resumoGeral: {
+    receitaTotal: number;
+    despesaTotal: number;
+    saldoAtual: number;
+    saldoAnterior: number;
+    variacaoSaldo: number;
+    percentualVariacao: number;
+  };
+  fluxoMensal: Array<{
+    mes: string;
+    ano: number;
+    receitas: number;
+    despesas: number;
+    saldo: number;
+    saldoAcumulado: number;
+  }>;
+  receitasPorFormaPagamento: Array<{
+    formaPagamento: string;
+    valor: number;
+    percentual: number;
+  }>;
+  despesasPorCategoria: Array<{
+    categoria: string;
+    valor: number;
+    percentual: number;
+  }>;
+  projecao: {
+    proximos3Meses: Array<{
+      mes: string;
+      receitaProjetada: number;
+      despesaProjetada: number;
+      saldoProjetado: number;
+    }>;
+    tendencia: 'crescimento' | 'declinio' | 'estavel';
+    confiabilidade: number; // 0-100
+  };
+  alertas: Array<{
+    tipo: 'saldo_negativo' | 'declinio_receita' | 'aumento_despesas' | 'inadimplencia';
+    mensagem: string;
+    severidade: 'baixa' | 'media' | 'alta';
+  }>;
+}

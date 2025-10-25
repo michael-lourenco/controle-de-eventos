@@ -12,13 +12,15 @@ import {
   DocumentArrowDownIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { useEventos, useDashboardData } from '@/hooks/useData';
+import { useEventos, useDashboardData, useAllPagamentos } from '@/hooks/useData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import PerformanceEventosReport from '@/components/relatorios/PerformanceEventosReport';
+import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
   const { data: dashboardData, loading: loadingDashboard } = useDashboardData();
+  const { data: pagamentos, loading: loadingPagamentos } = useAllPagamentos();
   
   const [periodoInicio, setPeriodoInicio] = useState(
     format(startOfMonth(subMonths(new Date(), 6)), 'yyyy-MM-dd')
@@ -27,7 +29,7 @@ export default function RelatoriosPage() {
     format(endOfMonth(new Date()), 'yyyy-MM-dd')
   );
   
-  const loading = loadingEventos || loadingDashboard;
+  const loading = loadingEventos || loadingDashboard || loadingPagamentos;
   
   if (loading) {
     return (
@@ -317,6 +319,23 @@ export default function RelatoriosPage() {
           </CardHeader>
           <CardContent>
             <PerformanceEventosReport eventos={eventos} />
+          </CardContent>
+        </Card>
+
+        {/* Relatório de Fluxo de Caixa */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-primary">💰 Relatório de Fluxo de Caixa</CardTitle>
+            <CardDescription>
+              Análise completa do fluxo de caixa mensal com projeções e alertas financeiros
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FluxoCaixaReport 
+              eventos={eventos} 
+              pagamentos={pagamentos || []} 
+              custos={[]} 
+            />
           </CardContent>
         </Card>
 
