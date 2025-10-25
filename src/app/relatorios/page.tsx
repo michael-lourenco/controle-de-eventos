@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useEventos, useDashboardData } from '@/hooks/useData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import PerformanceEventosReport from '@/components/relatorios/PerformanceEventosReport';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
@@ -303,6 +304,19 @@ export default function RelatoriosPage() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Relatório de Performance de Eventos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-primary">📊 Relatório de Performance de Eventos</CardTitle>
+            <CardDescription>
+              Análise detalhada de performance dos eventos com exportação CSV
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PerformanceEventosReport eventos={eventos} />
           </CardContent>
         </Card>
 

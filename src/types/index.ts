@@ -323,3 +323,51 @@ export interface ResumoServicosEvento {
   quantidadeItens: number;
   porCategoria: Record<string, number>;
 }
+
+export interface RelatorioPerformanceEventos {
+  periodo: {
+    inicio: Date;
+    fim: Date;
+  };
+  resumoGeral: {
+    totalEventos: number;
+    eventosConcluidos: number;
+    eventosCancelados: number;
+    taxaConclusao: number;
+    taxaCancelamento: number;
+  };
+  eventosPorStatus: Array<{
+    status: string;
+    quantidade: number;
+    percentual: number;
+  }>;
+  eventosPorTipo: Array<{
+    tipo: string;
+    quantidade: number;
+    percentual: number;
+  }>;
+  eventosPorMes: Array<{
+    mes: string;
+    ano: number;
+    quantidade: number;
+    receita: number;
+  }>;
+  eventosPorTrimestre: Array<{
+    trimestre: string;
+    ano: number;
+    quantidade: number;
+    receita: number;
+  }>;
+  sazonalidade: {
+    mesMaisMovimentado: string;
+    mesMenosMovimentado: string;
+    trimestreMaisMovimentado: string;
+    tipoEventoMaisPopular: string;
+    tipoEventoMenosPopular: string;
+  };
+  tendencias: {
+    crescimentoMensal: number;
+    crescimentoTrimestral: number;
+    previsaoProximoMes: number;
+  };
+}
