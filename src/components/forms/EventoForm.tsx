@@ -11,8 +11,7 @@ import {
   Cliente, 
   Evento, 
   StatusEvento, 
-  TipoEvento,
-  CanalEntrada
+  TipoEvento
 } from '@/types';
 import { useClientes, useCanaisEntrada } from '@/hooks/useData';
 import { dataService } from '@/lib/data-service';

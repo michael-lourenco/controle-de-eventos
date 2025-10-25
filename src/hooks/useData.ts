@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '@/lib/data-service';
-import { Cliente, Evento, Pagamento, TipoCusto, CustoEvento, ServicoEvento, CanalEntrada, DashboardData } from '@/types';
+import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, CanalEntrada, DashboardData } from '@/types';
 import { useCurrentUser } from './useAuth';
 
 export interface UseDataResult<T> {
