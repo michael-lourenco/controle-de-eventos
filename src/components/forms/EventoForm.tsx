@@ -127,6 +127,9 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
 
   useEffect(() => {
     if (evento) {
+      console.log('EventoForm: Inicializando formulário com evento:', evento);
+      console.log('EventoForm: Dados do cliente:', evento.cliente);
+      
       setFormData({
         clienteId: evento.clienteId,
         novoCliente: {
@@ -159,6 +162,10 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         valorTotal: evento.valorTotal,
         diaFinalPagamento: evento.diaFinalPagamento.toISOString().split('T')[0]
       });
+      
+      // Definir o cliente selecionado para exibição
+      setClienteSearch(evento.cliente.nome);
+      setIsNovoCliente(false);
     }
   }, [evento]);
 
