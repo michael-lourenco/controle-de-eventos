@@ -183,8 +183,12 @@ export default function EventoViewPage() {
               Voltar
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-text-primary">{evento.cliente.nome}</h1>
-              <p className="text-text-secondary">{evento.contratante}</p>
+              <h1 className="text-2xl font-bold text-text-primary">
+                {evento.nomeEvento || evento.cliente.nome}
+              </h1>
+              <p className="text-text-secondary">
+                {evento.nomeEvento ? `${evento.cliente.nome} - ${evento.contratante}` : evento.contratante}
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">

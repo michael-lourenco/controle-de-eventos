@@ -34,6 +34,7 @@ export interface Cliente {
 
 export interface Evento {
   id: string;
+  nomeEvento?: string;
   clienteId: string;
   cliente: Cliente;
   dataEvento: Date;

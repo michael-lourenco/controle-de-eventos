@@ -25,6 +25,7 @@ interface EventoFormProps {
 }
 
 interface FormData {
+  nomeEvento?: string;
   clienteId: string;
   novoCliente: {
     nome: string;
@@ -84,6 +85,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   const { userId, isLoading } = useCurrentUser();
 
   const [formData, setFormData] = useState<FormData>({
+    nomeEvento: '',
     clienteId: '',
     novoCliente: {
       nome: '',
@@ -131,6 +133,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       console.log('EventoForm: Dados do cliente:', evento.cliente);
       
       setFormData({
+        nomeEvento: evento.nomeEvento || '',
         clienteId: evento.clienteId,
         novoCliente: {
           nome: '',
@@ -319,6 +322,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       }
 
       const eventoData = {
+        nomeEvento: formData.nomeEvento || undefined,
         clienteId: cliente.id,
         cliente,
         dataEvento: new Date(formData.dataEvento + 'T00:00:00'),
@@ -364,6 +368,24 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Nome do Evento */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Nome do Evento</CardTitle>
+          <CardDescription>
+            Identifique facilmente este evento com um nome personalizado
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Input
+            label="Nome do Evento"
+            placeholder="Ex: Casamento João e Maria, Aniversário 15 anos Ana..."
+            value={formData.nomeEvento || ''}
+            onChange={(e) => handleInputChange('nomeEvento', e.target.value)}
+          />
+        </CardContent>
+      </Card>
+
       {/* Dados do Cliente */}
       <Card>
         <CardHeader>

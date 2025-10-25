@@ -68,7 +68,8 @@ export default function EventosPage() {
 
   const filteredEventos = eventos.filter(evento => {
     const matchesSearch = evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         evento.local.toLowerCase().includes(searchTerm.toLowerCase());
+                         evento.local.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (evento.nomeEvento && evento.nomeEvento.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
     const matchesTipo = filterTipo === 'todos' || evento.tipoEvento === filterTipo;
     const matchesDate = isDateInFilter(evento.dataEvento, dateFilter);
@@ -181,7 +182,7 @@ export default function EventosPage() {
                 <div>
                   <Input
                     label="Buscar"
-                    placeholder="Nome do cliente ou local..."
+                    placeholder="Nome do evento, cliente ou local..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -273,8 +274,12 @@ export default function EventosPage() {
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
-                    <CardTitle className="text-lg">{evento.cliente.nome}</CardTitle>
-                    <CardDescription>{evento.contratante}</CardDescription>
+                    <CardTitle className="text-lg">
+                      {evento.nomeEvento || evento.cliente.nome}
+                    </CardTitle>
+                    <CardDescription>
+                      {evento.nomeEvento ? `${evento.cliente.nome} - ${evento.contratante}` : evento.contratante}
+                    </CardDescription>
                   </div>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(evento.status)}`}>
                     {evento.status}
