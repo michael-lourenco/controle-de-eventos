@@ -410,23 +410,23 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
             id: 'tabela',
             label: '📋 Tabela',
             content: (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-surface">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Serviço</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentual</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Eventos Utilizando</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Tipo de Serviço</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Quantidade</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Percentual</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Eventos Utilizando</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-background divide-y divide-border">
                     {dadosServicos.servicosPorTipo.map((item, index) => (
                       <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.tipoServico}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.quantidade}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.percentual.toFixed(1)}%</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.eventosUtilizando}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">{item.tipoServico}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.quantidade}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.percentual.toFixed(1)}%</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.eventosUtilizando}</td>
                       </tr>
                     ))}
                   </tbody>

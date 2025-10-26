@@ -25,7 +25,7 @@ export function PieChart({ data, config = {} }: PieChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center h-64 text-text-secondary">
         Nenhum dado disponível
       </div>
     );
@@ -78,8 +78,8 @@ export function PieChart({ data, config = {} }: PieChartProps) {
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-700">{total}</div>
-              <div className="text-sm text-gray-500">Total</div>
+              <div className="text-2xl font-bold text-text-primary">{total}</div>
+              <div className="text-sm text-text-secondary">Total</div>
             </div>
           </div>
         </div>
@@ -98,8 +98,8 @@ export function PieChart({ data, config = {} }: PieChartProps) {
                   className="w-4 h-4 rounded-full flex-shrink-0"
                   style={{ backgroundColor: color }}
                 />
-                <span className="text-sm text-gray-700 flex-1">{item.label}</span>
-                <div className="text-sm font-medium text-gray-900">
+                <span className="text-sm text-text-primary flex-1">{item.label}</span>
+                <div className="text-sm font-medium text-text-primary">
                   {showValues && `${item.value}`}
                   {showValues && showPercentages && ' • '}
                   {showPercentages && `${percentage}%`}

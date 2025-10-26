@@ -42,7 +42,7 @@ export default function RelatoriosPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Carregando relatórios...</div>
+          <div className="text-text-secondary">Carregando relatórios...</div>
         </div>
       </Layout>
     );
@@ -52,7 +52,7 @@ export default function RelatoriosPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Nenhum dado disponível para relatórios</div>
+          <div className="text-text-secondary">Nenhum dado disponível para relatórios</div>
         </div>
       </Layout>
     );
@@ -102,7 +102,7 @@ export default function RelatoriosPage() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Relatórios</h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             Análise financeira e estatísticas do negócio
           </p>
         </div>
@@ -223,7 +223,7 @@ export default function RelatoriosPage() {
               <div className="space-y-4">
                 {Object.entries(eventosPorTipo).map(([tipo, quantidade]) => (
                   <div key={tipo} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">{tipo}</span>
+                    <span className="text-sm font-medium text-text-primary">{tipo}</span>
                     <div className="flex items-center">
                       <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
                         <div 
@@ -255,7 +255,7 @@ export default function RelatoriosPage() {
               <div className="space-y-4">
                 {Object.entries(statusPagamentos).map(([status, quantidade]) => (
                   <div key={status} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 capitalize">
+                    <span className="text-sm font-medium text-text-primary capitalize">
                       {status}
                     </span>
                     <div className="flex items-center">
@@ -294,7 +294,7 @@ export default function RelatoriosPage() {
             <div className="space-y-4">
               {receitaPorMes.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700 w-20">
+                  <span className="text-sm font-medium text-text-primary w-20">
                     {item.mes}
                   </span>
                   <div className="flex items-center flex-1 mx-4">

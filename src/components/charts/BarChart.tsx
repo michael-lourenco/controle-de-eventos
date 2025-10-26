@@ -27,7 +27,7 @@ export function BarChart({
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center h-64 text-text-secondary">
         Nenhum dado disponível
       </div>
     );
@@ -47,13 +47,13 @@ export function BarChart({
           return (
             <div key={item.label} className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                <span className="text-sm font-medium text-text-primary">{item.label}</span>
                 <div className="flex items-center gap-2">
                   {showValues && (
-                    <span className="text-sm font-bold text-gray-900">{item.value}</span>
+                    <span className="text-sm font-bold text-text-primary">{item.value}</span>
                   )}
                   {showPercentages && (
-                    <span className="text-sm text-gray-600">({percentage.toFixed(1)}%)</span>
+                    <span className="text-sm text-text-secondary">({percentage.toFixed(1)}%)</span>
                   )}
                 </div>
               </div>
@@ -96,11 +96,11 @@ export function BarChart({
                 minHeight: '4px'
               }}
             />
-            <span className="text-xs text-gray-600 text-center max-w-16 break-words">
+            <span className="text-xs text-text-secondary text-center max-w-16 break-words">
               {item.label}
             </span>
             {showValues && (
-              <span className="text-xs font-bold text-gray-900">{item.value}</span>
+              <span className="text-xs font-bold text-text-primary">{item.value}</span>
             )}
           </div>
         );

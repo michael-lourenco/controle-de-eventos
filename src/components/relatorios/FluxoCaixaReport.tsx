@@ -374,21 +374,21 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
             id: 'tabela',
             label: '📋 Tabela',
             content: (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-surface">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mês</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receitas</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Despesas</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Acumulado</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Mês</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Receitas</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Despesas</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Saldo</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Saldo Acumulado</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-background divide-y divide-border">
                     {dadosFluxoCaixa.fluxoMensal.map((item, index) => (
                       <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.mes}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">{item.mes}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
                           R$ {item.receitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
@@ -479,22 +479,22 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {dadosFluxoCaixa.projecao.proximos3Meses.map((projecao, index) => (
               <div key={index} className="p-4 border rounded-lg bg-gray-50">
-                <h4 className="font-medium text-gray-900 mb-2">{projecao.mes}</h4>
+                <h4 className="font-medium text-text-primary mb-2">{projecao.mes}</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Receita:</span>
+                    <span className="text-text-secondary">Receita:</span>
                     <span className="text-green-600 font-medium">
                       R$ {projecao.receitaProjetada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Despesa:</span>
+                    <span className="text-text-secondary">Despesa:</span>
                     <span className="text-red-600 font-medium">
                       R$ {projecao.despesaProjetada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex justify-between border-t pt-1">
-                    <span className="text-gray-600 font-medium">Saldo:</span>
+                    <span className="text-text-secondary font-medium">Saldo:</span>
                     <span className={`font-bold ${
                       projecao.saldoProjetado >= 0 ? 'text-green-600' : 'text-red-600'
                     }`}>

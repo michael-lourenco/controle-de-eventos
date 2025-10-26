@@ -395,25 +395,25 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
             id: 'tabela',
             label: '📋 Tabela',
             content: (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-surface">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Evento</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Impressões</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Eventos com Impressões</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Média por Evento</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Percentual</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Tipo de Evento</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Total Impressões</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Eventos com Impressões</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Média por Evento</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Percentual</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-background divide-y divide-border">
                     {dadosImpressoes.impressoesPorTipoEvento.map((item, index) => (
                       <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.tipoEvento}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.totalImpressoes.toLocaleString('pt-BR')}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.eventosComImpressoes}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.mediaImpressoesPorEvento.toFixed(1)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.percentual.toFixed(1)}%</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">{item.tipoEvento}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.totalImpressoes.toLocaleString('pt-BR')}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.eventosComImpressoes}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.mediaImpressoesPorEvento.toFixed(1)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.percentual.toFixed(1)}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -474,30 +474,30 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-surface">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Impressões</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Evento</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Custo Impressões</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Cliente</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Data</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Tipo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Impressões</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Valor Evento</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Custo Impressões</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-background divide-y divide-border">
                 {dadosImpressoes.impressoesPorEvento.slice(0, 10).map((item, index) => (
                   <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.clienteNome}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">{item.clienteNome}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">
                       {format(item.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.tipoEvento}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.quantidadeImpressoes.toLocaleString('pt-BR')}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.tipoEvento}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">{item.quantidadeImpressoes.toLocaleString('pt-BR')}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">
                       R$ {item.valorEvento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">
                       R$ {item.custoImpressaoPorEvento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
