@@ -18,6 +18,7 @@ import PerformanceEventosReport from '@/components/relatorios/PerformanceEventos
 import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
 import ServicosReport from '@/components/relatorios/ServicosReport';
 import CanaisEntradaReport from '@/components/relatorios/CanaisEntradaReport';
+import ImpressoesReport from '@/components/relatorios/ImpressoesReport';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
@@ -376,6 +377,19 @@ export default function RelatoriosPage() {
               canaisEntrada={canaisEntrada || []} 
               eventos={eventos} 
             />
+          </CardContent>
+        </Card>
+
+        {/* Relatório de Impressões */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-primary">🖨️ Relatório de Impressões</CardTitle>
+            <CardDescription>
+              Análise detalhada do uso de impressões e custos de insumos
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ImpressoesReport eventos={eventos} />
           </CardContent>
         </Card>
 

@@ -517,3 +517,58 @@ export interface RelatorioCanaisEntrada {
     severidade: 'baixa' | 'media' | 'alta';
   }>;
 }
+
+export interface RelatorioImpressoes {
+  periodo: {
+    inicio: Date;
+    fim: Date;
+  };
+  resumoGeral: {
+    totalImpressoes: number;
+    eventosComImpressoes: number;
+    eventosSemImpressoes: number;
+    taxaUtilizacaoImpressoes: number;
+    custoMedioPorImpressao: number;
+  };
+  impressoesPorEvento: Array<{
+    eventoId: string;
+    clienteNome: string;
+    dataEvento: Date;
+    tipoEvento: string;
+    quantidadeImpressoes: number;
+    valorEvento: number;
+    custoImpressaoPorEvento: number;
+  }>;
+  impressoesPorTipoEvento: Array<{
+    tipoEvento: string;
+    totalImpressoes: number;
+    eventosComImpressoes: number;
+    mediaImpressoesPorEvento: number;
+    percentual: number;
+  }>;
+  impressoesPorMes: Array<{
+    mes: string;
+    ano: number;
+    totalImpressoes: number;
+    eventosComImpressoes: number;
+    custoTotalImpressoes: number;
+  }>;
+  analiseCustoBeneficio: Array<{
+    tipoEvento: string;
+    valorMedioEvento: number;
+    custoMedioImpressoes: number;
+    percentualCustoImpressoes: number;
+    roiImpressoes: number;
+  }>;
+  tendencias: {
+    eventoComMaisImpressoes: string;
+    eventoComMenosImpressoes: string;
+    crescimentoImpressoes: number;
+    tiposEventoMaisImpressos: string[];
+  };
+  alertas: Array<{
+    tipo: 'evento_sem_impressoes' | 'alto_custo_impressoes' | 'baixa_utilizacao';
+    mensagem: string;
+    severidade: 'baixa' | 'media' | 'alta';
+  }>;
+}
