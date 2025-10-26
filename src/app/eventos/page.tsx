@@ -191,7 +191,7 @@ export default function EventosPage() {
                   <Select
                     label="Status"
                     value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
+                    onValueChange={(value) => setFilterStatus(value)}
                     options={[
                       { value: 'todos', label: 'Todos' },
                       { value: StatusEvento.AGENDADO, label: 'Agendado' },
@@ -206,7 +206,7 @@ export default function EventosPage() {
                   <Select
                     label="Tipo"
                     value={filterTipo}
-                    onChange={(e) => setFilterTipo(e.target.value)}
+                    onValueChange={(value) => setFilterTipo(value)}
                     options={[
                       { value: 'todos', label: 'Todos' },
                       { value: TipoEvento.CASAMENTO, label: 'Casamento' },

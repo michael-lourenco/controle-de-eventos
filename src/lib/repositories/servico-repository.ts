@@ -1,6 +1,6 @@
 import { SubcollectionRepository } from './subcollection-repository';
 import { ServicoEvento, TipoServico } from '@/types';
-import { orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, limit } from 'firebase/firestore';
+import { orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, limit, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '../firestore/collections';
 
@@ -202,7 +202,17 @@ export class TipoServicoRepository extends SubcollectionRepository<TipoServico> 
 
   async updateTipoServico(id: string, tipoServico: Partial<TipoServico>, userId: string): Promise<TipoServico> {
     await this.ensureSubcollectionExists(userId);
-    return this.update(id, tipoServico, userId);
+    // O método update espera: id, entity, parentId
+    const updateData = this.convertToFirestoreData(tipoServico) as any;
+    const docRef = this.getSubcollectionDocRef(userId, id);
+    await updateDoc(docRef, updateData);
+    
+    const updatedDoc = await getDoc(docRef);
+    if (!updatedDoc.exists()) {
+      throw new Error('Document not found after update');
+    }
+    
+    return this.convertFirestoreData(updatedDoc.data(), id);
   }
 
   async deleteTipoServico(id: string, userId: string): Promise<void> {

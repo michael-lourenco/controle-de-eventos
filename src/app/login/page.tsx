@@ -130,8 +130,7 @@ export default function LoginPage() {
                 variant="outline"
                 type="submit"
                 className="w-full"
-                loading={loading}
-                disabled={!email || !senha}
+                disabled={!email || !senha || loading}
               >
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>

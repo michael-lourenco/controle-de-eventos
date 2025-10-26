@@ -326,7 +326,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
             label="Forma de Pagamento *"
             options={formaPagamentoOptions}
             value={formData.formaPagamento}
-            onChange={(e) => handleInputChange('formaPagamento', e.target.value)}
+            onValueChange={(value) => handleInputChange('formaPagamento', value)}
             error={errors.formaPagamento}
           />
 

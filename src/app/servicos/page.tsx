@@ -4,84 +4,113 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import Layout from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
-import { ServicoEvento, Evento } from '@/types';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { TipoServico } from '@/types';
 import {
   PlusIcon,
-  EyeIcon,
   PencilIcon,
   TrashIcon,
   TagIcon,
-  MagnifyingGlassIcon,
-  CalendarIcon,
-  MapPinIcon
+  CheckIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function ServicosPage() {
   const { userId } = useCurrentUser();
-  const [servicos, setServicos] = useState<ServicoEvento[]>([]);
-  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [tiposServico, setTiposServico] = useState<TipoServico[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterEvento, setFilterEvento] = useState<string>('todos');
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [novoTipo, setNovoTipo] = useState({ nome: '', descricao: '' });
+  const [editandoTipo, setEditandoTipo] = useState({ nome: '', descricao: '' });
+  const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
 
-  // Carregar dados
+  // Carregar tipos de serviço
   useEffect(() => {
-    const carregarDados = async () => {
+    const carregarTiposServico = async () => {
       if (!userId) {
         console.log('ServicosPage: userId não disponível ainda');
         return;
       }
 
       try {
-        console.log('ServicosPage: Carregando dados');
-        
-        // Carregar eventos
-        const eventosData = await dataService.getEventos(userId);
-        setEventos(eventosData);
-        
-        // Carregar todos os serviços de todos os eventos
-        const todosServicos: ServicoEvento[] = [];
-        for (const evento of eventosData) {
-          const servicosEvento = await dataService.getServicosEvento(userId, evento.id);
-          todosServicos.push(...servicosEvento);
-        }
-        
-        console.log('ServicosPage: Serviços carregados:', todosServicos);
-        setServicos(todosServicos);
+        console.log('ServicosPage: Carregando tipos de serviço');
+        const tipos = await dataService.getTiposServicos(userId);
+        console.log('ServicosPage: Tipos carregados:', tipos);
+        setTiposServico(tipos);
       } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('Erro ao carregar tipos de serviço:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    carregarDados();
+    carregarTiposServico();
   }, [userId]);
 
-  // Filtrar serviços
-  const servicosFiltrados = servicos.filter(servico => {
-    const matchesSearch = servico.tipoServico.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         servico.observacoes?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesEvento = filterEvento === 'todos' || servico.eventoId === filterEvento;
-    
-    return matchesSearch && matchesEvento;
-  });
+  // Filtrar tipos de serviço
+  const tiposFiltrados = tiposServico.filter(tipo => 
+    tipo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tipo.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleExcluirServico = async (servico: ServicoEvento) => {
+  const handleNovoTipo = async () => {
+    if (!userId || !novoTipo.nome.trim()) return;
+
+    try {
+      const novoTipoServico = await dataService.createTipoServico({
+        nome: novoTipo.nome.trim(),
+        descricao: novoTipo.descricao.trim() || '',
+        ativo: true
+      }, userId);
+      
+      setTiposServico(prev => [...prev, novoTipoServico]);
+      setNovoTipo({ nome: '', descricao: '' });
+      setMostrarFormNovo(false);
+    } catch (error) {
+      console.error('Erro ao criar tipo de serviço:', error);
+    }
+  };
+
+  const handleEditarTipo = async (tipo: TipoServico) => {
+    if (!userId || !editandoTipo.nome.trim()) return;
+
+    try {
+      const tipoAtualizado = await dataService.updateTipoServico(tipo.id, {
+        nome: editandoTipo.nome.trim(),
+        descricao: editandoTipo.descricao.trim() || '',
+        ativo: tipo.ativo
+      }, userId);
+      
+      setTiposServico(prev => prev.map(t => t.id === tipo.id ? tipoAtualizado : t));
+      setEditandoId(null);
+    } catch (error) {
+      console.error('Erro ao atualizar tipo de serviço:', error);
+    }
+  };
+
+  const handleExcluirTipo = async (tipo: TipoServico) => {
     if (!userId) return;
 
     try {
-      await dataService.deleteServicoEvento(userId, servico.eventoId, servico.id);
-      setServicos(prev => prev.filter(s => s.id !== servico.id));
+      await dataService.deleteTipoServico(userId, tipo.id);
+      setTiposServico(prev => prev.filter(t => t.id !== tipo.id));
     } catch (error) {
-      console.error('Erro ao excluir serviço:', error);
+      console.error('Erro ao excluir tipo de serviço:', error);
     }
+  };
+
+  const iniciarEdicao = (tipo: TipoServico) => {
+    setEditandoId(tipo.id);
+    setEditandoTipo({ nome: tipo.nome, descricao: tipo.descricao || '' });
+  };
+
+  const cancelarEdicao = () => {
+    setEditandoId(null);
+    setEditandoTipo({ nome: '', descricao: '' });
   };
 
   const getTipoServicoColor = (nome: string) => {
@@ -107,7 +136,7 @@ export default function ServicosPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-text-secondary">Carregando serviços...</div>
+          <div className="text-text-secondary">Carregando tipos de serviço...</div>
         </div>
       </Layout>
     );
@@ -119,52 +148,41 @@ export default function ServicosPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Serviços</h1>
+            <h1 className="text-2xl font-bold text-text-primary">Tipos de Serviço</h1>
             <p className="text-text-secondary">
-              Gerencie todos os serviços prestados
+              Gerencie os tipos de serviços disponíveis
             </p>
           </div>
+          <Button
+            onClick={() => setMostrarFormNovo(true)}
+            className="flex items-center gap-2"
+          >
+            <PlusIcon className="h-4 w-4" />
+            Novo Tipo
+          </Button>
         </div>
 
-        {/* Filtros */}
+        {/* Busca */}
         <Card>
           <CardContent className="p-6">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <Input
-                  label="Buscar"
-                  placeholder="Nome do serviço, cliente ou observações..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <div>
-                <Select
-                  label="Evento"
-                  value={filterEvento}
-                  onChange={(e) => setFilterEvento(e.target.value)}
-                  options={[
-                    { value: 'todos', label: 'Todos os eventos' },
-                    ...eventos.map(evento => ({
-                      value: evento.id,
-                      label: `${evento.cliente.nome} - ${format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}`
-                    }))
-                  ]}
-                />
-              </div>
-            </div>
+            <Input
+              label="Buscar"
+              placeholder="Nome ou descrição do tipo de serviço..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </CardContent>
         </Card>
 
         {/* Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center">
                 <TagIcon className="h-8 w-8 text-primary mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-text-secondary">Total de Serviços</p>
-                  <p className="text-2xl font-bold text-text-primary">{servicosFiltrados.length}</p>
+                  <p className="text-sm font-medium text-text-secondary">Total de Tipos</p>
+                  <p className="text-2xl font-bold text-text-primary">{tiposFiltrados.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -172,24 +190,11 @@ export default function ServicosPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center">
-                <CalendarIcon className="h-8 w-8 text-success mr-3" />
+                <TagIcon className="h-8 w-8 text-success mr-3" />
                 <div>
-                  <p className="text-sm font-medium text-text-secondary">Total de Serviços</p>
+                  <p className="text-sm font-medium text-text-secondary">Tipos Ativos</p>
                   <p className="text-2xl font-bold text-text-primary">
-                    {servicosFiltrados.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <MapPinIcon className="h-8 w-8 text-accent mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Eventos Únicos</p>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {new Set(servicosFiltrados.map(s => s.eventoId)).size}
+                    {tiposFiltrados.filter(t => t.ativo).length}
                   </p>
                 </div>
               </div>
@@ -197,52 +202,108 @@ export default function ServicosPage() {
           </Card>
         </div>
 
-        {/* Lista de Serviços */}
+        {/* Formulário Novo Tipo */}
+        {mostrarFormNovo && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Novo Tipo de Serviço</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Input
+                label="Nome"
+                placeholder="Nome do tipo de serviço"
+                value={novoTipo.nome}
+                onChange={(e) => setNovoTipo(prev => ({ ...prev, nome: e.target.value }))}
+              />
+              <Textarea
+                label="Descrição"
+                placeholder="Descrição do tipo de serviço (opcional)"
+                value={novoTipo.descricao}
+                onChange={(e) => setNovoTipo(prev => ({ ...prev, descricao: e.target.value }))}
+                rows={3}
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setMostrarFormNovo(false);
+                    setNovoTipo({ nome: '', descricao: '' });
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleNovoTipo}
+                  disabled={!novoTipo.nome.trim()}
+                >
+                  Criar Tipo
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Lista de Tipos */}
         <div className="space-y-4">
-          {servicosFiltrados.map((servico) => (
-            <Card key={servico.id} className="hover:shadow-lg transition-shadow">
+          {tiposFiltrados.map((tipo) => (
+            <Card key={tipo.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoServicoColor(servico.tipoServico.nome)}`}>
-                        {servico.tipoServico.nome}
-                      </span>
+                {editandoId === tipo.id ? (
+                  <div className="space-y-4">
+                    <Input
+                      label="Nome"
+                      value={editandoTipo.nome}
+                      onChange={(e) => setEditandoTipo(prev => ({ ...prev, nome: e.target.value }))}
+                    />
+                    <Textarea
+                      label="Descrição"
+                      value={editandoTipo.descricao}
+                      onChange={(e) => setEditandoTipo(prev => ({ ...prev, descricao: e.target.value }))}
+                      rows={3}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={cancelarEdicao}
+                      >
+                        <XMarkIcon className="h-4 w-4 mr-1" />
+                        Cancelar
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleEditarTipo(tipo)}
+                        disabled={!editandoTipo.nome.trim()}
+                      >
+                        <CheckIcon className="h-4 w-4 mr-1" />
+                        Salvar
+                      </Button>
                     </div>
-                    <p className="text-sm text-text-secondary mb-2">
-                      Serviço adicionado em {format(new Date(servico.dataCadastro), 'dd/MM/yyyy', { locale: ptBR })}
-                    </p>
-                    <div className="flex items-center gap-4 text-sm text-text-muted">
-                      <span className="flex items-center gap-1">
-                        <CalendarIcon className="h-4 w-4" />
-                        Evento ID: {servico.eventoId}
-                      </span>
-                    </div>
-                    {servico.observacoes && (
-                      <p className="text-sm text-text-muted italic mt-2">
-                        {servico.observacoes}
-                      </p>
-                    )}
                   </div>
-                  <div className="flex items-center gap-4 ml-4">
-                    <div className="text-right">
-                      <p className="text-sm text-text-muted">
-                        {format(servico.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
-                      </p>
+                ) : (
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoServicoColor(tipo.nome)}`}>
+                          {tipo.nome}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          tipo.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {tipo.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                      {tipo.descricao && (
+                        <p className="text-sm text-text-secondary">
+                          {tipo.descricao}
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => window.open(`/eventos/${servico.eventoId}`, '_blank')}
-                        title="Ver Evento"
-                      >
-                        <EyeIcon className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(`/eventos/${servico.eventoId}`, '_blank')}
+                        onClick={() => iniciarEdicao(tipo)}
                         title="Editar"
                       >
                         <PencilIcon className="h-4 w-4" />
@@ -250,7 +311,7 @@ export default function ServicosPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleExcluirServico(servico)}
+                        onClick={() => handleExcluirTipo(tipo)}
                         title="Excluir"
                         className="text-error hover:text-error hover:bg-error/10"
                       >
@@ -258,23 +319,23 @@ export default function ServicosPage() {
                       </Button>
                     </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {servicosFiltrados.length === 0 && (
+        {tiposFiltrados.length === 0 && (
           <Card>
             <CardContent className="text-center py-12">
               <TagIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">
-                {searchTerm || filterEvento !== 'todos' ? 'Nenhum serviço encontrado' : 'Nenhum serviço cadastrado'}
+                {searchTerm ? 'Nenhum tipo encontrado' : 'Nenhum tipo cadastrado'}
               </h3>
               <p className="mt-1 text-sm text-text-secondary">
-                {searchTerm || filterEvento !== 'todos' 
-                  ? 'Tente ajustar os filtros de busca.'
-                  : 'Comece adicionando serviços aos eventos.'
+                {searchTerm 
+                  ? 'Tente ajustar o termo de busca.'
+                  : 'Comece criando um novo tipo de serviço.'
                 }
               </p>
             </CardContent>

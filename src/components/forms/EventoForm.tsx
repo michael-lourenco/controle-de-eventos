@@ -514,7 +514,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
               label="Tipo de Evento"
               options={tipoEventoOptions}
               value={formData.tipoEvento}
-              onChange={(e) => handleInputChange('tipoEvento', e.target.value as TipoEvento)}
+              onValueChange={(value) => handleInputChange('tipoEvento', value as TipoEvento)}
             />
           </div>
 
@@ -680,7 +680,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
             label="Status do Evento"
             options={statusOptions}
             value={formData.status}
-            onChange={(e) => handleInputChange('status', e.target.value as StatusEvento)}
+            onValueChange={(value) => handleInputChange('status', value as StatusEvento)}
           />
         </CardContent>
       </Card>

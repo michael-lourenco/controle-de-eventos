@@ -14,6 +14,7 @@ export interface SelectProps extends React.ComponentPropsWithoutRef<typeof Selec
   helperText?: string
   placeholder?: string
   options: Array<{ value: string; label: string }>
+  className?: string
 }
 
 const SelectWithLabel = React.forwardRef<

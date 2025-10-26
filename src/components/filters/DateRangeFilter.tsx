@@ -219,7 +219,7 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
                 {QUICK_FILTERS.map((filter) => (
                   <Button
                     key={filter.key}
-                    variant={selectedQuickFilter === filter.key ? "primary" : "outline"}
+                    variant={selectedQuickFilter === filter.key ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleQuickFilterSelect(filter.key)}
                     className={`text-xs ${selectedQuickFilter === filter.key ? 'bg-primary text-white' : ''}`}
