@@ -12,11 +12,12 @@ import {
   DocumentArrowDownIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { useEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos } from '@/hooks/useData';
+import { useEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos, useClientes, useCanaisEntrada } from '@/hooks/useData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import PerformanceEventosReport from '@/components/relatorios/PerformanceEventosReport';
 import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
 import ServicosReport from '@/components/relatorios/ServicosReport';
+import CanaisEntradaReport from '@/components/relatorios/CanaisEntradaReport';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
@@ -24,6 +25,8 @@ export default function RelatoriosPage() {
   const { data: pagamentos, loading: loadingPagamentos } = useAllPagamentos();
   const { data: servicos, loading: loadingServicos } = useAllServicos();
   const { data: tiposServicos, loading: loadingTiposServicos } = useTiposServicos();
+  const { data: clientes, loading: loadingClientes } = useClientes();
+  const { data: canaisEntrada, loading: loadingCanaisEntrada } = useCanaisEntrada();
   
   const [periodoInicio, setPeriodoInicio] = useState(
     format(startOfMonth(subMonths(new Date(), 6)), 'yyyy-MM-dd')
@@ -32,7 +35,7 @@ export default function RelatoriosPage() {
     format(endOfMonth(new Date()), 'yyyy-MM-dd')
   );
   
-  const loading = loadingEventos || loadingDashboard || loadingPagamentos || loadingServicos || loadingTiposServicos;
+  const loading = loadingEventos || loadingDashboard || loadingPagamentos || loadingServicos || loadingTiposServicos || loadingClientes || loadingCanaisEntrada;
   
   if (loading) {
     return (
@@ -355,6 +358,23 @@ export default function RelatoriosPage() {
               eventos={eventos} 
               servicos={servicos || []} 
               tiposServicos={tiposServicos || []} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Relatório de Canais de Entrada */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-primary">📈 Relatório de Canais de Entrada</CardTitle>
+            <CardDescription>
+              Análise detalhada da origem dos leads e efetividade dos canais
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CanaisEntradaReport 
+              clientes={clientes || []} 
+              canaisEntrada={canaisEntrada || []} 
+              eventos={eventos} 
             />
           </CardContent>
         </Card>

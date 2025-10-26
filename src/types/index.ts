@@ -472,3 +472,48 @@ export interface RelatorioServicos {
     severidade: 'baixa' | 'media' | 'alta';
   }>;
 }
+
+export interface RelatorioCanaisEntrada {
+  periodo: {
+    inicio: Date;
+    fim: Date;
+  };
+  resumoGeral: {
+    totalClientes: number;
+    canaisAtivos: number;
+    clientesSemCanal: number;
+    taxaPreenchimento: number;
+  };
+  clientesPorCanal: Array<{
+    canalId: string;
+    canalNome: string;
+    quantidade: number;
+    percentual: number;
+    valorTotalEventos: number;
+    ticketMedio: number;
+  }>;
+  clientesPorMes: Array<{
+    mes: string;
+    ano: number;
+    totalClientes: number;
+    porCanal: Record<string, number>;
+  }>;
+  conversaoPorCanal: Array<{
+    canalNome: string;
+    totalLeads: number;
+    eventosGerados: number;
+    taxaConversao: number;
+    receitaGerada: number;
+  }>;
+  tendencias: {
+    canalMaisEfetivo: string;
+    canalMenosEfetivo: string;
+    crescimentoLeads: number;
+    canaisEmAlta: string[];
+  };
+  alertas: Array<{
+    tipo: 'canal_inativo' | 'baixa_conversao' | 'clientes_sem_canal';
+    mensagem: string;
+    severidade: 'baixa' | 'media' | 'alta';
+  }>;
+}
