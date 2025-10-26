@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '@/lib/data-service';
-import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, CanalEntrada, DashboardData } from '@/types';
+import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData } from '@/types';
 import { useCurrentUser } from './useAuth';
 
 export interface UseDataResult<T> {
@@ -293,6 +293,72 @@ export function useCanaisEntrada(): UseDataResult<CanalEntrada[]> {
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar canais de entrada');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
+// Hook para todos os serviços
+export function useAllServicos(): UseDataResult<ServicoEvento[]> {
+  const [data, setData] = useState<ServicoEvento[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getAllServicos(userId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar serviços');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
+// Hook para tipos de serviços
+export function useTiposServicos(): UseDataResult<TipoServico[]> {
+  const [data, setData] = useState<TipoServico[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getTiposServicos(userId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar tipos de serviços');
     } finally {
       setLoading(false);
     }

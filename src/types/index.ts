@@ -419,3 +419,56 @@ export interface RelatorioFluxoCaixa {
     severidade: 'baixa' | 'media' | 'alta';
   }>;
 }
+
+export interface RelatorioServicos {
+  periodo: {
+    inicio: Date;
+    fim: Date;
+  };
+  resumoGeral: {
+    totalServicos: number;
+    tiposServicosUnicos: number;
+    eventosComServicos: number;
+    eventosSemServicos: number;
+    taxaUtilizacaoServicos: number;
+  };
+  servicosPorTipo: Array<{
+    tipoServico: string;
+    quantidade: number;
+    percentual: number;
+    eventosUtilizando: number;
+  }>;
+  servicosPorEvento: Array<{
+    eventoId: string;
+    clienteNome: string;
+    dataEvento: Date;
+    tipoEvento: string;
+    quantidadeServicos: number;
+    tiposServicos: string[];
+  }>;
+  servicosPorMes: Array<{
+    mes: string;
+    ano: number;
+    quantidadeServicos: number;
+    tiposUnicos: number;
+  }>;
+  servicosPorTipoEvento: Array<{
+    tipoEvento: string;
+    quantidadeServicos: number;
+    tiposMaisUtilizados: Array<{
+      tipoServico: string;
+      quantidade: number;
+    }>;
+  }>;
+  tendencias: {
+    servicoMaisUtilizado: string;
+    servicoMenosUtilizado: string;
+    crescimentoUtilizacao: number;
+    tiposEmAlta: string[];
+  };
+  alertas: Array<{
+    tipo: 'evento_sem_servicos' | 'servico_pouco_utilizado' | 'alta_concentracao';
+    mensagem: string;
+    severidade: 'baixa' | 'media' | 'alta';
+  }>;
+}

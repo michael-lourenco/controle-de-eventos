@@ -12,15 +12,18 @@ import {
   DocumentArrowDownIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { useEventos, useDashboardData, useAllPagamentos } from '@/hooks/useData';
+import { useEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos } from '@/hooks/useData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import PerformanceEventosReport from '@/components/relatorios/PerformanceEventosReport';
 import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
+import ServicosReport from '@/components/relatorios/ServicosReport';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
   const { data: dashboardData, loading: loadingDashboard } = useDashboardData();
   const { data: pagamentos, loading: loadingPagamentos } = useAllPagamentos();
+  const { data: servicos, loading: loadingServicos } = useAllServicos();
+  const { data: tiposServicos, loading: loadingTiposServicos } = useTiposServicos();
   
   const [periodoInicio, setPeriodoInicio] = useState(
     format(startOfMonth(subMonths(new Date(), 6)), 'yyyy-MM-dd')
@@ -29,7 +32,7 @@ export default function RelatoriosPage() {
     format(endOfMonth(new Date()), 'yyyy-MM-dd')
   );
   
-  const loading = loadingEventos || loadingDashboard || loadingPagamentos;
+  const loading = loadingEventos || loadingDashboard || loadingPagamentos || loadingServicos || loadingTiposServicos;
   
   if (loading) {
     return (
@@ -335,6 +338,23 @@ export default function RelatoriosPage() {
               eventos={eventos} 
               pagamentos={pagamentos || []} 
               custos={[]} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Relatório de Serviços */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-primary">🔧 Relatório de Serviços por Tipo</CardTitle>
+            <CardDescription>
+              Análise detalhada da utilização de serviços por tipo e evento
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ServicosReport 
+              eventos={eventos} 
+              servicos={servicos || []} 
+              tiposServicos={tiposServicos || []} 
             />
           </CardContent>
         </Card>

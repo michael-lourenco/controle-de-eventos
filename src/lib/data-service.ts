@@ -631,6 +631,32 @@ export class DataService {
     }
     return this.canalEntradaRepo.searchByName(userId, searchTerm);
   }
+
+  // Métodos para serviços
+  async getAllServicos(userId: string): Promise<ServicoEvento[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar serviços');
+    }
+    
+    // Buscar todos os eventos do usuário
+    const eventos = await this.eventoRepo.findAll(userId);
+    const todosServicos: ServicoEvento[] = [];
+    
+    // Para cada evento, buscar seus serviços
+    for (const evento of eventos) {
+      const servicos = await this.servicoEventoRepo.findByEventoId(userId, evento.id);
+      todosServicos.push(...servicos);
+    }
+    
+    return todosServicos;
+  }
+
+  async getTiposServicos(userId: string): Promise<TipoServico[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar tipos de serviços');
+    }
+    return this.tipoServicoRepo.findAll(userId);
+  }
 }
 
 export const dataService = new DataService();
