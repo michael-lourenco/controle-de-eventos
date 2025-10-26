@@ -31,6 +31,7 @@ const navigation = [
   { name: 'Pagamentos', href: '/pagamentos', icon: CurrencyDollarIcon },
   { name: 'Serviços', href: '/servicos', icon: WrenchScrewdriverIcon },
   { name: 'Canais de Entrada', href: '/canais-entrada', icon: TagIcon },
+  { name: 'Tipos de Custo', href: '/tipos-custos', icon: CurrencyDollarIcon },
   { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
 ];
@@ -38,7 +39,6 @@ const navigation = [
 const adminNavigation = [
   { name: 'Collections', href: '/admin/collections', icon: CogIcon },
   { name: 'Usuários', href: '/admin/users', icon: UserIcon },
-  { name: 'Tipos de Custo', href: '/tipos-custos', icon: CogIcon },
   { name: 'Tipos de Serviço', href: '/tipos-servicos', icon: CogIcon },
   { name: 'Migração', href: '/admin/migration', icon: CogIcon },
 ];
