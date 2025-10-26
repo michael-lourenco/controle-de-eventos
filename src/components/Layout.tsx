@@ -16,7 +16,8 @@ import {
   XMarkIcon,
   UserIcon,
   ArrowRightOnRectangleIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
+  TagIcon
 } from '@heroicons/react/24/outline';
 
 interface LayoutProps {
@@ -29,6 +30,7 @@ const navigation = [
   { name: 'Clientes', href: '/clientes', icon: UserIcon },
   { name: 'Pagamentos', href: '/pagamentos', icon: CurrencyDollarIcon },
   { name: 'Serviços', href: '/servicos', icon: WrenchScrewdriverIcon },
+  { name: 'Canais de Entrada', href: '/canais-entrada', icon: TagIcon },
   { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
 ];
@@ -38,7 +40,6 @@ const adminNavigation = [
   { name: 'Usuários', href: '/admin/users', icon: UserIcon },
   { name: 'Tipos de Custo', href: '/tipos-custos', icon: CogIcon },
   { name: 'Tipos de Serviço', href: '/tipos-servicos', icon: CogIcon },
-  { name: 'Canais de Entrada', href: '/canais-entrada', icon: CogIcon },
   { name: 'Migração', href: '/admin/migration', icon: CogIcon },
 ];
 

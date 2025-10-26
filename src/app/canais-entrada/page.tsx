@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,14 +9,13 @@ import Layout from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { CanalEntrada } from '@/types';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
   TagIcon,
-  MagnifyingGlassIcon
+  CheckIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function CanaisEntradaPage() {
@@ -24,15 +23,17 @@ export default function CanaisEntradaPage() {
   const [canaisEntrada, setCanaisEntrada] = useState<CanalEntrada[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [canalEditando, setCanalEditando] = useState<CanalEntrada | null>(null);
-  const [canalParaExcluir, setCanalParaExcluir] = useState<CanalEntrada | null>(null);
-  const [formData, setFormData] = useState({
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [novoCanal, setNovoCanal] = useState({
+    nome: '',
+    descricao: ''
+  });
+  const [editandoCanal, setEditandoCanal] = useState({
     nome: '',
     descricao: '',
     ativo: true
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
 
   // Carregar canais de entrada
   useEffect(() => {
@@ -63,96 +64,65 @@ export default function CanaisEntradaPage() {
     canal.descricao.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Limpar formulário
-  const limparFormulario = () => {
-    setFormData({
-      nome: '',
-      descricao: '',
-      ativo: true
-    });
-    setErrors({});
-    setCanalEditando(null);
+  const handleNovoCanal = async () => {
+    if (!userId || !novoCanal.nome.trim()) return;
+
+    try {
+      const novoCanalData = await dataService.createCanalEntrada({
+        nome: novoCanal.nome.trim(),
+        descricao: novoCanal.descricao.trim() || '',
+        ativo: true,
+        dataCadastro: new Date()
+      }, userId);
+      
+      setCanaisEntrada(prev => [novoCanalData, ...prev]);
+      setNovoCanal({ nome: '', descricao: '' });
+      setMostrarFormNovo(false);
+    } catch (error) {
+      console.error('Erro ao criar canal de entrada:', error);
+    }
   };
 
-  // Abrir formulário para novo canal
-  const handleNovoCanal = () => {
-    limparFormulario();
-    setShowForm(true);
+  const handleEditarCanal = async (canal: CanalEntrada) => {
+    if (!userId || !editandoCanal.nome.trim()) return;
+
+    try {
+      const canalAtualizado = await dataService.updateCanalEntrada(canal.id, {
+        nome: editandoCanal.nome.trim(),
+        descricao: editandoCanal.descricao.trim() || '',
+        ativo: editandoCanal.ativo
+      }, userId);
+      
+      setCanaisEntrada(prev => prev.map(c => c.id === canal.id ? canalAtualizado : c));
+      setEditandoId(null);
+    } catch (error) {
+      console.error('Erro ao atualizar canal de entrada:', error);
+    }
   };
 
-  // Abrir formulário para editar canal
-  const handleEditarCanal = (canal: CanalEntrada) => {
-    setFormData({
+  const handleExcluirCanal = async (canal: CanalEntrada) => {
+    if (!userId) return;
+
+    try {
+      await dataService.deleteCanalEntrada(canal.id, userId);
+      setCanaisEntrada(prev => prev.filter(c => c.id !== canal.id));
+    } catch (error) {
+      console.error('Erro ao excluir canal de entrada:', error);
+    }
+  };
+
+  const iniciarEdicao = (canal: CanalEntrada) => {
+    setEditandoId(canal.id);
+    setEditandoCanal({
       nome: canal.nome,
       descricao: canal.descricao,
       ativo: canal.ativo
     });
-    setCanalEditando(canal);
-    setShowForm(true);
   };
 
-  // Cancelar edição
-  const handleCancelar = () => {
-    setShowForm(false);
-    limparFormulario();
-  };
-
-  // Validar formulário
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.nome.trim()) {
-      newErrors.nome = 'Nome é obrigatório';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Salvar canal
-  const handleSalvar = async () => {
-    if (!validateForm() || !userId) return;
-
-    try {
-      if (canalEditando) {
-        // Atualizar canal existente
-        await dataService.updateCanalEntrada(canalEditando.id, formData, userId);
-        setCanaisEntrada(prev =>
-          prev.map(canal =>
-            canal.id === canalEditando.id
-              ? { ...canal, ...formData }
-              : canal
-          )
-        );
-      } else {
-        // Criar novo canal
-        const novoCanal = await dataService.createCanalEntrada({
-          ...formData,
-          dataCadastro: new Date()
-        }, userId);
-        setCanaisEntrada(prev => [novoCanal, ...prev]);
-      }
-
-      setShowForm(false);
-      limparFormulario();
-    } catch (error) {
-      console.error('Erro ao salvar canal de entrada:', error);
-    }
-  };
-
-  // Excluir canal
-  const handleExcluir = async () => {
-    if (!canalParaExcluir || !userId) return;
-
-    try {
-      await dataService.deleteCanalEntrada(canalParaExcluir.id, userId);
-      setCanaisEntrada(prev =>
-        prev.filter(canal => canal.id !== canalParaExcluir.id)
-      );
-      setCanalParaExcluir(null);
-    } catch (error) {
-      console.error('Erro ao excluir canal de entrada:', error);
-    }
+  const cancelarEdicao = () => {
+    setEditandoId(null);
+    setEditandoCanal({ nome: '', descricao: '', ativo: true });
   };
 
   if (loading) {
@@ -168,13 +138,18 @@ export default function CanaisEntradaPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Cabeçalho */}
+        {/* Header */}
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-text-primary">Canais de Entrada</h1>
-            <p className="text-text-secondary">Gerencie os canais pelos quais os clientes chegam</p>
+            <p className="text-text-secondary">
+              Gerencie os canais pelos quais os clientes chegam
+            </p>
           </div>
-          <Button onClick={handleNovoCanal} className="flex items-center gap-2">
+          <Button
+            onClick={() => setMostrarFormNovo(true)}
+            className="flex items-center gap-2"
+          >
             <PlusIcon className="h-4 w-4" />
             Novo Canal
           </Button>
@@ -182,34 +157,139 @@ export default function CanaisEntradaPage() {
 
         {/* Busca */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="relative">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
-              <Input
-                placeholder="Buscar canais de entrada..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <CardContent className="p-6">
+            <Input
+              label="Buscar"
+              placeholder="Buscar canais de entrada..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </CardContent>
         </Card>
 
+        {/* Resumo */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <TagIcon className="h-8 w-8 text-primary mr-3" />
+                <div>
+                  <p className="text-sm font-medium text-text-secondary">Total de Canais</p>
+                  <p className="text-2xl font-bold text-text-primary">{canaisFiltrados.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center">
+                <TagIcon className="h-8 w-8 text-success mr-3" />
+                <div>
+                  <p className="text-sm font-medium text-text-secondary">Canais Ativos</p>
+                  <p className="text-2xl font-bold text-text-primary">
+                    {canaisFiltrados.filter(c => c.ativo).length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Formulário Novo Canal - No TOPO */}
+        {mostrarFormNovo && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Novo Canal de Entrada</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <Input
+                  label="Nome *"
+                  placeholder="Ex: Instagram, Boca a boca, Google..."
+                  value={novoCanal.nome}
+                  onChange={(e) => setNovoCanal(prev => ({ ...prev, nome: e.target.value }))}
+                />
+                <Textarea
+                  label="Descrição"
+                  placeholder="Descrição opcional do canal de entrada"
+                  value={novoCanal.descricao}
+                  onChange={(e) => setNovoCanal(prev => ({ ...prev, descricao: e.target.value }))}
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setMostrarFormNovo(false);
+                    setNovoCanal({ nome: '', descricao: '' });
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleNovoCanal}
+                  disabled={!novoCanal.nome.trim()}
+                >
+                  Criar Canal
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Lista de Canais */}
-        <div className="grid gap-4">
-          {canaisFiltrados.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8">
-                <TagIcon className="h-12 w-12 text-text-muted mx-auto mb-4" />
-                <p className="text-text-muted">
-                  {searchTerm ? 'Nenhum canal encontrado' : 'Nenhum canal de entrada cadastrado'}
-                </p>
-              </CardContent>
-            </Card>
-          ) : (
-            canaisFiltrados.map((canal) => (
-              <Card key={canal.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
+        <div className="space-y-4">
+          {canaisFiltrados.map((canal) => (
+            <Card key={canal.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                {editandoId === canal.id ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-4">
+                      <Input
+                        label="Nome *"
+                        value={editandoCanal.nome}
+                        onChange={(e) => setEditandoCanal(prev => ({ ...prev, nome: e.target.value }))}
+                      />
+                      <Textarea
+                        label="Descrição"
+                        value={editandoCanal.descricao}
+                        onChange={(e) => setEditandoCanal(prev => ({ ...prev, descricao: e.target.value }))}
+                        rows={3}
+                      />
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="ativo-edit"
+                          checked={editandoCanal.ativo}
+                          onChange={(e) => setEditandoCanal(prev => ({ ...prev, ativo: e.target.checked }))}
+                          className="rounded border-border"
+                        />
+                        <label htmlFor="ativo-edit" className="text-sm text-text-primary">
+                          Canal ativo
+                        </label>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={cancelarEdicao}
+                      >
+                        <XMarkIcon className="h-4 w-4 mr-1" />
+                        Cancelar
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleEditarCanal(canal)}
+                        disabled={!editandoCanal.nome.trim()}
+                      >
+                        <CheckIcon className="h-4 w-4 mr-1" />
+                        Salvar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -228,112 +308,50 @@ export default function CanaisEntradaPage() {
                         <p className="text-text-secondary mb-2">{canal.descricao}</p>
                       )}
                       <p className="text-sm text-text-muted">
-                        Criado em {format(canal.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
+                        Criado em {new Date(canal.dataCadastro).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEditarCanal(canal)}
-                        className="hover:bg-accent/10 hover:text-accent"
+                        onClick={() => iniciarEdicao(canal)}
+                        title="Editar"
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setCanalParaExcluir(canal)}
-                        className="hover:bg-error/10 hover:text-error"
+                        onClick={() => handleExcluirCanal(canal)}
+                        title="Excluir"
+                        className="text-error hover:text-error hover:bg-error/10"
                       >
                         <TrashIcon className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        {/* Formulário */}
-        {showForm && (
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {canalEditando ? 'Editar Canal de Entrada' : 'Novo Canal de Entrada'}
-              </CardTitle>
-              <CardDescription>
-                {canalEditando ? 'Atualize as informações do canal' : 'Preencha as informações do novo canal'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Input
-                label="Nome *"
-                value={formData.nome}
-                onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                error={errors.nome}
-                placeholder="Ex: Instagram, Boca a boca, Google..."
-              />
-              <Textarea
-                label="Descrição"
-                value={formData.descricao}
-                onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                placeholder="Descrição opcional do canal de entrada"
-                rows={3}
-              />
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="ativo"
-                  checked={formData.ativo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, ativo: e.target.checked }))}
-                  className="rounded border-border"
-                />
-                <label htmlFor="ativo" className="text-sm text-text-primary">
-                  Canal ativo
-                </label>
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={handleCancelar}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleSalvar}>
-                  {canalEditando ? 'Atualizar' : 'Criar'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Modal de Confirmação de Exclusão */}
-        {canalParaExcluir && (
-          <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
-            <Card className="w-full max-w-md mx-4 modal-card">
-              <CardHeader>
-                <CardTitle>Confirmar Exclusão</CardTitle>
-                <CardDescription>
-                  Tem certeza que deseja excluir o canal &quot;{canalParaExcluir.nome}&quot;? Esta ação não pode ser desfeita.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setCanalParaExcluir(null)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleExcluir}
-                  >
-                    Excluir
-                  </Button>
-                </div>
+                )}
               </CardContent>
             </Card>
-          </div>
+          ))}
+        </div>
+
+        {canaisFiltrados.length === 0 && (
+          <Card>
+            <CardContent className="text-center py-12">
+              <TagIcon className="mx-auto h-12 w-12 text-text-muted" />
+              <h3 className="mt-2 text-sm font-medium text-text-primary">
+                {searchTerm ? 'Nenhum canal encontrado' : 'Nenhum canal de entrada cadastrado'}
+              </h3>
+              <p className="mt-1 text-sm text-text-secondary">
+                {searchTerm 
+                  ? 'Tente ajustar o termo de busca.'
+                  : 'Comece criando um novo canal de entrada.'
+                }
+              </p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </Layout>
