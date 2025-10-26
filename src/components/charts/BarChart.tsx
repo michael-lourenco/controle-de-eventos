@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChartData, ChartConfig } from '@/types/charts';
 
 interface BarChartProps {
@@ -27,84 +29,58 @@ export function BarChart({
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-text-secondary">
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
         Nenhum dado disponível
       </div>
     );
   }
 
-  const maxValue = Math.max(...data.map(item => item.value));
   const total = data.reduce((sum, item) => sum + item.value, 0);
+  
+  const chartData = data.map((item, index) => ({
+    name: item.label,
+    value: item.value,
+    fill: item.color || colors[index % colors.length],
+    percentage: ((item.value / total) * 100).toFixed(1)
+  }));
+
+  const chartConfig = {
+    value: {
+      label: "Valor",
+    },
+  };
 
   if (orientation === 'horizontal') {
     return (
-      <div className="space-y-4">
-        {data.map((item, index) => {
-          const percentage = total > 0 ? (item.value / total) * 100 : 0;
-          const barWidth = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-          const color = item.color || colors[index % colors.length];
-
-          return (
-            <div key={item.label} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-text-primary">{item.label}</span>
-                <div className="flex items-center gap-2">
-                  {showValues && (
-                    <span className="text-sm font-bold text-text-primary">{item.value}</span>
-                  )}
-                  {showPercentages && (
-                    <span className="text-sm text-text-secondary">({percentage.toFixed(1)}%)</span>
-                  )}
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-6">
-                <div
-                  className="h-6 rounded-full flex items-center justify-end pr-2 transition-all duration-300"
-                  style={{
-                    width: `${barWidth}%`,
-                    backgroundColor: color
-                  }}
-                >
-                  {showPercentages && barWidth > 20 && (
-                    <span className="text-xs font-medium text-white">
-                      {percentage.toFixed(1)}%
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <ChartContainer config={chartConfig} className="h-[300px]">
+        <RechartsBarChart
+          data={chartData}
+          layout="horizontal"
+          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis type="number" />
+          <YAxis dataKey="name" type="category" width={100} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Bar dataKey="value" fill="#3B82F6" />
+        </RechartsBarChart>
+      </ChartContainer>
     );
   }
 
-  // Vertical bars (for future implementation)
+  // Vertical bars
   return (
-    <div className="flex items-end justify-center space-x-2 h-64">
-      {data.map((item, index) => {
-        const barHeight = maxValue > 0 ? (item.value / maxValue) * 100 : 0;
-        const color = item.color || colors[index % colors.length];
-
-        return (
-          <div key={item.label} className="flex flex-col items-center space-y-2">
-            <div
-              className="w-8 rounded-t transition-all duration-300"
-              style={{
-                height: `${barHeight}%`,
-                backgroundColor: color,
-                minHeight: '4px'
-              }}
-            />
-            <span className="text-xs text-text-secondary text-center max-w-16 break-words">
-              {item.label}
-            </span>
-            {showValues && (
-              <span className="text-xs font-bold text-text-primary">{item.value}</span>
-            )}
-          </div>
-        );
-      })}
-    </div>
+    <ChartContainer config={chartConfig} className="h-[300px]">
+      <RechartsBarChart
+        data={chartData}
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="value" fill="#3B82F6" />
+      </RechartsBarChart>
+    </ChartContainer>
   );
 }

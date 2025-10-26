@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import EventoForm from '@/components/forms/EventoForm';
 import { useEvento } from '@/hooks/useData';

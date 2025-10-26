@@ -1,6 +1,8 @@
 'use client';
 
 import React from 'react';
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { PieChartData, ChartConfig } from '@/types/charts';
 
 interface PieChartProps {
@@ -25,81 +27,63 @@ export function PieChart({ data, config = {} }: PieChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-text-secondary">
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
         Nenhum dado disponível
       </div>
     );
   }
 
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  let currentAngle = 0;
-  const radius = 80;
-  const centerX = width / 2;
-  const centerY = height / 2;
+  
+  const chartData = data.map((item, index) => ({
+    name: item.label,
+    value: item.value,
+    fill: item.color || colors[index % colors.length],
+    percentage: ((item.value / total) * 100).toFixed(1)
+  }));
+
+  const chartConfig = {
+    value: {
+      label: "Valor",
+    },
+  };
 
   return (
     <div className="space-y-4">
-      {/* Gráfico SVG */}
-      <div className="flex items-center justify-center">
-        <div className="relative">
-          <svg width={width} height={height} className="transform -rotate-90">
-            {data.map((item, index) => {
-              const percentage = (item.value / total) * 100;
-              const angle = (percentage / 100) * 360;
-              const endAngle = currentAngle + angle;
-              
-              const x1 = centerX + radius * Math.cos((currentAngle * Math.PI) / 180);
-              const y1 = centerY + radius * Math.sin((currentAngle * Math.PI) / 180);
-              const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
-              const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
-              
-              const largeArcFlag = angle > 180 ? 1 : 0;
-              const pathData = [
-                `M ${centerX} ${centerY}`,
-                `L ${x1} ${y1}`,
-                `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-                'Z'
-              ].join(' ');
-
-              const color = item.color || colors[index % colors.length];
-              
-              currentAngle = endAngle;
-              
-              return (
-                <path
-                  key={item.label}
-                  d={pathData}
-                  fill={color}
-                  stroke="white"
-                  strokeWidth="2"
-                />
-              );
-            })}
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-text-primary">{total}</div>
-              <div className="text-sm text-text-secondary">Total</div>
-            </div>
-          </div>
-        </div>
+      <div className="text-center">
+        <div className="text-2xl font-bold text-foreground">{total}</div>
+        <div className="text-sm text-muted-foreground">Total</div>
       </div>
+      
+      <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+        <RechartsPieChart>
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Pie
+            data={chartData}
+            dataKey="value"
+            nameKey="name"
+            innerRadius={60}
+            strokeWidth={5}
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.fill} />
+            ))}
+          </Pie>
+        </RechartsPieChart>
+      </ChartContainer>
 
-      {/* Legenda */}
       {showLegend && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {data.map((item, index) => {
-            const color = item.color || colors[index % colors.length];
+          {chartData.map((item, index) => {
             const percentage = ((item.value / total) * 100).toFixed(1);
-            
             return (
-              <div key={item.label} className="flex items-center space-x-2">
+              <div key={index} className="flex items-center space-x-2">
                 <div
                   className="w-4 h-4 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: color }}
+                  style={{ backgroundColor: item.fill }}
                 />
-                <span className="text-sm text-text-primary flex-1">{item.label}</span>
-                <div className="text-sm font-medium text-text-primary">
+                <span className="text-sm text-foreground flex-1">{item.name}</span>
+                <div className="text-sm font-medium text-foreground">
                   {showValues && `${item.value}`}
                   {showValues && showPercentages && ' • '}
                   {showPercentages && `${percentage}%`}
