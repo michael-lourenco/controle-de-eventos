@@ -8,6 +8,8 @@ import { Evento } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, PrinterIcon, ExclamationTriangleIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer } from '@/components/ui/chart';
 import { 
   StatCard, 
   StatGrid, 
@@ -210,6 +212,56 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
     value: item.percentualCustoImpressoes,
     percentage: 0
   }));
+
+  // Dados formatados para gráficos melhorados
+  const impressoesPorMesChartData = dadosImpressoes.impressoesPorMes.map(item => ({
+    mes: item.mes,
+    totalImpressoes: item.totalImpressoes,
+    eventosComImpressoes: item.eventosComImpressoes,
+    custoTotalImpressoes: item.custoTotalImpressoes
+  }));
+
+  const custoImpressoesPorTipoChartData = dadosImpressoes.analiseCustoBeneficio.map(item => ({
+    tipoEvento: item.tipoEvento,
+    percentualCusto: item.percentualCustoImpressoes,
+    custoMedioImpressoes: item.custoMedioImpressoes,
+    valorMedioEvento: item.valorMedioEvento,
+    roiImpressoes: item.roiImpressoes
+  }));
+
+  const chartConfigImpressoes = {
+    totalImpressoes: {
+      label: "Total de Impressões",
+      color: "#3B82F6"
+    },
+    eventosComImpressoes: {
+      label: "Eventos com Impressões",
+      color: "#10B981"
+    },
+    custoTotalImpressoes: {
+      label: "Custo Total (R$)",
+      color: "#8B5CF6"
+    }
+  };
+
+  const chartConfigCusto = {
+    percentualCusto: {
+      label: "Percentual do Custo (%)",
+      color: "#EF4444"
+    },
+    custoMedioImpressoes: {
+      label: "Custo Médio (R$)",
+      color: "#F59E0B"
+    },
+    valorMedioEvento: {
+      label: "Valor Médio Evento (R$)",
+      color: "#10B981"
+    },
+    roiImpressoes: {
+      label: "ROI Impressões (%)",
+      color: "#8B5CF6"
+    }
+  };
 
   const exportarCSV = () => {
     const csvData = [
@@ -431,17 +483,103 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
           <CardHeader>
             <CardTitle>Impressões por Mês</CardTitle>
             <CardDescription>
-              Evolução do uso de impressões ao longo do tempo
+              Evolução do uso de impressões, eventos e custos ao longo do tempo
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <BarChart 
-              data={impressoesPorMesData}
-              config={{ 
-                showValues: true, 
-                showPercentages: false 
-              }}
-            />
+            <ChartContainer config={chartConfigImpressoes} className="h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={impressoesPorMesChartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <defs>
+                    <linearGradient id="colorImpressoes" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="mes" 
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    yAxisId="left"
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    label={{ value: 'Quantidade', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right"
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tickFormatter={(value) => `R$ ${(value / 1000).toFixed(1)}k`}
+                    label={{ value: 'Custo (R$)', angle: 90, position: 'insideRight', style: { fill: '#6b7280' } }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const data = payload[0]?.payload;
+                      return (
+                        <div className="rounded-lg border bg-white p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                            {data?.mes}
+                          </div>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Total Impressões:</span>
+                              <span className="font-semibold">{data?.totalImpressoes?.toLocaleString('pt-BR')}</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Eventos com Impressões:</span>
+                              <span className="font-semibold">{data?.eventosComImpressoes}</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Custo Total:</span>
+                              <span className="font-semibold">
+                                R$ {typeof data?.custoTotalImpressoes === 'number' 
+                                  ? data.custoTotalImpressoes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                                  : data?.custoTotalImpressoes}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                  <Area 
+                    yAxisId="left"
+                    type="monotone" 
+                    dataKey="totalImpressoes" 
+                    fill="url(#colorImpressoes)"
+                    stroke="#3B82F6"
+                    strokeWidth={2}
+                    name="Total de Impressões"
+                  />
+                  <Bar 
+                    yAxisId="left"
+                    dataKey="eventosComImpressoes" 
+                    fill="#10B981" 
+                    name="Eventos com Impressões"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="custoTotalImpressoes" 
+                    stroke="#8B5CF6" 
+                    strokeWidth={3}
+                    name="Custo Total (R$)"
+                    dot={{ fill: '#8B5CF6', r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
 
@@ -449,17 +587,113 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
           <CardHeader>
             <CardTitle>Custo de Impressões por Tipo</CardTitle>
             <CardDescription>
-              Percentual do custo de impressões em relação ao valor do evento
+              Análise completa: percentual de custo, valores e ROI por tipo de evento
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <BarChart 
-              data={custoBeneficioData}
-              config={{ 
-                showValues: true, 
-                showPercentages: false 
-              }}
-            />
+            <ChartContainer config={chartConfigCusto} className="h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={custoImpressoesPorTipoChartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="tipoEvento" 
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    yAxisId="left"
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tickFormatter={(value) => `R$ ${(value / 1000).toFixed(1)}k`}
+                    label={{ value: 'Valores (R$)', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right"
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tickFormatter={(value) => `${value}%`}
+                    label={{ value: 'Percentuais (%)', angle: 90, position: 'insideRight', style: { fill: '#6b7280' } }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const data = payload[0]?.payload;
+                      return (
+                        <div className="rounded-lg border bg-white p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                            {data?.tipoEvento}
+                          </div>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Percentual Custo:</span>
+                              <span className="font-semibold">{data?.percentualCusto?.toFixed(1)}%</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Custo Médio:</span>
+                              <span className="font-semibold">
+                                R$ {typeof data?.custoMedioImpressoes === 'number' 
+                                  ? data.custoMedioImpressoes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                                  : data?.custoMedioImpressoes}
+                              </span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Valor Médio Evento:</span>
+                              <span className="font-semibold">
+                                R$ {typeof data?.valorMedioEvento === 'number' 
+                                  ? data.valorMedioEvento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                                  : data?.valorMedioEvento}
+                              </span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">ROI Impressões:</span>
+                              <span className={`font-semibold ${data?.roiImpressoes >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {data?.roiImpressoes?.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                  <Bar 
+                    yAxisId="right"
+                    dataKey="percentualCusto" 
+                    fill="#EF4444" 
+                    name="Percentual do Custo (%)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    yAxisId="left"
+                    dataKey="custoMedioImpressoes" 
+                    fill="#F59E0B" 
+                    name="Custo Médio (R$)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    yAxisId="left"
+                    dataKey="valorMedioEvento" 
+                    fill="#10B981" 
+                    name="Valor Médio Evento (R$)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="roiImpressoes" 
+                    stroke="#8B5CF6" 
+                    strokeWidth={3}
+                    name="ROI Impressões (%)"
+                    dot={{ fill: '#8B5CF6', r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>

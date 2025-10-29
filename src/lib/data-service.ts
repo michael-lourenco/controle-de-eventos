@@ -301,6 +301,37 @@ export class DataService {
     return this.custoEventoRepo.getResumoCustosPorEvento(userId, eventoId);
   }
 
+  // Método para buscar todos os custos de todos os eventos do usuário
+  async getAllCustos(userId: string): Promise<CustoEvento[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar custos');
+    }
+    
+    try {
+      // Buscar todos os eventos do usuário
+      const eventos = await this.getEventos(userId);
+      const todosCustos: CustoEvento[] = [];
+      
+      // Buscar custos de todos os eventos
+      for (const evento of eventos) {
+        try {
+          const custosEvento = await this.getCustosPorEvento(userId, evento.id);
+          todosCustos.push(...custosEvento);
+        } catch (error) {
+          console.error(`Erro ao buscar custos do evento ${evento.id}:`, error);
+        }
+      }
+      
+      // Ordenar por data de cadastro (mais recente primeiro)
+      return todosCustos.sort((a, b) => 
+        new Date(b.dataCadastro).getTime() - new Date(a.dataCadastro).getTime()
+      );
+    } catch (error) {
+      console.error('Erro ao buscar todos os custos:', error);
+      return [];
+    }
+  }
+
   // Métodos para Tipos de Serviço
   async getTiposServico(userId: string): Promise<TipoServico[]> {
     if (!userId) {

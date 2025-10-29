@@ -12,7 +12,7 @@ import {
   DocumentArrowDownIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { useEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos, useClientes, useCanaisEntrada } from '@/hooks/useData';
+import { useEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos, useClientes, useCanaisEntrada, useAllCustos } from '@/hooks/useData';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import PerformanceEventosReport from '@/components/relatorios/PerformanceEventosReport';
 import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
@@ -28,6 +28,7 @@ export default function RelatoriosPage() {
   const { data: tiposServicos, loading: loadingTiposServicos } = useTiposServicos();
   const { data: clientes, loading: loadingClientes } = useClientes();
   const { data: canaisEntrada, loading: loadingCanaisEntrada } = useCanaisEntrada();
+  const { data: custos, loading: loadingCustos } = useAllCustos();
   
   const [periodoInicio, setPeriodoInicio] = useState(
     format(startOfMonth(subMonths(new Date(), 6)), 'yyyy-MM-dd')
@@ -36,7 +37,7 @@ export default function RelatoriosPage() {
     format(endOfMonth(new Date()), 'yyyy-MM-dd')
   );
   
-  const loading = loadingEventos || loadingDashboard || loadingPagamentos || loadingServicos || loadingTiposServicos || loadingClientes || loadingCanaisEntrada;
+  const loading = loadingEventos || loadingDashboard || loadingPagamentos || loadingServicos || loadingTiposServicos || loadingClientes || loadingCanaisEntrada || loadingCustos;
   
   if (loading) {
     return (
@@ -341,7 +342,7 @@ export default function RelatoriosPage() {
             <FluxoCaixaReport 
               eventos={eventos} 
               pagamentos={pagamentos || []} 
-              custos={[]} 
+              custos={custos || []} 
             />
           </CardContent>
         </Card>

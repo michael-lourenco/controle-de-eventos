@@ -8,6 +8,8 @@ import { Evento, Pagamento, CustoEvento } from '@/types';
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer } from '@/components/ui/chart';
 import { 
   StatCard, 
   StatGrid, 
@@ -33,7 +35,9 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
 
   const dadosFluxoCaixa = useMemo(() => {
     const inicio = new Date(dataInicio);
+    inicio.setHours(0, 0, 0, 0);
     const fim = new Date(dataFim);
+    fim.setHours(23, 59, 59, 999);
     
     // Filtrar dados do período
     const pagamentosPeriodo = pagamentos.filter(p => {
@@ -202,6 +206,34 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
     percentage: 0
   }));
 
+  // Dados formatados para o gráfico combinado
+  const fluxoMensalChartData = dadosFluxoCaixa.fluxoMensal.map(item => ({
+    mes: item.mes,
+    receitas: item.receitas,
+    despesas: item.despesas,
+    saldo: item.saldo,
+    saldoAcumulado: item.saldoAcumulado
+  }));
+
+  const chartConfig = {
+    receitas: {
+      label: "Receitas",
+      color: "#10B981"
+    },
+    despesas: {
+      label: "Despesas",
+      color: "#EF4444"
+    },
+    saldo: {
+      label: "Saldo",
+      color: "#3B82F6"
+    },
+    saldoAcumulado: {
+      label: "Saldo Acumulado",
+      color: "#8B5CF6"
+    }
+  };
+
   const exportarCSV = () => {
     const csvData = [
       ['Relatório de Fluxo de Caixa'],
@@ -360,14 +392,92 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
             id: 'grafico',
             label: '📊 Gráfico',
             content: (
-              <BarChart 
-                data={fluxoMensalData}
-                config={{ 
-                  showValues: true, 
-                  showPercentages: false 
-                }}
-                orientation="horizontal"
-              />
+              <ChartContainer config={chartConfig} className="h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={fluxoMensalChartData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis 
+                      dataKey="mes" 
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis 
+                      yAxisId="left"
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                    />
+                    <YAxis 
+                      yAxisId="right" 
+                      orientation="right"
+                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        return (
+                          <div className="rounded-lg border bg-white p-3 shadow-lg">
+                            <div className="mb-2 text-sm font-semibold text-gray-900">
+                              {payload[0]?.payload?.mes}
+                            </div>
+                            <div className="space-y-1">
+                              {payload.map((entry: any, index: number) => (
+                                <div key={index} className="flex items-center justify-between gap-4 text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <div 
+                                      className="h-2.5 w-2.5 rounded-full"
+                                      style={{ backgroundColor: entry.color }}
+                                    />
+                                    <span className="text-gray-600">{entry.name}:</span>
+                                  </div>
+                                  <span className="font-semibold text-gray-900">
+                                    {typeof entry.value === 'number' 
+                                      ? `R$ ${entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                                      : entry.value}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: '20px' }}
+                      iconType="rect"
+                    />
+                    <Bar 
+                      yAxisId="left"
+                      dataKey="receitas" 
+                      fill="#10B981" 
+                      name="Receitas"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      yAxisId="left"
+                      dataKey="despesas" 
+                      fill="#EF4444" 
+                      name="Despesas"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Line 
+                      yAxisId="right"
+                      type="monotone" 
+                      dataKey="saldoAcumulado" 
+                      stroke="#8B5CF6" 
+                      strokeWidth={3}
+                      name="Saldo Acumulado"
+                      dot={{ fill: '#8B5CF6', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             )
           },
           {

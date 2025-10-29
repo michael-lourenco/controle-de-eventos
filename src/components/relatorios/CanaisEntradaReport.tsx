@@ -8,6 +8,8 @@ import { Cliente, CanalEntrada, Evento } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { AreaChart, Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer } from '@/components/ui/chart';
 import { 
   StatCard, 
   StatGrid, 
@@ -209,6 +211,63 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
     value: item.taxaConversao,
     percentage: 0
   }));
+
+  // Dados formatados para gráficos melhorados
+  const clientesPorMesChartData = dadosCanaisEntrada.clientesPorMes.map(item => ({
+    mes: item.mes,
+    totalClientes: item.totalClientes,
+    ...item.porCanal
+  }));
+
+  // Extrair todos os canais únicos para o gráfico de clientes por mês
+  const todosCanaisUnicos = new Set<string>();
+  dadosCanaisEntrada.clientesPorMes.forEach(item => {
+    Object.keys(item.porCanal).forEach(canal => todosCanaisUnicos.add(canal));
+  });
+  const canaisUnicosArray = Array.from(todosCanaisUnicos).slice(0, 5); // Limitar a 5 canais para não poluir
+
+  const conversaoPorCanalChartData = dadosCanaisEntrada.conversaoPorCanal.map(item => ({
+    canal: item.canalNome.length > 15 ? item.canalNome.substring(0, 15) + '...' : item.canalNome,
+    canalNome: item.canalNome,
+    totalLeads: item.totalLeads,
+    eventosGerados: item.eventosGerados,
+    taxaConversao: item.taxaConversao,
+    receitaGerada: item.receitaGerada
+  }));
+
+  const chartConfigClientes = {
+    totalClientes: {
+      label: "Total de Clientes",
+      color: "#3B82F6"
+    },
+    ...canaisUnicosArray.reduce((acc, canal, index) => {
+      const colors = ['#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4'];
+      acc[canal.replace(/\s+/g, '')] = {
+        label: canal,
+        color: colors[index % colors.length]
+      };
+      return acc;
+    }, {} as Record<string, { label: string; color: string }>)
+  };
+
+  const chartConfigConversao = {
+    totalLeads: {
+      label: "Total de Leads",
+      color: "#3B82F6"
+    },
+    eventosGerados: {
+      label: "Eventos Gerados",
+      color: "#10B981"
+    },
+    taxaConversao: {
+      label: "Taxa de Conversão (%)",
+      color: "#8B5CF6"
+    },
+    receitaGerada: {
+      label: "Receita Gerada",
+      color: "#F59E0B"
+    }
+  };
 
   const exportarCSV = () => {
     const csvData = [
@@ -431,17 +490,98 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
           <CardHeader>
             <CardTitle>Clientes por Mês</CardTitle>
             <CardDescription>
-              Evolução do número de clientes ao longo do tempo
+              Evolução do número de clientes ao longo do tempo por canal de entrada
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <BarChart 
-              data={clientesPorMesData}
-              config={{ 
-                showValues: true, 
-                showPercentages: false 
-              }}
-            />
+            <ChartContainer config={chartConfigClientes} className="h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={clientesPorMesChartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <defs>
+                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                    </linearGradient>
+                    {canaisUnicosArray.map((canal, index) => {
+                      const colors = ['#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4'];
+                      return (
+                        <linearGradient key={canal} id={`color${canal.replace(/\s+/g, '')}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={colors[index % colors.length]} stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor={colors[index % colors.length]} stopOpacity={0.1}/>
+                        </linearGradient>
+                      );
+                    })}
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="mes" 
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    label={{ value: 'Clientes', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      return (
+                        <div className="rounded-lg border bg-white p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                            {payload[0]?.payload?.mes}
+                          </div>
+                          <div className="space-y-1">
+                            {payload.map((entry: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between gap-4 text-xs">
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{ backgroundColor: entry.color }}
+                                  />
+                                  <span className="text-gray-600">{entry.name}:</span>
+                                </div>
+                                <span className="font-semibold text-gray-900">
+                                  {typeof entry.value === 'number' ? entry.value : entry.value}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="totalClientes" 
+                    stroke="#3B82F6" 
+                    fillOpacity={1} 
+                    fill="url(#colorTotal)"
+                    name="Total de Clientes"
+                  />
+                  {canaisUnicosArray.map((canal, index) => {
+                    const colors = ['#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4'];
+                    const dataKey = canal.replace(/\s+/g, '');
+                    return (
+                      <Area 
+                        key={canal}
+                        type="monotone" 
+                        dataKey={canal} 
+                        stackId="1"
+                        stroke={colors[index % colors.length]} 
+                        fill={`url(#color${dataKey})`}
+                        name={canal}
+                      />
+                    );
+                  })}
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
 
@@ -449,17 +589,99 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
           <CardHeader>
             <CardTitle>Taxa de Conversão por Canal</CardTitle>
             <CardDescription>
-              Efetividade de cada canal em gerar eventos
+              Efetividade de cada canal: leads, conversão e receita gerada
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <BarChart 
-              data={conversaoPorCanalData}
-              config={{ 
-                showValues: true, 
-                showPercentages: false 
-              }}
-            />
+            <ChartContainer config={chartConfigConversao} className="h-[350px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={conversaoPorCanalChartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="canal" 
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    yAxisId="left"
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    label={{ value: 'Quantidade', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right"
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tickFormatter={(value) => `${value}%`}
+                    label={{ value: 'Taxa (%)', angle: 90, position: 'insideRight', style: { fill: '#6b7280' } }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const data = payload[0]?.payload;
+                      return (
+                        <div className="rounded-lg border bg-white p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                            {data?.canalNome}
+                          </div>
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Total Leads:</span>
+                              <span className="font-semibold">{data?.totalLeads}</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Eventos Gerados:</span>
+                              <span className="font-semibold">{data?.eventosGerados}</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Taxa de Conversão:</span>
+                              <span className="font-semibold">{data?.taxaConversao.toFixed(1)}%</span>
+                            </div>
+                            <div className="flex justify-between gap-4">
+                              <span className="text-gray-600">Receita Gerada:</span>
+                              <span className="font-semibold">
+                                R$ {typeof data?.receitaGerada === 'number' 
+                                  ? data.receitaGerada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                                  : data?.receitaGerada}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                  <Bar 
+                    yAxisId="left"
+                    dataKey="totalLeads" 
+                    fill="#3B82F6" 
+                    name="Total de Leads"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar 
+                    yAxisId="left"
+                    dataKey="eventosGerados" 
+                    fill="#10B981" 
+                    name="Eventos Gerados"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="taxaConversao" 
+                    stroke="#8B5CF6" 
+                    strokeWidth={3}
+                    name="Taxa de Conversão (%)"
+                    dot={{ fill: '#8B5CF6', r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>

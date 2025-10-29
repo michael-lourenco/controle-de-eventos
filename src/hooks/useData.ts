@@ -239,6 +239,39 @@ export function useCustosPorEvento(eventoId: string): UseDataResult<CustoEvento[
   return { data, loading, error, refetch: fetchData };
 }
 
+// Hook para todos os custos
+export function useAllCustos(): UseDataResult<CustoEvento[]> {
+  const [data, setData] = useState<CustoEvento[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getAllCustos(userId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar custos');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
 // Hook para serviços
 export function useServicosPorEvento(eventoId: string): UseDataResult<ServicoEvento[]> {
   const [data, setData] = useState<ServicoEvento[] | null>(null);
