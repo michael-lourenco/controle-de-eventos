@@ -232,34 +232,34 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
   const chartConfigImpressoes = {
     totalImpressoes: {
       label: "Total de Impressões",
-      color: "#3B82F6"
+      color: "#313c43"
     },
     eventosComImpressoes: {
       label: "Eventos com Impressões",
-      color: "#10B981"
+      color: "#21b6bf"
     },
     custoTotalImpressoes: {
       label: "Custo Total (R$)",
-      color: "#8B5CF6"
+      color: "#1a9ba3"
     }
   };
 
   const chartConfigCusto = {
     percentualCusto: {
       label: "Percentual do Custo (%)",
-      color: "#EF4444"
+      color: "#d97757"
     },
     custoMedioImpressoes: {
       label: "Custo Médio (R$)",
-      color: "#F59E0B"
+      color: "#5d6b74"
     },
     valorMedioEvento: {
       label: "Valor Médio Evento (R$)",
-      color: "#10B981"
+      color: "#21b6bf"
     },
     roiImpressoes: {
       label: "ROI Impressões (%)",
-      color: "#8B5CF6"
+      color: "#1a9ba3"
     }
   };
 
@@ -319,10 +319,10 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
 
   const getSeveridadeColor = (severidade: string) => {
     switch (severidade) {
-      case 'alta': return 'text-red-600 bg-red-50';
-      case 'media': return 'text-yellow-600 bg-yellow-50';
-      case 'baixa': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'alta': return 'text-[#d97757] bg-[#d97757]/10';
+      case 'media': return 'text-[#5d6b74] bg-[#5d6b74]/10';
+      case 'baixa': return 'text-accent bg-accent/10';
+      default: return 'text-text-secondary bg-surface';
     }
   };
 
@@ -496,27 +496,27 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                 >
                   <defs>
                     <linearGradient id="colorImpressoes" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#313c43" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#313c43" stopOpacity={0.1}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
                   <XAxis 
                     dataKey="mes" 
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis 
                     yAxisId="left"
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     width={50}
                   />
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     tickFormatter={(value) => `R$ ${(value / 1000).toFixed(1)}k`}
                     width={60}
                   />
@@ -525,22 +525,22 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                       if (!active || !payload?.length) return null;
                       const data = payload[0]?.payload;
                       return (
-                        <div className="rounded-lg border bg-white p-3 shadow-lg">
-                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                        <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-text-primary">
                             {data?.mes}
                           </div>
                           <div className="space-y-1 text-xs">
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Total Impressões:</span>
-                              <span className="font-semibold">{data?.totalImpressoes?.toLocaleString('pt-BR')}</span>
+                              <span className="text-text-secondary">Total Impressões:</span>
+                              <span className="font-semibold text-text-primary">{data?.totalImpressoes?.toLocaleString('pt-BR')}</span>
                             </div>
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Eventos com Impressões:</span>
-                              <span className="font-semibold">{data?.eventosComImpressoes}</span>
+                              <span className="text-text-secondary">Eventos com Impressões:</span>
+                              <span className="font-semibold text-text-primary">{data?.eventosComImpressoes}</span>
                             </div>
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Custo Total:</span>
-                              <span className="font-semibold">
+                              <span className="text-text-secondary">Custo Total:</span>
+                              <span className="font-semibold text-text-primary">
                                 R$ {typeof data?.custoTotalImpressoes === 'number' 
                                   ? data.custoTotalImpressoes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
                                   : data?.custoTotalImpressoes}
@@ -557,14 +557,14 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                     type="monotone" 
                     dataKey="totalImpressoes" 
                     fill="url(#colorImpressoes)"
-                    stroke="#3B82F6"
+                    stroke="#313c43"
                     strokeWidth={2}
                     name="Total de Impressões"
                   />
                   <Bar 
                     yAxisId="left"
                     dataKey="eventosComImpressoes" 
-                    fill="#10B981" 
+                    fill="#21b6bf" 
                     name="Eventos com Impressões"
                     radius={[4, 4, 0, 0]}
                   />
@@ -572,10 +572,10 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                     yAxisId="right"
                     type="monotone" 
                     dataKey="custoTotalImpressoes" 
-                    stroke="#8B5CF6" 
+                    stroke="#1a9ba3" 
                     strokeWidth={3}
                     name="Custo Total (R$)"
-                    dot={{ fill: '#8B5CF6', r: 4 }}
+                    dot={{ fill: '#1a9ba3', r: 4 }}
                     activeDot={{ r: 6 }}
                   />
                 </ComposedChart>
@@ -600,24 +600,24 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                     data={custoImpressoesPorTipoChartData}
                     margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
                   <XAxis 
                     dataKey="tipoEvento" 
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis 
                     yAxisId="left"
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     tickFormatter={(value) => `R$ ${(value / 1000).toFixed(1)}k`}
                     width={60}
                   />
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     tickFormatter={(value) => `${value}%`}
                     width={50}
                   />
@@ -626,34 +626,34 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                       if (!active || !payload?.length) return null;
                       const data = payload[0]?.payload;
                       return (
-                        <div className="rounded-lg border bg-white p-3 shadow-lg">
-                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                        <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-text-primary">
                             {data?.tipoEvento}
                           </div>
                           <div className="space-y-1 text-xs">
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Percentual Custo:</span>
-                              <span className="font-semibold">{data?.percentualCusto?.toFixed(1)}%</span>
+                              <span className="text-text-secondary">Percentual Custo:</span>
+                              <span className="font-semibold text-text-primary">{data?.percentualCusto?.toFixed(1)}%</span>
                             </div>
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Custo Médio:</span>
-                              <span className="font-semibold">
+                              <span className="text-text-secondary">Custo Médio:</span>
+                              <span className="font-semibold text-text-primary">
                                 R$ {typeof data?.custoMedioImpressoes === 'number' 
                                   ? data.custoMedioImpressoes.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
                                   : data?.custoMedioImpressoes}
                               </span>
                             </div>
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Valor Médio Evento:</span>
-                              <span className="font-semibold">
+                              <span className="text-text-secondary">Valor Médio Evento:</span>
+                              <span className="font-semibold text-text-primary">
                                 R$ {typeof data?.valorMedioEvento === 'number' 
                                   ? data.valorMedioEvento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
                                   : data?.valorMedioEvento}
                               </span>
                             </div>
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">ROI Impressões:</span>
-                              <span className={`font-semibold ${data?.roiImpressoes >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              <span className="text-text-secondary">ROI Impressões:</span>
+                              <span className={`font-semibold ${data?.roiImpressoes >= 0 ? 'text-accent' : 'text-[#d97757]'}`}>
                                 {data?.roiImpressoes?.toFixed(1)}%
                               </span>
                             </div>
@@ -666,21 +666,21 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                   <Bar 
                     yAxisId="right"
                     dataKey="percentualCusto" 
-                    fill="#EF4444" 
+                    fill="#d97757" 
                     name="Percentual do Custo (%)"
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar 
                     yAxisId="left"
                     dataKey="custoMedioImpressoes" 
-                    fill="#F59E0B" 
+                    fill="#5d6b74" 
                     name="Custo Médio (R$)"
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar 
                     yAxisId="left"
                     dataKey="valorMedioEvento" 
-                    fill="#10B981" 
+                    fill="#21b6bf" 
                     name="Valor Médio Evento (R$)"
                     radius={[4, 4, 0, 0]}
                   />
@@ -688,10 +688,10 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                     yAxisId="right"
                     type="monotone" 
                     dataKey="roiImpressoes" 
-                    stroke="#8B5CF6" 
+                    stroke="#1a9ba3" 
                     strokeWidth={3}
                     name="ROI Impressões (%)"
-                    dot={{ fill: '#8B5CF6', r: 4 }}
+                    dot={{ fill: '#1a9ba3', r: 4 }}
                     activeDot={{ r: 6 }}
                   />
                 </ComposedChart>
@@ -759,23 +759,23 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 border rounded-lg bg-green-50">
-              <h4 className="font-medium text-green-800 mb-2">Evento com Mais Impressões</h4>
-              <p className="text-green-600 font-bold">{dadosImpressoes.tendencias.eventoComMaisImpressoes}</p>
+            <div className="p-4 border rounded-lg bg-accent/10 border-border">
+              <h4 className="font-medium text-accent-dark mb-2">Evento com Mais Impressões</h4>
+              <p className="text-accent font-bold">{dadosImpressoes.tendencias.eventoComMaisImpressoes}</p>
             </div>
-            <div className="p-4 border rounded-lg bg-red-50">
-              <h4 className="font-medium text-red-800 mb-2">Evento com Menos Impressões</h4>
-              <p className="text-red-600 font-bold">{dadosImpressoes.tendencias.eventoComMenosImpressoes}</p>
+            <div className="p-4 border rounded-lg bg-[#d97757]/10 border-border">
+              <h4 className="font-medium text-[#d97757] mb-2">Evento com Menos Impressões</h4>
+              <p className="text-[#d97757] font-bold">{dadosImpressoes.tendencias.eventoComMenosImpressoes}</p>
             </div>
-            <div className="p-4 border rounded-lg bg-blue-50">
-              <h4 className="font-medium text-blue-800 mb-2">Crescimento de Impressões</h4>
-              <p className={`font-bold ${dadosImpressoes.tendencias.crescimentoImpressoes >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="p-4 border rounded-lg bg-secondary/10 border-border">
+              <h4 className="font-medium text-secondary mb-2">Crescimento de Impressões</h4>
+              <p className={`font-bold ${dadosImpressoes.tendencias.crescimentoImpressoes >= 0 ? 'text-accent' : 'text-[#d97757]'}`}>
                 {dadosImpressoes.tendencias.crescimentoImpressoes.toFixed(1)}%
               </p>
             </div>
-            <div className="p-4 border rounded-lg bg-purple-50">
-              <h4 className="font-medium text-purple-800 mb-2">Tipos Mais Impressos</h4>
-              <p className="text-purple-600 font-bold">{dadosImpressoes.tendencias.tiposEventoMaisImpressos.length}</p>
+            <div className="p-4 border rounded-lg bg-accent-dark/10 border-border">
+              <h4 className="font-medium text-accent-dark mb-2">Tipos Mais Impressos</h4>
+              <p className="text-accent-dark font-bold">{dadosImpressoes.tendencias.tiposEventoMaisImpressos.length}</p>
             </div>
           </div>
         </CardContent>

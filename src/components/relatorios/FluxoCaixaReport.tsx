@@ -218,19 +218,19 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
   const chartConfig = {
     receitas: {
       label: "Receitas",
-      color: "#10B981"
+      color: "#21b6bf"
     },
     despesas: {
       label: "Despesas",
-      color: "#EF4444"
+      color: "#d97757"
     },
     saldo: {
       label: "Saldo",
-      color: "#3B82F6"
+      color: "#5d6b74"
     },
     saldoAcumulado: {
       label: "Saldo Acumulado",
-      color: "#8B5CF6"
+      color: "#1a9ba3"
     }
   };
 
@@ -287,10 +287,10 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
 
   const getSeveridadeColor = (severidade: string) => {
     switch (severidade) {
-      case 'alta': return 'text-red-600 bg-red-50';
-      case 'media': return 'text-yellow-600 bg-yellow-50';
-      case 'baixa': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'alta': return 'text-[#d97757] bg-[#d97757]/10';
+      case 'media': return 'text-[#5d6b74] bg-[#5d6b74]/10';
+      case 'baixa': return 'text-accent bg-accent/10';
+      default: return 'text-text-secondary bg-surface';
     }
   };
 
@@ -400,24 +400,24 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                         data={fluxoMensalChartData}
                         margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
                     <XAxis 
                       dataKey="mes" 
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                       angle={-45}
                       textAnchor="end"
                       height={80}
                     />
                     <YAxis 
                       yAxisId="left"
-                      tick={{ fill: '#6b7280', fontSize: 10 }}
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                       tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
                       width={60}
                     />
                     <YAxis 
                       yAxisId="right" 
                       orientation="right"
-                      tick={{ fill: '#6b7280', fontSize: 10 }}
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                       tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
                       width={60}
                     />
@@ -425,8 +425,8 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                       content={({ active, payload }) => {
                         if (!active || !payload?.length) return null;
                         return (
-                          <div className="rounded-lg border bg-white p-3 shadow-lg">
-                            <div className="mb-2 text-sm font-semibold text-gray-900">
+                          <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
+                            <div className="mb-2 text-sm font-semibold text-text-primary">
                               {payload[0]?.payload?.mes}
                             </div>
                             <div className="space-y-1">
@@ -437,9 +437,9 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                                       className="h-2.5 w-2.5 rounded-full"
                                       style={{ backgroundColor: entry.color }}
                                     />
-                                    <span className="text-gray-600">{entry.name}:</span>
+                                    <span className="text-text-secondary">{entry.name}:</span>
                                   </div>
-                                  <span className="font-semibold text-gray-900">
+                                  <span className="font-semibold text-text-primary">
                                     {typeof entry.value === 'number' 
                                       ? `R$ ${entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                                       : entry.value}
@@ -458,14 +458,14 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                     <Bar 
                       yAxisId="left"
                       dataKey="receitas" 
-                      fill="#10B981" 
+                      fill="#21b6bf" 
                       name="Receitas"
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar 
                       yAxisId="left"
                       dataKey="despesas" 
-                      fill="#EF4444" 
+                      fill="#d97757" 
                       name="Despesas"
                       radius={[4, 4, 0, 0]}
                     />
@@ -473,10 +473,10 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                       yAxisId="right"
                       type="monotone" 
                       dataKey="saldoAcumulado" 
-                      stroke="#8B5CF6" 
+                      stroke="#1a9ba3" 
                       strokeWidth={3}
                       name="Saldo Acumulado"
-                      dot={{ fill: '#8B5CF6', r: 4 }}
+                      dot={{ fill: '#1a9ba3', r: 4 }}
                       activeDot={{ r: 6 }}
                     />
                       </ComposedChart>
@@ -505,19 +505,19 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                     {dadosFluxoCaixa.fluxoMensal.map((item, index) => (
                       <tr key={index}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">{item.mes}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-accent">
                           R$ {item.receitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#d97757]">
                           R$ {item.despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                          item.saldo >= 0 ? 'text-green-600' : 'text-red-600'
+                          item.saldo >= 0 ? 'text-accent' : 'text-[#d97757]'
                         }`}>
                           R$ {item.saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
                         <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                          item.saldoAcumulado >= 0 ? 'text-green-600' : 'text-red-600'
+                          item.saldoAcumulado >= 0 ? 'text-accent' : 'text-[#d97757]'
                         }`}>
                           R$ {item.saldoAcumulado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </td>
@@ -578,11 +578,11 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {dadosFluxoCaixa.projecao.tendencia === 'crescimento' ? (
-              <ArrowTrendingUpIcon className="h-5 w-5 text-green-600" />
+              <ArrowTrendingUpIcon className="h-5 w-5 text-accent" />
             ) : dadosFluxoCaixa.projecao.tendencia === 'declinio' ? (
-              <ArrowTrendingDownIcon className="h-5 w-5 text-red-600" />
+              <ArrowTrendingDownIcon className="h-5 w-5 text-[#d97757]" />
             ) : (
-              <ChartBarIcon className="h-5 w-5 text-gray-600" />
+              <ChartBarIcon className="h-5 w-5 text-text-secondary" />
             )}
             Projeções para os Próximos 3 Meses
           </CardTitle>
@@ -594,25 +594,25 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {dadosFluxoCaixa.projecao.proximos3Meses.map((projecao, index) => (
-              <div key={index} className="p-4 border rounded-lg bg-gray-50">
+              <div key={index} className="p-4 border rounded-lg bg-surface border-border">
                 <h4 className="font-medium text-text-primary mb-2">{projecao.mes}</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-text-secondary">Receita:</span>
-                    <span className="text-green-600 font-medium">
+                    <span className="text-accent font-medium">
                       R$ {projecao.receitaProjetada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-secondary">Despesa:</span>
-                    <span className="text-red-600 font-medium">
+                    <span className="text-[#d97757] font-medium">
                       R$ {projecao.despesaProjetada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="flex justify-between border-t pt-1">
                     <span className="text-text-secondary font-medium">Saldo:</span>
                     <span className={`font-bold ${
-                      projecao.saldoProjetado >= 0 ? 'text-green-600' : 'text-red-600'
+                      projecao.saldoProjetado >= 0 ? 'text-accent' : 'text-[#d97757]'
                     }`}>
                       R$ {projecao.saldoProjetado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>

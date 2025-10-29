@@ -238,10 +238,10 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
   const chartConfigClientes = {
     totalClientes: {
       label: "Total de Clientes",
-      color: "#3B82F6"
+      color: "#313c43"
     },
     ...canaisUnicosArray.reduce((acc, canal, index) => {
-      const colors = ['#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4'];
+      const colors = ['#21b6bf', '#5d6b74', '#1a9ba3', '#7d8d96', '#2c383f'];
       acc[canal.replace(/\s+/g, '')] = {
         label: canal,
         color: colors[index % colors.length]
@@ -253,19 +253,19 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
   const chartConfigConversao = {
     totalLeads: {
       label: "Total de Leads",
-      color: "#3B82F6"
+      color: "#313c43"
     },
     eventosGerados: {
       label: "Eventos Gerados",
-      color: "#10B981"
+      color: "#21b6bf"
     },
     taxaConversao: {
       label: "Taxa de Conversão (%)",
-      color: "#8B5CF6"
+      color: "#1a9ba3"
     },
     receitaGerada: {
       label: "Receita Gerada",
-      color: "#F59E0B"
+      color: "#5d6b74"
     }
   };
 
@@ -322,10 +322,10 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
 
   const getSeveridadeColor = (severidade: string) => {
     switch (severidade) {
-      case 'alta': return 'text-red-600 bg-red-50';
-      case 'media': return 'text-yellow-600 bg-yellow-50';
-      case 'baixa': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'alta': return 'text-[#d97757] bg-[#d97757]/10';
+      case 'media': return 'text-[#5d6b74] bg-[#5d6b74]/10';
+      case 'baixa': return 'text-accent bg-accent/10';
+      default: return 'text-text-secondary bg-surface';
     }
   };
 
@@ -503,11 +503,11 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                 >
                   <defs>
                     <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#313c43" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#313c43" stopOpacity={0.1}/>
                     </linearGradient>
                     {canaisUnicosArray.map((canal, index) => {
-                      const colors = ['#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4'];
+                      const colors = ['#21b6bf', '#5d6b74', '#1a9ba3', '#7d8d96', '#2c383f'];
                       return (
                         <linearGradient key={canal} id={`color${canal.replace(/\s+/g, '')}`} x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor={colors[index % colors.length]} stopOpacity={0.8}/>
@@ -516,24 +516,24 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                       );
                     })}
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
                   <XAxis 
                     dataKey="mes" 
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis 
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     width={50}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       return (
-                        <div className="rounded-lg border bg-white p-3 shadow-lg">
-                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                        <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-text-primary">
                             {payload[0]?.payload?.mes}
                           </div>
                           <div className="space-y-1">
@@ -544,9 +544,9 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                                     className="h-2.5 w-2.5 rounded-full"
                                     style={{ backgroundColor: entry.color }}
                                   />
-                                  <span className="text-gray-600">{entry.name}:</span>
+                                  <span className="text-text-secondary">{entry.name}:</span>
                                 </div>
-                                <span className="font-semibold text-gray-900">
+                                <span className="font-semibold text-text-primary">
                                   {typeof entry.value === 'number' ? entry.value : entry.value}
                                 </span>
                               </div>
@@ -560,13 +560,13 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                   <Area 
                     type="monotone" 
                     dataKey="totalClientes" 
-                    stroke="#3B82F6" 
+                    stroke="#313c43" 
                     fillOpacity={1} 
                     fill="url(#colorTotal)"
                     name="Total de Clientes"
                   />
                   {canaisUnicosArray.map((canal, index) => {
-                    const colors = ['#10B981', '#F59E0B', '#8B5CF6', '#EF4444', '#06B6D4'];
+                    const colors = ['#21b6bf', '#5d6b74', '#1a9ba3', '#7d8d96', '#2c383f'];
                     const dataKey = canal.replace(/\s+/g, '');
                     return (
                       <Area 
@@ -602,23 +602,23 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                     data={conversaoPorCanalChartData}
                     margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
                   <XAxis 
                     dataKey="canal" 
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis 
                     yAxisId="left"
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     width={50}
                   />
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     tickFormatter={(value) => `${value}%`}
                     width={50}
                   />
@@ -627,26 +627,26 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                       if (!active || !payload?.length) return null;
                       const data = payload[0]?.payload;
                       return (
-                        <div className="rounded-lg border bg-white p-3 shadow-lg">
-                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                        <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-text-primary">
                             {data?.canalNome}
                           </div>
                           <div className="space-y-1 text-xs">
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Total Leads:</span>
-                              <span className="font-semibold">{data?.totalLeads}</span>
+                              <span className="text-text-secondary">Total Leads:</span>
+                              <span className="font-semibold text-text-primary">{data?.totalLeads}</span>
                             </div>
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Eventos Gerados:</span>
-                              <span className="font-semibold">{data?.eventosGerados}</span>
+                              <span className="text-text-secondary">Eventos Gerados:</span>
+                              <span className="font-semibold text-text-primary">{data?.eventosGerados}</span>
                             </div>
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Taxa de Conversão:</span>
-                              <span className="font-semibold">{data?.taxaConversao.toFixed(1)}%</span>
+                              <span className="text-text-secondary">Taxa de Conversão:</span>
+                              <span className="font-semibold text-text-primary">{data?.taxaConversao.toFixed(1)}%</span>
                             </div>
                             <div className="flex justify-between gap-4">
-                              <span className="text-gray-600">Receita Gerada:</span>
-                              <span className="font-semibold">
+                              <span className="text-text-secondary">Receita Gerada:</span>
+                              <span className="font-semibold text-text-primary">
                                 R$ {typeof data?.receitaGerada === 'number' 
                                   ? data.receitaGerada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })
                                   : data?.receitaGerada}
@@ -661,14 +661,14 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                   <Bar 
                     yAxisId="left"
                     dataKey="totalLeads" 
-                    fill="#3B82F6" 
+                    fill="#313c43" 
                     name="Total de Leads"
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar 
                     yAxisId="left"
                     dataKey="eventosGerados" 
-                    fill="#10B981" 
+                    fill="#21b6bf" 
                     name="Eventos Gerados"
                     radius={[4, 4, 0, 0]}
                   />
@@ -676,10 +676,10 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                     yAxisId="right"
                     type="monotone" 
                     dataKey="taxaConversao" 
-                    stroke="#8B5CF6" 
+                    stroke="#1a9ba3" 
                     strokeWidth={3}
                     name="Taxa de Conversão (%)"
-                    dot={{ fill: '#8B5CF6', r: 4 }}
+                    dot={{ fill: '#1a9ba3', r: 4 }}
                     activeDot={{ r: 6 }}
                   />
                 </ComposedChart>
@@ -703,23 +703,23 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 border rounded-lg bg-green-50">
-              <h4 className="font-medium text-green-800 mb-2">Canal Mais Efetivo</h4>
-              <p className="text-green-600 font-bold">{dadosCanaisEntrada.tendencias.canalMaisEfetivo}</p>
+            <div className="p-4 border rounded-lg bg-accent/10 border-border">
+              <h4 className="font-medium text-accent-dark mb-2">Canal Mais Efetivo</h4>
+              <p className="text-accent font-bold">{dadosCanaisEntrada.tendencias.canalMaisEfetivo}</p>
             </div>
-            <div className="p-4 border rounded-lg bg-red-50">
-              <h4 className="font-medium text-red-800 mb-2">Canal Menos Efetivo</h4>
-              <p className="text-red-600 font-bold">{dadosCanaisEntrada.tendencias.canalMenosEfetivo}</p>
+            <div className="p-4 border rounded-lg bg-[#d97757]/10 border-border">
+              <h4 className="font-medium text-[#d97757] mb-2">Canal Menos Efetivo</h4>
+              <p className="text-[#d97757] font-bold">{dadosCanaisEntrada.tendencias.canalMenosEfetivo}</p>
             </div>
-            <div className="p-4 border rounded-lg bg-blue-50">
-              <h4 className="font-medium text-blue-800 mb-2">Crescimento de Leads</h4>
-              <p className={`font-bold ${dadosCanaisEntrada.tendencias.crescimentoLeads >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="p-4 border rounded-lg bg-secondary/10 border-border">
+              <h4 className="font-medium text-secondary mb-2">Crescimento de Leads</h4>
+              <p className={`font-bold ${dadosCanaisEntrada.tendencias.crescimentoLeads >= 0 ? 'text-accent' : 'text-[#d97757]'}`}>
                 {dadosCanaisEntrada.tendencias.crescimentoLeads.toFixed(1)}%
               </p>
             </div>
-            <div className="p-4 border rounded-lg bg-purple-50">
-              <h4 className="font-medium text-purple-800 mb-2">Canais em Alta</h4>
-              <p className="text-purple-600 font-bold">{dadosCanaisEntrada.tendencias.canaisEmAlta.length}</p>
+            <div className="p-4 border rounded-lg bg-accent-dark/10 border-border">
+              <h4 className="font-medium text-accent-dark mb-2">Canais em Alta</h4>
+              <p className="text-accent-dark font-bold">{dadosCanaisEntrada.tendencias.canaisEmAlta.length}</p>
             </div>
           </div>
         </CardContent>

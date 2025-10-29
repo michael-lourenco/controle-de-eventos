@@ -240,30 +240,30 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
   const chartConfigServicos = {
     quantidadeServicos: {
       label: "Quantidade de Serviços",
-      color: "#3B82F6"
+      color: "#313c43"
     },
     tiposUnicos: {
       label: "Tipos Únicos",
-      color: "#10B981"
+      color: "#21b6bf"
     }
   };
 
   const chartConfigTipoEvento = {
     quantidadeServicos: {
       label: "Total de Serviços",
-      color: "#3B82F6"
+      color: "#313c43"
     },
     topServico1: {
       label: "Serviço Mais Utilizado",
-      color: "#10B981"
+      color: "#21b6bf"
     },
     topServico2: {
       label: "2º Mais Utilizado",
-      color: "#F59E0B"
+      color: "#5d6b74"
     },
     topServico3: {
       label: "3º Mais Utilizado",
-      color: "#8B5CF6"
+      color: "#1a9ba3"
     }
   };
 
@@ -329,10 +329,10 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
 
   const getSeveridadeColor = (severidade: string) => {
     switch (severidade) {
-      case 'alta': return 'text-red-600 bg-red-50';
-      case 'media': return 'text-yellow-600 bg-yellow-50';
-      case 'baixa': return 'text-blue-600 bg-blue-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case 'alta': return 'text-[#d97757] bg-[#d97757]/10';
+      case 'media': return 'text-[#5d6b74] bg-[#5d6b74]/10';
+      case 'baixa': return 'text-accent bg-accent/10';
+      default: return 'text-text-secondary bg-surface';
     }
   };
 
@@ -502,31 +502,31 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                     data={servicosPorMesChartData}
                     margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
                   <XAxis 
                     dataKey="mes" 
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis 
                     yAxisId="left"
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     width={50}
                   />
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     width={50}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       return (
-                        <div className="rounded-lg border bg-white p-3 shadow-lg">
-                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                        <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-text-primary">
                             {payload[0]?.payload?.mes}
                           </div>
                           <div className="space-y-1">
@@ -537,9 +537,9 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                                     className="h-2.5 w-2.5 rounded-full"
                                     style={{ backgroundColor: entry.color }}
                                   />
-                                  <span className="text-gray-600">{entry.name}:</span>
+                                  <span className="text-text-secondary">{entry.name}:</span>
                                 </div>
-                                <span className="font-semibold text-gray-900">
+                                <span className="font-semibold text-text-primary">
                                   {typeof entry.value === 'number' ? entry.value : entry.value}
                                 </span>
                               </div>
@@ -554,18 +554,19 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                     yAxisId="left"
                     type="monotone" 
                     dataKey="quantidadeServicos" 
-                    fill="#3B82F6" 
+                    fill="#313c43" 
                     fillOpacity={0.6}
+                    stroke="#313c43"
                     name="Quantidade de Serviços"
                   />
                   <Line 
                     yAxisId="right"
                     type="monotone" 
                     dataKey="tiposUnicos" 
-                    stroke="#10B981" 
+                    stroke="#21b6bf" 
                     strokeWidth={3}
                     name="Tipos Únicos"
-                    dot={{ fill: '#10B981', r: 4 }}
+                    dot={{ fill: '#21b6bf', r: 4 }}
                     activeDot={{ r: 6 }}
                   />
                 </ComposedChart>
@@ -590,24 +591,24 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                     data={servicosPorTipoEventoChartData}
                     margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
                   <XAxis 
                     dataKey="tipoEvento" 
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
                     height={80}
                   />
                   <YAxis 
-                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
                     width={50}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       return (
-                        <div className="rounded-lg border bg-white p-3 shadow-lg">
-                          <div className="mb-2 text-sm font-semibold text-gray-900">
+                        <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
+                          <div className="mb-2 text-sm font-semibold text-text-primary">
                             {payload[0]?.payload?.tipoEvento}
                           </div>
                           <div className="space-y-1">
@@ -618,9 +619,9 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                                     className="h-2.5 w-2.5 rounded-full"
                                     style={{ backgroundColor: entry.color }}
                                   />
-                                  <span className="text-gray-600">{entry.name}:</span>
+                                  <span className="text-text-secondary">{entry.name}:</span>
                                 </div>
-                                <span className="font-semibold text-gray-900">
+                                <span className="font-semibold text-text-primary">
                                   {typeof entry.value === 'number' ? entry.value : entry.value}
                                 </span>
                               </div>
@@ -633,25 +634,25 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                   <Legend wrapperStyle={{ paddingTop: '20px' }} />
                   <Bar 
                     dataKey="quantidadeServicos" 
-                    fill="#3B82F6" 
+                    fill="#313c43" 
                     name="Total de Serviços"
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar 
                     dataKey="topServico1" 
-                    fill="#10B981" 
+                    fill="#21b6bf" 
                     name="Serviço Mais Utilizado"
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar 
                     dataKey="topServico2" 
-                    fill="#F59E0B" 
+                    fill="#5d6b74" 
                     name="2º Mais Utilizado"
                     radius={[4, 4, 0, 0]}
                   />
                   <Bar 
                     dataKey="topServico3" 
-                    fill="#8B5CF6" 
+                    fill="#1a9ba3" 
                     name="3º Mais Utilizado"
                     radius={[4, 4, 0, 0]}
                   />
@@ -676,23 +677,23 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 border rounded-lg bg-green-50">
-              <h4 className="font-medium text-green-800 mb-2">Serviço Mais Utilizado</h4>
-              <p className="text-green-600 font-bold">{dadosServicos.tendencias.servicoMaisUtilizado}</p>
+            <div className="p-4 border rounded-lg bg-accent/10 border-border">
+              <h4 className="font-medium text-accent-dark mb-2">Serviço Mais Utilizado</h4>
+              <p className="text-accent font-bold">{dadosServicos.tendencias.servicoMaisUtilizado}</p>
             </div>
-            <div className="p-4 border rounded-lg bg-red-50">
-              <h4 className="font-medium text-red-800 mb-2">Serviço Menos Utilizado</h4>
-              <p className="text-red-600 font-bold">{dadosServicos.tendencias.servicoMenosUtilizado}</p>
+            <div className="p-4 border rounded-lg bg-[#d97757]/10 border-border">
+              <h4 className="font-medium text-[#d97757] mb-2">Serviço Menos Utilizado</h4>
+              <p className="text-[#d97757] font-bold">{dadosServicos.tendencias.servicoMenosUtilizado}</p>
             </div>
-            <div className="p-4 border rounded-lg bg-blue-50">
-              <h4 className="font-medium text-blue-800 mb-2">Crescimento</h4>
-              <p className={`font-bold ${dadosServicos.tendencias.crescimentoUtilizacao >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="p-4 border rounded-lg bg-secondary/10 border-border">
+              <h4 className="font-medium text-secondary mb-2">Crescimento</h4>
+              <p className={`font-bold ${dadosServicos.tendencias.crescimentoUtilizacao >= 0 ? 'text-accent' : 'text-[#d97757]'}`}>
                 {dadosServicos.tendencias.crescimentoUtilizacao.toFixed(1)}%
               </p>
             </div>
-            <div className="p-4 border rounded-lg bg-purple-50">
-              <h4 className="font-medium text-purple-800 mb-2">Tipos em Alta</h4>
-              <p className="text-purple-600 font-bold">{dadosServicos.tendencias.tiposEmAlta.length}</p>
+            <div className="p-4 border rounded-lg bg-accent-dark/10 border-border">
+              <h4 className="font-medium text-accent-dark mb-2">Tipos em Alta</h4>
+              <p className="text-accent-dark font-bold">{dadosServicos.tendencias.tiposEmAlta.length}</p>
             </div>
           </div>
         </CardContent>
