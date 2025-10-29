@@ -493,12 +493,13 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
               Evolução do número de clientes ao longo do tempo por canal de entrada
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfigClientes} className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={clientesPorMesChartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-[500px]">
+              <ChartContainer config={chartConfigClientes} className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={clientesPorMesChartData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
                   <defs>
                     <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
@@ -524,8 +525,8 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                     height={80}
                   />
                   <YAxis 
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                    label={{ value: 'Clientes', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    width={50}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
@@ -580,8 +581,9 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                     );
                   })}
                 </AreaChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -592,12 +594,13 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
               Efetividade de cada canal: leads, conversão e receita gerada
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfigConversao} className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={conversaoPorCanalChartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-[500px]">
+              <ChartContainer config={chartConfigConversao} className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={conversaoPorCanalChartData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis 
@@ -609,15 +612,15 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                   />
                   <YAxis 
                     yAxisId="left"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                    label={{ value: 'Quantidade', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    width={50}
                   />
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
                     tickFormatter={(value) => `${value}%`}
-                    label={{ value: 'Taxa (%)', angle: 90, position: 'insideRight', style: { fill: '#6b7280' } }}
+                    width={50}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
@@ -680,8 +683,9 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
                     activeDot={{ r: 6 }}
                   />
                 </ComposedChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -392,11 +392,13 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
             id: 'grafico',
             label: '📊 Gráfico',
             content: (
-              <ChartContainer config={chartConfig} className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={fluxoMensalChartData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              <div className="overflow-x-auto">
+                <div className="min-w-[600px]">
+                  <ChartContainer config={chartConfig} className="h-[400px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart
+                        data={fluxoMensalChartData}
+                        margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis 
@@ -408,14 +410,16 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                     />
                     <YAxis 
                       yAxisId="left"
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tick={{ fill: '#6b7280', fontSize: 10 }}
                       tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                      width={60}
                     />
                     <YAxis 
                       yAxisId="right" 
                       orientation="right"
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tick={{ fill: '#6b7280', fontSize: 10 }}
                       tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                      width={60}
                     />
                     <Tooltip 
                       content={({ active, payload }) => {
@@ -475,9 +479,11 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                       dot={{ fill: '#8B5CF6', r: 4 }}
                       activeDot={{ r: 6 }}
                     />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </div>
+              </div>
             )
           },
           {

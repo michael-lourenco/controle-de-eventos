@@ -494,12 +494,13 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
               Evolução da utilização de serviços e tipos únicos ao longo do tempo
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfigServicos} className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={servicosPorMesChartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-[500px]">
+              <ChartContainer config={chartConfigServicos} className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={servicosPorMesChartData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis 
@@ -511,14 +512,14 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                   />
                   <YAxis 
                     yAxisId="left"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                    label={{ value: 'Quantidade', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    width={50}
                   />
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                    label={{ value: 'Tipos Únicos', angle: 90, position: 'insideRight', style: { fill: '#6b7280' } }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    width={50}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
@@ -568,8 +569,9 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                     activeDot={{ r: 6 }}
                   />
                 </ComposedChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -580,12 +582,13 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
               Distribuição de serviços e tipos mais utilizados por tipo de evento
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfigTipoEvento} className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={servicosPorTipoEventoChartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-[500px]">
+              <ChartContainer config={chartConfigTipoEvento} className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={servicosPorTipoEventoChartData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis 
@@ -596,8 +599,8 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                     height={80}
                   />
                   <YAxis 
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                    label={{ value: 'Quantidade', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    width={50}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
@@ -653,8 +656,9 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                     radius={[4, 4, 0, 0]}
                   />
                 </ComposedChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
       </div>

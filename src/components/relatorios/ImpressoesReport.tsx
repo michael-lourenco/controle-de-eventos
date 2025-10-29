@@ -486,12 +486,13 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
               Evolução do uso de impressões, eventos e custos ao longo do tempo
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfigImpressoes} className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={impressoesPorMesChartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-[500px]">
+              <ChartContainer config={chartConfigImpressoes} className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={impressoesPorMesChartData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
                   <defs>
                     <linearGradient id="colorImpressoes" x1="0" y1="0" x2="0" y2="1">
@@ -509,15 +510,15 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                   />
                   <YAxis 
                     yAxisId="left"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                    label={{ value: 'Quantidade', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    width={50}
                   />
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
                     tickFormatter={(value) => `R$ ${(value / 1000).toFixed(1)}k`}
-                    label={{ value: 'Custo (R$)', angle: 90, position: 'insideRight', style: { fill: '#6b7280' } }}
+                    width={60}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
@@ -578,8 +579,9 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                     activeDot={{ r: 6 }}
                   />
                 </ComposedChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -590,12 +592,13 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
               Análise completa: percentual de custo, valores e ROI por tipo de evento
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfigCusto} className="h-[350px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={custoImpressoesPorTipoChartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          <CardContent className="overflow-x-auto">
+            <div className="min-w-[500px]">
+              <ChartContainer config={chartConfigCusto} className="h-[350px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={custoImpressoesPorTipoChartData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis 
@@ -607,16 +610,16 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                   />
                   <YAxis 
                     yAxisId="left"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
                     tickFormatter={(value) => `R$ ${(value / 1000).toFixed(1)}k`}
-                    label={{ value: 'Valores (R$)', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+                    width={60}
                   />
                   <YAxis 
                     yAxisId="right" 
                     orientation="right"
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
                     tickFormatter={(value) => `${value}%`}
-                    label={{ value: 'Percentuais (%)', angle: 90, position: 'insideRight', style: { fill: '#6b7280' } }}
+                    width={50}
                   />
                   <Tooltip 
                     content={({ active, payload }) => {
@@ -692,8 +695,9 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                     activeDot={{ r: 6 }}
                   />
                 </ComposedChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
