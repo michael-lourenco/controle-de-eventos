@@ -189,9 +189,10 @@ export default function PerformanceEventosReport({ eventos }: PerformanceEventos
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <BarChart 
+          <PieChart 
             data={eventosPorStatusData}
             config={{ 
+              showLegend: true, 
               showValues: true, 
               showPercentages: true 
             }}
@@ -204,6 +205,20 @@ export default function PerformanceEventosReport({ eventos }: PerformanceEventos
         title="Eventos por Tipo"
         subtitle="Visualize a distribuição dos eventos por tipo em diferentes formatos"
         tabs={[
+          {
+            id: 'pizza',
+            label: '🥧 Pizza',
+            content: (
+              <PieChart 
+                data={eventosPorTipoData}
+                config={{ 
+                  showLegend: true, 
+                  showValues: true, 
+                  showPercentages: true 
+                }}
+              />
+            )
+          },
           {
             id: 'lista',
             label: '📋 Lista',
@@ -222,20 +237,6 @@ export default function PerformanceEventosReport({ eventos }: PerformanceEventos
             )
           },
           {
-            id: 'pizza',
-            label: '🥧 Pizza',
-            content: (
-              <PieChart 
-                data={eventosPorTipoData}
-                config={{ 
-                  showLegend: true, 
-                  showValues: true, 
-                  showPercentages: true 
-                }}
-              />
-            )
-          },
-          {
             id: 'barras',
             label: '📊 Barras',
             content: (
@@ -249,7 +250,7 @@ export default function PerformanceEventosReport({ eventos }: PerformanceEventos
             )
           }
         ]}
-        defaultTab="lista"
+        defaultTab="pizza"
       />
     </div>
   );
