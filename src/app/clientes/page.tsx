@@ -181,6 +181,42 @@ export default function ClientesPage() {
     return canal ? canal.nome : 'Canal não encontrado';
   };
 
+  const handleCreateCanalEntrada = async (nome: string) => {
+    if (!userId) return;
+    
+    try {
+      const novoCanal = await dataService.createCanalEntrada({
+        nome,
+        descricao: '',
+        ativo: true,
+        dataCadastro: new Date()
+      }, userId);
+      
+      // Recarregar a lista de canais de entrada
+      const canaisAtualizados = await dataService.getCanaisEntrada(userId);
+      setCanaisEntrada(canaisAtualizados);
+      
+      // Retornar o ID do novo canal para atualizar automaticamente o campo
+      return novoCanal.id;
+    } catch (error) {
+      console.error('Erro ao criar canal de entrada:', error);
+    }
+  };
+
+  const handleCreateCanalEntradaParaNovoCliente = async (nome: string) => {
+    const novoId = await handleCreateCanalEntrada(nome);
+    if (novoId) {
+      setNovoCliente(prev => ({ ...prev, canalEntradaId: novoId }));
+    }
+  };
+
+  const handleCreateCanalEntradaParaEdicao = async (nome: string) => {
+    const novoId = await handleCreateCanalEntrada(nome);
+    if (novoId) {
+      setEditandoCliente(prev => ({ ...prev, canalEntradaId: novoId }));
+    }
+  };
+
   const formatarData = (data: Date) => {
     return new Date(data).toLocaleDateString('pt-BR');
   };
@@ -321,13 +357,15 @@ export default function ClientesPage() {
                 />
                 <SelectWithSearch
                   label="Canal de Entrada"
-                  placeholder="Selecione um canal de entrada"
+                  placeholder="Selecione ou digite um canal de entrada"
                   options={canaisEntrada.map(canal => ({
                     value: canal.id,
                     label: canal.nome
                   }))}
                   value={novoCliente.canalEntradaId}
                   onChange={(value) => setNovoCliente(prev => ({ ...prev, canalEntradaId: value }))}
+                  onCreateNew={(nome) => handleCreateCanalEntradaParaNovoCliente(nome)}
+                  allowCreate={true}
                 />
               </div>
               <div className="flex justify-end gap-2">
@@ -406,13 +444,15 @@ export default function ClientesPage() {
                       />
                       <SelectWithSearch
                         label="Canal de Entrada"
-                        placeholder="Selecione um canal de entrada"
+                        placeholder="Selecione ou digite um canal de entrada"
                         options={canaisEntrada.map(canal => ({
                           value: canal.id,
                           label: canal.nome
                         }))}
                         value={editandoCliente.canalEntradaId}
                         onChange={(value) => setEditandoCliente(prev => ({ ...prev, canalEntradaId: value }))}
+                        onCreateNew={(nome) => handleCreateCanalEntradaParaEdicao(nome)}
+                        allowCreate={true}
                       />
                     </div>
                     <div className="flex justify-end gap-2">
