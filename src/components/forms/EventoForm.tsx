@@ -232,6 +232,53 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     return diasSemana[dataObj.getDay()];
   };
 
+  const calcularTempoEvento = (inicio: string, fim: string): string => {
+    if (!inicio || !fim) return '';
+    
+    // Converter horários para minutos desde meia-noite
+    const [horaInicio, minutoInicio] = inicio.split(':').map(Number);
+    const [horaFim, minutoFim] = fim.split(':').map(Number);
+    
+    const minutosInicio = horaInicio * 60 + minutoInicio;
+    let minutosFim = horaFim * 60 + minutoFim;
+    
+    // Se o horário de fim for menor que o de início, assumir que é no dia seguinte
+    if (minutosFim < minutosInicio) {
+      minutosFim += 24 * 60; // Adicionar 24 horas em minutos
+    }
+    
+    const diferencaMinutos = minutosFim - minutosInicio;
+    
+    const horas = Math.floor(diferencaMinutos / 60);
+    const minutos = diferencaMinutos % 60;
+    
+    if (horas === 0 && minutos === 0) return '';
+    
+    if (minutos === 0) {
+      return horas === 1 ? '1 HORA' : `${horas} HORAS`;
+    }
+    
+    if (horas === 0) {
+      return `${minutos} MINUTOS`;
+    }
+    
+    const horasTexto = horas === 1 ? '1 HORA' : `${horas} HORAS`;
+    return `${horasTexto} E ${minutos} MINUTOS`;
+  };
+
+  // Calcular automaticamente o tempo de evento quando os horários mudarem
+  useEffect(() => {
+    if (formData.horarioInicio && formData.horarioDesmontagem) {
+      const tempoCalculado = calcularTempoEvento(formData.horarioInicio, formData.horarioDesmontagem);
+      if (tempoCalculado !== formData.tempoEvento) {
+        setFormData(prev => ({
+          ...prev,
+          tempoEvento: tempoCalculado
+        }));
+      }
+    }
+  }, [formData.horarioInicio, formData.horarioDesmontagem, formData.tempoEvento]);
+
 
   const handleCreateCanalEntrada = async (nome: string) => {
     if (!userId) return;
@@ -631,10 +678,11 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           </div>
 
           <Input
-            label="Tempo de Evento"
+            label="Tempo de Evento (calculado automaticamente)"
             value={formData.tempoEvento}
             onChange={(e) => handleInputChange('tempoEvento', e.target.value)}
-            placeholder="Ex: 4 HORAS"
+            placeholder="Preencha os horários de início e desmontagem"
+            disabled={true}
           />
         </CardContent>
       </Card>
