@@ -130,8 +130,8 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         ativo: true
       }, userId);
       
-      // Atualizar a lista de tipos de custo
-      setTiposCusto(prev => [...prev, novoTipoCusto]);
+      // Atualizar a lista de tipos de custo e ordenar
+      setTiposCusto(prev => [...prev, novoTipoCusto].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
       
       setFormData(prev => ({
         ...prev,
@@ -184,7 +184,8 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
       value: tipo.id,
       label: tipo.nome,
       description: tipo.descricao || ''
-    }));
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
 
   if (loading) {
     return (

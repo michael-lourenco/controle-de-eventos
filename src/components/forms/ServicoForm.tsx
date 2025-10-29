@@ -61,7 +61,7 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
           nome: tipo.nome,
           descricao: tipo.descricao,
           ativo: tipo.ativo
-        }));
+        })).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
         
         setTiposServico(opcoes);
       } catch (error) {
@@ -163,13 +163,13 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
 
       console.log('ServicoForm: Tipo criado com sucesso:', novoTipo);
 
-      // Adicionar à lista de opções
+      // Adicionar à lista de opções e ordenar
       setTiposServico(prev => [...prev, {
         id: novoTipo.id,
         nome: novoTipo.nome,
         descricao: novoTipo.descricao,
         ativo: novoTipo.ativo
-      }]);
+      }].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
 
       // Definir o novo tipo como selecionado
       setFormData(prev => ({

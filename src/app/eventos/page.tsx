@@ -195,10 +195,10 @@ export default function EventosPage() {
                     options={[
                       { value: 'todos', label: 'Todos' },
                       { value: StatusEvento.AGENDADO, label: 'Agendado' },
-                      { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
-                      { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' },
+                      { value: StatusEvento.CANCELADO, label: 'Cancelado' },
                       { value: StatusEvento.CONCLUIDO, label: 'Concluído' },
-                      { value: StatusEvento.CANCELADO, label: 'Cancelado' }
+                      { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
+                      { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' }
                     ]}
                   />
                 </div>
@@ -209,10 +209,10 @@ export default function EventosPage() {
                     onValueChange={(value) => setFilterTipo(value)}
                     options={[
                       { value: 'todos', label: 'Todos' },
-                      { value: TipoEvento.CASAMENTO, label: 'Casamento' },
-                      { value: TipoEvento.ANIVERSARIO_INFANTIL, label: 'Aniversário Infantil' },
-                      { value: TipoEvento.ANIVERSARIO_ADULTO, label: 'Aniversário Adulto' },
                       { value: TipoEvento.QUINZE_ANOS, label: '15 Anos' },
+                      { value: TipoEvento.ANIVERSARIO_ADULTO, label: 'Aniversário Adulto' },
+                      { value: TipoEvento.ANIVERSARIO_INFANTIL, label: 'Aniversário Infantil' },
+                      { value: TipoEvento.CASAMENTO, label: 'Casamento' },
                       { value: TipoEvento.OUTROS, label: 'Outros' }
                     ]}
                   />

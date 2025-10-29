@@ -361,7 +361,7 @@ export default function ClientesPage() {
                   options={canaisEntrada.map(canal => ({
                     value: canal.id,
                     label: canal.nome
-                  }))}
+                  })).sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'))}
                   value={novoCliente.canalEntradaId}
                   onChange={(value) => setNovoCliente(prev => ({ ...prev, canalEntradaId: value }))}
                   onCreateNew={(nome) => handleCreateCanalEntradaParaNovoCliente(nome)}
@@ -448,7 +448,7 @@ export default function ClientesPage() {
                         options={canaisEntrada.map(canal => ({
                           value: canal.id,
                           label: canal.nome
-                        }))}
+                        })).sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'))}
                         value={editandoCliente.canalEntradaId}
                         onChange={(value) => setEditandoCliente(prev => ({ ...prev, canalEntradaId: value }))}
                         onCreateNew={(nome) => handleCreateCanalEntradaParaEdicao(nome)}

@@ -61,19 +61,19 @@ interface FormData {
 }
 
 const tipoEventoOptions = [
-  { value: TipoEvento.CASAMENTO, label: 'Casamento' },
-  { value: TipoEvento.ANIVERSARIO_INFANTIL, label: 'Aniversário Infantil' },
-  { value: TipoEvento.ANIVERSARIO_ADULTO, label: 'Aniversário Adulto' },
   { value: TipoEvento.QUINZE_ANOS, label: '15 Anos' },
+  { value: TipoEvento.ANIVERSARIO_ADULTO, label: 'Aniversário Adulto' },
+  { value: TipoEvento.ANIVERSARIO_INFANTIL, label: 'Aniversário Infantil' },
+  { value: TipoEvento.CASAMENTO, label: 'Casamento' },
   { value: TipoEvento.OUTROS, label: 'Outros' }
 ];
 
 const statusOptions = [
   { value: StatusEvento.AGENDADO, label: 'Agendado' },
-  { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
-  { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' },
+  { value: StatusEvento.CANCELADO, label: 'Cancelado' },
   { value: StatusEvento.CONCLUIDO, label: 'Concluído' },
-  { value: StatusEvento.CANCELADO, label: 'Cancelado' }
+  { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
+  { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' }
 ];
 
 const diasSemana = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
@@ -529,7 +529,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
                 options={canaisEntrada?.map(canal => ({
                   value: canal.id,
                   label: canal.nome
-                })) || []}
+                })).sort((a, b) => a.label.localeCompare(b.label, 'pt-BR')) || []}
                 value={formData.novoCliente.canalEntradaId || ''}
                 onChange={(value) => handleNovoClienteChange('canalEntradaId', value)}
                 onCreateNew={(nome) => handleCreateCanalEntrada(nome)}

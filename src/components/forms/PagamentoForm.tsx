@@ -30,9 +30,9 @@ interface FormData {
 }
 
 const formaPagamentoOptions = [
-  { value: 'Dinheiro', label: 'Dinheiro' },
   { value: 'Cartão de crédito', label: 'Cartão de crédito' },
   { value: 'Depósito bancário', label: 'Depósito bancário' },
+  { value: 'Dinheiro', label: 'Dinheiro' },
   { value: 'PIX', label: 'PIX' },
   { value: 'Transferência', label: 'Transferência' }
 ];
