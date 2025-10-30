@@ -108,7 +108,12 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
     try {
       const querySnapshot = await getDocs(this.getSubcollectionRef(parentId));
       return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
-    } catch (error) {
+    } catch (error: any) {
+      // No Firestore, se a subcollection não existe ainda, getDocs pode retornar uma lista vazia ou lançar erro
+      // Se for um erro de "not found" ou subcollection não existe, retornar lista vazia
+      if (error?.code === 'not-found' || error?.message?.includes('not found')) {
+        return [];
+      }
       console.error(`Error finding all documents in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }

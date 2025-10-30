@@ -618,7 +618,13 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar canais de entrada');
     }
-    return this.canalEntradaRepo.findAll(userId);
+    try {
+      return await this.canalEntradaRepo.findAll(userId);
+    } catch (error) {
+      console.error('Erro ao buscar canais de entrada:', error);
+      // Retornar lista vazia se a subcollection não existe ainda
+      return [];
+    }
   }
 
   async getCanaisEntradaAtivos(userId: string): Promise<CanalEntrada[]> {

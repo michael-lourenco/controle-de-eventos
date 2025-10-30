@@ -1,7 +1,5 @@
 import { SubcollectionRepository } from './subcollection-repository';
 import { CanalEntrada } from '@/types';
-import { orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '../firestore/collections';
 
 export class CanalEntradaRepository extends SubcollectionRepository<CanalEntrada> {
@@ -10,52 +8,12 @@ export class CanalEntradaRepository extends SubcollectionRepository<CanalEntrada
   }
 
   // Método para garantir que a subcollection existe
+  // No Firestore, a subcollection é criada automaticamente ao adicionar o primeiro documento
+  // Este método apenas verifica acessibilidade sem criar documentos automaticamente
   private async ensureSubcollectionExists(userId: string): Promise<void> {
-    try {
-      // Tentar buscar todos os documentos para verificar se a subcollection existe
-      const canaisCollection = collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.CANAIS_ENTRADA);
-      const q = query(canaisCollection);
-      const snapshot = await getDocs(q);
-      
-      // Se não há documentos, criar um canal padrão
-      if (snapshot.docs.length === 0) {
-        try {
-          await this.createCanalEntrada(userId, {
-            nome: 'Boca a Boca',
-            descricao: 'Indicação de conhecidos',
-            ativo: true,
-            dataCadastro: new Date()
-          });
-        } catch (createError) {
-          console.error('Erro ao criar canal padrão:', createError);
-        }
-      }
-    } catch (error) {
-      // Se a subcollection não existe, tentar criar um documento temporário
-      try {
-        const tempDoc = await addDoc(collection(db, COLLECTIONS.USERS, userId, COLLECTIONS.CANAIS_ENTRADA), {
-          nome: 'temp',
-          descricao: 'temp',
-          ativo: false,
-          dataCadastro: new Date()
-        });
-        await deleteDoc(doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.CANAIS_ENTRADA, tempDoc.id));
-        
-        // Agora criar um canal padrão
-        try {
-          await this.createCanalEntrada(userId, {
-            nome: 'Boca a Boca',
-            descricao: 'Indicação de conhecidos',
-            ativo: true,
-            dataCadastro: new Date()
-          });
-        } catch (createError) {
-          console.error('Erro ao criar canal padrão após inicialização:', createError);
-        }
-      } catch (createError) {
-        console.error('Erro ao criar subcollection canais_entrada:', createError);
-      }
-    }
+    // No Firestore, subcollections são criadas automaticamente ao adicionar o primeiro documento
+    // Não precisamos fazer nada aqui, apenas manter o método para compatibilidade
+    // O método create() da classe base já lida com a criação automática da subcollection
   }
 
   async findByNome(userId: string, nome: string): Promise<CanalEntrada | null> {
@@ -84,7 +42,8 @@ export class CanalEntradaRepository extends SubcollectionRepository<CanalEntrada
   }
 
   async createCanalEntrada(userId: string, canal: Omit<CanalEntrada, 'id'>): Promise<CanalEntrada> {
-    await this.ensureSubcollectionExists(userId);
+    // No Firestore, a subcollection é criada automaticamente ao adicionar o primeiro documento
+    // Não é necessário chamar ensureSubcollectionExists antes de criar
     return super.create(canal, userId);
   }
 
