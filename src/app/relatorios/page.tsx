@@ -108,8 +108,120 @@ export default function RelatoriosPage() {
           </p>
         </div>
 
+        {/* Submenu de Navegação Rápida */}
+        <div className="sticky top-16 z-30 bg-surface/95 backdrop-blur-sm border border-border rounded-lg p-4 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('periodo-analise');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              Período de Análise
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('performance-eventos');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              Performance de Eventos
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('fluxo-caixa');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              Fluxo de Caixa
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('servicos-tipo');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              Serviços por Tipo
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('canais-entrada');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              Canais de Entrada
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('impressoes');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              Impressões
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('receita-mensal');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              Receita Mensal
+            </Button>
+          </div>
+        </div>
+
         {/* Filtros de Período */}
-        <Card>
+        <div id="periodo-analise">
+          <Card>
           <CardHeader>
             <CardTitle>Período de Análise</CardTitle>
             <CardDescription>
@@ -143,6 +255,7 @@ export default function RelatoriosPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
 
         {/* Resumo Financeiro */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -284,9 +397,10 @@ export default function RelatoriosPage() {
         </div>
 
         {/* Receita Mensal */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Receita Mensal (Últimos 12 meses)</CardTitle>
+        <div id="receita-mensal">
+          <Card>
+            <CardHeader>
+              <CardTitle>Receita Mensal (Últimos 12 meses)</CardTitle>
             <CardDescription>
               Evolução da receita ao longo do tempo
             </CardDescription>
@@ -316,11 +430,13 @@ export default function RelatoriosPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
 
         {/* Relatório de Performance de Eventos */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-primary">📊 Relatório de Performance de Eventos</CardTitle>
+        <div id="performance-eventos">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-primary">📊 Performance de Eventos</CardTitle>
             <CardDescription>
               Análise detalhada de performance dos eventos com exportação CSV
             </CardDescription>
@@ -329,11 +445,13 @@ export default function RelatoriosPage() {
             <PerformanceEventosReport eventos={eventos} />
           </CardContent>
         </Card>
+        </div>
 
         {/* Relatório de Fluxo de Caixa */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-primary">💰 Relatório de Fluxo de Caixa</CardTitle>
+        <div id="fluxo-caixa">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-primary">💰 Fluxo de Caixa</CardTitle>
             <CardDescription>
               Análise completa do fluxo de caixa mensal com projeções e alertas financeiros
             </CardDescription>
@@ -346,11 +464,13 @@ export default function RelatoriosPage() {
             />
           </CardContent>
         </Card>
+        </div>
 
         {/* Relatório de Serviços */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-primary">🔧 Relatório de Serviços por Tipo</CardTitle>
+        <div id="servicos-tipo">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-primary">🔧 Serviços por Tipo</CardTitle>
             <CardDescription>
               Análise detalhada da utilização de serviços por tipo e evento
             </CardDescription>
@@ -363,11 +483,13 @@ export default function RelatoriosPage() {
             />
           </CardContent>
         </Card>
+        </div>
 
         {/* Relatório de Canais de Entrada */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-primary">📈 Relatório de Canais de Entrada</CardTitle>
+        <div id="canais-entrada">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-primary">📈 Canais de Entrada</CardTitle>
             <CardDescription>
               Análise detalhada da origem dos leads e efetividade dos canais
             </CardDescription>
@@ -380,11 +502,13 @@ export default function RelatoriosPage() {
             />
           </CardContent>
         </Card>
+        </div>
 
         {/* Relatório de Impressões */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-primary">🖨️ Relatório de Impressões</CardTitle>
+        <div id="impressoes">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl font-bold text-primary">🖨️ Impressões</CardTitle>
             <CardDescription>
               Análise detalhada do uso de impressões e custos de insumos
             </CardDescription>
@@ -393,6 +517,7 @@ export default function RelatoriosPage() {
             <ImpressoesReport eventos={eventos} />
           </CardContent>
         </Card>
+        </div>
 
         {/* Ações */}
         <div className="flex justify-center space-x-4">
