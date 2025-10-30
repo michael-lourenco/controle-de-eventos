@@ -1,19 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import Layout from '@/components/Layout';
 import {
-  ChartBarIcon,
-  CalendarIcon,
-  CurrencyDollarIcon,
   DocumentArrowDownIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
 import { useEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos, useClientes, useCanaisEntrada, useAllCustos } from '@/hooks/useData';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import PerformanceEventosReport from '@/components/relatorios/PerformanceEventosReport';
 import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
 import ServicosReport from '@/components/relatorios/ServicosReport';
@@ -30,13 +25,6 @@ export default function RelatoriosPage() {
   const { data: clientes, loading: loadingClientes } = useClientes();
   const { data: canaisEntrada, loading: loadingCanaisEntrada } = useCanaisEntrada();
   const { data: custos, loading: loadingCustos } = useAllCustos();
-  
-  const [periodoInicio, setPeriodoInicio] = useState(
-    format(startOfMonth(subMonths(new Date(), 6)), 'yyyy-MM-dd')
-  );
-  const [periodoFim, setPeriodoFim] = useState(
-    format(endOfMonth(new Date()), 'yyyy-MM-dd')
-  );
   
   const loading = loadingEventos || loadingDashboard || loadingPagamentos || loadingServicos || loadingTiposServicos || loadingClientes || loadingCanaisEntrada || loadingCustos;
   
@@ -60,41 +48,6 @@ export default function RelatoriosPage() {
     );
   }
 
-  // Cálculos para o período selecionado
-  const dataInicio = new Date(periodoInicio);
-  const dataFim = new Date(periodoFim);
-
-  const eventosPeriodo = eventos.filter(evento => {
-    const dataEvento = new Date(evento.dataEvento);
-    return dataEvento >= dataInicio && dataEvento <= dataFim;
-  });
-
-  const receitaTotal = dashboardData.resumoFinanceiro.receitaTotal;
-  const pagamentosPendentes = dashboardData.pagamentosPendentes;
-  const pagamentosAtrasados = []; // Com a nova lógica, não há mais status "Atrasado" nos pagamentos
-
-  // Estatísticas por tipo de evento
-  const eventosPorTipo = eventosPeriodo.reduce((acc, evento) => {
-    acc[evento.tipoEvento] = (acc[evento.tipoEvento] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Status dos pagamentos
-  const statusPagamentos = {
-    pago: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Pago')?.quantidade || 0,
-    pendente: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Pendente')?.quantidade || 0,
-    atrasado: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Atrasado')?.quantidade || 0,
-    cancelado: dashboardData.graficos.statusPagamentos.find(s => s.status === 'Cancelado')?.quantidade || 0
-  };
-
-  // Total de pagamentos para cálculo de porcentagem
-  const totalPagamentos = Object.values(statusPagamentos).reduce((total, quantidade) => total + quantidade, 0);
-
-  const handleGerarRelatorio = () => {
-    // Aqui seria implementada a geração do relatório em PDF/Excel
-    console.log('Gerando relatório para o período:', periodoInicio, 'até', periodoFim);
-  };
-
   return (
     <Layout>
       <div className="space-y-6">
@@ -113,7 +66,7 @@ export default function RelatoriosPage() {
               variant="outline"
               size="sm"
               onClick={() => {
-                const element = document.getElementById('periodo-analise');
+                const element = document.getElementById('receita-mensal-relatorio');
                 if (element) {
                   const offset = 120;
                   const elementPosition = element.offsetTop - offset;
@@ -122,7 +75,7 @@ export default function RelatoriosPage() {
               }}
               className="text-text-primary hover:bg-surface-hover"
             >
-              Período de Análise
+              Receita Mensal
             </Button>
             <Button
               variant="outline"
@@ -199,199 +152,7 @@ export default function RelatoriosPage() {
             >
               Impressões
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const element = document.getElementById('receita-mensal-relatorio');
-                if (element) {
-                  const offset = 120;
-                  const elementPosition = element.offsetTop - offset;
-                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
-                }
-              }}
-              className="text-text-primary hover:bg-surface-hover"
-            >
-              Receita Mensal
-            </Button>
           </div>
-        </div>
-
-        {/* Filtros de Período */}
-        <div id="periodo-analise">
-          <Card>
-          <CardHeader>
-            <CardTitle>Período de Análise</CardTitle>
-            <CardDescription>
-              Selecione o período para gerar os relatórios
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div>
-                <Input
-                  label="Data Início"
-                  type="date"
-                  value={periodoInicio}
-                  onChange={(e) => setPeriodoInicio(e.target.value)}
-                />
-              </div>
-              <div>
-                <Input
-                  label="Data Fim"
-                  type="date"
-                  value={periodoFim}
-                  onChange={(e) => setPeriodoFim(e.target.value)}
-                />
-              </div>
-              <div className="flex items-end">
-                <Button onClick={handleGerarRelatorio} className="w-full">
-                  <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-                  Gerar Relatório
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        </div>
-
-        {/* Resumo Financeiro */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 rounded-md p-3 bg-green-100">
-                  <CurrencyDollarIcon className="h-6 w-6 text-green-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-text-secondary">Receita Total</p>
-                  <p className="text-2xl font-semibold text-text-primary">
-                    R$ {receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 rounded-md p-3 bg-blue-100">
-                  <CalendarIcon className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-text-secondary">Eventos Realizados</p>
-                  <p className="text-2xl font-semibold text-text-primary">
-                    {eventosPeriodo.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 rounded-md p-3 bg-yellow-100">
-                  <ChartBarIcon className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-text-secondary">Pagamentos Pendentes</p>
-                  <p className="text-2xl font-semibold text-text-primary">
-                    {pagamentosPendentes}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 rounded-md p-3 bg-red-100">
-                  <ChartBarIcon className="h-6 w-6 text-red-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-text-secondary">Pagamentos Atrasados</p>
-                  <p className="text-2xl font-semibold text-text-primary">
-                    {pagamentosAtrasados.length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* Eventos por Tipo */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Eventos por Tipo</CardTitle>
-              <CardDescription>
-                Distribuição dos eventos no período selecionado
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(eventosPorTipo).map(([tipo, quantidade]) => (
-                  <div key={tipo} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-text-primary">{tipo}</span>
-                    <div className="flex items-center">
-                      <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ 
-                            width: `${(quantidade / eventosPeriodo.length) * 100}%` 
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-text-primary w-8 text-right">
-                        {quantidade}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Status dos Pagamentos */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Status dos Pagamentos</CardTitle>
-              <CardDescription>
-                Distribuição por status de pagamento
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(statusPagamentos).map(([status, quantidade]) => (
-                  <div key={status} className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-text-primary capitalize">
-                      {status}
-                    </span>
-                    <div className="flex items-center">
-                      <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                        <div 
-                          className={`h-2 rounded-full ${
-                            status === 'pago' ? 'bg-green-600' :
-                            status === 'pendente' ? 'bg-yellow-600' :
-                            status === 'atrasado' ? 'bg-red-600' : 'bg-gray-600'
-                          }`}
-                          style={{ 
-                            width: totalPagamentos > 0 ? `${(quantidade / totalPagamentos) * 100}%` : '0%'
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-text-primary w-8 text-right">
-                        {quantidade}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Relatório de Receita Mensal */}
