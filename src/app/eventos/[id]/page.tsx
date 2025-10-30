@@ -355,10 +355,6 @@ export default function EventoViewPage() {
                 {evento.endereco}
               </div>
               <div className="flex items-center text-sm text-text-secondary">
-                <ClockIcon className="h-4 w-4 mr-2 text-text-muted" />
-                {evento.saida} - {evento.horarioInicio}
-              </div>
-              <div className="flex items-center text-sm text-text-secondary">
                 <UserGroupIcon className="h-4 w-4 mr-2 text-text-muted" />
                 {evento.numeroConvidados} convidados
               </div>

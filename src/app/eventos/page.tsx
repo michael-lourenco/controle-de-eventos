@@ -297,10 +297,6 @@ export default function EventosPage() {
                     {evento.local}
                   </div>
                   <div className="flex items-center text-sm text-text-secondary">
-                    <ClockIcon className="h-4 w-4 mr-2" />
-                    {evento.chegadaNoLocal} - {evento.horarioInicio}
-                  </div>
-                  <div className="flex items-center text-sm text-text-secondary">
                     <UserGroupIcon className="h-4 w-4 mr-2" />
                     {evento.numeroConvidados} convidados
                   </div>
