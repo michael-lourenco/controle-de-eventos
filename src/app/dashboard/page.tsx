@@ -56,35 +56,50 @@ export default function DashboardPage() {
       value: `R$ ${dashboardData.resumoFinanceiro.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: CurrencyDollarIcon,
       color: 'text-success',
-      bgColor: 'bg-success-bg'
+      bgColor: 'bg-success-bg',
+      onClick: () => {
+        router.push('/relatorios');
+        setTimeout(() => {
+          const element = document.getElementById('fluxo-caixa');
+          if (element) {
+            const offset = 120;
+            const elementPosition = element.offsetTop - offset;
+            window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+          }
+        }, 100);
+      }
     },
     {
       name: 'Valor a Receber',
       value: `R$ ${dashboardData.resumoFinanceiro.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ClockIcon,
       color: 'text-warning',
-      bgColor: 'bg-warning-bg'
+      bgColor: 'bg-warning-bg',
+      onClick: () => router.push('/relatorios')
     },
     {
       name: 'Valor Atrasado',
       value: `R$ ${dashboardData.resumoFinanceiro.valorAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: ExclamationTriangleIcon,
       color: 'text-error',
-      bgColor: 'bg-error-bg'
+      bgColor: 'bg-error-bg',
+      onClick: () => router.push('/relatorios')
     },
     {
       name: 'Total de Eventos',
       value: dashboardData.resumoFinanceiro.totalEventos,
       icon: CalendarIcon,
       color: 'text-accent',
-      bgColor: 'bg-accent/10'
+      bgColor: 'bg-accent/10',
+      onClick: () => router.push('/eventos')
     },
     {
       name: 'Eventos Concluídos',
       value: dashboardData.resumoFinanceiro.eventosConcluidos,
       icon: CalendarIcon,
       color: 'text-success',
-      bgColor: 'bg-success-bg'
+      bgColor: 'bg-success-bg',
+      onClick: () => router.push('/eventos')
     }
   ];
 
@@ -102,7 +117,11 @@ export default function DashboardPage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {stats.map((stat) => (
-            <Card key={stat.name}>
+            <Card 
+              key={stat.name}
+              onClick={stat.onClick}
+              className="cursor-pointer transition-all hover:shadow-lg hover:scale-105 active:scale-95"
+            >
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center space-y-4 p-6">
                   {/* Ícone */}
@@ -127,7 +146,10 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Eventos Hoje */}
-          <Card>
+          <Card 
+            onClick={() => router.push('/eventos')}
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+          >
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -161,7 +183,10 @@ export default function DashboardPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => router.push(`/eventos/${evento.id}`)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/eventos/${evento.id}`);
+                          }}
                           title="Visualizar"
                           className="hover:bg-primary/10 hover:text-primary"
                         >
@@ -176,7 +201,10 @@ export default function DashboardPage() {
           </Card>
 
           {/* Valores Atrasados */}
-          <Card>
+          <Card 
+            onClick={() => router.push('/relatorios')}
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+          >
             <CardHeader>
               <CardTitle className="flex items-center">
                 <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-error" />
@@ -204,11 +232,27 @@ export default function DashboardPage() {
         </div>
 
         {/* Eventos Próximos */}
-        <Card>
+        <Card 
+          onClick={() => router.push('/eventos')}
+          className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]"
+        >
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <ClockIcon className="h-5 w-5 mr-2 text-success" />
-              Próximos Eventos (7 dias)
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center">
+                <ClockIcon className="h-5 w-5 mr-2 text-success" />
+                Próximos Eventos (7 dias)
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push('/eventos');
+                }}
+                className="text-text-secondary hover:text-primary"
+              >
+                Ver todos
+              </Button>
             </CardTitle>
             <CardDescription>
               Eventos agendados para os próximos 7 dias
@@ -266,7 +310,10 @@ export default function DashboardPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => router.push(`/eventos/${evento.id}`)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/eventos/${evento.id}`);
+                            }}
                             title="Visualizar"
                             className="hover:bg-primary/10 hover:text-primary"
                           >
@@ -284,7 +331,20 @@ export default function DashboardPage() {
 
         {/* Resumo Financeiro */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <Card>
+          <Card 
+            onClick={() => {
+              router.push('/relatorios');
+              setTimeout(() => {
+                const element = document.getElementById('fluxo-caixa');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }, 100);
+            }}
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+          >
             <CardHeader>
               <CardTitle className="text-lg">Receita do Mês</CardTitle>
             </CardHeader>
@@ -298,7 +358,20 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            onClick={() => {
+              router.push('/relatorios');
+              setTimeout(() => {
+                const element = document.getElementById('fluxo-caixa');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }, 100);
+            }}
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+          >
             <CardHeader>
               <CardTitle className="text-lg">Receita do Ano</CardTitle>
             </CardHeader>
@@ -312,7 +385,10 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            onClick={() => router.push('/relatorios')}
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+          >
             <CardHeader>
               <CardTitle className="text-lg">Total de Pagamentos</CardTitle>
             </CardHeader>
