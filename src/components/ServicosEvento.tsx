@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import ServicoForm from '@/components/forms/ServicoForm';
 import { 
   ServicoEvento, 
@@ -43,6 +44,8 @@ export default function ServicosEvento({
   const [tiposServicoDisponiveis, setTiposServicoDisponiveis] = useState<TipoServico[]>([]);
   const [servicosSelecionados, setServicosSelecionados] = useState<Set<string>>(new Set());
   const [loadingTipos, setLoadingTipos] = useState(false);
+  const [novoServicoNome, setNovoServicoNome] = useState('');
+  const [criandoServico, setCriandoServico] = useState(false);
   const [resumoServicos, setResumoServicos] = useState({
     quantidadeItens: 0,
     porCategoria: {} as Record<string, number>
@@ -96,11 +99,42 @@ export default function ServicosEvento({
     setServicoEditando(null);
     setShowModalSelecao(true);
     setServicosSelecionados(new Set());
+    setNovoServicoNome('');
   };
 
   const handleFecharModalSelecao = () => {
     setShowModalSelecao(false);
     setServicosSelecionados(new Set());
+    setNovoServicoNome('');
+  };
+
+  const handleCriarNovoServico = async () => {
+    if (!novoServicoNome.trim() || !userId || criandoServico) return;
+
+    setCriandoServico(true);
+    try {
+      const novoTipo = await dataService.createTipoServico({
+        nome: novoServicoNome.trim(),
+        descricao: '',
+        ativo: true
+      }, userId);
+
+      // Adicionar à lista e ordenar
+      const novaLista = [...tiposServicoDisponiveis, novoTipo].sort((a, b) =>
+        a.nome.localeCompare(b.nome, 'pt-BR')
+      );
+      setTiposServicoDisponiveis(novaLista);
+
+      // Selecionar automaticamente o novo serviço
+      setServicosSelecionados(prev => new Set([...prev, novoTipo.id]));
+
+      // Limpar o campo
+      setNovoServicoNome('');
+    } catch (error) {
+      console.error('Erro ao criar novo serviço:', error);
+    } finally {
+      setCriandoServico(false);
+    }
   };
 
   const handleToggleServico = (tipoServicoId: string) => {
@@ -395,6 +429,39 @@ export default function ServicosEvento({
               </div>
             </CardHeader>
             <CardContent className="flex-1 overflow-y-auto">
+              {/* Seção de Criar Novo Serviço */}
+              {!loadingTipos && (
+                <div className="mb-6 p-4 border border-border rounded-lg bg-surface">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TagIcon className="h-4 w-4 text-accent" />
+                    <label className="text-sm font-medium text-text-primary">
+                      Criar Novo Serviço
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Digite o nome do novo serviço"
+                      value={novoServicoNome}
+                      onChange={(e) => setNovoServicoNome(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && novoServicoNome.trim()) {
+                          handleCriarNovoServico();
+                        }
+                      }}
+                      disabled={criandoServico}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleCriarNovoServico}
+                      disabled={!novoServicoNome.trim() || criandoServico}
+                      size="sm"
+                    >
+                      {criandoServico ? 'Criando...' : 'Criar'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {loadingTipos ? (
                 <div className="text-center py-8">
                   <div className="text-text-secondary">Carregando serviços...</div>
