@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import ServicoForm from '@/components/forms/ServicoForm';
 import { 
   ServicoEvento, 
-  Evento
+  Evento,
+  TipoServico
 } from '@/types';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -19,7 +20,8 @@ import {
   CalculatorIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
-  TagIcon
+  TagIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 interface ServicosEventoProps {
@@ -35,8 +37,12 @@ export default function ServicosEvento({
 }: ServicosEventoProps) {
   const { userId } = useCurrentUser();
   const [showForm, setShowForm] = useState(false);
+  const [showModalSelecao, setShowModalSelecao] = useState(false);
   const [servicoEditando, setServicoEditando] = useState<ServicoEvento | null>(null);
   const [servicoParaExcluir, setServicoParaExcluir] = useState<ServicoEvento | null>(null);
+  const [tiposServicoDisponiveis, setTiposServicoDisponiveis] = useState<TipoServico[]>([]);
+  const [servicosSelecionados, setServicosSelecionados] = useState<Set<string>>(new Set());
+  const [loadingTipos, setLoadingTipos] = useState(false);
   const [resumoServicos, setResumoServicos] = useState({
     quantidadeItens: 0,
     porCategoria: {} as Record<string, number>
@@ -63,9 +69,93 @@ export default function ServicosEvento({
     carregarResumoServicos();
   }, [userId, evento.id, servicos]);
 
+  // Carregar tipos de serviço disponíveis quando abrir o modal
+  useEffect(() => {
+    const carregarTiposServico = async () => {
+      if (!showModalSelecao || !userId) return;
+
+      setLoadingTipos(true);
+      try {
+        const tipos = await dataService.getTiposServicoAtivos(userId);
+        // Ordenar alfabeticamente
+        const tiposOrdenados = tipos.sort((a, b) => 
+          a.nome.localeCompare(b.nome, 'pt-BR')
+        );
+        setTiposServicoDisponiveis(tiposOrdenados);
+      } catch (error) {
+        console.error('Erro ao carregar tipos de serviço:', error);
+      } finally {
+        setLoadingTipos(false);
+      }
+    };
+
+    carregarTiposServico();
+  }, [showModalSelecao, userId]);
+
   const handleNovoServico = () => {
     setServicoEditando(null);
-    setShowForm(true);
+    setShowModalSelecao(true);
+    setServicosSelecionados(new Set());
+  };
+
+  const handleFecharModalSelecao = () => {
+    setShowModalSelecao(false);
+    setServicosSelecionados(new Set());
+  };
+
+  const handleToggleServico = (tipoServicoId: string) => {
+    setServicosSelecionados(prev => {
+      const novo = new Set(prev);
+      if (novo.has(tipoServicoId)) {
+        novo.delete(tipoServicoId);
+      } else {
+        novo.add(tipoServicoId);
+      }
+      return novo;
+    });
+  };
+
+  const handleSelecionarTodos = () => {
+    // Filtrar serviços já adicionados
+    const servicosJaAdicionados = new Set(servicos.map(s => s.tipoServicoId));
+    const tiposDisponiveis = tiposServicoDisponiveis.filter(
+      tipo => !servicosJaAdicionados.has(tipo.id)
+    );
+    
+    if (servicosSelecionados.size === tiposDisponiveis.length) {
+      setServicosSelecionados(new Set());
+    } else {
+      setServicosSelecionados(new Set(tiposDisponiveis.map(t => t.id)));
+    }
+  };
+
+  const handleSalvarServicosSelecionados = async () => {
+    if (!userId || servicosSelecionados.size === 0) return;
+
+    try {
+      // Filtrar apenas os tipos de serviço que já não foram adicionados
+      const servicosJaAdicionados = new Set(servicos.map(s => s.tipoServicoId));
+      const tiposParaAdicionar = tiposServicoDisponiveis.filter(
+        tipo => servicosSelecionados.has(tipo.id) && !servicosJaAdicionados.has(tipo.id)
+      );
+
+      // Criar um serviço para cada tipo selecionado
+      for (const tipoServico of tiposParaAdicionar) {
+        const servicoEvento: Omit<ServicoEvento, 'id'> = {
+          eventoId: evento.id,
+          tipoServicoId: tipoServico.id,
+          tipoServico: tipoServico,
+          observacoes: '',
+          dataCadastro: new Date()
+        };
+        await dataService.createServicoEvento(userId, evento.id, servicoEvento);
+      }
+
+      onServicosChange();
+      handleFecharModalSelecao();
+    } catch (error) {
+      console.error('Erro ao salvar serviços:', error);
+    }
   };
 
   const handleEditarServico = (servico: ServicoEvento) => {
@@ -132,6 +222,12 @@ export default function ServicosEvento({
     }
     return colors[Math.abs(hash) % colors.length];
   };
+
+  // Filtrar serviços já adicionados ao evento
+  const servicosJaAdicionados = new Set(servicos.map(s => s.tipoServicoId));
+  const tiposDisponiveisParaAdicionar = tiposServicoDisponiveis.filter(
+    tipo => !servicosJaAdicionados.has(tipo.id)
+  );
 
   if (showForm) {
     return (
@@ -275,6 +371,105 @@ export default function ServicosEvento({
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Seleção de Serviços */}
+      {showModalSelecao && (
+        <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
+          <Card className="w-full max-w-2xl mx-4 modal-card max-h-[90vh] flex flex-col">
+            <CardHeader className="flex-shrink-0">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Adicionar Serviços</CardTitle>
+                  <CardDescription>
+                    Selecione os serviços que deseja adicionar ao evento
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleFecharModalSelecao}
+                  className="h-8 w-8 p-0"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto">
+              {loadingTipos ? (
+                <div className="text-center py-8">
+                  <div className="text-text-secondary">Carregando serviços...</div>
+                </div>
+              ) : tiposDisponiveisParaAdicionar.length === 0 ? (
+                <div className="text-center py-8">
+                  <TagIcon className="mx-auto h-12 w-12 text-text-muted" />
+                  <h3 className="mt-2 text-sm font-medium text-text-primary">
+                    Todos os serviços já foram adicionados
+                  </h3>
+                  <p className="mt-1 text-sm text-text-secondary">
+                    Não há mais serviços disponíveis para adicionar.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+                    <span className="text-sm font-medium text-text-primary">
+                      {servicosSelecionados.size} de {tiposDisponiveisParaAdicionar.length} selecionados
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelecionarTodos}
+                    >
+                      {servicosSelecionados.size === tiposDisponiveisParaAdicionar.length 
+                        ? 'Desmarcar Todos' 
+                        : 'Selecionar Todos'}
+                    </Button>
+                  </div>
+                  <div className="space-y-1">
+                    {tiposDisponiveisParaAdicionar.map((tipo) => (
+                      <label
+                        key={tipo.id}
+                        className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:bg-surface-hover cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={servicosSelecionados.has(tipo.id)}
+                          onChange={() => handleToggleServico(tipo.id)}
+                          className="w-4 h-4 text-accent border-border rounded focus:ring-accent focus:ring-2"
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-text-primary">
+                            {tipo.nome}
+                          </div>
+                          {tipo.descricao && (
+                            <div className="text-xs text-text-secondary mt-0.5">
+                              {tipo.descricao}
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+            <div className="flex justify-end space-x-2 p-6 border-t border-border flex-shrink-0">
+              <Button
+                variant="outline"
+                onClick={handleFecharModalSelecao}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSalvarServicosSelecionados}
+                disabled={servicosSelecionados.size === 0 || loadingTipos}
+              >
+                Salvar ({servicosSelecionados.size})
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Modal de Confirmação de Exclusão */}
       {servicoParaExcluir && (
