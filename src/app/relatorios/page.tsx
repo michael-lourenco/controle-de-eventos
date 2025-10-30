@@ -4,10 +4,6 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
-import {
-  DocumentArrowDownIcon,
-  EyeIcon
-} from '@heroicons/react/24/outline';
 import { useEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos, useClientes, useCanaisEntrada, useAllCustos } from '@/hooks/useData';
 import PerformanceEventosReport from '@/components/relatorios/PerformanceEventosReport';
 import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
@@ -255,22 +251,6 @@ export default function RelatoriosPage() {
             <ImpressoesReport eventos={eventos} />
           </CardContent>
         </Card>
-        </div>
-
-        {/* Ações */}
-        <div className="flex justify-center space-x-4">
-          <Button variant="outline">
-            <EyeIcon className="h-4 w-4 mr-2" />
-            Visualizar Relatório
-          </Button>
-          <Button>
-            <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-            Exportar PDF
-          </Button>
-          <Button variant="outline">
-            <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-            Exportar Excel
-          </Button>
         </div>
       </div>
     </Layout>
