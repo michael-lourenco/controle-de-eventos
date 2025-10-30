@@ -1,0 +1,360 @@
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Evento, Pagamento } from '@/types';
+import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+
+interface ReceitaMensalReportProps {
+  eventos: Evento[];
+  pagamentos: Pagamento[];
+}
+
+export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMensalReportProps) {
+  const [dataInicio, setDataInicio] = useState(
+    format(startOfMonth(subMonths(new Date(), 23)), 'yyyy-MM-dd')
+  );
+  const [dataFim, setDataFim] = useState(
+    format(endOfMonth(new Date()), 'yyyy-MM-dd')
+  );
+
+  const dadosReceitaMensal = useMemo(() => {
+    if (!pagamentos || pagamentos.length === 0) {
+      return {
+        receitaPorMes: [],
+        resumoGeral: {
+          receitaTotal: 0,
+          receitaMedia: 0,
+          maiorValor: 0,
+          menorValor: 0,
+          mesesComReceita: 0,
+          totalMeses: 0
+        }
+      };
+    }
+
+    const inicio = parseISO(dataInicio);
+    const fim = parseISO(dataFim);
+    
+    // Validar que o período não exceda 24 meses
+    const diferencaMeses = Math.round((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+    if (diferencaMeses > 24) {
+      // Ajustar dataFim para não exceder 24 meses
+      const novaDataFim = endOfMonth(subMonths(inicio, -24));
+      setDataFim(format(novaDataFim, 'yyyy-MM-dd'));
+      // Retornar estrutura vazia válida temporariamente até o próximo render
+      return {
+        receitaPorMes: [],
+        resumoGeral: {
+          receitaTotal: 0,
+          receitaMedia: 0,
+          maiorValor: 0,
+          menorValor: 0,
+          mesesComReceita: 0,
+          totalMeses: 0
+        }
+      };
+    }
+
+    // Obter todos os meses no intervalo
+    const meses = eachMonthOfInterval({ start: startOfMonth(inicio), end: endOfMonth(fim) });
+
+    // Calcular receita por mês (usando a mesma lógica do dashboard)
+    const receitaPorMes = meses.map(mes => {
+      const inicioMes = new Date(mes.getFullYear(), mes.getMonth(), 1);
+      const fimMes = new Date(mes.getFullYear(), mes.getMonth() + 1, 0, 23, 59, 59, 999);
+      
+      // Filtrar pagamentos do mês (mesma lógica do data-service)
+      const pagamentosDoMes = pagamentos.filter(pagamento => {
+        if (!pagamento.dataPagamento) {
+          return false;
+        }
+        const dataPagamento = new Date(pagamento.dataPagamento);
+        return dataPagamento >= inicioMes && dataPagamento <= fimMes && pagamento.status === 'Pago';
+      });
+      
+      const receitaMes = pagamentosDoMes.reduce((total, p) => total + p.valor, 0);
+
+      return {
+        mes: format(mes, 'MMM/yyyy', { locale: ptBR }),
+        mesCompleto: format(mes, 'MMMM yyyy', { locale: ptBR }),
+        valor: receitaMes,
+        data: mes
+      };
+    });
+
+    const receitaTotal = receitaPorMes.reduce((total, item) => total + item.valor, 0);
+    const valores = receitaPorMes.map(r => r.valor);
+    const valoresPositivos = valores.filter(v => v > 0);
+    const maiorValor = valores.length > 0 ? Math.max(...valores) : 0;
+    const menorValor = valoresPositivos.length > 0 ? Math.min(...valoresPositivos) : 0;
+    const receitaMedia = receitaPorMes.length > 0 ? receitaTotal / receitaPorMes.length : 0;
+    const mesesComReceita = valoresPositivos.length;
+
+    return {
+      receitaPorMes,
+      resumoGeral: {
+        receitaTotal,
+        receitaMedia,
+        maiorValor,
+        menorValor,
+        mesesComReceita,
+        totalMeses: receitaPorMes.length
+      }
+    };
+  }, [dataInicio, dataFim, pagamentos]);
+
+  const exportarCSV = () => {
+    if (!dadosReceitaMensal || !dadosReceitaMensal.resumoGeral) {
+      return;
+    }
+
+    const resumoGeral = dadosReceitaMensal.resumoGeral;
+    const receitaPorMes = dadosReceitaMensal.receitaPorMes || [];
+
+    const csvData = [
+      ['Relatório de Receita Mensal'],
+      [`Período: ${format(new Date(dataInicio), 'dd/MM/yyyy', { locale: ptBR })} - ${format(new Date(dataFim), 'dd/MM/yyyy', { locale: ptBR })}`],
+      [''],
+      ['RESUMO GERAL'],
+      ['Receita Total', `R$ ${(resumoGeral.receitaTotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`],
+      ['Receita Média Mensal', `R$ ${(resumoGeral.receitaMedia || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`],
+      ['Maior Receita Mensal', `R$ ${(resumoGeral.maiorValor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`],
+      ['Menor Receita Mensal', `R$ ${(resumoGeral.menorValor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`],
+      ['Meses com Receita', resumoGeral.mesesComReceita || 0],
+      ['Total de Meses Analisados', resumoGeral.totalMeses || 0],
+      [''],
+      ['RECEITA POR MÊS'],
+      ['Mês', 'Valor (R$)', 'Percentual (%)'],
+      ...receitaPorMes.map(item => [
+        item.mesCompleto,
+        item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+        (resumoGeral.receitaTotal || 0) > 0 
+          ? ((item.valor / (resumoGeral.receitaTotal || 1)) * 100).toFixed(2)
+          : '0.00'
+      ])
+    ];
+
+    const csvContent = csvData.map(row => 
+      row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `receita-mensal-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDataInicioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const novaDataInicio = parseISO(e.target.value);
+    const dataFimAtual = parseISO(dataFim);
+    const mesesDiferenca = Math.ceil((dataFimAtual.getTime() - novaDataInicio.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    
+    if (mesesDiferenca > 24) {
+      const novaDataFim = endOfMonth(subMonths(novaDataInicio, -24));
+      setDataFim(format(novaDataFim, 'yyyy-MM-dd'));
+    }
+    
+    setDataInicio(e.target.value);
+  };
+
+  const handleDataFimChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const novaDataFim = parseISO(e.target.value);
+    const dataInicioAtual = parseISO(dataInicio);
+    const mesesDiferenca = Math.ceil((novaDataFim.getTime() - dataInicioAtual.getTime()) / (1000 * 60 * 60 * 24 * 30));
+    
+    if (mesesDiferenca > 24) {
+      const novaDataInicio = startOfMonth(subMonths(novaDataFim, 24));
+      setDataInicio(format(novaDataInicio, 'yyyy-MM-dd'));
+    }
+    
+    setDataFim(e.target.value);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Filtros de Período */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtros de Período</CardTitle>
+          <CardDescription>
+            Selecione o período para análise (máximo 24 meses)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <Input
+                label="Data Início"
+                type="date"
+                value={dataInicio}
+                onChange={handleDataInicioChange}
+              />
+            </div>
+            <div>
+              <Input
+                label="Data Fim"
+                type="date"
+                value={dataFim}
+                onChange={handleDataFimChange}
+              />
+            </div>
+            <div className="flex items-end">
+              <Button onClick={exportarCSV} className="w-full">
+                <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                Exportar CSV
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resumo Geral */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 rounded-md p-3 bg-success-bg">
+                <span className="text-success text-2xl">💰</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-text-secondary">Receita Total</p>
+                <p className="text-2xl font-semibold text-text-primary">
+                  R$ {(dadosReceitaMensal?.resumoGeral?.receitaTotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 rounded-md p-3 bg-primary/10">
+                <span className="text-primary text-2xl">📊</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-text-secondary">Média Mensal</p>
+                <p className="text-2xl font-semibold text-text-primary">
+                  R$ {(dadosReceitaMensal?.resumoGeral?.receitaMedia || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 rounded-md p-3 bg-accent/10">
+                <span className="text-accent text-2xl">📈</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-text-secondary">Maior Receita</p>
+                <p className="text-2xl font-semibold text-text-primary">
+                  R$ {(dadosReceitaMensal?.resumoGeral?.maiorValor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 rounded-md p-3 bg-warning-bg">
+                <span className="text-warning text-2xl">📉</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-text-secondary">Menor Receita</p>
+                <p className="text-2xl font-semibold text-text-primary">
+                  R$ {(dadosReceitaMensal?.resumoGeral?.menorValor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 rounded-md p-3 bg-primary/10">
+                <span className="text-primary text-2xl">📅</span>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-text-secondary">Meses c/ Receita</p>
+                <p className="text-2xl font-semibold text-text-primary">
+                  {dadosReceitaMensal?.resumoGeral?.mesesComReceita || 0} / {dadosReceitaMensal?.resumoGeral?.totalMeses || 0}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Receita Mensal */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Receita Mensal</CardTitle>
+          <CardDescription>
+            Evolução da receita ao longo do período selecionado
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {!dadosReceitaMensal || dadosReceitaMensal.receitaPorMes.length === 0 ? (
+              <p className="text-text-muted text-center py-8">
+                Nenhum dado disponível para o período selecionado
+              </p>
+            ) : (
+              dadosReceitaMensal.receitaPorMes.map((item, index) => {
+                const receitaTotal = dadosReceitaMensal.resumoGeral?.receitaTotal || 0;
+                const maiorValor = dadosReceitaMensal.resumoGeral?.maiorValor || 0;
+                const percentual = receitaTotal > 0
+                  ? (item.valor / receitaTotal) * 100
+                  : 0;
+                const larguraBarra = maiorValor > 0
+                  ? (item.valor / maiorValor) * 100
+                  : 0;
+
+                return (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-text-primary w-32">
+                      {item.mes}
+                    </span>
+                    <div className="flex items-center flex-1 mx-4">
+                      <div className="w-full bg-surface rounded-full h-2">
+                        <div
+                          className="bg-primary h-2 rounded-full transition-all"
+                          style={{
+                            width: `${larguraBarra}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <span className="text-sm font-medium text-text-primary w-32 text-right">
+                      R$ {item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-xs text-text-secondary w-16 text-right">
+                      {percentual.toFixed(1)}%
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+

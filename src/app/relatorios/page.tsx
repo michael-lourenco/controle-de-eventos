@@ -19,6 +19,7 @@ import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
 import ServicosReport from '@/components/relatorios/ServicosReport';
 import CanaisEntradaReport from '@/components/relatorios/CanaisEntradaReport';
 import ImpressoesReport from '@/components/relatorios/ImpressoesReport';
+import ReceitaMensalReport from '@/components/relatorios/ReceitaMensalReport';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
@@ -77,9 +78,6 @@ export default function RelatoriosPage() {
     acc[evento.tipoEvento] = (acc[evento.tipoEvento] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-
-  // Receita por mês no período
-  const receitaPorMes = dashboardData.graficos.receitaMensal;
 
   // Status dos pagamentos
   const statusPagamentos = {
@@ -205,7 +203,7 @@ export default function RelatoriosPage() {
               variant="outline"
               size="sm"
               onClick={() => {
-                const element = document.getElementById('receita-mensal');
+                const element = document.getElementById('receita-mensal-relatorio');
                 if (element) {
                   const offset = 120;
                   const elementPosition = element.offsetTop - offset;
@@ -396,40 +394,19 @@ export default function RelatoriosPage() {
           </Card>
         </div>
 
-        {/* Receita Mensal */}
-        <div id="receita-mensal">
+        {/* Relatório de Receita Mensal */}
+        <div id="receita-mensal-relatorio">
           <Card>
             <CardHeader>
-              <CardTitle>Receita Mensal (Últimos 12 meses)</CardTitle>
-            <CardDescription>
-              Evolução da receita ao longo do tempo
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {receitaPorMes.map((item, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-text-primary w-20">
-                    {item.mes}
-                  </span>
-                  <div className="flex items-center flex-1 mx-4">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-600 h-2 rounded-full" 
-                        style={{ 
-                          width: `${(item.valor / Math.max(...receitaPorMes.map(r => r.valor))) * 100}%` 
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <span className="text-sm font-medium text-text-primary w-24 text-right">
-                    R$ {item.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              <CardTitle className="text-xl font-bold text-primary">💰 Relatório de Receita Mensal</CardTitle>
+              <CardDescription>
+                Análise detalhada da receita mensal com exportação CSV (máximo 24 meses)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ReceitaMensalReport eventos={eventos} pagamentos={pagamentos || []} />
+            </CardContent>
+          </Card>
         </div>
 
         {/* Relatório de Performance de Eventos */}
