@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,10 +16,12 @@ import {
   TrashIcon,
   UserIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 
 export default function ClientesPage() {
+  const router = useRouter();
   const { userId } = useCurrentUser();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [canaisEntrada, setCanaisEntrada] = useState<CanalEntrada[]>([]);
@@ -517,6 +520,15 @@ export default function ClientesPage() {
                       </div>
                     </div>
                     <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push(`/clientes/${cliente.id}`)}
+                        title="Visualizar"
+                        className="hover:bg-primary/10 hover:text-primary"
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"

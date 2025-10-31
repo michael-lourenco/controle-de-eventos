@@ -25,7 +25,7 @@ export default function ServicosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [novoTipo, setNovoTipo] = useState({ nome: '', descricao: '' });
-  const [editandoTipo, setEditandoTipo] = useState({ nome: '', descricao: '' });
+  const [editandoTipo, setEditandoTipo] = useState({ nome: '', descricao: '', ativo: true });
   const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
 
   // Carregar tipos de serviço
@@ -82,7 +82,7 @@ export default function ServicosPage() {
       const tipoAtualizado = await dataService.updateTipoServico(tipo.id, {
         nome: editandoTipo.nome.trim(),
         descricao: editandoTipo.descricao.trim() || '',
-        ativo: tipo.ativo
+        ativo: editandoTipo.ativo
       }, userId);
       
       setTiposServico(prev => prev.map(t => t.id === tipo.id ? tipoAtualizado : t));
@@ -105,12 +105,12 @@ export default function ServicosPage() {
 
   const iniciarEdicao = (tipo: TipoServico) => {
     setEditandoId(tipo.id);
-    setEditandoTipo({ nome: tipo.nome, descricao: tipo.descricao || '' });
+    setEditandoTipo({ nome: tipo.nome, descricao: tipo.descricao || '', ativo: tipo.ativo });
   };
 
   const cancelarEdicao = () => {
     setEditandoId(null);
-    setEditandoTipo({ nome: '', descricao: '' });
+    setEditandoTipo({ nome: '', descricao: '', ativo: true });
   };
 
   const getTipoServicoColor = (nome: string) => {
@@ -261,6 +261,18 @@ export default function ServicosPage() {
                       onChange={(e) => setEditandoTipo(prev => ({ ...prev, descricao: e.target.value }))}
                       rows={3}
                     />
+                    <div className="flex items-center gap-2 rounded-md border border-border/80 bg-surface/60 px-3 py-2">
+                      <input
+                        id={`ativo-${tipo.id}`}
+                        type="checkbox"
+                        className="rounded border-border"
+                        checked={editandoTipo.ativo}
+                        onChange={(e) => setEditandoTipo(prev => ({ ...prev, ativo: e.target.checked }))}
+                      />
+                      <label htmlFor={`ativo-${tipo.id}`} className="text-sm text-text-primary">
+                        Tipo de serviço ativo
+                      </label>
+                    </div>
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="outline"

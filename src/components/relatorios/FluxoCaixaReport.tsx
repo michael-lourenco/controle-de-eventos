@@ -372,7 +372,7 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
           value={`R$ ${dadosFluxoCaixa.resumoGeral.saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           color={dadosFluxoCaixa.resumoGeral.saldoAtual >= 0 ? "success" : "error"}
           trend={{
-            value: Math.abs(dadosFluxoCaixa.resumoGeral.percentualVariacao),
+            value: Number(Math.abs(dadosFluxoCaixa.resumoGeral.percentualVariacao).toFixed(1)),
             isPositive: dadosFluxoCaixa.resumoGeral.percentualVariacao >= 0
           }}
         />
