@@ -1,5 +1,7 @@
 'use client';
 
+/*
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,7 +115,7 @@ export default function AdminUsersPage() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Criar Novo Usuário */}
+          {/* Criar Novo Usuário * /}
           <Card>
             <CardHeader>
               <CardTitle>Criar Novo Usuário</CardTitle>
@@ -138,7 +140,7 @@ export default function AdminUsersPage() {
                   required
                 />
                 
-                {/* Campo de Senha */}
+                {/* Campo de Senha * /}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Senha
@@ -165,7 +167,7 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
 
-                {/* Validação de Senha */}
+                {/* Validação de Senha * /}
                 {formData.password && (
                   <div className="bg-gray-50 p-3 rounded-md">
                     <p className="text-sm font-medium text-gray-700 mb-2">Critérios da senha:</p>
@@ -192,7 +194,7 @@ export default function AdminUsersPage() {
                       </div>
                     </div>
                     
-                    {/* Indicador de força da senha */}
+                    {/* Indicador de força da senha * /}
                     <div className="mt-3">
                       <div className="flex justify-between text-xs text-gray-600 mb-1">
                         <span>Força da senha:</span>
@@ -245,7 +247,7 @@ export default function AdminUsersPage() {
             </CardContent>
           </Card>
 
-          {/* Usuários Padrão */}
+          {/* Usuários Padrão * /}
           <Card>
             <CardHeader>
               <CardTitle>Usuários Padrão</CardTitle>
@@ -276,7 +278,7 @@ export default function AdminUsersPage() {
           </Card>
         </div>
 
-        {/* Instruções */}
+        {/* Instruções * /}
         <Card>
           <CardHeader>
             <CardTitle>Como Funciona o Sistema de Autenticação</CardTitle>
@@ -316,4 +318,10 @@ export default function AdminUsersPage() {
       </div>
     </Layout>
   );
+}
+
+*/
+
+export default function AdminUsersPage() {
+  return null;
 }

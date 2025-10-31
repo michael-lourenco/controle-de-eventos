@@ -36,12 +36,12 @@ const navigation = [
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
 ];
 
-const adminNavigation = [
-  { name: 'Collections', href: '/admin/collections', icon: CogIcon },
-  { name: 'Usuários', href: '/admin/users', icon: UserIcon },
-  { name: 'Tipos de Serviço', href: '/tipos-servicos', icon: CogIcon },
-  { name: 'Migração', href: '/admin/migration', icon: CogIcon },
-];
+// const adminNavigation = [
+//   { name: 'Collections', href: '/admin/collections', icon: CogIcon },
+//   { name: 'Usuários', href: '/admin/users', icon: UserIcon },
+//   { name: 'Tipos de Serviço', href: '/tipos-servicos', icon: CogIcon },
+//   { name: 'Migração', href: '/admin/migration', icon: CogIcon },
+// ];
 
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -104,7 +104,7 @@ export default function Layout({ children }: LayoutProps) {
               </Link>
             ))}
             
-            {/* Seção de Administração - Mobile */}
+            {/*
             {user && (
               <>
                 <div className="border-t border-border my-4"></div>
@@ -125,6 +125,7 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </>
             )}
+            */}
           </nav>
         </div>
       </div>
@@ -147,7 +148,7 @@ export default function Layout({ children }: LayoutProps) {
               </Link>
             ))}
             
-            {/* Seção de Administração */}
+            {/*
             {user && (
               <>
                 <div className="border-t border-border my-4"></div>
@@ -159,7 +160,7 @@ export default function Layout({ children }: LayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
+                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duração-200 hover:shadow-sm"
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}
@@ -168,6 +169,7 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </>
             )}
+            */}
           </nav>
           <div className="flex-shrink-0 border-t border-border p-4">
             <div className="flex items-center">
