@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Evento, Pagamento } from '@/types';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { useCurrentUser } from '@/hooks/useAuth';
+import { dataService } from '@/lib/data-service';
 
 interface DetalhamentoReceberReportProps {
   eventos: Evento[];
@@ -73,6 +75,80 @@ export default function DetalhamentoReceberReport({
   dashboardTotals
 }: DetalhamentoReceberReportProps) {
   const [clienteExpandido, setClienteExpandido] = useState<string | null>(null);
+  const [resumosEventos, setResumosEventos] = useState<Record<string, {
+    totalPago: number;
+    valorPendente: number;
+    valorAtrasado: number;
+    quantidadePagamentos: number;
+    isAtrasado: boolean;
+  }>>({});
+  const [carregandoResumos, setCarregandoResumos] = useState(false);
+  const { userId } = useCurrentUser();
+
+  useEffect(() => {
+    let ativo = true;
+
+    const carregarResumos = async () => {
+      if (!userId || !eventos?.length) {
+        if (ativo) {
+          setResumosEventos({});
+        }
+        return;
+      }
+
+      setCarregandoResumos(true);
+
+      try {
+        const resultados = await Promise.all(
+          eventos.map(async (evento) => {
+            try {
+              const resumo = await dataService.getResumoFinanceiroPorEvento(
+                userId,
+                evento.id,
+                evento.valorTotal || 0,
+                parseDate(evento.diaFinalPagamento)
+              );
+
+              return [evento.id, resumo] as const;
+            } catch (error) {
+              console.error('Erro ao calcular resumo financeiro do evento', evento.id, error);
+              return [evento.id, null] as const;
+            }
+          })
+        );
+
+        if (!ativo) {
+          return;
+        }
+
+        const mapa: Record<string, {
+          totalPago: number;
+          valorPendente: number;
+          valorAtrasado: number;
+          quantidadePagamentos: number;
+          isAtrasado: boolean;
+        }> = {};
+
+        resultados.forEach(([eventoId, resumo]) => {
+          if (resumo) {
+            mapa[eventoId] = resumo;
+          }
+        });
+
+        setResumosEventos(mapa);
+      } finally {
+        if (ativo) {
+          setCarregandoResumos(false);
+        }
+      }
+    };
+
+    carregarResumos();
+
+    return () => {
+      ativo = false;
+    };
+  }, [userId, eventos]);
 
   const resumo = useMemo(() => {
     if (!eventos?.length) {
@@ -107,23 +183,33 @@ export default function DetalhamentoReceberReport({
         return;
       }
 
-      const pagamentosEvento = pagamentosPorEvento.get(evento.id) ?? [];
-      const valorPago = pagamentosEvento
-        .filter((pagamento) => pagamento.status === 'Pago')
-        .reduce((acc, pagamento) => acc + pagamento.valor, 0);
+      const dataFinalPagamento = parseDate(evento.diaFinalPagamento);
+      const dataEvento = parseDate(evento.dataEvento);
 
-      const valorRestante = Math.max(valorPrevisto - valorPago, 0);
+      const resumoOficial = resumosEventos[evento.id];
+
+      let valorPago = resumoOficial?.totalPago ?? 0;
+      let valorPendenteEvento = resumoOficial?.valorPendente ?? 0;
+      let valorAtrasadoEvento = resumoOficial?.valorAtrasado ?? 0;
+
+      if (!resumoOficial) {
+        const pagamentosEvento = pagamentosPorEvento.get(evento.id) ?? [];
+        valorPago = pagamentosEvento
+          .filter((pagamento) => pagamento.status === 'Pago')
+          .reduce((acc, pagamento) => acc + pagamento.valor, 0);
+
+        const valorRestanteCalculado = Math.max(valorPrevisto - valorPago, 0);
+        const vencido = dataFinalPagamento ? hoje > dataFinalPagamento : false;
+
+        valorAtrasadoEvento = vencido ? valorRestanteCalculado : 0;
+        valorPendenteEvento = vencido ? 0 : valorRestanteCalculado;
+      }
+
+      const valorRestante = valorPendenteEvento + valorAtrasadoEvento;
 
       if (valorRestante <= 0) {
         return;
       }
-
-      const dataFinalPagamento = parseDate(evento.diaFinalPagamento);
-      const dataEvento = parseDate(evento.dataEvento);
-      const vencido = dataFinalPagamento ? hoje > dataFinalPagamento : false;
-
-      const valorAtrasadoEvento = vencido ? valorRestante : 0;
-      const valorPendenteEvento = vencido ? 0 : valorRestante;
 
       totalPendente += valorPendenteEvento;
       totalAtrasado += valorAtrasadoEvento;
@@ -176,7 +262,7 @@ export default function DetalhamentoReceberReport({
       totalReceber: totalPendente + totalAtrasado,
       clientes
     };
-  }, [eventos, pagamentos]);
+  }, [eventos, pagamentos, resumosEventos]);
 
   const dashboardPendente = dashboardTotals?.pendente ?? null;
   const dashboardAtrasado = dashboardTotals?.atrasado ?? null;
@@ -202,6 +288,11 @@ export default function DetalhamentoReceberReport({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {carregandoResumos && (
+          <div className="rounded-lg border border-dashed border-border p-4 text-sm text-text-secondary">
+            Atualizando valores com base nos pagamentos mais recentes...
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-lg border border-border bg-surface p-4">
             <p className="text-sm font-medium text-text-secondary">Total a Receber</p>
