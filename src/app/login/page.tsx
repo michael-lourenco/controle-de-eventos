@@ -149,7 +149,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="mt-4 p-4 bg-primary/10 rounded-md">
+            {/* <div className="mt-4 p-4 bg-primary/10 rounded-md">
               <h3 className="text-sm font-medium text-primary mb-2">
                 Credenciais para teste (desenvolvimento):
               </h3>
@@ -157,7 +157,7 @@ export default function LoginPage() {
                 <p><strong>Admin:</strong> admin@clickse.com / qualquer senha</p>
                 <p><strong>Usuário:</strong> user@clickse.com / qualquer senha</p>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </div>
