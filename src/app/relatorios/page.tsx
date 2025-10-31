@@ -11,6 +11,7 @@ import ServicosReport from '@/components/relatorios/ServicosReport';
 import CanaisEntradaReport from '@/components/relatorios/CanaisEntradaReport';
 import ImpressoesReport from '@/components/relatorios/ImpressoesReport';
 import ReceitaMensalReport from '@/components/relatorios/ReceitaMensalReport';
+import DetalhamentoReceberReport from '@/components/relatorios/DetalhamentoReceberReport';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
@@ -58,6 +59,21 @@ export default function RelatoriosPage() {
         {/* Submenu de Navegação Rápida */}
         <div className="sticky top-16 z-30 bg-surface/95 backdrop-blur-sm border border-border rounded-lg p-4 shadow-sm">
           <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('total-receber');
+                if (element) {
+                  const offset = 120;
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover"
+            >
+              Total a Receber
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -149,6 +165,17 @@ export default function RelatoriosPage() {
               Impressões
             </Button>
           </div>
+        </div>
+        {/* Detalhamento do Valor a Receber */}
+        <div id="total-receber">
+          <DetalhamentoReceberReport
+            eventos={eventos}
+            pagamentos={pagamentos || []}
+            dashboardTotals={{
+              pendente: dashboardData.resumoFinanceiro.valorPendente,
+              atrasado: dashboardData.resumoFinanceiro.valorAtrasado
+            }}
+          />
         </div>
 
         {/* Relatório de Receita Mensal */}
