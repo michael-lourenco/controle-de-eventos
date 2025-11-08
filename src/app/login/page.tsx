@@ -38,6 +38,7 @@ export default function LoginPage() {
       if (result?.error) {
         console.error('Erro no login:', result.error);
         setError('Email ou senha inválidos');
+        setLoading(false);
       } else if (result?.ok) {
         console.log('Login bem-sucedido, redirecionando...');
         router.push('/dashboard');
@@ -45,11 +46,11 @@ export default function LoginPage() {
       } else {
         console.error('Resultado inesperado:', result);
         setError('Erro inesperado. Tente novamente.');
+        setLoading(false);
       }
     } catch (error) {
       console.error('Erro no catch:', error);
       setError('Erro inesperado. Tente novamente.');
-    } finally {
       setLoading(false);
     }
   };
@@ -132,7 +133,17 @@ export default function LoginPage() {
                 className="w-full"
                 disabled={!email || !senha || loading}
               >
-                {loading ? 'Entrando...' : 'Entrar'}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span
+                      className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"
+                      aria-hidden="true"
+                    />
+                    Entrando...
+                  </span>
+                ) : (
+                  'Entrar'
+                )}
               </Button>
             </form>
 
