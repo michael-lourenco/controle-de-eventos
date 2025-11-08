@@ -77,15 +77,33 @@ export default function RegisterPage() {
     }
   };
 
+  const getPasswordStrengthLabel = () => {
+    if (passwordStrength < 2) return 'Fraca';
+    if (passwordStrength < 4) return 'Média';
+    return 'Forte';
+  };
+
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength < 2) return 'var(--error)';
+    if (passwordStrength < 4) return 'var(--warning)';
+    return 'var(--success)';
+  };
+
+  const confirmPasswordError =
+    formData.confirmPassword.length > 0 && !passwordsMatch ? 'Senhas não coincidem' : undefined;
+
+  const confirmPasswordHelper =
+    formData.confirmPassword.length > 0 && passwordsMatch ? 'Senhas coincidem' : undefined;
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-extrabold text-text-primary">
               Criar Conta
             </CardTitle>
-            <CardDescription className="mt-2 text-sm text-gray-600">
+            <CardDescription className="mt-2 text-sm text-text-secondary">
               Cadastre-se para acessar o sistema
             </CardDescription>
           </CardHeader>
@@ -97,10 +115,10 @@ export default function RegisterPage() {
                   name="nome"
                   type="text"
                   required
-                  placeholder="Nome completo"
+                  label="Nome completo"
+                  placeholder="Digite seu nome"
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-text-primary rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 />
                 
                 <Input
@@ -109,10 +127,10 @@ export default function RegisterPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  placeholder="Email"
+                  label="Email"
+                  placeholder="Digite seu email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-text-primary rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 />
                 
                 {/* Campo de Senha */}
@@ -123,46 +141,47 @@ export default function RegisterPage() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
                     required
-                    placeholder="Senha"
+                    label="Senha"
+                    placeholder="Digite sua senha"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-text-primary rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    className="pr-10"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-text-muted"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                      <EyeSlashIcon className="h-5 w-5" />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                      <EyeIcon className="h-5 w-5" />
                     )}
                   </button>
                 </div>
 
                 {/* Validação de Senha */}
                 {formData.password && (
-                  <div className="bg-gray-50 p-3 rounded-md">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Critérios da senha:</p>
+                  <div className="border border-border bg-surface rounded-md p-3">
+                    <p className="text-sm font-medium text-text-secondary mb-2">Critérios da senha:</p>
                     <div className="space-y-1">
-                      <div className={`flex items-center text-xs ${passwordValidation.minLength ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`flex items-center text-xs ${passwordValidation.minLength ? 'text-success' : 'text-error'}`}>
                         <span className="mr-2">{passwordValidation.minLength ? '✓' : '✗'}</span>
                         Mínimo 6 caracteres
                       </div>
-                      <div className={`flex items-center text-xs ${passwordValidation.hasUpperCase ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`flex items-center text-xs ${passwordValidation.hasUpperCase ? 'text-success' : 'text-error'}`}>
                         <span className="mr-2">{passwordValidation.hasUpperCase ? '✓' : '✗'}</span>
                         Uma letra maiúscula
                       </div>
-                      <div className={`flex items-center text-xs ${passwordValidation.hasLowerCase ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`flex items-center text-xs ${passwordValidation.hasLowerCase ? 'text-success' : 'text-error'}`}>
                         <span className="mr-2">{passwordValidation.hasLowerCase ? '✓' : '✗'}</span>
                         Uma letra minúscula
                       </div>
-                      <div className={`flex items-center text-xs ${passwordValidation.hasNumber ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`flex items-center text-xs ${passwordValidation.hasNumber ? 'text-success' : 'text-error'}`}>
                         <span className="mr-2">{passwordValidation.hasNumber ? '✓' : '✗'}</span>
                         Um número
                       </div>
-                      <div className={`flex items-center text-xs ${passwordValidation.hasSpecialChar ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`flex items-center text-xs ${passwordValidation.hasSpecialChar ? 'text-success' : 'text-error'}`}>
                         <span className="mr-2">{passwordValidation.hasSpecialChar ? '✓' : '✗'}</span>
                         Um caractere especial
                       </div>
@@ -170,26 +189,19 @@ export default function RegisterPage() {
                     
                     {/* Indicador de força da senha */}
                     <div className="mt-3">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                      <div className="flex justify-between text-xs text-text-secondary mb-1">
                         <span>Força da senha:</span>
-                        <span className={`font-medium ${
-                          passwordStrength < 2 ? 'text-red-600' :
-                          passwordStrength < 4 ? 'text-yellow-600' :
-                          'text-green-600'
-                        }`}>
-                          {passwordStrength < 2 ? 'Fraca' :
-                           passwordStrength < 4 ? 'Média' :
-                           'Forte'}
+                        <span className="font-medium" style={{ color: getPasswordStrengthColor() }}>
+                          {getPasswordStrengthLabel()}
                         </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            passwordStrength < 2 ? 'bg-red-500' :
-                            passwordStrength < 4 ? 'bg-yellow-500' :
-                            'bg-green-500'
-                          }`}
-                          style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className="h-2 rounded-full transition-all duration-300"
+                          style={{
+                            width: `${(passwordStrength / 5) * 100}%`,
+                            backgroundColor: getPasswordStrengthColor()
+                          }}
                         ></div>
                       </div>
                     </div>
@@ -204,41 +216,30 @@ export default function RegisterPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     autoComplete="new-password"
                     required
-                    placeholder="Confirmar senha"
+                    label="Confirmar senha"
+                    placeholder="Digite novamente a senha"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    className={`appearance-none relative block w-full px-3 py-2 pr-10 border rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm ${
-                      formData.confirmPassword ? 
-                        (passwordsMatch ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50') :
-                        'border-gray-300'
-                    }`}
+                    className="pr-10"
+                    error={confirmPasswordError}
+                    helperText={confirmPasswordHelper}
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-text-muted"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 text-gray-400" />
+                      <EyeSlashIcon className="h-5 w-5" />
                     ) : (
-                      <EyeIcon className="h-5 w-5 text-gray-400" />
+                      <EyeIcon className="h-5 w-5" />
                     )}
                   </button>
                 </div>
-
-                {/* Validação de Confirmação */}
-                {formData.confirmPassword && (
-                  <div className={`text-xs flex items-center ${
-                    passwordsMatch ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    <span className="mr-2">{passwordsMatch ? '✓' : '✗'}</span>
-                    {passwordsMatch ? 'Senhas coincidem' : 'Senhas não coincidem'}
-                  </div>
-                )}
               </div>
 
               {error && (
-                <div className="text-red-600 text-sm text-center">
+                <div className="text-error text-sm text-center bg-error-bg border border-border rounded-md px-3 py-2">
                   {error}
                 </div>
               )}
@@ -247,19 +248,19 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="w-full"
                 >
                   {loading ? 'Criando conta...' : 'Criar Conta'}
                 </Button>
               </div>
 
               <div className="text-center">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-text-secondary">
                   Já tem uma conta?{' '}
                   <button
                     type="button"
                     onClick={() => router.push('/login')}
-                    className="font-medium text-indigo-600 hover:text-indigo-500 cursor-pointer"
+                    className="font-semibold text-primary hover:text-primary/80 cursor-pointer transition-colors"
                   >
                     Faça login
                   </button>

@@ -10,12 +10,15 @@ import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import { 
   Cliente, 
   Evento, 
+  ServicoEvento,
   StatusEvento, 
-  TipoEvento
+  TipoEvento,
+  TipoServico
 } from '@/types';
 import { useClientes, useCanaisEntrada } from '@/hooks/useData';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
+import EventoServicosSection from '@/components/forms/EventoServicosSection';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -125,6 +128,13 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const [tiposServico, setTiposServico] = useState<TipoServico[]>([]);
+  const [selectedTiposServicoIds, setSelectedTiposServicoIds] = useState<Set<string>>(new Set());
+  const [servicosEventoOriginais, setServicosEventoOriginais] = useState<ServicoEvento[]>([]);
+  const [loadingTiposServico, setLoadingTiposServico] = useState(false);
+  const [criandoTipoServico, setCriandoTipoServico] = useState(false);
+  const [erroTiposServico, setErroTiposServico] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (evento) {
@@ -182,6 +192,66 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     }
   }, [clienteSearch, clientes]);
 
+  useEffect(() => {
+    const carregarTiposServico = async () => {
+      if (!userId) {
+        return;
+      }
+
+      setLoadingTiposServico(true);
+      setErroTiposServico(null);
+
+      try {
+        const tipos = await dataService.getTiposServicoAtivos(userId);
+        const tiposOrdenados = tipos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+        setTiposServico(tiposOrdenados);
+        setSelectedTiposServicoIds(prev => {
+          if (prev.size === 0) {
+            return prev;
+          }
+
+          const validIds = new Set<string>();
+          prev.forEach(id => {
+            if (tiposOrdenados.some(tipo => tipo.id === id)) {
+              validIds.add(id);
+            }
+          });
+
+          if (validIds.size === prev.size) {
+            return prev;
+          }
+
+          return validIds;
+        });
+      } catch (error) {
+        console.error('EventoForm: erro ao carregar tipos de serviço', error);
+        setErroTiposServico('Não foi possível carregar os tipos de serviço.');
+      } finally {
+        setLoadingTiposServico(false);
+      }
+    };
+
+    carregarTiposServico();
+  }, [userId]);
+
+  useEffect(() => {
+    const carregarServicosEvento = async () => {
+      if (!userId || !evento?.id) {
+        return;
+      }
+
+      try {
+        const servicos = await dataService.getServicosEvento(userId, evento.id);
+        setServicosEventoOriginais(servicos);
+        setSelectedTiposServicoIds(new Set(servicos.map(servico => servico.tipoServicoId)));
+      } catch (error) {
+        console.error('EventoForm: erro ao carregar serviços do evento', error);
+      }
+    };
+
+    carregarServicosEvento();
+  }, [userId, evento?.id]);
+
   const handleInputChange = (field: string, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
@@ -224,6 +294,153 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     }));
     setClienteSearch(cliente.nome);
     setClientesFiltrados([]);
+  };
+
+  const handleToggleTipoServico = (tipoId: string) => {
+    setSelectedTiposServicoIds(prev => {
+      const atualizados = new Set(prev);
+      if (atualizados.has(tipoId)) {
+        atualizados.delete(tipoId);
+      } else {
+        atualizados.add(tipoId);
+      }
+      return atualizados;
+    });
+  };
+
+  const handleSelecionarTodosTiposServico = () => {
+    setSelectedTiposServicoIds(prev => {
+      if (tiposServico.length === 0) {
+        return prev;
+      }
+
+      if (prev.size === tiposServico.length) {
+        return new Set();
+      }
+
+      return new Set(tiposServico.map(tipo => tipo.id));
+    });
+  };
+
+  const handleCreateTipoServico = async (nome: string) => {
+    if (!userId) {
+      return;
+    }
+
+    setCriandoTipoServico(true);
+    setErroTiposServico(null);
+
+    try {
+      const novoTipo = await dataService.createTipoServico({
+        nome,
+        descricao: '',
+        ativo: true
+      }, userId);
+
+      setTiposServico(prev => {
+        const novaLista = [...prev, novoTipo].sort((a, b) =>
+          a.nome.localeCompare(b.nome, 'pt-BR')
+        );
+        return novaLista;
+      });
+
+      setSelectedTiposServicoIds(prev => {
+        const atualizado = new Set(prev);
+        atualizado.add(novoTipo.id);
+        return atualizado;
+      });
+    } catch (error) {
+      console.error('EventoForm: erro ao criar novo tipo de serviço', error);
+      setErroTiposServico('Não foi possível criar o novo tipo de serviço.');
+      throw error;
+    } finally {
+      setCriandoTipoServico(false);
+    }
+  };
+
+  const sincronizarServicosEvento = async (eventoId: string) => {
+    if (!userId) {
+      console.warn('EventoForm: usuário não autenticado para sincronizar serviços.');
+      return;
+    }
+
+    const tiposMap = new Map(tiposServico.map(tipo => [tipo.id, tipo]));
+    const selecionados = Array.from(selectedTiposServicoIds);
+
+    try {
+      if (evento) {
+        let servicosAtuais = servicosEventoOriginais;
+
+        if (servicosAtuais.length === 0) {
+          try {
+            servicosAtuais = await dataService.getServicosEvento(userId, eventoId);
+          } catch (erro) {
+            console.error('EventoForm: erro ao buscar serviços atuais do evento para sincronização', erro);
+          }
+        }
+
+        const mapaOriginais = new Map(servicosAtuais.map(servico => [servico.tipoServicoId, servico]));
+        const atualizados: ServicoEvento[] = [];
+
+        for (const tipoId of selecionados) {
+          const tipo = tiposMap.get(tipoId);
+          if (!tipo) {
+            continue;
+          }
+
+          if (mapaOriginais.has(tipoId)) {
+            atualizados.push(mapaOriginais.get(tipoId)!);
+            mapaOriginais.delete(tipoId);
+            continue;
+          }
+
+          const novoServico = await dataService.createServicoEvento(userId, eventoId, {
+            eventoId,
+            tipoServicoId: tipoId,
+            tipoServico: tipo,
+            observacoes: '',
+            dataCadastro: new Date()
+          });
+
+          atualizados.push(novoServico);
+        }
+
+        for (const [, servico] of mapaOriginais) {
+          await dataService.deleteServicoEvento(userId, eventoId, servico.id);
+        }
+
+        setServicosEventoOriginais(atualizados);
+      } else {
+        if (selecionados.length === 0) {
+          setServicosEventoOriginais([]);
+          return;
+        }
+
+        const novosServicos: ServicoEvento[] = [];
+
+        for (const tipoId of selecionados) {
+          const tipo = tiposMap.get(tipoId);
+          if (!tipo) {
+            continue;
+          }
+
+          const novoServico = await dataService.createServicoEvento(userId, eventoId, {
+            eventoId,
+            tipoServicoId: tipoId,
+            tipoServico: tipo,
+            observacoes: '',
+            dataCadastro: new Date()
+          });
+
+          novosServicos.push(novoServico);
+        }
+
+        setServicosEventoOriginais(novosServicos);
+      }
+    } catch (error) {
+      console.error('EventoForm: erro ao sincronizar serviços do evento', error);
+      throw error;
+    }
   };
 
   const getDiaSemana = (data: string) => {
@@ -400,11 +617,13 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
 
       if (evento) {
         const eventoAtualizado = await dataService.updateEvento(evento.id, eventoData, userId);
+        await sincronizarServicosEvento(eventoAtualizado.id);
         onSave(eventoAtualizado);
       } else {
         console.log('EventoForm: Criando novo evento com dados:', eventoData);
         const novoEvento = await dataService.createEvento(eventoData, userId);
         console.log('EventoForm: Evento criado:', novoEvento);
+        await sincronizarServicosEvento(novoEvento.id);
         onSave(novoEvento);
       }
     } catch (error) {
@@ -732,6 +951,18 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           />
         </CardContent>
       </Card>
+
+      <EventoServicosSection
+        tiposServico={tiposServico}
+        selectedIds={selectedTiposServicoIds}
+        onToggle={handleToggleTipoServico}
+        onSelecionarTodos={handleSelecionarTodosTiposServico}
+        totalSelecionado={selectedTiposServicoIds.size}
+        loading={loadingTiposServico}
+        onCreateTipo={handleCreateTipoServico}
+        criandoTipo={criandoTipoServico}
+        errorMessage={erroTiposServico}
+      />
 
       {/* Botões de Ação */}
       <div className="flex justify-end space-x-4">
