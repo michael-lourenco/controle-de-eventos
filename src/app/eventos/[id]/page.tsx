@@ -18,7 +18,8 @@ import {
   HomeIcon,
   HashtagIcon,
   PrinterIcon,
-  UserIcon
+  UserIcon,
+  BriefcaseIcon
 } from '@heroicons/react/24/outline';
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
@@ -173,8 +174,27 @@ export default function EventoViewPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="space-y-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-text-primary leading-tight break-words">
+              {evento.nomeEvento || evento.cliente.nome}
+            </h1>
+            <div className="mt-3 space-y-2 text-sm">
+              <div className="flex items-start gap-2 text-text-primary">
+                <UserIcon className="h-5 w-5 text-text-muted flex-shrink-0 mt-0.5" />
+                <span className="font-medium break-words">{evento.cliente.nome}</span>
+              </div>
+              <div className="flex items-start gap-2 text-text-secondary">
+                <BriefcaseIcon className="h-5 w-5 text-text-muted flex-shrink-0 mt-0.5" />
+                <span className="break-words">{evento.contratante}</span>
+              </div>
+              <p className="text-text-muted text-xs">
+                {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} • {evento.diaSemana}
+              </p>
+            </div>
+          </div>
+
+          <div className="border-t border-border pt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="outline"
               onClick={() => router.push('/eventos')}
@@ -182,27 +202,19 @@ export default function EventoViewPage() {
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Voltar
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-text-primary">
-                {evento.nomeEvento || evento.cliente.nome}
-              </h1>
-              <p className="text-text-secondary">
-                {evento.nomeEvento ? `${evento.cliente.nome} - ${evento.contratante}` : evento.contratante}
-              </p>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleEdit}>
+                <PencilIcon className="h-4 w-4 mr-2" />
+                Editar
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <TrashIcon className="h-4 w-4 mr-2" />
+                Excluir
+              </Button>
             </div>
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" onClick={handleEdit}>
-              <PencilIcon className="h-4 w-4 mr-2" />
-              Editar
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              <TrashIcon className="h-4 w-4 mr-2" />
-              Excluir
-            </Button>
           </div>
         </div>
 

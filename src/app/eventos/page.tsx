@@ -264,7 +264,7 @@ export default function EventosPage() {
         )}
 
         {/* Lista de Eventos */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-4">
           {filteredEventos.map((evento) => (
             <Card 
               key={evento.id} 
@@ -272,18 +272,25 @@ export default function EventosPage() {
               onClick={() => handleView(evento)}
             >
               <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">
-                      {evento.nomeEvento || evento.cliente.nome}
-                    </CardTitle>
-                    <CardDescription>
-                      {evento.nomeEvento ? `${evento.cliente.nome} - ${evento.contratante}` : evento.contratante}
-                    </CardDescription>
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between lg:gap-4">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-lg leading-tight text-text-primary break-words">
+                        {evento.nomeEvento || evento.cliente.nome}
+                      </CardTitle>
+                      <CardDescription className="mt-1 text-sm text-text-secondary">
+                        <span className="block text-text-primary font-medium truncate lg:whitespace-normal">
+                          {evento.cliente.nome}
+                        </span>
+                        <span className="block text-xs text-text-secondary truncate lg:whitespace-normal">
+                          {evento.contratante}
+                        </span>
+                      </CardDescription>
+                    </div>
+                    <span className={`mt-2 lg:mt-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(evento.status)} shrink-0`}>
+                      {evento.status}
+                    </span>
                   </div>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(evento.status)}`}>
-                    {evento.status}
-                  </span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
