@@ -23,19 +23,48 @@ import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { StatusEvento, TipoEvento, Evento } from '@/types';
+import { StatusEvento, Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
 import DateRangeFilter, { DateFilter, isDateInFilter } from '@/components/filters/DateRangeFilter';
+import { useTiposEvento } from '@/hooks/useData';
 
 export default function EventosPage() {
   const router = useRouter();
   const { userId } = useCurrentUser();
   const { data: eventos, loading, error, refetch } = useEventos();
+  const { data: tiposEventoData } = useTiposEvento();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<DateFilter | null>(null);
   const [eventoParaExcluir, setEventoParaExcluir] = useState<Evento | null>(null);
   
+  const eventosLista = eventos ?? [];
+
+  const tiposEventoFilterOptions = React.useMemo(() => {
+    const nomes = new Set<string>();
+    const options = [
+      { value: 'todos', label: 'Todos' }
+    ];
+
+    const fontes = [
+      ...(tiposEventoData ?? []).filter(tipo => tipo.ativo).map(tipo => tipo.nome),
+      ...DEFAULT_TIPOS_EVENTO.map(tipo => tipo.nome),
+      ...eventosLista.map(evento => evento.tipoEvento)
+    ];
+
+    fontes.forEach(nome => {
+      if (nome && !nomes.has(nome)) {
+        nomes.add(nome);
+        options.push({
+          value: nome,
+          label: nome
+        });
+      }
+    });
+
+    return options;
+  }, [tiposEventoData, eventosLista]);
+
   if (loading) {
     return (
       <Layout>
@@ -66,7 +95,7 @@ export default function EventosPage() {
     );
   }
 
-  const filteredEventos = eventos.filter(evento => {
+  const filteredEventos = eventosLista.filter(evento => {
     const matchesSearch = evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          evento.local.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (evento.nomeEvento && evento.nomeEvento.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -207,14 +236,7 @@ export default function EventosPage() {
                     label="Tipo"
                     value={filterTipo}
                     onValueChange={(value) => setFilterTipo(value)}
-                    options={[
-                      { value: 'todos', label: 'Todos' },
-                      { value: TipoEvento.QUINZE_ANOS, label: '15 Anos' },
-                      { value: TipoEvento.ANIVERSARIO_ADULTO, label: 'Aniversário Adulto' },
-                      { value: TipoEvento.ANIVERSARIO_INFANTIL, label: 'Aniversário Infantil' },
-                      { value: TipoEvento.CASAMENTO, label: 'Casamento' },
-                      { value: TipoEvento.OUTROS, label: 'Outros' }
-                    ]}
+                    options={tiposEventoFilterOptions}
                   />
                 </div>
               </div>

@@ -7,6 +7,7 @@ export const COLLECTIONS = {
   // Subcollections de controle_users
   CLIENTES: 'clientes',
   EVENTOS: 'eventos',
+  TIPO_EVENTOS: 'tipo_eventos',
   TIPO_CUSTOS: 'tipo_custos',
   TIPO_SERVICOS: 'tipo_servicos',
   CANAIS_ENTRADA: 'canais_entrada',
@@ -59,6 +60,14 @@ export const COLLECTION_SCHEMAS = {
     dataCadastro: 'timestamp'
   },
   
+  [COLLECTIONS.TIPO_EVENTOS]: {
+    id: 'string',
+    nome: 'string',
+    descricao: 'string',
+    ativo: 'boolean',
+    dataCadastro: 'timestamp'
+  },
+
   [COLLECTIONS.EVENTOS]: {
     id: 'string',
     clienteId: 'string',
@@ -67,6 +76,7 @@ export const COLLECTION_SCHEMAS = {
     local: 'string',
     endereco: 'string',
     tipoEvento: 'string',
+    tipoEventoId: 'string?',
     horarioInicio: 'string',
     horarioInicioServico: 'string',
     horarioTerminoServico: 'string',

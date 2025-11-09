@@ -11,7 +11,9 @@ import {
   AnexoEvento,
   DashboardData,
   ResumoCustosEvento,
-  ResumoServicosEvento
+  ResumoServicosEvento,
+  TipoEvento,
+  DEFAULT_TIPOS_EVENTO
 } from '@/types';
 import { initializeAllCollections, initializeTiposCusto } from './collections-init';
 
@@ -24,6 +26,7 @@ export class DataService {
   private tipoServicoRepo = repositoryFactory.getTipoServicoRepository();
   private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
   private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
+  private tipoEventoRepo = repositoryFactory.getTipoEventoRepository();
 
   // Método para inicializar collections automaticamente
   private async ensureCollectionsInitialized(): Promise<void> {
@@ -32,6 +35,31 @@ export class DataService {
     } catch (error) {
       console.error('Erro ao inicializar collections:', error);
       // Não lançar erro para não quebrar a aplicação
+    }
+  }
+
+  private async ensureTiposEventoInitialized(userId: string): Promise<void> {
+    if (!userId) {
+      return;
+    }
+
+    try {
+      const existentes = await this.tipoEventoRepo.findAll(userId);
+      if (existentes.length === 0) {
+        for (const tipo of DEFAULT_TIPOS_EVENTO) {
+          await this.tipoEventoRepo.createTipoEvento(
+            {
+              nome: tipo.nome,
+              descricao: tipo.descricao ?? '',
+              ativo: true,
+              dataCadastro: new Date()
+            },
+            userId
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao garantir tipos de evento padrões:', error);
     }
   }
 
@@ -667,6 +695,59 @@ export class DataService {
       throw new Error('userId é obrigatório para buscar canais de entrada');
     }
     return this.canalEntradaRepo.searchByName(userId, searchTerm);
+  }
+
+  // Métodos para Tipos de Evento
+  async getTiposEvento(userId: string): Promise<TipoEvento[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar tipos de evento');
+    }
+    await this.ensureTiposEventoInitialized(userId);
+    const tipos = await this.tipoEventoRepo.findAll(userId);
+    return tipos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+
+  async getTiposEventoAtivos(userId: string): Promise<TipoEvento[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar tipos de evento');
+    }
+    await this.ensureTiposEventoInitialized(userId);
+    const tipos = await this.tipoEventoRepo.getAtivos(userId);
+    return tipos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }
+
+  async getTipoEventoById(id: string, userId: string): Promise<TipoEvento | null> {
+    if (!id || !userId) {
+      throw new Error('id e userId são obrigatórios para buscar tipo de evento');
+    }
+    return this.tipoEventoRepo.getTipoEventoById(id, userId);
+  }
+
+  async createTipoEvento(tipoEvento: Omit<TipoEvento, 'id' | 'dataCadastro'>, userId: string): Promise<TipoEvento> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para criar tipo de evento');
+    }
+    return this.tipoEventoRepo.createTipoEvento(
+      {
+        ...tipoEvento,
+        dataCadastro: new Date()
+      },
+      userId
+    );
+  }
+
+  async updateTipoEvento(id: string, tipoEvento: Partial<TipoEvento>, userId: string): Promise<TipoEvento> {
+    if (!id || !userId) {
+      throw new Error('id e userId são obrigatórios para atualizar tipo de evento');
+    }
+    return this.tipoEventoRepo.updateTipoEvento(id, tipoEvento, userId);
+  }
+
+  async deleteTipoEvento(id: string, userId: string): Promise<void> {
+    if (!id || !userId) {
+      throw new Error('id e userId são obrigatórios para deletar tipo de evento');
+    }
+    return this.tipoEventoRepo.deleteTipoEvento(id, userId);
   }
 
   // Métodos para serviços

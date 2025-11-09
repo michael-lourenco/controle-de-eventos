@@ -17,7 +17,8 @@ import {
   UserIcon,
   ArrowRightOnRectangleIcon,
   WrenchScrewdriverIcon,
-  TagIcon
+  TagIcon,
+  CalendarDaysIcon
 } from '@heroicons/react/24/outline';
 
 interface LayoutProps {
@@ -31,6 +32,7 @@ const navigation = [
   { name: 'Pagamentos', href: '/pagamentos', icon: CurrencyDollarIcon },
   { name: 'Serviços', href: '/servicos', icon: WrenchScrewdriverIcon },
   { name: 'Canais de Entrada', href: '/canais-entrada', icon: TagIcon },
+  { name: 'Tipos de Evento', href: '/tipos-eventos', icon: CalendarDaysIcon },
   { name: 'Tipos de Custo', href: '/tipos-custos', icon: CurrencyDollarIcon },
   { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },

@@ -32,6 +32,14 @@ export interface Cliente {
   dataCadastro: Date;
 }
 
+export interface TipoEvento {
+  id: string;
+  nome: string;
+  descricao?: string;
+  ativo: boolean;
+  dataCadastro: Date;
+}
+
 export interface Evento {
   id: string;
   nomeEvento?: string;
@@ -41,7 +49,8 @@ export interface Evento {
   diaSemana: string;
   local: string;
   endereco: string;
-  tipoEvento: 'Casamento' | 'Aniversário infantil' | 'Aniversário adulto' | '15 anos' | 'Outros';
+  tipoEvento: string;
+  tipoEventoId?: string;
   saida: string;
   chegadaNoLocal: string;
   horarioInicio: string;
@@ -247,14 +256,6 @@ export enum StatusContrato {
   CONCLUIDO = 'Concluído'
 }
 
-export enum TipoEvento {
-  CASAMENTO = 'Casamento',
-  ANIVERSARIO_INFANTIL = 'Aniversário infantil',
-  ANIVERSARIO_ADULTO = 'Aniversário adulto',
-  QUINZE_ANOS = '15 anos',
-  OUTROS = 'Outros'
-}
-
 export enum FormaPagamento {
   A_VISTA = 'À vista',
   PARCELADO = 'Parcelado',
@@ -262,6 +263,14 @@ export enum FormaPagamento {
   DEPOSITO_BANCARIO = 'Depósito bancário',
   PIX = 'PIX'
 }
+
+export const DEFAULT_TIPOS_EVENTO: Array<Pick<TipoEvento, 'nome' | 'descricao'>> = [
+  { nome: 'Casamento', descricao: 'Cerimônias e recepções matrimoniais' },
+  { nome: 'Aniversário infantil', descricao: 'Festas para crianças' },
+  { nome: 'Aniversário adulto', descricao: 'Celebrações para adultos' },
+  { nome: '15 anos', descricao: 'Festas de debutante' },
+  { nome: 'Outros', descricao: 'Eventos personalizados ou diferentes do padrão' }
+];
 
 export interface TipoCusto {
   id: string;

@@ -13,7 +13,6 @@ import {
   ResumoCustosEvento,
   StatusEvento,
   StatusContrato,
-  TipoEvento,
   FormaPagamento,
   CanalEntrada
 } from '@/types';

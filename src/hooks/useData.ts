@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '@/lib/data-service';
-import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData } from '@/types';
+import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData, TipoEvento } from '@/types';
 import { useCurrentUser } from './useAuth';
 
 export interface UseDataResult<T> {
@@ -392,6 +392,38 @@ export function useTiposServicos(): UseDataResult<TipoServico[]> {
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar tipos de serviços');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
+export function useTiposEvento(): UseDataResult<TipoEvento[]> {
+  const [data, setData] = useState<TipoEvento[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getTiposEvento(userId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar tipos de evento');
     } finally {
       setLoading(false);
     }

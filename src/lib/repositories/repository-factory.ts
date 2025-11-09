@@ -6,6 +6,7 @@ import { ServicoEventoRepository, TipoServicoRepository } from './servico-reposi
 import { CanalEntradaRepository } from './canal-entrada-repository';
 import { UserRepository } from './user-repository';
 import { ArquivoRepository } from './arquivo-repository';
+import { TipoEventoRepository } from './tipo-evento-repository';
 
 export class RepositoryFactory {
   private static instance: RepositoryFactory;
@@ -18,6 +19,7 @@ export class RepositoryFactory {
   private servicoEventoRepository: ServicoEventoRepository;
   private tipoServicoRepository: TipoServicoRepository;
   private canalEntradaRepository: CanalEntradaRepository;
+  private tipoEventoRepository: TipoEventoRepository;
   private userRepository: UserRepository;
   private arquivoRepository: ArquivoRepository;
 
@@ -30,6 +32,7 @@ export class RepositoryFactory {
     this.servicoEventoRepository = new ServicoEventoRepository();
     this.tipoServicoRepository = new TipoServicoRepository();
     this.canalEntradaRepository = new CanalEntradaRepository();
+    this.tipoEventoRepository = new TipoEventoRepository();
     this.userRepository = new UserRepository();
     this.arquivoRepository = new ArquivoRepository();
   }
@@ -79,6 +82,10 @@ export class RepositoryFactory {
 
   public getCanalEntradaRepository(): CanalEntradaRepository {
     return this.canalEntradaRepository;
+  }
+
+  public getTipoEventoRepository(): TipoEventoRepository {
+    return this.tipoEventoRepository;
   }
 }
 

@@ -42,7 +42,8 @@ interface FormData {
   dataEvento: string;
   local: string;
   endereco: string;
-  tipoEvento: TipoEvento;
+  tipoEvento: string;
+  tipoEventoId: string;
   saida: string;
   chegadaNoLocal: string;
   horarioInicio: string;
@@ -62,14 +63,6 @@ interface FormData {
   valorTotal: number;
   diaFinalPagamento: string;
 }
-
-const tipoEventoOptions = [
-  { value: TipoEvento.QUINZE_ANOS, label: '15 Anos' },
-  { value: TipoEvento.ANIVERSARIO_ADULTO, label: 'Aniversário Adulto' },
-  { value: TipoEvento.ANIVERSARIO_INFANTIL, label: 'Aniversário Infantil' },
-  { value: TipoEvento.CASAMENTO, label: 'Casamento' },
-  { value: TipoEvento.OUTROS, label: 'Outros' }
-];
 
 const statusOptions = [
   { value: StatusEvento.AGENDADO, label: 'Agendado' },
@@ -102,7 +95,8 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     dataEvento: '',
     local: '',
     endereco: '',
-    tipoEvento: TipoEvento.CASAMENTO,
+    tipoEvento: '',
+    tipoEventoId: '',
     saida: '',
     chegadaNoLocal: '',
     horarioInicio: '',
@@ -128,6 +122,10 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [tiposEvento, setTiposEvento] = useState<TipoEvento[]>([]);
+  const [loadingTiposEvento, setLoadingTiposEvento] = useState(false);
+  const [criandoTipoEvento, setCriandoTipoEvento] = useState(false);
+  const [erroTiposEvento, setErroTiposEvento] = useState<string | null>(null);
 
   const [tiposServico, setTiposServico] = useState<TipoServico[]>([]);
   const [selectedTiposServicoIds, setSelectedTiposServicoIds] = useState<Set<string>>(new Set());
@@ -135,6 +133,32 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   const [loadingTiposServico, setLoadingTiposServico] = useState(false);
   const [criandoTipoServico, setCriandoTipoServico] = useState(false);
   const [erroTiposServico, setErroTiposServico] = useState<string | null>(null);
+
+  const tipoEventoOptions = React.useMemo(() => {
+    const baseOptions = tiposEvento
+      .filter(tipo => tipo.ativo || tipo.id === formData.tipoEventoId)
+      .map(tipo => ({
+        value: tipo.id,
+        label: tipo.nome,
+        description: tipo.descricao
+      }));
+
+    if (!formData.tipoEventoId && formData.tipoEvento) {
+      const jaExiste = baseOptions.some(
+        option => option.label.toLowerCase() === formData.tipoEvento.toLowerCase()
+      );
+
+      if (!jaExiste) {
+        baseOptions.push({
+          value: formData.tipoEvento,
+          label: formData.tipoEvento,
+          description: 'Tipo associado a eventos já cadastrados'
+        });
+      }
+    }
+
+    return baseOptions.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+  }, [tiposEvento, formData.tipoEventoId, formData.tipoEvento]);
 
 
   useEffect(() => {
@@ -158,7 +182,8 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         dataEvento: new Date(evento.dataEvento.getTime() - evento.dataEvento.getTimezoneOffset() * 60000).toISOString().split('T')[0],
         local: evento.local,
         endereco: evento.endereco,
-        tipoEvento: evento.tipoEvento as TipoEvento,
+        tipoEvento: evento.tipoEvento || '',
+        tipoEventoId: evento.tipoEventoId || '',
         saida: evento.saida,
         chegadaNoLocal: evento.chegadaNoLocal,
         horarioInicio: evento.horarioInicio,
@@ -192,6 +217,51 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       setClientesFiltrados([]);
     }
   }, [clienteSearch, clientes]);
+
+  useEffect(() => {
+    const carregarTiposEvento = async () => {
+      if (!userId) {
+        return;
+      }
+
+      setLoadingTiposEvento(true);
+      setErroTiposEvento(null);
+
+      try {
+        const tipos = await dataService.getTiposEvento(userId);
+        const ordenados = tipos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+        setTiposEvento(ordenados);
+
+        if (!evento) {
+          const atualSelecionado = formData.tipoEventoId;
+          const tipoPadrao = ordenados.find(tipo => tipo.ativo) ?? ordenados[0];
+          if (!atualSelecionado && tipoPadrao) {
+            setFormData(prev => ({
+              ...prev,
+              tipoEvento: tipoPadrao.nome,
+              tipoEventoId: tipoPadrao.id
+            }));
+          }
+        } else if (evento && evento.tipoEventoId) {
+          const tipoExistente = ordenados.find(tipo => tipo.id === evento.tipoEventoId);
+          if (tipoExistente) {
+            setFormData(prev => ({
+              ...prev,
+              tipoEvento: tipoExistente.nome,
+              tipoEventoId: tipoExistente.id
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('EventoForm: erro ao carregar tipos de evento', error);
+        setErroTiposEvento('Não foi possível carregar os tipos de evento.');
+      } finally {
+        setLoadingTiposEvento(false);
+      }
+    };
+
+    carregarTiposEvento();
+  }, [userId, evento, formData.tipoEventoId]);
 
   useEffect(() => {
     const carregarTiposServico = async () => {
@@ -295,6 +365,81 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     }));
     setClienteSearch(cliente.nome);
     setClientesFiltrados([]);
+  };
+
+  const handleTipoEventoSelect = (tipoId: string) => {
+    if (!tipoId) {
+      setFormData(prev => ({
+        ...prev,
+        tipoEvento: '',
+        tipoEventoId: ''
+      }));
+      setErroTiposEvento('Selecione um tipo de evento');
+      return;
+    }
+
+    const tipo = tiposEvento.find(t => t.id === tipoId);
+    if (!tipo) {
+      setFormData(prev => ({
+        ...prev,
+        tipoEvento: tipoId,
+        tipoEventoId: ''
+      }));
+      setErroTiposEvento(null);
+      if (errors.tipoEvento) {
+        setErrors(prev => {
+          const { tipoEvento, ...rest } = prev;
+          return rest;
+        });
+      }
+      return;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      tipoEvento: tipo.nome,
+      tipoEventoId: tipo.id
+    }));
+
+    setErroTiposEvento(null);
+    if (errors.tipoEvento) {
+      setErrors(prev => {
+        const { tipoEvento, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
+  const handleCreateTipoEvento = async (nome: string) => {
+    if (!userId || !nome.trim() || criandoTipoEvento) {
+      return;
+    }
+
+    setCriandoTipoEvento(true);
+    setErroTiposEvento(null);
+
+    try {
+      const novoTipo = await dataService.createTipoEvento(
+        {
+          nome: nome.trim(),
+          descricao: '',
+          ativo: true
+        },
+        userId
+      );
+
+      setTiposEvento(prev => [...prev, novoTipo].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
+      setFormData(prev => ({
+        ...prev,
+        tipoEvento: novoTipo.nome,
+        tipoEventoId: novoTipo.id
+      }));
+    } catch (error) {
+      console.error('EventoForm: erro ao criar novo tipo de evento', error);
+      setErroTiposEvento('Não foi possível criar o novo tipo de evento.');
+    } finally {
+      setCriandoTipoEvento(false);
+    }
   };
 
   const handleToggleTipoServico = (tipoId: string) => {
@@ -541,6 +686,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     if (!formData.dataEvento) newErrors.dataEvento = 'Data do evento é obrigatória';
     if (!formData.local) newErrors.local = 'Local é obrigatório';
     if (!formData.endereco) newErrors.endereco = 'Endereço é obrigatório';
+    if (!formData.tipoEventoId) newErrors.tipoEvento = 'Selecione um tipo de evento';
     if (!formData.contratante) newErrors.contratante = 'Nome do contratante é obrigatório';
     if (!formData.numeroConvidados || formData.numeroConvidados <= 0) newErrors.numeroConvidados = 'Número de convidados deve ser maior que zero';
     if (!formData.valorTotal || formData.valorTotal <= 0) newErrors.valorTotal = 'Valor total deve ser maior que zero';
@@ -600,6 +746,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         local: formData.local,
         endereco: formData.endereco,
         tipoEvento: formData.tipoEvento,
+        tipoEventoId: formData.tipoEventoId || undefined,
         saida: formData.saida,
         chegadaNoLocal: formData.chegadaNoLocal,
         horarioInicio: formData.horarioInicio,
@@ -784,11 +931,15 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
               onChange={(e) => handleInputChange('dataEvento', e.target.value)}
               error={errors.dataEvento}
             />
-            <Select
+            <SelectWithSearch
               label="Tipo de Evento"
+              placeholder="Selecione ou digite um tipo de evento"
               options={tipoEventoOptions}
-              value={formData.tipoEvento}
-              onValueChange={(value) => handleInputChange('tipoEvento', value as TipoEvento)}
+              value={formData.tipoEventoId || formData.tipoEvento}
+              onChange={(value) => handleTipoEventoSelect(value)}
+              onCreateNew={(nome) => handleCreateTipoEvento(nome)}
+              allowCreate
+              error={errors.tipoEvento ?? erroTiposEvento ?? undefined}
             />
           </div>
 
