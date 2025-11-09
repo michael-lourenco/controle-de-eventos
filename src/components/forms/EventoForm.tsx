@@ -127,6 +127,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   const [clienteSearch, setClienteSearch] = useState('');
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const [tiposServico, setTiposServico] = useState<TipoServico[]>([]);
   const [selectedTiposServicoIds, setSelectedTiposServicoIds] = useState<Set<string>>(new Set());
@@ -553,6 +554,11 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     e.preventDefault();
     console.log('EventoForm: handleSubmit chamado');
     
+    if (submitting) {
+      console.log('EventoForm: submissão em andamento, ignorando novo envio');
+      return;
+    }
+    
     if (isLoading) {
       console.log('EventoForm: sessão ainda carregando');
       return;
@@ -569,6 +575,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     }
     
     console.log('EventoForm: Validação passou, processando...');
+    setSubmitting(true);
 
     try {
       let cliente: Cliente;
@@ -628,6 +635,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       }
     } catch (error) {
       console.error('Erro ao salvar evento:', error);
+      setSubmitting(false);
     }
   };
 
@@ -969,8 +977,22 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button type="submit" variant="outline">
-          {evento ? 'Atualizar Evento' : 'Criar Evento'}
+        <Button
+          type="submit"
+          variant="outline"
+          disabled={submitting}
+        >
+          {submitting ? (
+            <span className="flex items-center gap-2">
+              <span
+                className="h-4 w-4 rounded-full border-2 border-current border-t-transparent animate-spin"
+                aria-hidden="true"
+              />
+              {evento ? 'Atualizando...' : 'Criando...'}
+            </span>
+          ) : (
+            evento ? 'Atualizar Evento' : 'Criar Evento'
+          )}
         </Button>
       </div>
     </form>
