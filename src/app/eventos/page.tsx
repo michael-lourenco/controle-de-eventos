@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,6 +65,49 @@ export default function EventosPage() {
     return options;
   }, [tiposEventoData, eventosLista]);
 
+  // Filtrar eventos - chamado antes dos early returns para seguir as regras dos hooks
+  const filteredEventos = useMemo(() => {
+    if (!eventosLista || eventosLista.length === 0) {
+      return [];
+    }
+    
+    return eventosLista.filter(evento => {
+      const matchesSearch = evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           evento.local.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (evento.nomeEvento && evento.nomeEvento.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
+      const matchesTipo = filterTipo === 'todos' || evento.tipoEvento === filterTipo;
+      const matchesDate = isDateInFilter(evento.dataEvento, dateFilter);
+      
+      // Debug para verificar filtro de data
+      if (dateFilter && dateFilter.range.startDate && dateFilter.range.endDate) {
+        console.log('Filtro de data ativo:', {
+          eventDate: evento.dataEvento,
+          eventDateFormatted: format(evento.dataEvento, 'dd/MM/yyyy'),
+          filterStart: dateFilter.range.startDate,
+          filterEnd: dateFilter.range.endDate,
+          matchesDate
+        });
+      }
+      
+      return matchesSearch && matchesStatus && matchesTipo && matchesDate;
+    });
+  }, [eventosLista, searchTerm, filterStatus, filterTipo, dateFilter]);
+
+  // Ordenar eventos por data do evento em ordem crescente - chamado antes dos early returns
+  const sortedEventos = useMemo(() => {
+    if (!filteredEventos || filteredEventos.length === 0) {
+      return [];
+    }
+    
+    return [...filteredEventos].sort((a, b) => {
+      const dataA = a.dataEvento instanceof Date ? a.dataEvento.getTime() : new Date(a.dataEvento).getTime();
+      const dataB = b.dataEvento instanceof Date ? b.dataEvento.getTime() : new Date(b.dataEvento).getTime();
+      return dataA - dataB;
+    });
+  }, [filteredEventos]);
+
+  // Early returns após todos os hooks
   if (loading) {
     return (
       <Layout>
@@ -94,28 +137,6 @@ export default function EventosPage() {
       </Layout>
     );
   }
-
-  const filteredEventos = eventosLista.filter(evento => {
-    const matchesSearch = evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         evento.local.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (evento.nomeEvento && evento.nomeEvento.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
-    const matchesTipo = filterTipo === 'todos' || evento.tipoEvento === filterTipo;
-    const matchesDate = isDateInFilter(evento.dataEvento, dateFilter);
-    
-    // Debug para verificar filtro de data
-    if (dateFilter && dateFilter.range.startDate && dateFilter.range.endDate) {
-      console.log('Filtro de data ativo:', {
-        eventDate: evento.dataEvento,
-        eventDateFormatted: format(evento.dataEvento, 'dd/MM/yyyy'),
-        filterStart: dateFilter.range.startDate,
-        filterEnd: dateFilter.range.endDate,
-        matchesDate
-      });
-    }
-    
-    return matchesSearch && matchesStatus && matchesTipo && matchesDate;
-  });
 
   const handleView = (evento: Evento) => {
     router.push(`/eventos/${evento.id}`);
@@ -278,7 +299,7 @@ export default function EventosPage() {
                   </div>
                 </div>
                 <div className="text-sm text-text-secondary">
-                  {filteredEventos.length} evento{filteredEventos.length !== 1 ? 's' : ''} encontrado{filteredEventos.length !== 1 ? 's' : ''}
+                  {sortedEventos.length} evento{sortedEventos.length !== 1 ? 's' : ''} encontrado{sortedEventos.length !== 1 ? 's' : ''}
                 </div>
               </div>
             </CardContent>
@@ -287,7 +308,7 @@ export default function EventosPage() {
 
         {/* Lista de Eventos */}
         <div className="space-y-4">
-          {filteredEventos.map((evento) => (
+          {sortedEventos.map((evento) => (
             <Card 
               key={evento.id} 
               className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
@@ -379,7 +400,7 @@ export default function EventosPage() {
           ))}
         </div>
 
-        {filteredEventos.length === 0 && (
+        {sortedEventos.length === 0 && (
           <Card className="bg-surface/50 backdrop-blur-sm">
             <CardContent className="text-center py-12">
               <CalendarIcon className="mx-auto h-12 w-12 text-text-muted" />
