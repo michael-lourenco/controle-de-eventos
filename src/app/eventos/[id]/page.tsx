@@ -19,7 +19,9 @@ import {
   HashtagIcon,
   PrinterIcon,
   UserIcon,
-  BriefcaseIcon
+  BriefcaseIcon,
+  ClipboardDocumentIcon,
+  CheckIcon
 } from '@heroicons/react/24/outline';
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
@@ -39,6 +41,7 @@ export default function EventoViewPage() {
   const { userId } = useCurrentUser();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [copied, setCopied] = useState(false);
   
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
@@ -118,6 +121,129 @@ export default function EventoViewPage() {
 
   const handleAnexosChange = () => {
     refetchAnexos();
+  };
+
+  const formatEventInfoForCopy = () => {
+    if (!evento) return '';
+
+    let text = '';
+
+    // Informações do Cliente
+    text += '👤 *INFORMAÇÕES DO CLIENTE*\n\n';
+    text += `Nome: ${evento.cliente.nome}\n`;
+    text += `Email: ${evento.cliente.email}\n`;
+    text += `Telefone: ${evento.cliente.telefone}\n`;
+    text += `Endereço: ${evento.cliente.endereco}\n`;
+    if (evento.cliente.instagram) {
+      text += `Instagram: ${evento.cliente.instagram}\n`;
+    }
+    if (evento.cliente.canalEntrada) {
+      text += `Canal de Entrada: ${evento.cliente.canalEntrada.nome}\n`;
+    }
+    
+    text += '\n────────────────────────\n\n';
+
+    // Informações do Evento
+    text += '📅 *INFORMAÇÕES DO EVENTO*\n\n';
+    text += `Data: ${format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} - ${evento.diaSemana}\n`;
+    text += `Local: ${evento.local}\n`;
+    text += `Endereço: ${evento.endereco}\n`;
+    text += `Convidados: ${evento.numeroConvidados}\n`;
+    text += `Tipo: ${evento.tipoEvento}\n`;
+    if (evento.contratante) {
+      text += `Contratante: ${evento.contratante}\n`;
+    }
+    
+    text += '\n────────────────────────\n\n';
+
+    // Detalhes do Serviço
+    text += '⚙️ *DETALHES DO SERVIÇO*\n\n';
+    if (evento.saida) {
+      text += `Saída: ${evento.saida}\n`;
+    }
+    if (evento.chegadaNoLocal) {
+      text += `Chegada no local: ${evento.chegadaNoLocal}\n`;
+    }
+    if (evento.horarioInicio) {
+      text += `Horário de início: ${evento.horarioInicio}\n`;
+    }
+    if (evento.horarioDesmontagem) {
+      text += `Horário de Desmontagem: ${evento.horarioDesmontagem}\n`;
+    }
+    if (evento.tempoEvento) {
+      text += `Duração: ${evento.tempoEvento}\n`;
+    }
+    if (evento.quantidadeMesas) {
+      text += `Mesas: ${evento.quantidadeMesas}\n`;
+    }
+    if (evento.numeroImpressoes) {
+      text += `Impressões: ${evento.numeroImpressoes}\n`;
+    }
+    if (evento.hashtag) {
+      text += `Hashtag: ${evento.hashtag}\n`;
+    }
+    if (evento.cerimonialista) {
+      text += `\nCerimonialista: ${evento.cerimonialista.nome}\n`;
+      if (evento.cerimonialista.telefone) {
+        text += `Telefone: ${evento.cerimonialista.telefone}\n`;
+      }
+    }
+    if (evento.observacoes) {
+      text += `\nObservações:\n${evento.observacoes}\n`;
+    }
+
+    return text;
+  };
+
+  const handleCopyInfo = async () => {
+    const text = formatEventInfoForCopy();
+    
+    // Tentar usar a API moderna do clipboard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, 2000);
+        return;
+      } catch (error) {
+        console.error('Erro ao copiar texto:', error);
+      }
+    }
+    
+    // Fallback para navegadores mais antigos
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, 2000);
+      } else {
+        console.error('Falha ao copiar texto');
+      }
+    } catch (err) {
+      console.error('Erro ao copiar texto:', err);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -203,6 +329,24 @@ export default function EventoViewPage() {
               Voltar
             </Button>
             <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleCopyInfo}
+                title="Copiar informações do evento"
+                className={copied ? 'bg-success-bg text-success-text' : ''}
+              >
+                {copied ? (
+                  <>
+                    <CheckIcon className="h-4 w-4 mr-2" />
+                    Copiado!
+                  </>
+                ) : (
+                  <>
+                    <ClipboardDocumentIcon className="h-4 w-4 mr-2" />
+                    Copiar
+                  </>
+                )}
+              </Button>
               <Button variant="outline" onClick={handleEdit}>
                 <PencilIcon className="h-4 w-4 mr-2" />
                 Editar
