@@ -147,7 +147,7 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center space-y-3">
               <p className="text-sm text-text-secondary">
                 Não tem uma conta?{' '}
                 <button
@@ -158,17 +158,20 @@ export default function LoginPage() {
                   Criar conta
                 </button>
               </p>
-            </div>
-
-            {/* <div className="mt-4 p-4 bg-primary/10 rounded-md">
-              <h3 className="text-sm font-medium text-primary mb-2">
-                Credenciais para teste (desenvolvimento):
-              </h3>
-              <div className="text-xs text-primary/80 space-y-1">
-                <p><strong>Admin:</strong> admin@clickse.com / qualquer senha</p>
-                <p><strong>Usuário:</strong> user@clickse.com / qualquer senha</p>
+              
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-xs text-yellow-800 mb-2">
+                  <strong>Primeira vez?</strong> Se você está configurando o sistema pela primeira vez:
+                </p>
+                <button
+                  type="button"
+                  onClick={() => router.push('/admin/setup')}
+                  className="text-xs font-medium text-yellow-900 hover:text-yellow-700 underline"
+                >
+                  Criar usuário admin automaticamente
+                </button>
               </div>
-            </div> */}
+            </div>
           </CardContent>
         </Card>
       </div>

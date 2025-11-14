@@ -1,0 +1,499 @@
+{
+  "info": {
+    "name": "Click-se Sistema - Planos e Funcionalidades",
+    "description": "Collection com todas as APIs do sistema de planos e funcionalidades",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Funcionalidades",
+      "item": [
+        {
+          "name": "Listar Funcionalidades",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/funcionalidades",
+              "host": ["{{base_url}}"],
+              "path": ["api", "funcionalidades"]
+            }
+          }
+        },
+        {
+          "name": "Criar Funcionalidade",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"EVENTOS_ILIMITADOS\",\n  \"nome\": \"Eventos Ilimitados\",\n  \"descricao\": \"Criar eventos sem limite\",\n  \"categoria\": \"EVENTOS\",\n  \"ativo\": true,\n  \"ordem\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/funcionalidades",
+              "host": ["{{base_url}}"],
+              "path": ["api", "funcionalidades"]
+            }
+          }
+        },
+        {
+          "name": "Buscar Funcionalidade por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/funcionalidades/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "funcionalidades", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Funcionalidade",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Eventos Ilimitados (Atualizado)\",\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/funcionalidades/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "funcionalidades", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Funcionalidade",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/funcionalidades/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "funcionalidades", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planos",
+      "item": [
+        {
+          "name": "Listar Planos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/planos?ativos=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "planos"],
+              "query": [
+                {
+                  "key": "ativos",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar Plano",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Básico\",\n  \"descricao\": \"Plano ideal para começar\",\n  \"codigoHotmart\": \"BASICO_MENSAL\",\n  \"funcionalidades\": [\"func_id_1\", \"func_id_2\"],\n  \"preco\": 49.90,\n  \"intervalo\": \"mensal\",\n  \"ativo\": true,\n  \"destaque\": true,\n  \"limiteEventos\": 10,\n  \"limiteClientes\": 50,\n  \"limiteUsuarios\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/planos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "planos"]
+            }
+          }
+        },
+        {
+          "name": "Buscar Plano por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/planos/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "planos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Atualizar Plano",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Básico (Atualizado)\",\n  \"preco\": 59.90,\n  \"ativo\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/planos/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "planos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deletar Plano",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/planos/:id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "planos", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": ""
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assinaturas",
+      "item": [
+        {
+          "name": "Buscar Minha Assinatura",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/assinaturas",
+              "host": ["{{base_url}}"],
+              "path": ["api", "assinaturas"]
+            }
+          }
+        },
+        {
+          "name": "Buscar Assinatura por User ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/assinaturas?userId=user_id_aqui",
+              "host": ["{{base_url}}"],
+              "path": ["api", "assinaturas"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "user_id_aqui"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook Hotmart",
+      "item": [
+        {
+          "name": "Testar Webhook (GET - Mockado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart?email=usuario@exemplo.com&plano=PROFISSIONAL_MENSAL&evento=SUBSCRIPTION_PURCHASE",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "usuario@exemplo.com"
+                },
+                {
+                  "key": "plano",
+                  "value": "PROFISSIONAL_MENSAL"
+                },
+                {
+                  "key": "evento",
+                  "value": "SUBSCRIPTION_PURCHASE"
+                }
+              ]
+            },
+            "description": "Endpoint GET para testar o webhook mockado da Hotmart"
+          }
+        },
+        {
+          "name": "Webhook Hotmart (POST - Produção)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"SUBSCRIPTION_PURCHASE\",\n  \"data\": {\n    \"subscription\": {\n      \"code\": \"SUB-123456\",\n      \"plan\": {\n        \"code\": \"PROFISSIONAL_MENSAL\"\n      },\n      \"buyer\": {\n        \"email\": \"cliente@exemplo.com\",\n        \"name\": \"Nome do Cliente\"\n      },\n      \"status\": \"TRIAL\",\n      \"trial_period_end\": \"2025-01-15T00:00:00Z\",\n      \"date_next_charge\": \"2025-01-22T00:00:00Z\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart"]
+            },
+            "description": "Endpoint POST para receber webhooks da Hotmart (quando integração real for feita)"
+          }
+        },
+        {
+          "name": "Webhook - Assinatura Ativada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"SUBSCRIPTION_ACTIVATED\",\n  \"data\": {\n    \"subscription\": {\n      \"code\": \"SUB-123456\",\n      \"plan\": {\n        \"code\": \"PROFISSIONAL_MENSAL\"\n      },\n      \"buyer\": {\n        \"email\": \"cliente@exemplo.com\",\n        \"name\": \"Nome do Cliente\"\n      },\n      \"status\": \"ACTIVE\",\n      \"date_next_charge\": \"2025-02-22T00:00:00Z\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart"]
+            }
+          }
+        },
+        {
+          "name": "Webhook - Assinatura Cancelada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"SUBSCRIPTION_CANCELLED\",\n  \"data\": {\n    \"subscription\": {\n      \"code\": \"SUB-123456\",\n      \"plan\": {\n        \"code\": \"PROFISSIONAL_MENSAL\"\n      },\n      \"buyer\": {\n        \"email\": \"cliente@exemplo.com\",\n        \"name\": \"Nome do Cliente\"\n      },\n      \"status\": \"CANCELLED\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart"]
+            }
+          }
+        },
+        {
+          "name": "Webhook - Assinatura Expirada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"SUBSCRIPTION_EXPIRED\",\n  \"data\": {\n    \"subscription\": {\n      \"code\": \"SUB-123456\",\n      \"plan\": {\n        \"code\": \"PROFISSIONAL_MENSAL\"\n      },\n      \"buyer\": {\n        \"email\": \"cliente@exemplo.com\",\n        \"name\": \"Nome do Cliente\"\n      },\n      \"status\": \"EXPIRED\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart"]
+            }
+          }
+        },
+        {
+          "name": "Webhook - Assinatura Renovada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"SUBSCRIPTION_RENEWED\",\n  \"data\": {\n    \"subscription\": {\n      \"code\": \"SUB-123456\",\n      \"plan\": {\n        \"code\": \"PROFISSIONAL_MENSAL\"\n      },\n      \"buyer\": {\n        \"email\": \"cliente@exemplo.com\",\n        \"name\": \"Nome do Cliente\"\n      },\n      \"status\": \"ACTIVE\",\n      \"date_next_charge\": \"2025-03-22T00:00:00Z\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart"]
+            }
+          }
+        },
+        {
+          "name": "Webhook - Assinatura Suspensa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"SUBSCRIPTION_SUSPENDED\",\n  \"data\": {\n    \"subscription\": {\n      \"code\": \"SUB-123456\",\n      \"plan\": {\n        \"code\": \"PROFISSIONAL_MENSAL\"\n      },\n      \"buyer\": {\n        \"email\": \"cliente@exemplo.com\",\n        \"name\": \"Nome do Cliente\"\n      },\n      \"status\": \"SUSPENDED\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seed e Setup",
+      "item": [
+        {
+          "name": "Seed Funcionalidades e Planos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/seed/funcionalidades-planos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "seed", "funcionalidades-planos"]
+            },
+            "description": "Cria 24 funcionalidades e 3 planos iniciais (Básico, Profissional, Enterprise). Funciona em modo dev sem autenticação, ou com x-api-key header."
+          }
+        },
+        {
+          "name": "Criar Usuário Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/create-default-admin",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "create-default-admin"]
+            },
+            "description": "Cria usuário admin@clickse.com com senha 123456"
+          }
+        },
+        {
+          "name": "Criar Usuário Customizado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@exemplo.com\",\n  \"password\": \"senha123\",\n  \"nome\": \"Nome do Usuário\",\n  \"role\": \"user\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/create-user",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "create-user"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

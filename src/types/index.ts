@@ -6,6 +6,10 @@ export interface User {
   nome: string;
   role: 'admin' | 'user';
   ativo: boolean;
+  assinaturaId?: string;
+  funcionalidadesHabilitadas?: string[];
+  planoAtual?: string;
+  dataExpiraAssinatura?: Date;
   dataCadastro: Date;
   dataAtualizacao: Date;
 }

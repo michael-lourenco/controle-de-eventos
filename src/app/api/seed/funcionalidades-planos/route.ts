@@ -1,0 +1,276 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-config';
+import { FuncionalidadeRepository } from '@/lib/repositories/funcionalidade-repository';
+import { PlanoRepository } from '@/lib/repositories/plano-repository';
+import { Funcionalidade, Plano } from '@/types/funcionalidades';
+
+const FUNCIONALIDADES_INICIAIS: Omit<Funcionalidade, 'id' | 'dataCadastro'>[] = [
+  // EVENTOS
+  { codigo: 'EVENTOS_ILIMITADOS', nome: 'Eventos Ilimitados', descricao: 'Criar eventos sem limite', categoria: 'EVENTOS', ativo: true, ordem: 1 },
+  { codigo: 'EVENTOS_LIMITADOS', nome: 'Eventos Limitados', descricao: 'Criar eventos com limite mensal', categoria: 'EVENTOS', ativo: true, ordem: 2 },
+  
+  // CLIENTES
+  { codigo: 'CLIENTES_ILIMITADOS', nome: 'Clientes Ilimitados', descricao: 'Cadastrar clientes sem limite', categoria: 'EVENTOS', ativo: true, ordem: 10 },
+  { codigo: 'CLIENTES_LIMITADOS', nome: 'Clientes Limitados', descricao: 'Cadastrar clientes com limite', categoria: 'EVENTOS', ativo: true, ordem: 11 },
+  
+  // FINANCEIRO
+  { codigo: 'PAGAMENTOS_REGISTRAR', nome: 'Registrar Pagamentos', descricao: 'Registrar pagamentos e parcelas', categoria: 'FINANCEIRO', ativo: true, ordem: 20 },
+  { codigo: 'PAGAMENTOS_COMPROVANTES', nome: 'Comprovantes de Pagamento', descricao: 'Upload de comprovantes de pagamento', categoria: 'FINANCEIRO', ativo: true, ordem: 22 },
+  { codigo: 'FLUXO_CAIXA', nome: 'Fluxo de Caixa', descricao: 'Acesso ao relatório de fluxo de caixa', categoria: 'FINANCEIRO', ativo: true, ordem: 23 },
+  
+  // RELATORIOS
+  { codigo: 'RELATORIOS_BASICOS', nome: 'Relatórios Básicos', descricao: 'Relatórios básicos (dashboard e receita mensal)', categoria: 'RELATORIOS', ativo: true, ordem: 30 },
+  { codigo: 'RELATORIOS_AVANCADOS', nome: 'Relatórios Avançados', descricao: 'Relatórios avançados (performance, serviços, canais, impressões)', categoria: 'RELATORIOS', ativo: true, ordem: 31 },
+  
+  // SERVICOS E CUSTOS
+  { codigo: 'SERVICOS_GERENCIAR', nome: 'Gerenciar Serviços', descricao: 'Gerenciar serviços e tipos de serviços', categoria: 'EVENTOS', ativo: true, ordem: 40 },
+  { codigo: 'CUSTOS_GERENCIAR', nome: 'Gerenciar Custos', descricao: 'Gerenciar tipos de custos e custos por evento', categoria: 'EVENTOS', ativo: true, ordem: 41 },
+];
+
+export async function POST(request: NextRequest) {
+  try {
+    // Verificar se há um token de segurança no header (para uso via Postman/API)
+    const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization');
+    const isDevMode = process.env.NODE_ENV === 'development';
+    
+    // Verificar parâmetro reset
+    const { searchParams } = new URL(request.url);
+    const reset = searchParams.get('reset') === 'true';
+    
+    // Tentar autenticação via sessão primeiro
+    const session = await getServerSession(authOptions);
+    
+    // Se não houver sessão, verificar se é modo dev ou tem API key válida
+    if (!session || session.user?.role !== 'admin') {
+      // Verificar se tem API key válida (para uso via Postman)
+      if (apiKey) {
+        const validApiKey = process.env.SEED_API_KEY || 'dev-seed-key-2024';
+        if (apiKey !== validApiKey && !apiKey.includes(validApiKey)) {
+          return NextResponse.json({ error: 'API key inválida' }, { status: 401 });
+        }
+        // API key válida, continuar sem verificação de role
+      } else if (!isDevMode) {
+        // Em produção, requer autenticação
+        return NextResponse.json({ 
+          error: 'Não autorizado. Em produção, use autenticação admin ou forneça x-api-key header' 
+        }, { status: 401 });
+      }
+      // Em desenvolvimento, permitir sem autenticação
+    }
+
+    const funcionalidadeRepo = new FuncionalidadeRepository();
+    const planoRepo = new PlanoRepository();
+
+    // Se reset=true, limpar tudo primeiro
+    if (reset) {
+      console.log('🔄 Modo RESET: removendo funcionalidades e planos existentes...');
+      
+      // Remover todos os planos primeiro (eles dependem das funcionalidades)
+      const todosPlanos = await planoRepo.findAll();
+      for (const plano of todosPlanos) {
+        await planoRepo.delete(plano.id);
+      }
+      console.log(`✅ ${todosPlanos.length} plano(s) removido(s)`);
+      
+      // Remover todas as funcionalidades
+      const todasFuncionalidadesAntigas = await funcionalidadeRepo.findAll();
+      for (const func of todasFuncionalidadesAntigas) {
+        await funcionalidadeRepo.delete(func.id);
+      }
+      console.log(`✅ ${todasFuncionalidadesAntigas.length} funcionalidade(s) removida(s)`);
+    }
+
+    // Criar/Atualizar funcionalidades
+    const funcionalidadesCriadas: Funcionalidade[] = [];
+    const funcionalidadesAtualizadas: Funcionalidade[] = [];
+    const funcionalidadesExistentes = await funcionalidadeRepo.findAll();
+    const funcionalidadesPorCodigo = new Map(funcionalidadesExistentes.map(f => [f.codigo, f]));
+    const codigosNoSeed = new Set(FUNCIONALIDADES_INICIAIS.map(f => f.codigo));
+
+    // Criar ou atualizar funcionalidades do seed
+    for (const funcData of FUNCIONALIDADES_INICIAIS) {
+      const existente = funcionalidadesPorCodigo.get(funcData.codigo);
+      
+      if (!existente) {
+        // Criar nova
+        const func = await funcionalidadeRepo.create({
+          ...funcData,
+          dataCadastro: new Date()
+        });
+        funcionalidadesCriadas.push(func);
+      } else {
+        // Atualizar existente (mantém ID e dataCadastro)
+        const atualizada = await funcionalidadeRepo.update(existente.id, {
+          nome: funcData.nome,
+          descricao: funcData.descricao,
+          categoria: funcData.categoria,
+          ativo: funcData.ativo,
+          ordem: funcData.ordem
+        });
+        funcionalidadesAtualizadas.push(atualizada);
+      }
+    }
+
+    // Remover funcionalidades que não estão mais no seed (se não estiver em reset, que já removeu tudo)
+    if (!reset) {
+      const funcionalidadesRemovidas: string[] = [];
+      for (const func of funcionalidadesExistentes) {
+        if (!codigosNoSeed.has(func.codigo)) {
+          await funcionalidadeRepo.delete(func.id);
+          funcionalidadesRemovidas.push(func.codigo);
+        }
+      }
+      if (funcionalidadesRemovidas.length > 0) {
+        console.log(`🗑️ ${funcionalidadesRemovidas.length} funcionalidade(s) removida(s): ${funcionalidadesRemovidas.join(', ')}`);
+      }
+    }
+
+    // Buscar todas as funcionalidades (incluindo as recém-criadas/atualizadas)
+    const todasFuncionalidades = await funcionalidadeRepo.findAll();
+    const funcionalidadesMap = new Map(todasFuncionalidades.map(f => [f.codigo, f]));
+
+    // Definir planos iniciais
+    const PLANOS_INICIAIS: Omit<Plano, 'id' | 'dataCadastro' | 'dataAtualizacao'>[] = [
+      {
+        nome: 'Básico',
+        descricao: 'Plano ideal para começar',
+        codigoHotmart: 'BASICO_MENSAL',
+        funcionalidades: [
+          funcionalidadesMap.get('EVENTOS_LIMITADOS')?.id,
+          funcionalidadesMap.get('CLIENTES_LIMITADOS')?.id,
+          funcionalidadesMap.get('PAGAMENTOS_REGISTRAR')?.id,
+          funcionalidadesMap.get('RELATORIOS_BASICOS')?.id,
+          funcionalidadesMap.get('SERVICOS_GERENCIAR')?.id,
+          funcionalidadesMap.get('CUSTOS_GERENCIAR')?.id,
+        ].filter(Boolean) as string[],
+        preco: 49.90,
+        intervalo: 'mensal',
+        ativo: true,
+        destaque: true,
+        limiteEventos: 10,
+        limiteClientes: 50,
+        limiteUsuarios: 1,
+      },
+      {
+        nome: 'Profissional',
+        descricao: 'Plano completo para profissionais',
+        codigoHotmart: 'PROFISSIONAL_MENSAL',
+        funcionalidades: [
+          funcionalidadesMap.get('EVENTOS_ILIMITADOS')?.id,
+          funcionalidadesMap.get('CLIENTES_ILIMITADOS')?.id,
+          funcionalidadesMap.get('PAGAMENTOS_REGISTRAR')?.id,
+          funcionalidadesMap.get('PAGAMENTOS_COMPROVANTES')?.id,
+          funcionalidadesMap.get('RELATORIOS_BASICOS')?.id,
+          funcionalidadesMap.get('RELATORIOS_AVANCADOS')?.id,
+          funcionalidadesMap.get('SERVICOS_GERENCIAR')?.id,
+          funcionalidadesMap.get('CUSTOS_GERENCIAR')?.id,
+          funcionalidadesMap.get('FLUXO_CAIXA')?.id,
+        ].filter(Boolean) as string[],
+        preco: 149.90,
+        intervalo: 'mensal',
+        ativo: true,
+        destaque: true,
+        limiteUsuarios: 1,
+        limiteArmazenamento: 5,
+      },
+      {
+        nome: 'Enterprise',
+        descricao: 'Plano premium com todas as funcionalidades',
+        codigoHotmart: 'ENTERPRISE_MENSAL',
+        funcionalidades: todasFuncionalidades.map(f => f.id),
+        preco: 349.90,
+        intervalo: 'mensal',
+        ativo: true,
+        destaque: true,
+        limiteUsuarios: 1,
+        limiteArmazenamento: 50,
+      },
+    ];
+
+    // Buscar planos existentes e mapear
+    const planosExistentes = await planoRepo.findAll();
+    const planosPorCodigo = new Map(planosExistentes.map(p => [p.codigoHotmart, p]));
+    const codigosPlanosNoSeed = new Set(PLANOS_INICIAIS.map(p => p.codigoHotmart));
+
+    const planosCriados: Plano[] = [];
+    const planosAtualizados: Plano[] = [];
+
+    // Criar ou atualizar planos do seed
+    for (const planoData of PLANOS_INICIAIS) {
+      const existente = planosPorCodigo.get(planoData.codigoHotmart);
+      
+      if (!existente) {
+        // Criar novo plano
+        const plano = await planoRepo.create({
+          ...planoData,
+          dataCadastro: new Date(),
+          dataAtualizacao: new Date()
+        });
+        planosCriados.push(plano);
+      } else {
+        // Atualizar plano existente (mantém ID e dataCadastro)
+        const planoAtualizado = await planoRepo.update(existente.id, {
+          nome: planoData.nome,
+          descricao: planoData.descricao,
+          funcionalidades: planoData.funcionalidades,
+          preco: planoData.preco,
+          intervalo: planoData.intervalo,
+          ativo: planoData.ativo,
+          destaque: planoData.destaque,
+          limiteEventos: planoData.limiteEventos,
+          limiteClientes: planoData.limiteClientes,
+          limiteUsuarios: planoData.limiteUsuarios,
+          limiteArmazenamento: planoData.limiteArmazenamento,
+          dataAtualizacao: new Date()
+        });
+        planosAtualizados.push(planoAtualizado);
+      }
+    }
+
+    // Remover planos que não estão mais no seed (se não estiver em reset, que já removeu tudo)
+    const planosRemovidos: string[] = [];
+    if (!reset) {
+      for (const plano of planosExistentes) {
+        if (!codigosPlanosNoSeed.has(plano.codigoHotmart)) {
+          await planoRepo.delete(plano.id);
+          planosRemovidos.push(plano.codigoHotmart);
+        }
+      }
+      if (planosRemovidos.length > 0) {
+        console.log(`🗑️ ${planosRemovidos.length} plano(s) removido(s): ${planosRemovidos.join(', ')}`);
+      }
+    }
+
+    const totalPlanos = await planoRepo.findAll();
+
+    return NextResponse.json({
+      success: true,
+      message: reset 
+        ? 'Seed executado com sucesso (modo RESET - dados limpos e recriados)'
+        : 'Seed executado com sucesso (atualização incremental)',
+      reset: reset,
+      funcionalidades: {
+        total: todasFuncionalidades.length,
+        criadas: funcionalidadesCriadas.length,
+        atualizadas: funcionalidadesAtualizadas.length,
+        novas: funcionalidadesCriadas.map(f => ({ codigo: f.codigo, nome: f.nome })),
+        atualizadas: funcionalidadesAtualizadas.map(f => ({ codigo: f.codigo, nome: f.nome }))
+      },
+      planos: {
+        total: totalPlanos.length,
+        criados: planosCriados.length,
+        atualizados: planosAtualizados.length,
+        novos: planosCriados.map(p => ({ nome: p.nome, codigoHotmart: p.codigoHotmart })),
+        atualizados: planosAtualizados.map(p => ({ nome: p.nome, codigoHotmart: p.codigoHotmart }))
+      }
+    });
+  } catch (error: any) {
+    console.error('Erro ao executar seed:', error);
+    return NextResponse.json(
+      { error: error.message || 'Erro ao executar seed' },
+      { status: 500 }
+    );
+  }
+}
+
