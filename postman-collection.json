@@ -151,7 +151,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Básico\",\n  \"descricao\": \"Plano ideal para começar\",\n  \"codigoHotmart\": \"BASICO_MENSAL\",\n  \"funcionalidades\": [\"func_id_1\", \"func_id_2\"],\n  \"preco\": 49.90,\n  \"intervalo\": \"mensal\",\n  \"ativo\": true,\n  \"destaque\": true,\n  \"limiteEventos\": 10,\n  \"limiteClientes\": 50,\n  \"limiteUsuarios\": 1\n}"
+              "raw": "{\n  \"nome\": \"Basico\",\n  \"descricao\": \"Plano ideal para comecar a usar o sistema\",\n  \"codigoHotmart\": \"BASICO_MENSAL\",\n  \"funcionalidades\": [\"func_id_1\", \"func_id_2\"],\n  \"preco\": 49.90,\n  \"intervalo\": \"mensal\",\n  \"ativo\": true,\n  \"destaque\": true,\n  \"limiteEventos\": 10,\n  \"limiteClientes\": 50,\n  \"limiteUsuarios\": 1\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/planos",
@@ -256,6 +256,89 @@
                 }
               ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuários e Assinaturas",
+      "item": [
+        {
+          "name": "Obter Status do Plano",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/:id/assinatura",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", ":id", "assinatura"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "ID do usuário"
+                }
+              ]
+            },
+            "description": "Obtém status completo do plano do usuário (próprio usuário ou admin)"
+          }
+        },
+        {
+          "name": "Atualizar Assinatura do Usuário (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assinaturaId\": \"assinatura_id_aqui\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/:id/assinatura",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", ":id", "assinatura"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "ID do usuário"
+                }
+              ]
+            },
+            "description": "Atualiza assinatura do usuário (apenas admin)"
+          }
+        },
+        {
+          "name": "Sincronizar Plano do Usuário (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sincronizar\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/:id/assinatura",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", ":id", "assinatura"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "ID do usuário"
+                }
+              ]
+            },
+            "description": "Força sincronização dos dados do plano no usuário (apenas admin)"
           }
         }
       ]
@@ -472,24 +555,91 @@
           }
         },
         {
-          "name": "Criar Usuário Customizado",
+          "name": "Seed com Reset",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"usuario@exemplo.com\",\n  \"password\": \"senha123\",\n  \"nome\": \"Nome do Usuário\",\n  \"role\": \"user\"\n}"
+              "raw": ""
             },
             "url": {
-              "raw": "{{base_url}}/api/admin/create-user",
+              "raw": "{{base_url}}/api/seed/funcionalidades-planos?reset=true",
               "host": ["{{base_url}}"],
-              "path": ["api", "admin", "create-user"]
-            }
+              "path": ["api", "seed", "funcionalidades-planos"],
+              "query": [
+                {
+                  "key": "reset",
+                  "value": "true",
+                  "description": "Limpa tudo e recria do zero"
+                }
+              ]
+            },
+            "description": "Executa seed com reset completo (remove todas funcionalidades e planos antes de recriar)"
+          }
+        },
+        {
+          "name": "Migrar Usuários para Planos",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planoPadrao\": \"BASICO_MENSAL\",\n  \"statusPadrao\": \"active\",\n  \"dataExpiracao\": null,\n  \"dryRun\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-users-to-plans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-users-to-plans"]
+            },
+            "description": "Migra usuários existentes para planos. dryRun=true apenas simula sem aplicar mudanças. Requer autenticação admin."
+          }
+        },
+        {
+          "name": "Migrar Usuários - Dry Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planoPadrao\": \"BASICO_MENSAL\",\n  \"statusPadrao\": \"active\",\n  \"dryRun\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-users-to-plans",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-users-to-plans"]
+            },
+            "description": "Simula migração sem aplicar mudanças (dryRun=true)"
           }
         }
       ]

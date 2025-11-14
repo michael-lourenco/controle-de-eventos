@@ -82,8 +82,10 @@ export class PlanoService {
     if (user) {
       await this.userRepo.update(userId, {
         assinaturaId: assinatura.id,
+        planoId: plano.id,
+        planoNome: plano.nome,
+        planoCodigoHotmart: plano.codigoHotmart,
         funcionalidadesHabilitadas: plano.funcionalidades,
-        planoAtual: plano.nome,
         dataExpiraAssinatura: status === 'trial' ? this.calcularDataFimTrial() : undefined,
         dataAtualizacao: new Date()
       });

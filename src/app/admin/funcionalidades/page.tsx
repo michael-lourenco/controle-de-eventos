@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Layout from '@/components/Layout';
 import { Funcionalidade, CategoriaFuncionalidade } from '@/types/funcionalidades';
-import { PencilIcon, TrashIcon, PlusIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 const CATEGORIAS: CategoriaFuncionalidade[] = ['EVENTOS', 'FINANCEIRO', 'RELATORIOS', 'INTEGRACAO', 'ADMIN'];
 

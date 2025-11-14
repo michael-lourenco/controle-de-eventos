@@ -133,8 +133,8 @@ export async function POST(request: NextRequest) {
     // Definir planos iniciais
     const PLANOS_INICIAIS: Omit<Plano, 'id' | 'dataCadastro' | 'dataAtualizacao'>[] = [
       {
-        nome: 'Básico',
-        descricao: 'Plano ideal para começar',
+        nome: 'Basico',
+        descricao: 'Plano ideal para comecar a usar o sistema',
         codigoHotmart: 'BASICO_MENSAL',
         funcionalidades: [
           funcionalidadesMap.get('EVENTOS_LIMITADOS')?.id,
@@ -255,14 +255,14 @@ export async function POST(request: NextRequest) {
         criadas: funcionalidadesCriadas.length,
         atualizadas: funcionalidadesAtualizadas.length,
         novas: funcionalidadesCriadas.map(f => ({ codigo: f.codigo, nome: f.nome })),
-        atualizadas: funcionalidadesAtualizadas.map(f => ({ codigo: f.codigo, nome: f.nome }))
+        atualizadasDetalhes: funcionalidadesAtualizadas.map(f => ({ codigo: f.codigo, nome: f.nome }))
       },
       planos: {
         total: totalPlanos.length,
         criados: planosCriados.length,
         atualizados: planosAtualizados.length,
         novos: planosCriados.map(p => ({ nome: p.nome, codigoHotmart: p.codigoHotmart })),
-        atualizados: planosAtualizados.map(p => ({ nome: p.nome, codigoHotmart: p.codigoHotmart }))
+        atualizadosDetalhes: planosAtualizados.map(p => ({ nome: p.nome, codigoHotmart: p.codigoHotmart }))
       }
     });
   } catch (error: any) {

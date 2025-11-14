@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Layout from '@/components/Layout';
 import { Plano, Funcionalidade } from '@/types/funcionalidades';
-import { PencilIcon, TrashIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function AdminPlanosPage() {
   const [planos, setPlanos] = useState<Plano[]>([]);

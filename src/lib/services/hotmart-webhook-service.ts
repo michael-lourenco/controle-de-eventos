@@ -124,8 +124,10 @@ export class HotmartWebhookService {
       const plano = await this.planoRepo.findById(assinatura.planoId);
       if (plano) {
         await this.userRepo.update(user.id, {
+          planoId: plano.id,
+          planoNome: plano.nome,
+          planoCodigoHotmart: plano.codigoHotmart,
           funcionalidadesHabilitadas: plano.funcionalidades,
-          planoAtual: plano.nome,
           dataExpiraAssinatura: undefined,
           dataAtualizacao: new Date()
         });
@@ -166,8 +168,10 @@ export class HotmartWebhookService {
     const user = await this.userRepo.findById(assinatura.userId);
     if (user) {
       await this.userRepo.update(user.id, {
+        planoId: undefined,
+        planoNome: undefined,
+        planoCodigoHotmart: undefined,
         funcionalidadesHabilitadas: [],
-        planoAtual: undefined,
         dataExpiraAssinatura: undefined,
         dataAtualizacao: new Date()
       });

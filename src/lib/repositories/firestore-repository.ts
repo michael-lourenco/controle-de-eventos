@@ -98,16 +98,27 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
   async update(id: string, entity: Partial<T>): Promise<T> {
     try {
       const docRef = doc(db, this.collectionName, id);
-      await updateDoc(docRef, this.convertToFirestoreData(entity));
+      const firestoreData = this.convertToFirestoreData(entity);
+      
+      console.log(`[FirestoreRepository] Atualizando documento ${id} na collection ${this.collectionName}`);
+      console.log(`[FirestoreRepository] Dados a serem atualizados:`, JSON.stringify(firestoreData, null, 2));
+      
+      await updateDoc(docRef, firestoreData);
+      
+      // Aguardar um pouco para garantir que o Firestore processou
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       const updatedDoc = await getDoc(docRef);
       if (!updatedDoc.exists()) {
         throw new Error('Document not found after update');
       }
       
-      return this.convertFirestoreData(updatedDoc.data(), id);
+      const converted = this.convertFirestoreData(updatedDoc.data(), id);
+      console.log(`[FirestoreRepository] Documento atualizado com sucesso`);
+      
+      return converted;
     } catch (error) {
-      console.error(`Error updating document in ${this.collectionName}:`, error);
+      console.error(`[FirestoreRepository] Error updating document in ${this.collectionName}:`, error);
       throw error;
     }
   }

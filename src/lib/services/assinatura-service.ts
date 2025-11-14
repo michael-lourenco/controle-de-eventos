@@ -1,0 +1,305 @@
+import { AssinaturaRepository } from '../repositories/assinatura-repository';
+import { PlanoRepository } from '../repositories/plano-repository';
+import { UserRepository } from '../repositories/user-repository';
+import { Assinatura, StatusAssinatura, Plano } from '@/types/funcionalidades';
+import { User } from '@/types';
+
+export interface PlanoStatus {
+  plano: Plano | null;
+  assinatura: Assinatura | null;
+  status: StatusAssinatura | 'sem_assinatura';
+  pagamentoEmDia: boolean;
+  ativo: boolean;
+  mensagem?: string;
+}
+
+export class AssinaturaService {
+  private assinaturaRepo: AssinaturaRepository;
+  private planoRepo: PlanoRepository;
+  private userRepo: UserRepository;
+
+  constructor() {
+    this.assinaturaRepo = new AssinaturaRepository();
+    this.planoRepo = new PlanoRepository();
+    this.userRepo = new UserRepository();
+  }
+
+  /**
+   * Verifica se usuário tem assinatura ativa
+   */
+  async verificarAssinaturaAtiva(userId: string): Promise<boolean> {
+    // Admin sempre tem acesso
+    const user = await this.userRepo.findById(userId);
+    if (user?.role === 'admin') {
+      return true;
+    }
+
+    const assinatura = await this.assinaturaRepo.findByUserId(userId);
+    if (!assinatura) {
+      return false;
+    }
+
+    return assinatura.status === 'active' || assinatura.status === 'trial';
+  }
+
+  /**
+   * Verifica se pagamento está em dia
+   */
+  async validarStatusPagamento(userId: string): Promise<boolean> {
+    // Admin sempre tem pagamento em dia
+    const user = await this.userRepo.findById(userId);
+    if (user?.role === 'admin') {
+      return true;
+    }
+
+    const assinatura = await this.assinaturaRepo.findByUserId(userId);
+    if (!assinatura) {
+      return false;
+    }
+
+    // Verificar se assinatura está ativa
+    if (assinatura.status !== 'active' && assinatura.status !== 'trial') {
+      return false;
+    }
+
+    // Verificar data de expiração
+    if (assinatura.dataFim) {
+      const agora = new Date();
+      if (assinatura.dataFim < agora) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Obtém status completo do plano do usuário
+   */
+  async obterStatusPlanoUsuario(userId: string): Promise<PlanoStatus> {
+    // Admin sempre tem acesso total
+    const user = await this.userRepo.findById(userId);
+    if (user?.role === 'admin') {
+      // Buscar primeiro plano como referência (para admin)
+      const planos = await this.planoRepo.findAtivos();
+      const planoAdmin = planos.length > 0 ? planos[0] : null;
+      
+      return {
+        plano: planoAdmin,
+        assinatura: null,
+        status: 'active',
+        pagamentoEmDia: true,
+        ativo: true,
+        mensagem: 'Admin - acesso total'
+      };
+    }
+
+    const assinatura = await this.assinaturaRepo.findByUserId(userId);
+    
+    if (!assinatura) {
+      return {
+        plano: null,
+        assinatura: null,
+        status: 'sem_assinatura',
+        pagamentoEmDia: false,
+        ativo: false,
+        mensagem: 'Usuário não possui assinatura ativa'
+      };
+    }
+
+    let plano: Plano | null = null;
+    if (assinatura.planoId) {
+      plano = await this.planoRepo.findById(assinatura.planoId);
+    }
+
+    const pagamentoEmDia = await this.validarStatusPagamento(userId);
+    const ativo = assinatura.status === 'active' || assinatura.status === 'trial';
+
+    let mensagem: string | undefined;
+    if (!ativo) {
+      mensagem = `Assinatura ${assinatura.status.toLowerCase()}`;
+    } else if (!pagamentoEmDia) {
+      mensagem = 'Pagamento em atraso';
+    }
+
+    return {
+      plano,
+      assinatura,
+      status: assinatura.status,
+      pagamentoEmDia,
+      ativo,
+      mensagem
+    };
+  }
+
+  /**
+   * Atualiza assinatura do usuário
+   */
+  async atualizarAssinaturaUsuario(userId: string, assinaturaId: string): Promise<User> {
+    const user = await this.userRepo.findById(userId);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    const assinatura = await this.assinaturaRepo.findById(assinaturaId);
+    if (!assinatura) {
+      throw new Error('Assinatura não encontrada');
+    }
+
+    if (assinatura.userId !== userId) {
+      throw new Error('Assinatura não pertence ao usuário');
+    }
+
+    // Sincronizar dados do plano no usuário
+    return this.sincronizarPlanoUsuario(userId);
+  }
+
+  /**
+   * Sincroniza dados do plano no usuário (atualiza cache)
+   */
+  async sincronizarPlanoUsuario(userId: string): Promise<User> {
+    const user = await this.userRepo.findById(userId);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    // Admin não precisa de sincronização
+    if (user.role === 'admin') {
+      return user;
+    }
+
+    const assinatura = await this.assinaturaRepo.findByUserId(userId);
+    
+    if (!assinatura) {
+      // Limpar dados de plano se não houver assinatura
+      return this.userRepo.update(userId, {
+        assinaturaId: undefined,
+        planoId: undefined,
+        planoNome: undefined,
+        planoCodigoHotmart: undefined,
+        funcionalidadesHabilitadas: [],
+        assinaturaStatus: undefined,
+        pagamentoEmDia: false,
+        dataExpiraAssinatura: undefined,
+        dataProximoPagamento: undefined,
+        ultimaSincronizacaoPlano: new Date(),
+        dataAtualizacao: new Date()
+      });
+    }
+
+    // Buscar plano
+    let plano: Plano | null = null;
+    if (assinatura.planoId) {
+      plano = await this.planoRepo.findById(assinatura.planoId);
+    }
+
+    // Calcular status de pagamento
+    const pagamentoEmDia = await this.validarStatusPagamento(userId);
+    const ativo = assinatura.status === 'active' || assinatura.status === 'trial';
+
+    // Mapear status da assinatura para o formato do User
+    let statusUser: 'ATIVA' | 'TRIAL' | 'CANCELADA' | 'EXPIRADA' | 'SUSPENSA' | undefined;
+    if (assinatura.status === 'active') statusUser = 'ATIVA';
+    else if (assinatura.status === 'trial') statusUser = 'TRIAL';
+    else if (assinatura.status === 'cancelled') statusUser = 'CANCELADA';
+    else if (assinatura.status === 'expired') statusUser = 'EXPIRADA';
+    else if (assinatura.status === 'suspended') statusUser = 'SUSPENSA';
+
+    // Preparar dados para atualização (remover campos undefined explicitamente)
+    const dadosAtualizacao: Partial<User> = {
+      dataAtualizacao: new Date(),
+      ultimaSincronizacaoPlano: new Date()
+    };
+
+    // Adicionar apenas campos definidos
+    if (assinatura.id) dadosAtualizacao.assinaturaId = assinatura.id;
+    if (plano?.id) dadosAtualizacao.planoId = plano.id;
+    if (plano?.nome) dadosAtualizacao.planoNome = plano.nome;
+    if (plano?.codigoHotmart) dadosAtualizacao.planoCodigoHotmart = plano.codigoHotmart;
+    if (assinatura.funcionalidadesHabilitadas) dadosAtualizacao.funcionalidadesHabilitadas = assinatura.funcionalidadesHabilitadas;
+    if (statusUser) dadosAtualizacao.assinaturaStatus = statusUser;
+    dadosAtualizacao.pagamentoEmDia = pagamentoEmDia;
+    if (assinatura.dataFim) dadosAtualizacao.dataExpiraAssinatura = assinatura.dataFim;
+    if (assinatura.dataRenovacao) dadosAtualizacao.dataProximoPagamento = assinatura.dataRenovacao;
+
+    console.log(`[AssinaturaService] Sincronizando plano do usuário ${userId}:`, dadosAtualizacao);
+
+    // Atualizar usuário com dados da assinatura
+    const userAtualizado = await this.userRepo.update(userId, dadosAtualizacao);
+    
+    console.log(`[AssinaturaService] Usuário sincronizado:`, {
+      userId: userAtualizado.id,
+      planoId: userAtualizado.planoId,
+      planoNome: userAtualizado.planoNome,
+      assinaturaId: userAtualizado.assinaturaId
+    });
+
+    return userAtualizado;
+  }
+
+  /**
+   * Criar assinatura para usuário
+   */
+  async criarAssinaturaUsuario(
+    userId: string,
+    planoId: string,
+    status: StatusAssinatura = 'trial',
+    hotmartSubscriptionId?: string
+  ): Promise<Assinatura> {
+    const user = await this.userRepo.findById(userId);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    const plano = await this.planoRepo.findById(planoId);
+    if (!plano) {
+      throw new Error('Plano não encontrado');
+    }
+
+    // Verificar se usuário já tem assinatura ativa
+    const assinaturaExistente = await this.assinaturaRepo.findByUserId(userId);
+    if (assinaturaExistente && (assinaturaExistente.status === 'active' || assinaturaExistente.status === 'trial')) {
+      throw new Error('Usuário já possui assinatura ativa');
+    }
+
+    // Calcular datas
+    const agora = new Date();
+    let dataFim: Date | undefined;
+    let dataRenovacao: Date | undefined;
+
+    if (status === 'trial') {
+      // Trial de 7 dias
+      dataFim = new Date(agora);
+      dataFim.setDate(dataFim.getDate() + 7);
+    } else if (status === 'active') {
+      // Assinatura mensal (30 dias)
+      dataRenovacao = new Date(agora);
+      dataRenovacao.setMonth(dataRenovacao.getMonth() + 1);
+    }
+
+    // Criar assinatura
+    const assinatura = await this.assinaturaRepo.create({
+      userId,
+      planoId: plano.id,
+      status,
+      hotmartSubscriptionId: hotmartSubscriptionId || `LOCAL_${userId}_${Date.now()}`,
+      dataInicio: agora,
+      dataFim,
+      dataRenovacao,
+      funcionalidadesHabilitadas: plano.funcionalidades || [],
+      historico: [{
+        data: agora,
+        acao: 'Assinatura criada',
+        detalhes: { plano: plano.nome, status }
+      }],
+      dataCadastro: agora,
+      dataAtualizacao: agora
+    });
+
+    // Sincronizar plano no usuário
+    await this.sincronizarPlanoUsuario(userId);
+
+    return assinatura;
+  }
+}
+

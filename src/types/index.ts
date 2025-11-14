@@ -6,12 +6,26 @@ export interface User {
   nome: string;
   role: 'admin' | 'user';
   ativo: boolean;
+  
+  // Assinatura e Plano
   assinaturaId?: string;
-  funcionalidadesHabilitadas?: string[];
-  planoAtual?: string;
+  planoId?: string; // ID do plano atual
+  planoNome?: string; // Nome do plano (cache)
+  planoCodigoHotmart?: string; // Código do plano na Hotmart (cache)
+  
+  // Funcionalidades (cache para performance)
+  funcionalidadesHabilitadas?: string[]; // IDs das funcionalidades
+  
+  // Status e Validações
+  assinaturaStatus?: 'ATIVA' | 'TRIAL' | 'CANCELADA' | 'EXPIRADA' | 'SUSPENSA';
+  pagamentoEmDia?: boolean;
   dataExpiraAssinatura?: Date;
+  dataProximoPagamento?: Date;
+  
+  // Metadados
   dataCadastro: Date;
   dataAtualizacao: Date;
+  ultimaSincronizacaoPlano?: Date; // Quando o plano foi sincronizado pela última vez
 }
 
 export interface CanalEntrada {
