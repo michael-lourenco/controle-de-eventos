@@ -334,25 +334,29 @@ export class HotmartWebhookService {
 
   /**
    * Valida a assinatura HMAC SHA256 do webhook do Hotmart
-   * O Hotmart envia o HMAC no header e precisamos recalcular usando o secret
+   * Segundo a documentação oficial: https://developers.hotmart.com/docs/pt-BR/tutorials/use-webhook-for-subscriptions/
+   * O Hotmart envia o HMAC no header 'x-hotmart-hmac-sha256' e precisamos recalcular usando o secret
+   * O HMAC é calculado sobre o body RAW (string JSON original)
    */
-  validarAssinatura(payload: any, signature: string, secret: string): boolean {
+  validarAssinatura(payloadBody: string, signature: string, secret: string): boolean {
     try {
       if (!signature || !secret) {
         console.warn('⚠️ Validação HMAC: signature ou secret não fornecidos');
         return false;
       }
 
-      // Converter payload para string JSON (ordem de chaves preservada)
-      const payloadString = typeof payload === 'string' 
-        ? payload 
-        : JSON.stringify(payload);
+      // Segundo a documentação do Hotmart, o HMAC é calculado sobre o body RAW
+      // Não fazer JSON.stringify novamente, usar o body como recebido
+      const payloadString = typeof payloadBody === 'string' 
+        ? payloadBody 
+        : JSON.stringify(payloadBody);
       
-      // Criar HMAC SHA256
+      // Criar HMAC SHA256 (conforme documentação oficial do Hotmart)
       const hmac = crypto.createHmac('sha256', secret);
-      hmac.update(payloadString);
+      hmac.update(payloadString, 'utf8');
       const expectedSignature = hmac.digest('hex');
       
+      // O Hotmart envia a assinatura em hexadecimal
       // Comparar assinaturas (comparação segura contra timing attacks)
       const signatureBuffer = Buffer.from(signature, 'hex');
       const expectedBuffer = Buffer.from(expectedSignature, 'hex');

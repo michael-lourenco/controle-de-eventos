@@ -19,11 +19,10 @@ export async function POST(request: NextRequest) {
 
     const service = new HotmartWebhookService();
 
-    // Obter assinatura HMAC do header (Hotmart pode enviar em diferentes headers)
-    const signature = request.headers.get('x-hotmart-hmac-sha256') || 
-                     request.headers.get('hotmart-hmac-sha256') ||
-                     request.headers.get('x-hmac-sha256') ||
-                     '';
+    // Segundo a documentação oficial do Hotmart:
+    // https://developers.hotmart.com/docs/pt-BR/tutorials/use-webhook-for-subscriptions/
+    // O header correto é 'x-hotmart-hmac-sha256'
+    const signature = request.headers.get('x-hotmart-hmac-sha256') || '';
     
     // Obter secret da variável de ambiente
     const secret = process.env.HOTMART_WEBHOOK_SECRET || '';
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
       hasSecret: !!secret,
       validateHmac,
       isDevelopment,
-      headers: Object.fromEntries(request.headers.entries())
+      signatureHeader: request.headers.get('x-hotmart-hmac-sha256') ? 'presente' : 'ausente'
     });
 
     // Validar HMAC se estiver habilitado e em produção
