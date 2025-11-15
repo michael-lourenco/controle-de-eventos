@@ -1,0 +1,329 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Layout from '@/components/Layout';
+import { Plano, Funcionalidade } from '@/types/funcionalidades';
+import { CheckIcon, XMarkIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import { usePlano } from '@/lib/hooks/usePlano';
+import LimiteUso from '@/components/LimiteUso';
+
+export default function PlanosPage() {
+  const [planos, setPlanos] = useState<Plano[]>([]);
+  const [funcionalidadesMap, setFuncionalidadesMap] = useState<Record<string, Funcionalidade>>({});
+  const [loading, setLoading] = useState(true);
+  const { statusPlano, limites } = usePlano();
+  const [planoComFuncionalidades, setPlanoComFuncionalidades] = useState<Record<string, Funcionalidade[]>>({});
+
+  useEffect(() => {
+    loadPlanos();
+  }, []);
+
+  useEffect(() => {
+    // Carregar funcionalidades quando planos estiverem disponíveis
+    if (planos.length > 0 && Object.keys(funcionalidadesMap).length === 0) {
+      loadFuncionalidades();
+    }
+  }, [planos]);
+
+  const loadFuncionalidades = async () => {
+    try {
+      const funcs: Funcionalidade[] = [];
+      const funcMap = new Map<string, Funcionalidade>();
+
+      for (const plano of planos) {
+        if (plano.funcionalidades && plano.funcionalidades.length > 0) {
+          try {
+            const res = await fetch(`/api/planos/${plano.id}`);
+            const data = await res.json();
+            if (data.plano?.funcionalidadesDetalhes) {
+              data.plano.funcionalidadesDetalhes.forEach((f: Funcionalidade) => {
+                if (!funcMap.has(f.id)) {
+                  funcMap.set(f.id, f);
+                  funcs.push(f);
+                }
+              });
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar funcionalidades do plano ${plano.id}:`, error);
+          }
+        }
+      }
+
+      const map: Record<string, Funcionalidade> = {};
+      funcs.forEach(func => {
+        map[func.id] = func;
+      });
+      setFuncionalidadesMap(map);
+
+      const planoFuncMap: Record<string, Funcionalidade[]> = {};
+      for (const plano of planos) {
+        const planoFuncs: Funcionalidade[] = [];
+        for (const funcId of plano.funcionalidades) {
+          if (map[funcId]) {
+            planoFuncs.push(map[funcId]);
+          }
+        }
+        planoFuncMap[plano.id] = planoFuncs;
+      }
+      setPlanoComFuncionalidades(planoFuncMap);
+    } catch (error) {
+      console.error('Erro ao carregar funcionalidades:', error);
+    }
+  };
+
+  const loadPlanos = async () => {
+    setLoading(true);
+    try {
+      // Buscar planos ativos
+      const res = await fetch('/api/planos?ativos=true');
+      const data = await res.json();
+      
+      if (data.planos) {
+        const planosOrdenados = data.planos.sort((a: Plano, b: Plano) => {
+          // Ordenar por destaque primeiro, depois por preço
+          if (a.destaque && !b.destaque) return -1;
+          if (!a.destaque && b.destaque) return 1;
+          return a.preco - b.preco;
+        });
+        setPlanos(planosOrdenados);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar planos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isPlanoAtual = (planoId?: string) => {
+    return statusPlano?.plano?.id === planoId;
+  };
+
+  const getPlanoFuncionalidades = (plano: Plano): Funcionalidade[] => {
+    return planoComFuncionalidades[plano.id] || [];
+  };
+
+  const agruparFuncionalidadesPorCategoria = (funcs: Funcionalidade[]) => {
+    const categorias: Record<string, Funcionalidade[]> = {};
+    funcs.forEach(func => {
+      if (!categorias[func.categoria]) {
+        categorias[func.categoria] = [];
+      }
+      categorias[func.categoria].push(func);
+    });
+    return categorias;
+  };
+
+  const formatarPreco = (preco: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(preco);
+  };
+
+  const handleAssinar = (plano: Plano) => {
+    // Aqui você redirecionaria para a Hotmart ou processaria a assinatura
+    alert(`Para assinar o plano ${plano.nome}, você será redirecionado para a Hotmart.\n\nEm produção, isso redirecionaria para: ${plano.codigoHotmart}`);
+    // window.location.href = `https://hotmart.com/.../${plano.codigoHotmart}`;
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Planos Disponíveis</h1>
+          <p className="text-text-secondary">Escolha o plano ideal para seu negócio</p>
+        </div>
+
+        {/* Resumo do Plano Atual */}
+        {statusPlano?.plano && (
+          <Card className="border-primary border-2">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-xl">Seu Plano Atual</CardTitle>
+                  <CardDescription>Gerencie sua assinatura atual</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.href = '/assinatura'}
+                >
+                  Ver Detalhes
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-2xl font-bold text-primary">{statusPlano.plano.nome}</p>
+                  <p className="text-sm text-text-secondary mt-1">{statusPlano.plano.descricao}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-text-primary">
+                    {formatarPreco(statusPlano.plano.preco)} / {statusPlano.plano.intervalo === 'mensal' ? 'mês' : 'ano'}
+                  </p>
+                  <p className="text-sm text-text-secondary mt-1">
+                    Status: <span className="font-semibold text-success-text">
+                      {statusPlano.status === 'active' ? 'Ativo' : statusPlano.status === 'trial' ? 'Trial' : 'Inativo'}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Lista de Planos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {planos.map((plano) => {
+            const funcionalidades = getPlanoFuncionalidades(plano);
+            const categorias = agruparFuncionalidadesPorCategoria(funcionalidades);
+            const planoAtual = isPlanoAtual(plano.id);
+
+            return (
+              <Card
+                key={plano.id}
+                className={`relative transition-all hover:shadow-lg ${
+                  plano.destaque ? 'border-2 border-primary scale-105' : ''
+                } ${planoAtual ? 'border-2 border-success' : ''}`}
+              >
+                {plano.destaque && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                      <SparklesIcon className="h-3 w-3" />
+                      Popular
+                    </span>
+                  </div>
+                )}
+
+                {planoAtual && (
+                  <div className="absolute -top-3 right-3">
+                    <span className="bg-success text-success-text px-2 py-1 rounded-full text-xs font-semibold">
+                      Atual
+                    </span>
+                  </div>
+                )}
+
+                <CardHeader>
+                  <CardTitle className="text-xl">{plano.nome}</CardTitle>
+                  <CardDescription>{plano.descricao}</CardDescription>
+                  <div className="mt-4">
+                    <span className="text-3xl font-bold text-text-primary">
+                      {formatarPreco(plano.preco)}
+                    </span>
+                    <span className="text-text-secondary ml-2">
+                      / {plano.intervalo === 'mensal' ? 'mês' : 'ano'}
+                    </span>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  {/* Limites */}
+                  {(plano.limiteEventos || plano.limiteClientes) && (
+                    <div className="space-y-2 p-3 bg-surface rounded-lg">
+                      <p className="text-sm font-semibold text-text-primary">Limites:</p>
+                      <div className="space-y-1 text-sm text-text-secondary">
+                        {plano.limiteEventos && (
+                          <p>• {plano.limiteEventos} eventos/mês</p>
+                        )}
+                        {plano.limiteClientes && (
+                          <p>• {plano.limiteClientes} clientes</p>
+                        )}
+                        {plano.limiteUsuarios && (
+                          <p>• {plano.limiteUsuarios} usuários</p>
+                        )}
+                        {plano.limiteArmazenamento && (
+                          <p>• {plano.limiteArmazenamento} GB armazenamento</p>
+                        )}
+                        {!plano.limiteEventos && !plano.limiteClientes && !plano.limiteUsuarios && (
+                          <p>• Sem limites configurados</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Funcionalidades */}
+                  {Object.keys(categorias).length > 0 ? (
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-text-primary">
+                        {funcionalidades.length} Funcionalidade(s) Incluída(s):
+                      </p>
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {Object.entries(categorias).map(([categoria, funcs]) => (
+                          <div key={categoria} className="space-y-1">
+                            <p className="text-xs font-medium text-text-secondary uppercase">
+                              {categoria}
+                            </p>
+                            <div className="space-y-1 pl-2">
+                              {funcs.map(func => (
+                                <div key={func.id} className="flex items-start gap-2">
+                                  <CheckIcon className="h-4 w-4 text-success-text mt-0.5 flex-shrink-0" />
+                                  <p className="text-xs text-text-secondary">{func.nome}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-text-secondary">
+                        {funcionalidades.length === 0 ? 'Sem funcionalidades definidas' : 'Carregando funcionalidades...'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Botão de Ação */}
+                  <div className="pt-4">
+                    {planoAtual ? (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        disabled
+                      >
+                        Plano Atual
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        onClick={() => handleAssinar(plano)}
+                      >
+                        {plano.destaque ? 'Assinar Agora' : 'Escolher Plano'}
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {planos.length === 0 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <p className="text-text-secondary mb-4">Nenhum plano disponível no momento.</p>
+                <Button onClick={() => window.location.href = '/assinatura'}>
+                  Ver Minha Assinatura
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </Layout>
+  );
+}
+

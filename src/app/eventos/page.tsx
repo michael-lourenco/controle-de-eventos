@@ -23,6 +23,8 @@ import {
 import { useEventos } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
+import { usePlano } from '@/lib/hooks/usePlano';
+import LimiteUso from '@/components/LimiteUso';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusEvento, Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
@@ -34,6 +36,7 @@ export default function EventosPage() {
   const { userId } = useCurrentUser();
   const { data: eventos, loading, error, refetch } = useEventos();
   const { data: tiposEventoData } = useTiposEvento();
+  const { limites } = usePlano();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
@@ -338,6 +341,18 @@ export default function EventosPage() {
             </Button>
           </div>
         </div>
+
+        {/* Limite de Eventos */}
+        {limites && limites.eventosLimiteMes !== undefined && (
+          <div className="max-w-md">
+            <LimiteUso
+              tipo="eventos"
+              usado={limites.eventosMesAtual}
+              limite={limites.eventosLimiteMes}
+              periodo="mes"
+            />
+          </div>
+        )}
 
         {/* Filtros */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

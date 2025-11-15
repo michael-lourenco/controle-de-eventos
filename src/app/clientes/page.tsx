@@ -11,6 +11,8 @@ import { dataService } from '@/lib/data-service';
 import { Cliente, CanalEntrada } from '@/types';
 import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import PlanoBloqueio from '@/components/PlanoBloqueio';
+import { usePlano } from '@/lib/hooks/usePlano';
+import LimiteUso from '@/components/LimiteUso';
 import {
   PlusIcon,
   PencilIcon,
@@ -24,6 +26,7 @@ import {
 export default function ClientesPage() {
   const router = useRouter();
   const { userId } = useCurrentUser();
+  const { limites } = usePlano();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [canaisEntrada, setCanaisEntrada] = useState<CanalEntrada[]>([]);
   const [loading, setLoading] = useState(true);
@@ -263,6 +266,18 @@ export default function ClientesPage() {
             Novo Cliente
           </Button>
         </div>
+
+        {/* Limite de Clientes */}
+        {limites && limites.clientesLimite !== undefined && (
+          <div className="max-w-md">
+            <LimiteUso
+              tipo="clientes"
+              usado={limites.clientesTotal}
+              limite={limites.clientesLimite}
+              periodo="total"
+            />
+          </div>
+        )}
 
         {/* Busca */}
         <Card>

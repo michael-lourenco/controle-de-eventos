@@ -4,13 +4,17 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
-import { Assinatura, Plano } from '@/types/funcionalidades';
+import { Assinatura, Plano, Funcionalidade, CategoriaFuncionalidade } from '@/types/funcionalidades';
 import { CheckIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { usePlano } from '@/lib/hooks/usePlano';
+import LimiteUso from '@/components/LimiteUso';
 
 export default function AssinaturaPage() {
   const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
   const [plano, setPlano] = useState<Plano | null>(null);
+  const [funcionalidades, setFuncionalidades] = useState<Funcionalidade[]>([]);
   const [loading, setLoading] = useState(true);
+  const { limites, loading: loadingLimites } = usePlano();
 
   useEffect(() => {
     loadAssinatura();
@@ -29,6 +33,23 @@ export default function AssinaturaPage() {
           const planoRes = await fetch(`/api/planos/${data.assinatura.planoId}`);
           const planoData = await planoRes.json();
           setPlano(planoData.plano);
+        }
+
+        // Carregar detalhes das funcionalidades habilitadas
+        if (data.assinatura.funcionalidadesHabilitadas && data.assinatura.funcionalidadesHabilitadas.length > 0) {
+          try {
+            const funcRes = await fetch('/api/funcionalidades/por-ids', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ids: data.assinatura.funcionalidadesHabilitadas })
+            });
+            const funcData = await funcRes.json();
+            if (funcData.funcionalidades) {
+              setFuncionalidades(funcData.funcionalidades);
+            }
+          } catch (error) {
+            console.error('Erro ao carregar funcionalidades:', error);
+          }
         }
       }
     } catch (error) {
@@ -91,7 +112,7 @@ export default function AssinaturaPage() {
     }
   };
 
-  if (loading) {
+  if (loading || loadingLimites) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -207,12 +228,12 @@ export default function AssinaturaPage() {
               <CardDescription>Funcionalidades habilitadas no seu plano</CardDescription>
             </CardHeader>
             <CardContent>
-              {assinatura.funcionalidadesHabilitadas.length === 0 ? (
-                <p className="text-text-muted text-center py-8">Nenhuma funcionalidade habilitada</p>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-text-secondary mb-4">
-                    {assinatura.funcionalidadesHabilitadas.length} funcionalidade(s) ativa(s)
+              {funcionalidades.length === 0 ? (
+                <div className="space-y-4">
+                  <p className="text-text-muted text-center py-4">
+                    {assinatura.funcionalidadesHabilitadas.length === 0 
+                      ? 'Nenhuma funcionalidade habilitada'
+                      : 'Carregando funcionalidades...'}
                   </p>
                   <Button 
                     variant="outline" 
@@ -222,10 +243,120 @@ export default function AssinaturaPage() {
                     Ver Detalhes do Plano
                   </Button>
                 </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-text-secondary">
+                    {funcionalidades.length} funcionalidade(s) ativa(s)
+                  </p>
+                  
+                  {/* Agrupar por categoria */}
+                  {(() => {
+                    const categorias: Record<CategoriaFuncionalidade, Funcionalidade[]> = {
+                      'EVENTOS': [],
+                      'FINANCEIRO': [],
+                      'RELATORIOS': [],
+                      'INTEGRACAO': [],
+                      'ADMIN': []
+                    };
+
+                    funcionalidades.forEach(func => {
+                      if (categorias[func.categoria]) {
+                        categorias[func.categoria].push(func);
+                      }
+                    });
+
+                    const categoriasComFunc = Object.entries(categorias).filter(([_, funcs]) => funcs.length > 0);
+
+                    return (
+                      <div className="space-y-4">
+                        {categoriasComFunc.map(([categoria, funcs]) => (
+                          <div key={categoria} className="space-y-2">
+                            <h4 className="text-sm font-semibold text-text-primary uppercase">
+                              {categoria === 'EVENTOS' && '📅 '}
+                              {categoria === 'FINANCEIRO' && '💰 '}
+                              {categoria === 'RELATORIOS' && '📊 '}
+                              {categoria === 'INTEGRACAO' && '🔗 '}
+                              {categoria === 'ADMIN' && '⚙️ '}
+                              {categoria}
+                            </h4>
+                            <div className="space-y-1 pl-4">
+                              {funcs.map(func => (
+                                <div key={func.id} className="flex items-start gap-2 py-1">
+                                  <CheckIcon className="h-4 w-4 text-success-text mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-text-primary">{func.nome}</p>
+                                    {func.descricao && (
+                                      <p className="text-xs text-text-secondary mt-0.5">{func.descricao}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full mt-4"
+                    onClick={() => window.location.href = '/planos'}
+                  >
+                    Ver Todos os Planos
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
         </div>
+
+        {/* Limites de Uso */}
+        {limites && (limites.eventosLimiteMes || limites.clientesLimite || limites.usuariosLimite || limites.armazenamentoLimite) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Limites de Uso</CardTitle>
+              <CardDescription>Consumo atual dos recursos do seu plano</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {limites.eventosLimiteMes !== undefined && (
+                  <LimiteUso
+                    tipo="eventos"
+                    usado={limites.eventosMesAtual}
+                    limite={limites.eventosLimiteMes}
+                    periodo="mes"
+                  />
+                )}
+                {limites.clientesLimite !== undefined && (
+                  <LimiteUso
+                    tipo="clientes"
+                    usado={limites.clientesTotal}
+                    limite={limites.clientesLimite}
+                    periodo="total"
+                  />
+                )}
+                {limites.usuariosLimite !== undefined && (
+                  <LimiteUso
+                    tipo="usuarios"
+                    usado={limites.usuariosConta}
+                    limite={limites.usuariosLimite}
+                    periodo="total"
+                  />
+                )}
+                {limites.armazenamentoLimite !== undefined && (
+                  <LimiteUso
+                    tipo="armazenamento"
+                    usado={limites.armazenamentoUsado}
+                    limite={limites.armazenamentoLimite}
+                    periodo="total"
+                    unidade="GB"
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Histórico */}
         {assinatura.historico && assinatura.historico.length > 0 && (
