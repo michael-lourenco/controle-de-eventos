@@ -76,11 +76,13 @@ export class HotmartWebhookService {
     this.planoService = new PlanoService();
   }
 
-  async processarWebhook(payload: any): Promise<{ success: boolean; message: string }> {
+  async processarWebhook(payload: any, isSandbox: boolean = false): Promise<{ success: boolean; message: string }> {
     const event = payload.event;
-    console.log(`📥 Webhook recebido: ${event}`, {
+    const receivedPrefix = isSandbox ? '🧪 [SANDBOX]' : '📥';
+    console.log(`${receivedPrefix} Webhook recebido: ${event}`, {
       timestamp: new Date().toISOString(),
-      payloadKeys: Object.keys(payload)
+      payloadKeys: Object.keys(payload),
+      environment: isSandbox ? 'sandbox' : 'production'
     });
 
     try {
@@ -88,13 +90,15 @@ export class HotmartWebhookService {
       const subscription = payload.data?.subscription || payload.subscription;
       
       if (!subscription) {
-        console.error('❌ Payload inválido: subscription não encontrado', payload);
-        return { success: false, message: 'Payload inválido: subscription não encontrado' };
+        const errorMsg = 'Payload inválido: subscription não encontrado';
+        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, payload);
+        return { success: false, message: errorMsg };
       }
 
       if (!event) {
-        console.error('❌ Payload inválido: event não encontrado', payload);
-        return { success: false, message: 'Payload inválido: event não encontrado' };
+        const errorMsg = 'Payload inválido: event não encontrado';
+        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, payload);
+        return { success: false, message: errorMsg };
       }
 
       // Extrair dados normalizados (suportar diferentes formatos)
@@ -103,52 +107,65 @@ export class HotmartWebhookService {
       const email = (subscription.buyer?.email || subscription.subscriber?.email)?.toLowerCase().trim();
 
       if (!hotmartSubscriptionId) {
-        console.error('❌ Dados incompletos: subscription_id não encontrado', subscription);
-        return { success: false, message: 'Dados incompletos: subscription_id não encontrado' };
+        const errorMsg = 'Dados incompletos: subscription_id não encontrado';
+        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, subscription);
+        return { success: false, message: errorMsg };
       }
 
       if (!codigoPlano) {
-        console.error('❌ Dados incompletos: código do plano não encontrado', subscription);
-        return { success: false, message: 'Dados incompletos: código do plano não encontrado' };
+        const errorMsg = 'Dados incompletos: código do plano não encontrado';
+        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, subscription);
+        return { success: false, message: errorMsg };
       }
 
       if (!email) {
-        console.error('❌ Dados incompletos: email não encontrado', subscription);
-        return { success: false, message: 'Dados incompletos: email não encontrado' };
+        const errorMsg = 'Dados incompletos: email não encontrado';
+        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, subscription);
+        return { success: false, message: errorMsg };
       }
 
-      console.log(`🔍 Processando webhook:`, {
+      const logPrefix = isSandbox ? '🔍 [SANDBOX]' : '🔍';
+      console.log(`${logPrefix} Processando webhook:`, {
         event,
         hotmartSubscriptionId,
         codigoPlano,
-        email
+        email,
+        environment: isSandbox ? 'sandbox' : 'production'
       });
 
       // Buscar usuário por email
       const user = await this.userRepo.findByEmail(email);
       if (!user) {
-        console.warn(`⚠️ Usuário não encontrado para email: ${email}`);
+        const errorMsg = `Usuário não encontrado: ${email}. Verifique se o email está cadastrado no sistema.`;
+        if (isSandbox) {
+          console.warn(`⚠️ [SANDBOX] ${errorMsg}`);
+        } else {
+          console.warn(`⚠️ ${errorMsg}`);
+        }
         return { 
           success: false, 
-          message: `Usuário não encontrado: ${email}. Verifique se o email está cadastrado no sistema.` 
+          message: errorMsg
         };
       }
 
       // Buscar plano pelo código Hotmart
       const plano = await this.planoRepo.findByCodigoHotmart(codigoPlano);
       if (!plano) {
-        console.error(`❌ Plano não encontrado: ${codigoPlano}`);
+        const errorMsg = `Plano não encontrado: ${codigoPlano}. Verifique se o código do plano está correto no banco de dados.`;
+        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`);
         return { 
           success: false, 
-          message: `Plano não encontrado: ${codigoPlano}. Verifique se o código do plano está correto no banco de dados.` 
+          message: errorMsg
         };
       }
 
-      console.log(`✅ Dados validados:`, {
+      const successPrefix = isSandbox ? '✅ [SANDBOX]' : '✅';
+      console.log(`${successPrefix} Dados validados:`, {
         userId: user.id,
         userName: user.nome,
         planoId: plano.id,
-        planoNome: plano.nome
+        planoNome: plano.nome,
+        environment: isSandbox ? 'sandbox' : 'production'
       });
 
       // Processar evento
@@ -179,22 +196,26 @@ export class HotmartWebhookService {
           break;
         
         default:
-          console.warn(`⚠️ Evento não reconhecido: ${event}`);
-          return { success: false, message: `Evento não reconhecido: ${event}` };
+          const errorMsg = `Evento não reconhecido: ${event}`;
+          console.warn(`${isSandbox ? '⚠️ [SANDBOX]' : '⚠️'} ${errorMsg}`);
+          return { success: false, message: errorMsg };
       }
 
       if (result.success) {
-        console.log(`✅ Webhook processado com sucesso: ${event}`, {
+        const finalPrefix = isSandbox ? '✅ [SANDBOX]' : '✅';
+        console.log(`${finalPrefix} Webhook processado com sucesso: ${event}`, {
           userId: user.id,
           email: email,
           planoId: plano.id,
-          hotmartSubscriptionId
+          hotmartSubscriptionId,
+          environment: isSandbox ? 'sandbox' : 'production'
         });
       }
 
       return result;
     } catch (error: any) {
-      console.error(`❌ Erro ao processar webhook ${event}:`, error);
+      const errorPrefix = isSandbox ? '❌ [SANDBOX]' : '❌';
+      console.error(`${errorPrefix} Erro ao processar webhook ${event}:`, error);
       return { success: false, message: error.message || 'Erro ao processar webhook' };
     }
   }
