@@ -58,10 +58,37 @@ export default function AssinaturaPage() {
     );
   };
 
-  const formatDate = (date?: Date | string) => {
+  const formatDate = (date?: Date | string | any) => {
     if (!date) return 'N/A';
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('pt-BR');
+    
+    // Se for Timestamp do Firestore
+    if (date && typeof date === 'object' && 'seconds' in date) {
+      const d = new Date(date.seconds * 1000 + (date.nanoseconds || 0) / 1000000);
+      if (isNaN(d.getTime())) return 'N/A';
+      return d.toLocaleDateString('pt-BR');
+    }
+    
+    // Se for string
+    if (typeof date === 'string') {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return 'N/A';
+      return d.toLocaleDateString('pt-BR');
+    }
+    
+    // Se for Date
+    if (date instanceof Date) {
+      if (isNaN(date.getTime())) return 'N/A';
+      return date.toLocaleDateString('pt-BR');
+    }
+    
+    // Tentar converter para Date
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return 'N/A';
+      return d.toLocaleDateString('pt-BR');
+    } catch {
+      return 'N/A';
+    }
   };
 
   if (loading) {
