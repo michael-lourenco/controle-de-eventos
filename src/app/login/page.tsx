@@ -67,9 +67,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-primary mb-2">Click-se</h1>
+          <h1 className="text-4xl font-bold mb-2">
+            <span className="text-primary">Clickse</span>
+            <span className="text-accent">hub</span>
+          </h1>
           <h2 className="text-2xl font-semibold text-text-primary">
-            Sistema de Controle
+            Sistema de Gestão de Eventos
           </h2>
           <p className="mt-2 text-sm text-text-secondary">
             Faça login para acessar o sistema

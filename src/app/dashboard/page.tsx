@@ -110,7 +110,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
           <p className="text-text-secondary">
-            Visão geral do sistema Click-se
+            Visão geral do sistema Clicksehub
           </p>
         </div>
 

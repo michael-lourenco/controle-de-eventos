@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Click-se Sistema",
-  description: "Sistema de controle financeiro e gerenciamento de eventos",
+  title: "Clicksehub - Sistema de Gestão de Eventos",
+  description: "Sistema completo de gestão para empresas de eventos. Gerencie eventos, clientes, pagamentos e relatórios em uma única plataforma.",
 };
 
 export default function RootLayout({

@@ -87,7 +87,10 @@ export default function Layout({ children }: LayoutProps) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
         <div className="relative flex w-64 flex-col bg-surface/95 backdrop-blur-md shadow-2xl border-r border-border">
           <div className="flex h-16 items-center justify-between px-4">
-            <h1 className="text-xl font-bold text-primary">Click-se</h1>
+            <h1 className="text-xl font-bold">
+              <span className="text-primary">Clickse</span>
+              <span className="text-accent">hub</span>
+            </h1>
             <button
               type="button"
               className="text-text-muted hover:text-text-secondary cursor-pointer"
@@ -138,7 +141,10 @@ export default function Layout({ children }: LayoutProps) {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-grow flex-col overflow-y-auto bg-surface/95 backdrop-blur-md border-r border-border shadow-xl">
           <div className="flex h-16 items-center px-4">
-            <h1 className="text-xl font-bold text-primary">Click-se</h1>
+            <h1 className="text-xl font-bold">
+              <span className="text-primary">Clickse</span>
+              <span className="text-accent">hub</span>
+            </h1>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
             {navigation.map((item) => (

@@ -236,7 +236,7 @@ A imagem deve ter:
 ---
 
 **Data de criação:** 2025  
-**Sistema:** Click SE - Sistema de Gestão de Eventos  
+**Sistema:** Clicksehub - Sistema de Gestão de Eventos  
 **Versão:** 1.0
 
 ---
@@ -248,7 +248,7 @@ A imagem deve ter:
 ```
 🎯 Oportunidade de Ouro para Afiliados de Software B2B!
 
-Apresentamos o Click SE - Sistema Completo de Gestão para Empresas de Eventos, uma solução SaaS que está revolucionando como profissionais e empresas gerenciam seus eventos de forma profissional e organizada.
+Apresentamos o Clicksehub - Sistema Completo de Gestão para Empresas de Eventos, uma solução SaaS que está revolucionando como profissionais e empresas gerenciam seus eventos de forma profissional e organizada.
 
 🔥 POR QUE PROMOVER ESTE PRODUTO?
 
