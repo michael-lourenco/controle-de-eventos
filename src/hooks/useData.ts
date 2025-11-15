@@ -174,6 +174,39 @@ export function useAllEventos(): UseDataResult<Evento[]> {
   return { data, loading, error, refetch: fetchData };
 }
 
+// Hook para eventos arquivados
+export function useEventosArquivados(): UseDataResult<Evento[]> {
+  const [data, setData] = useState<Evento[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getEventosArquivados(userId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar eventos arquivados');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
 export function useEvento(id: string): UseDataResult<Evento> {
   const [data, setData] = useState<Evento | null>(null);
   const [loading, setLoading] = useState(true);

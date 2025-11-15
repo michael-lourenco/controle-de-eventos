@@ -32,6 +32,8 @@ import PagamentoHistorico from '@/components/PagamentoHistorico';
 import CustosEvento from '@/components/CustosEvento';
 import ServicosEvento from '@/components/ServicosEvento';
 import AnexosEvento from '@/components/AnexosEvento';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -39,6 +41,7 @@ export default function EventoViewPage() {
   const params = useParams();
   const router = useRouter();
   const { userId } = useCurrentUser();
+  const { showToast } = useToast();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -86,18 +89,15 @@ export default function EventoViewPage() {
   };
 
   const handleDelete = async () => {
-    if (evento) {
-      try {
-        if (!userId) {
-          console.error('Usuário não autenticado');
-          return;
-        }
-        
-        await dataService.deleteEvento(evento.id, userId);
-        router.push('/eventos');
-      } catch (error) {
-        console.error('Erro ao excluir evento:', error);
-      }
+    if (!evento || !userId) return;
+
+    try {
+      await dataService.deleteEvento(evento.id, userId);
+      showToast('Evento arquivado com sucesso!', 'success');
+      router.push('/eventos');
+    } catch (error) {
+      console.error('Erro ao arquivar evento:', error);
+      showToast('Erro ao arquivar evento', 'error');
     }
   };
 
@@ -356,7 +356,7 @@ export default function EventoViewPage() {
                 onClick={() => setShowDeleteConfirm(true)}
               >
                 <TrashIcon className="h-4 w-4 mr-2" />
-                Excluir
+                Arquivar
               </Button>
             </div>
           </div>
@@ -670,35 +670,21 @@ export default function EventoViewPage() {
         />
         </div>
 
-        {/* Modal de Confirmação de Exclusão */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
-            <Card className="w-full max-w-md mx-4 modal-card">
-              <CardHeader>
-                <CardTitle>Confirmar Exclusão</CardTitle>
-                <CardDescription>
-                  Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowDeleteConfirm(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleDelete}
-                  >
-                    Excluir
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        {/* Modal de Confirmação de Arquivamento */}
+        <ConfirmationDialog
+          open={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          title="Arquivar Evento"
+          description={
+            evento
+              ? `Tem certeza que deseja arquivar o evento "${evento.nomeEvento || evento.cliente.nome}"? Ele não aparecerá nas listas ativas, mas continuará disponível nos relatórios históricos.`
+              : 'Tem certeza que deseja arquivar este evento?'
+          }
+          confirmText="Arquivar"
+          cancelText="Cancelar"
+          variant="default"
+          onConfirm={handleDelete}
+        />
       </div>
     </Layout>
   );

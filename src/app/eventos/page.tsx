@@ -20,7 +20,7 @@ import {
   ClipboardDocumentIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
-import { useEventos } from '@/hooks/useData';
+import { useEventos, useEventosArquivados, useTiposEvento } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { usePlano } from '@/lib/hooks/usePlano';
@@ -29,22 +29,33 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusEvento, Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
 import DateRangeFilter, { DateFilter, isDateInFilter } from '@/components/filters/DateRangeFilter';
-import { useTiposEvento } from '@/hooks/useData';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 export default function EventosPage() {
   const router = useRouter();
   const { userId } = useCurrentUser();
-  const { data: eventos, loading, error, refetch } = useEventos();
+  const { data: eventos, loading: loadingAtivos, error: errorAtivos, refetch: refetchAtivos } = useEventos();
+  const { data: eventosArquivados, loading: loadingArquivados, error: errorArquivados, refetch: refetchArquivados } = useEventosArquivados();
   const { data: tiposEventoData } = useTiposEvento();
   const { limites } = usePlano();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<DateFilter | null>(null);
-  const [eventoParaExcluir, setEventoParaExcluir] = useState<Evento | null>(null);
+  const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados'>('ativos');
+  const [eventoParaArquivar, setEventoParaArquivar] = useState<Evento | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [eventoCopiado, setEventoCopiado] = useState<string | null>(null);
   
-  const eventosLista = eventos ?? [];
+  const loading = loadingAtivos || loadingArquivados;
+  const error = errorAtivos || errorArquivados;
+  const eventosLista = abaAtiva === 'ativos' ? (eventos ?? []) : (eventosArquivados ?? []);
+
+  const recarregarEventos = async () => {
+    await Promise.all([refetchAtivos(), refetchArquivados()]);
+  };
 
   const tiposEventoFilterOptions = React.useMemo(() => {
     const nomes = new Set<string>();
@@ -152,8 +163,37 @@ export default function EventosPage() {
     router.push(`/eventos/${evento.id}/editar`);
   };
 
-  const handleDelete = (evento: Evento) => {
-    setEventoParaExcluir(evento);
+  const handleExcluirEvento = (evento: Evento) => {
+    setEventoParaArquivar(evento);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmarArquivamento = async () => {
+    if (!eventoParaArquivar || !userId) return;
+
+    try {
+      await dataService.deleteEvento(eventoParaArquivar.id, userId);
+      showToast('Evento arquivado com sucesso!', 'success');
+      await recarregarEventos();
+      setEventoParaArquivar(null);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Erro ao arquivar evento:', error);
+      showToast('Erro ao arquivar evento', 'error');
+    }
+  };
+
+  const handleDesarquivar = async (evento: Evento) => {
+    if (!userId) return;
+
+    try {
+      await dataService.desarquivarEvento(evento.id, userId);
+      showToast('Evento desarquivado com sucesso!', 'success');
+      await recarregarEventos();
+    } catch (error) {
+      console.error('Erro ao desarquivar evento:', error);
+      showToast('Erro ao desarquivar evento', 'error');
+    }
   };
 
   const formatEventInfoForCopy = (evento: Evento) => {
@@ -277,26 +317,6 @@ export default function EventosPage() {
     }
   };
 
-  const confirmDelete = async () => {
-    if (eventoParaExcluir) {
-      try {
-        if (!userId) {
-          console.error('Usuário não autenticado');
-          return;
-        }
-        
-        await dataService.deleteEvento(eventoParaExcluir.id, userId);
-        await refetch(); // Recarrega os dados
-        setEventoParaExcluir(null);
-      } catch (error) {
-        console.error('Erro ao excluir evento:', error);
-      }
-    }
-  };
-
-  const cancelDelete = () => {
-    setEventoParaExcluir(null);
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -321,7 +341,10 @@ export default function EventosPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Eventos</h1>
+            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+              <CalendarIcon className="h-6 w-6" />
+              Eventos
+            </h1>
             <p className="text-text-secondary">
               Gerencie todos os eventos agendados
             </p>
@@ -329,7 +352,7 @@ export default function EventosPage() {
           <div className="flex space-x-2">
             <Button 
               variant="outline" 
-              onClick={() => refetch()}
+              onClick={() => recarregarEventos()}
               disabled={loading}
             >
               <ArrowPathIcon className="h-4 w-4 mr-2" />
@@ -353,6 +376,34 @@ export default function EventosPage() {
             />
           </div>
         )}
+
+        {/* Abas */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setAbaAtiva('ativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'ativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Ativos ({eventos?.length || 0})
+              </button>
+              <button
+                onClick={() => setAbaAtiva('arquivados')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'arquivados'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Arquivados ({eventosArquivados?.length || 0})
+              </button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Filtros */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -535,18 +586,33 @@ export default function EventosPage() {
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(evento);
-                        }}
-                        title="Excluir"
-                        className="hover:bg-error/10 hover:text-error"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      {abaAtiva === 'ativos' ? (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExcluirEvento(evento);
+                          }}
+                          title="Arquivar"
+                          className="text-error hover:text-error hover:bg-error/10"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDesarquivar(evento);
+                          }}
+                          title="Desarquivar"
+                          className="text-success hover:text-success hover:bg-success/10"
+                        >
+                          <ArrowPathIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -559,51 +625,47 @@ export default function EventosPage() {
           <Card className="bg-surface/50 backdrop-blur-sm">
             <CardContent className="text-center py-12">
               <CalendarIcon className="mx-auto h-12 w-12 text-text-muted" />
-              <h3 className="mt-2 text-sm font-medium text-text-primary">Nenhum evento encontrado</h3>
+              <h3 className="mt-2 text-sm font-medium text-text-primary">
+                {searchTerm 
+                  ? 'Nenhum evento encontrado' 
+                  : abaAtiva === 'ativos' 
+                    ? 'Nenhum evento ativo' 
+                    : 'Nenhum evento arquivado'}
+              </h3>
               <p className="mt-1 text-sm text-text-secondary">
-                Tente ajustar os filtros ou criar um novo evento.
+                {searchTerm 
+                  ? 'Tente ajustar o termo de busca.'
+                  : abaAtiva === 'ativos'
+                    ? 'Comece criando um novo evento.'
+                    : 'Não há eventos arquivados no momento.'}
               </p>
-              <div className="mt-6">
-                <Button onClick={() => router.push('/eventos/novo')}>
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Novo Evento
-                </Button>
-              </div>
+              {abaAtiva === 'ativos' && (
+                <div className="mt-6">
+                  <Button onClick={() => router.push('/eventos/novo')}>
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Novo Evento
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
 
-        {/* Modal de Confirmação de Exclusão */}
-        {eventoParaExcluir && (
-          <div className="fixed inset-0 modal-overlay flex items-center justify-center z-50">
-            <Card className="w-full max-w-md mx-4 modal-card">
-              <CardHeader>
-                <CardTitle>Confirmar Exclusão</CardTitle>
-                <CardDescription>
-                  Tem certeza que deseja excluir o evento de <strong>{eventoParaExcluir.cliente.nome}</strong>?
-                  <br />
-                  Esta ação não pode ser desfeita.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    onClick={cancelDelete}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={confirmDelete}
-                  >
-                    Excluir
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        {/* Modal de Confirmação de Arquivamento */}
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Arquivar Evento"
+          description={
+            eventoParaArquivar
+              ? `Tem certeza que deseja arquivar o evento de "${eventoParaArquivar.cliente.nome}"? Ele não aparecerá nas listas ativas, mas continuará disponível nos relatórios históricos.`
+              : 'Tem certeza que deseja arquivar este evento?'
+          }
+          confirmText="Arquivar"
+          cancelText="Cancelar"
+          variant="default"
+          onConfirm={handleConfirmarArquivamento}
+        />
       </div>
     </Layout>
   );
