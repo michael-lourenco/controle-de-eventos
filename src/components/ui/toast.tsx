@@ -59,26 +59,26 @@ interface ToastItemProps {
 function ToastItem({ toast, onClose }: ToastItemProps) {
   const typeConfig = {
     success: {
-      bg: 'bg-success-bg',
-      border: 'border-success-border',
+      bgColor: 'var(--success-bg)',
+      borderColor: 'var(--success)',
       text: 'text-success-text',
       icon: CheckCircleIcon,
     },
     error: {
-      bg: 'bg-error-bg',
-      border: 'border-error-border',
+      bgColor: 'var(--error-bg)',
+      borderColor: 'var(--error)',
       text: 'text-error-text',
       icon: ExclamationCircleIcon,
     },
     warning: {
-      bg: 'bg-warning-bg',
-      border: 'border-warning-border',
+      bgColor: 'var(--warning-bg)',
+      borderColor: 'var(--warning)',
       text: 'text-warning-text',
       icon: ExclamationCircleIcon,
     },
     info: {
-      bg: 'bg-info-bg',
-      border: 'border-info-border',
+      bgColor: 'var(--info-bg)',
+      borderColor: 'var(--info)',
       text: 'text-info-text',
       icon: InformationCircleIcon,
     },
@@ -90,10 +90,13 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
   return (
     <div
       className={cn(
-        'pointer-events-auto animate-in slide-in-from-right-full flex items-start gap-3 rounded-lg border p-4 shadow-lg transition-all',
-        config.bg,
-        config.border
+        'pointer-events-auto animate-in slide-in-from-right-full flex items-start gap-3 rounded-lg border-2 p-4 shadow-xl transition-all'
       )}
+      style={{
+        backgroundColor: config.bgColor,
+        borderColor: config.borderColor,
+        opacity: 1,
+      }}
       role="alert"
     >
       <Icon className={cn('h-5 w-5 flex-shrink-0 mt-0.5', config.text)} />
@@ -105,7 +108,6 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
         className={cn(
           'flex-shrink-0 rounded-md p-1 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2',
           config.text,
-          config.border,
           'opacity-70 hover:opacity-100'
         )}
       >
