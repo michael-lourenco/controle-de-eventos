@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import Layout from '@/components/Layout';
 import { Plano, Funcionalidade } from '@/types/funcionalidades';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 export default function AdminPlanosPage() {
   const [planos, setPlanos] = useState<Plano[]>([]);
@@ -28,6 +30,9 @@ export default function AdminPlanosPage() {
     limiteArmazenamento: undefined as number | undefined
   });
   const [message, setMessage] = useState('');
+  const [planoParaExcluir, setPlanoParaExcluir] = useState<Plano | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadPlanos();
@@ -146,25 +151,34 @@ export default function AdminPlanosPage() {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja deletar este plano?')) return;
+  const handleDeleteClick = (plano: Plano) => {
+    setPlanoParaExcluir(plano);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDelete = async () => {
+    if (!planoParaExcluir) return;
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/planos/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/planos/${planoParaExcluir.id}`, { method: 'DELETE' });
       if (res.ok) {
-        setMessage('✅ Plano deletado!');
+        showToast('Plano deletado com sucesso!', 'success');
+        setMessage('');
         setTimeout(() => {
           loadPlanos();
         }, 500);
       } else {
         const data = await res.json();
+        showToast(`Erro ao deletar: ${data.error || 'Erro desconhecido'}`, 'error');
         setMessage(`❌ Erro: ${data.error || 'Erro ao deletar'}`);
       }
     } catch (error: any) {
+      showToast(`Erro inesperado: ${error.message || 'Erro ao deletar'}`, 'error');
       setMessage(`❌ Erro inesperado: ${error.message || 'Erro ao deletar'}`);
     } finally {
       setLoading(false);
+      setPlanoParaExcluir(null);
     }
   };
 
@@ -426,7 +440,7 @@ export default function AdminPlanosPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(plano.id)}
+                        onClick={() => handleDeleteClick(plano)}
                         className="text-error hover:bg-error-bg hover:text-error-text"
                       >
                         <TrashIcon className="h-4 w-4" />
@@ -438,6 +452,22 @@ export default function AdminPlanosPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Modal de Confirmação de Exclusão */}
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Deletar Plano"
+          description={
+            planoParaExcluir
+              ? `Tem certeza que deseja deletar o plano "${planoParaExcluir.nome}"? Esta ação não pode ser desfeita.`
+              : 'Tem certeza que deseja deletar este plano? Esta ação não pode ser desfeita.'
+          }
+          confirmText="Deletar"
+          cancelText="Cancelar"
+          variant="destructive"
+          onConfirm={handleDelete}
+        />
       </div>
     </Layout>
   );

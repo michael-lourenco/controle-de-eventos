@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import Layout from '@/components/Layout';
 import { Funcionalidade, CategoriaFuncionalidade } from '@/types/funcionalidades';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 const CATEGORIAS: CategoriaFuncionalidade[] = ['EVENTOS', 'FINANCEIRO', 'RELATORIOS', 'INTEGRACAO', 'ADMIN'];
 
@@ -23,6 +25,9 @@ export default function AdminFuncionalidadesPage() {
     ordem: 0
   });
   const [message, setMessage] = useState('');
+  const [funcionalidadeParaExcluir, setFuncionalidadeParaExcluir] = useState<Funcionalidade | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadFuncionalidades();
@@ -100,25 +105,34 @@ export default function AdminFuncionalidadesPage() {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja deletar esta funcionalidade?')) return;
+  const handleDeleteClick = (funcionalidade: Funcionalidade) => {
+    setFuncionalidadeParaExcluir(funcionalidade);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDelete = async () => {
+    if (!funcionalidadeParaExcluir) return;
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/funcionalidades/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/funcionalidades/${funcionalidadeParaExcluir.id}`, { method: 'DELETE' });
       if (res.ok) {
-        setMessage('✅ Funcionalidade deletada!');
+        showToast('Funcionalidade deletada com sucesso!', 'success');
+        setMessage('');
         setTimeout(() => {
           loadFuncionalidades();
         }, 500);
       } else {
         const data = await res.json();
+        showToast(`Erro ao deletar: ${data.error || 'Erro desconhecido'}`, 'error');
         setMessage(`❌ Erro: ${data.error || 'Erro ao deletar'}`);
       }
     } catch (error: any) {
+      showToast(`Erro inesperado: ${error.message || 'Erro ao deletar'}`, 'error');
       setMessage(`❌ Erro inesperado: ${error.message || 'Erro ao deletar'}`);
     } finally {
       setLoading(false);
+      setFuncionalidadeParaExcluir(null);
     }
   };
 
@@ -296,7 +310,7 @@ export default function AdminFuncionalidadesPage() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleDelete(func.id)}
+                                  onClick={() => handleDeleteClick(func)}
                                   className="text-error hover:bg-error-bg hover:text-error-text"
                                 >
                                   <TrashIcon className="h-4 w-4" />
@@ -312,6 +326,22 @@ export default function AdminFuncionalidadesPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Modal de Confirmação de Exclusão */}
+          <ConfirmationDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            title="Deletar Funcionalidade"
+            description={
+              funcionalidadeParaExcluir
+                ? `Tem certeza que deseja deletar a funcionalidade "${funcionalidadeParaExcluir.nome}"? Esta ação não pode ser desfeita.`
+                : 'Tem certeza que deseja deletar esta funcionalidade? Esta ação não pode ser desfeita.'
+            }
+            confirmText="Deletar"
+            cancelText="Cancelar"
+            variant="destructive"
+            onConfirm={handleDelete}
+          />
         </div>
       </div>
     </Layout>

@@ -1,0 +1,126 @@
+'use client';
+
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { XMarkIcon, CheckCircleIcon, ExclamationCircleIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { cn } from '@/lib/utils';
+
+type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+interface Toast {
+  id: string;
+  message: string;
+  type: ToastType;
+  duration?: number;
+}
+
+interface ToastContextType {
+  showToast: (message: string, type?: ToastType, duration?: number) => void;
+}
+
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const showToast = useCallback((message: string, type: ToastType = 'info', duration = 5000) => {
+    const id = Math.random().toString(36).substring(7);
+    const newToast: Toast = { id, message, type, duration };
+
+    setToasts((prev) => [...prev, newToast]);
+
+    if (duration > 0) {
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
+      }, duration);
+    }
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  return (
+    <ToastContext.Provider value={{ showToast }}>
+      {children}
+      <div className="fixed bottom-0 right-0 z-50 w-full max-w-sm p-4 space-y-2 pointer-events-none sm:max-w-md">
+        {toasts.map((toast) => (
+          <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
+interface ToastItemProps {
+  toast: Toast;
+  onClose: () => void;
+}
+
+function ToastItem({ toast, onClose }: ToastItemProps) {
+  const typeConfig = {
+    success: {
+      bg: 'bg-success-bg',
+      border: 'border-success-border',
+      text: 'text-success-text',
+      icon: CheckCircleIcon,
+    },
+    error: {
+      bg: 'bg-error-bg',
+      border: 'border-error-border',
+      text: 'text-error-text',
+      icon: ExclamationCircleIcon,
+    },
+    warning: {
+      bg: 'bg-warning-bg',
+      border: 'border-warning-border',
+      text: 'text-warning-text',
+      icon: ExclamationCircleIcon,
+    },
+    info: {
+      bg: 'bg-info-bg',
+      border: 'border-info-border',
+      text: 'text-info-text',
+      icon: InformationCircleIcon,
+    },
+  };
+
+  const config = typeConfig[toast.type];
+  const Icon = config.icon;
+
+  return (
+    <div
+      className={cn(
+        'pointer-events-auto animate-in slide-in-from-right-full flex items-start gap-3 rounded-lg border p-4 shadow-lg transition-all',
+        config.bg,
+        config.border
+      )}
+      role="alert"
+    >
+      <Icon className={cn('h-5 w-5 flex-shrink-0 mt-0.5', config.text)} />
+      <div className="flex-1 min-w-0">
+        <p className={cn('text-sm font-medium', config.text)}>{toast.message}</p>
+      </div>
+      <button
+        onClick={onClose}
+        className={cn(
+          'flex-shrink-0 rounded-md p-1 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2',
+          config.text,
+          config.border,
+          'opacity-70 hover:opacity-100'
+        )}
+      >
+        <XMarkIcon className="h-4 w-4" />
+        <span className="sr-only">Fechar</span>
+      </button>
+    </div>
+  );
+}
+
+export function useToast() {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast must be used within ToastProvider');
+  }
+  return context;
+}
+

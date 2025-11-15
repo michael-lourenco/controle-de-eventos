@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +28,9 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <SessionProvider>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </SessionProvider>
         </ThemeProvider>
       </body>

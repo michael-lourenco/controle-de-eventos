@@ -5,16 +5,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import { Assinatura, Plano, Funcionalidade, CategoriaFuncionalidade } from '@/types/funcionalidades';
-import { CheckIcon, ClockIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ClockIcon, XCircleIcon, DocumentTextIcon, ArrowPathIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { usePlano } from '@/lib/hooks/usePlano';
 import LimiteUso from '@/components/LimiteUso';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 export default function AssinaturaPage() {
   const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
   const [plano, setPlano] = useState<Plano | null>(null);
   const [funcionalidades, setFuncionalidades] = useState<Funcionalidade[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const { limites, loading: loadingLimites } = usePlano();
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadAssinatura();
@@ -86,30 +90,179 @@ export default function AssinaturaPage() {
     if (date && typeof date === 'object' && 'seconds' in date) {
       const d = new Date(date.seconds * 1000 + (date.nanoseconds || 0) / 1000000);
       if (isNaN(d.getTime())) return 'N/A';
-      return d.toLocaleDateString('pt-BR');
+      return d.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
     
     // Se for string
     if (typeof date === 'string') {
       const d = new Date(date);
       if (isNaN(d.getTime())) return 'N/A';
-      return d.toLocaleDateString('pt-BR');
+      return d.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
     
     // Se for Date
     if (date instanceof Date) {
       if (isNaN(date.getTime())) return 'N/A';
-      return date.toLocaleDateString('pt-BR');
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
     
     // Tentar converter para Date
     try {
       const d = new Date(date);
       if (isNaN(d.getTime())) return 'N/A';
-      return d.toLocaleDateString('pt-BR');
+      return d.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     } catch {
       return 'N/A';
     }
+  };
+
+  const formatarDetalhes = (acao: string, detalhes: any): { titulo: string; items: { label: string; value: string }[] } => {
+    if (!detalhes || typeof detalhes !== 'object') {
+      return { titulo: acao, items: [] };
+    }
+
+    const items: { label: string; value: string }[] = [];
+
+    // Status
+    if (detalhes.status) {
+      const statusLabels: Record<string, string> = {
+        'active': 'Ativa',
+        'trial': 'Trial',
+        'cancelled': 'Cancelada',
+        'expired': 'Expirada',
+        'suspended': 'Suspensa'
+      };
+      items.push({
+        label: 'Status',
+        value: statusLabels[detalhes.status] || detalhes.status
+      });
+    }
+
+    // Plano
+    if (detalhes.plano) {
+      items.push({
+        label: 'Plano',
+        value: detalhes.plano
+      });
+    }
+
+    // Valor
+    if (detalhes.valor || detalhes.preco) {
+      const valor = detalhes.valor || detalhes.preco;
+      items.push({
+        label: 'Valor',
+        value: new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        }).format(Number(valor))
+      });
+    }
+
+    // Período
+    if (detalhes.periodo || detalhes.intervalo) {
+      const periodo = detalhes.periodo || detalhes.intervalo;
+      const periodoLabel = periodo === 'mensal' ? 'Mensal' : periodo === 'anual' ? 'Anual' : periodo;
+      items.push({
+        label: 'Período',
+        value: periodoLabel
+      });
+    }
+
+    // Motivo
+    if (detalhes.motivo) {
+      items.push({
+        label: 'Motivo',
+        value: detalhes.motivo
+      });
+    }
+
+    // Data
+    if (detalhes.data) {
+      items.push({
+        label: 'Data',
+        value: formatDate(detalhes.data)
+      });
+    }
+
+    // Campos genéricos que não foram tratados acima
+    Object.keys(detalhes).forEach(key => {
+      if (!['status', 'plano', 'valor', 'preco', 'periodo', 'intervalo', 'motivo', 'data'].includes(key)) {
+        const value = detalhes[key];
+        if (value !== null && value !== undefined) {
+          items.push({
+            label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1'),
+            value: typeof value === 'object' ? JSON.stringify(value) : String(value)
+          });
+        }
+      }
+    });
+
+    return { titulo: acao, items };
+  };
+
+  const getAcaoIcon = (acao: string) => {
+    const acaoLower = acao.toLowerCase();
+    
+    if (acaoLower.includes('criada') || acaoLower.includes('criado')) {
+      return <CheckIcon className="h-5 w-5 text-success-text" />;
+    }
+    if (acaoLower.includes('atualizada') || acaoLower.includes('atualizado')) {
+      return <ArrowPathIcon className="h-5 w-5 text-info-text" />;
+    }
+    if (acaoLower.includes('cancelada') || acaoLower.includes('cancelado')) {
+      return <XCircleIcon className="h-5 w-5 text-error-text" />;
+    }
+    if (acaoLower.includes('expirada') || acaoLower.includes('expirado')) {
+      return <ExclamationTriangleIcon className="h-5 w-5 text-warning-text" />;
+    }
+    if (acaoLower.includes('renovada') || acaoLower.includes('renovado')) {
+      return <ClockIcon className="h-5 w-5 text-success-text" />;
+    }
+    
+    return <DocumentTextIcon className="h-5 w-5 text-text-secondary" />;
+  };
+
+  const getAcaoColor = (acao: string) => {
+    const acaoLower = acao.toLowerCase();
+    
+    if (acaoLower.includes('criada') || acaoLower.includes('renovada')) {
+      return 'bg-success-bg border-success-border';
+    }
+    if (acaoLower.includes('atualizada')) {
+      return 'bg-info-bg border-info-border';
+    }
+    if (acaoLower.includes('cancelada') || acaoLower.includes('expirada')) {
+      return 'bg-error-bg border-error-border';
+    }
+    if (acaoLower.includes('suspensa')) {
+      return 'bg-warning-bg border-warning-border';
+    }
+    
+    return 'bg-surface border-border';
   };
 
   if (loading || loadingLimites) {
@@ -368,20 +521,62 @@ export default function AssinaturaPage() {
             <CardContent>
               <div className="space-y-3">
                 {assinatura.historico
-                  .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
-                  .map((evento, index) => (
-                    <div key={index} className="flex items-start gap-3 p-3 border border-border rounded-md hover:bg-surface-hover transition-colors">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-text-primary">{evento.acao}</p>
-                        <p className="text-xs text-text-muted mt-1">{formatDate(evento.data)}</p>
-                        {evento.detalhes && (
-                          <p className="text-xs text-text-secondary mt-1">
-                            {JSON.stringify(evento.detalhes, null, 2)}
-                          </p>
-                        )}
+                  .sort((a, b) => {
+                    const getDate = (date: any): Date => {
+                      if (date && typeof date === 'object' && 'seconds' in date) {
+                        const seconds = (date as any).seconds;
+                        const nanoseconds = (date as any).nanoseconds || 0;
+                        return new Date(seconds * 1000 + nanoseconds / 1000000);
+                      }
+                      return new Date(date);
+                    };
+                    
+                    const dataA = getDate(a.data);
+                    const dataB = getDate(b.data);
+                    return dataB.getTime() - dataA.getTime();
+                  })
+                  .map((evento, index) => {
+                    const detalhesFormatados = formatarDetalhes(evento.acao, evento.detalhes);
+                    const bgColor = getAcaoColor(evento.acao);
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className={`flex items-start gap-4 p-4 border rounded-lg hover:shadow-md transition-all ${bgColor}`}
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          {getAcaoIcon(evento.acao)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-text-primary mb-1">
+                                {detalhesFormatados.titulo}
+                              </p>
+                              <p className="text-xs text-text-secondary mb-2">
+                                {formatDate(evento.data)}
+                              </p>
+                              
+                              {detalhesFormatados.items.length > 0 && (
+                                <div className="mt-3 space-y-2">
+                                  {detalhesFormatados.items.map((item, itemIndex) => (
+                                    <div key={itemIndex} className="flex items-start gap-2">
+                                      <span className="text-xs font-medium text-text-secondary min-w-[80px]">
+                                        {item.label}:
+                                      </span>
+                                      <span className="text-xs text-text-primary flex-1">
+                                        {item.value}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>
@@ -402,17 +597,27 @@ export default function AssinaturaPage() {
               Ver Planos Disponíveis
             </Button>
             {assinatura.status === 'active' || assinatura.status === 'trial' ? (
-              <Button 
-                variant="outline" 
-                className="w-full text-error hover:text-error-text hover:bg-error-bg"
-                onClick={() => {
-                  if (confirm('Tem certeza que deseja cancelar sua assinatura?')) {
-                    alert('Para cancelar sua assinatura, acesse sua conta na Hotmart ou entre em contato com o suporte.');
-                  }
-                }}
-              >
-                Cancelar Assinatura
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  className="w-full text-error hover:text-error-text hover:bg-error-bg"
+                  onClick={() => setShowCancelDialog(true)}
+                >
+                  Cancelar Assinatura
+                </Button>
+                <ConfirmationDialog
+                  open={showCancelDialog}
+                  onOpenChange={setShowCancelDialog}
+                  title="Cancelar Assinatura"
+                  description="Tem certeza que deseja cancelar sua assinatura? Para cancelar sua assinatura, acesse sua conta na Hotmart ou entre em contato com o suporte."
+                  confirmText="Entendi"
+                  cancelText="Fechar"
+                  variant="destructive"
+                  onConfirm={() => {
+                    showToast('Para cancelar sua assinatura, acesse sua conta na Hotmart ou entre em contato com o suporte.', 'info', 8000);
+                  }}
+                />
+              </>
             ) : null}
           </CardContent>
         </Card>

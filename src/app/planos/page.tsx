@@ -8,6 +8,7 @@ import { Plano, Funcionalidade } from '@/types/funcionalidades';
 import { CheckIcon, XMarkIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { usePlano } from '@/lib/hooks/usePlano';
 import LimiteUso from '@/components/LimiteUso';
+import { useToast } from '@/components/ui/toast';
 
 export default function PlanosPage() {
   const [planos, setPlanos] = useState<Plano[]>([]);
@@ -15,6 +16,7 @@ export default function PlanosPage() {
   const [loading, setLoading] = useState(true);
   const { statusPlano, limites } = usePlano();
   const [planoComFuncionalidades, setPlanoComFuncionalidades] = useState<Record<string, Funcionalidade[]>>({});
+  const { showToast } = useToast();
 
   useEffect(() => {
     loadPlanos();
@@ -124,7 +126,11 @@ export default function PlanosPage() {
 
   const handleAssinar = (plano: Plano) => {
     // Aqui você redirecionaria para a Hotmart ou processaria a assinatura
-    alert(`Para assinar o plano ${plano.nome}, você será redirecionado para a Hotmart.\n\nEm produção, isso redirecionaria para: ${plano.codigoHotmart}`);
+    showToast(
+      `Para assinar o plano ${plano.nome}, você será redirecionado para a Hotmart. Em produção, isso redirecionaria para: ${plano.codigoHotmart}`,
+      'info',
+      8000
+    );
     // window.location.href = `https://hotmart.com/.../${plano.codigoHotmart}`;
   };
 
