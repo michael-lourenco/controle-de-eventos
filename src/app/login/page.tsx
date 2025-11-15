@@ -158,19 +158,6 @@ export default function LoginPage() {
                   Criar conta
                 </button>
               </p>
-              
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                <p className="text-xs text-yellow-800 mb-2">
-                  <strong>Primeira vez?</strong> Se você está configurando o sistema pela primeira vez:
-                </p>
-                <button
-                  type="button"
-                  onClick={() => router.push('/admin/setup')}
-                  className="text-xs font-medium text-yellow-900 hover:text-yellow-700 underline"
-                >
-                  Criar usuário admin automaticamente
-                </button>
-              </div>
             </div>
           </CardContent>
         </Card>
