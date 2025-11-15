@@ -12,6 +12,7 @@ import CanaisEntradaReport from '@/components/relatorios/CanaisEntradaReport';
 import ImpressoesReport from '@/components/relatorios/ImpressoesReport';
 import ReceitaMensalReport from '@/components/relatorios/ReceitaMensalReport';
 import DetalhamentoReceberReport from '@/components/relatorios/DetalhamentoReceberReport';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
 
 export default function RelatoriosPage() {
   const { data: eventos, loading: loadingEventos } = useEventos();
@@ -195,89 +196,99 @@ export default function RelatoriosPage() {
 
         {/* Relatório de Performance de Eventos */}
         <div id="performance-eventos">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-primary">📊 Performance de Eventos</CardTitle>
-            <CardDescription>
-              Análise detalhada de performance dos eventos com exportação CSV
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PerformanceEventosReport eventos={eventos} />
-          </CardContent>
-        </Card>
+          <PlanoBloqueio funcionalidade="RELATORIOS_AVANCADOS">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-primary">📊 Performance de Eventos</CardTitle>
+              <CardDescription>
+                Análise detalhada de performance dos eventos com exportação CSV
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PerformanceEventosReport eventos={eventos} />
+            </CardContent>
+          </Card>
+          </PlanoBloqueio>
         </div>
 
         {/* Relatório de Fluxo de Caixa */}
         <div id="fluxo-caixa">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-primary">💰 Fluxo de Caixa</CardTitle>
-            <CardDescription>
-              Análise completa do fluxo de caixa mensal com projeções e alertas financeiros
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FluxoCaixaReport 
-              eventos={eventos} 
-              pagamentos={pagamentos || []} 
-              custos={custos || []} 
-            />
-          </CardContent>
-        </Card>
+          <PlanoBloqueio funcionalidade="FLUXO_CAIXA">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-primary">💰 Fluxo de Caixa</CardTitle>
+              <CardDescription>
+                Análise completa do fluxo de caixa mensal com projeções e alertas financeiros
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FluxoCaixaReport 
+                eventos={eventos} 
+                pagamentos={pagamentos || []} 
+                custos={custos || []} 
+              />
+            </CardContent>
+          </Card>
+          </PlanoBloqueio>
         </div>
 
         {/* Relatório de Serviços */}
         <div id="servicos-tipo">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-primary">🔧 Serviços por Tipo</CardTitle>
-            <CardDescription>
-              Análise detalhada da utilização de serviços por tipo e evento
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ServicosReport 
-              eventos={eventos} 
-              servicos={servicos || []} 
-              tiposServicos={tiposServicos || []} 
-            />
-          </CardContent>
-        </Card>
+          <PlanoBloqueio funcionalidade="RELATORIOS_AVANCADOS">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-primary">🔧 Serviços por Tipo</CardTitle>
+              <CardDescription>
+                Análise detalhada da utilização de serviços por tipo e evento
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ServicosReport 
+                eventos={eventos} 
+                servicos={servicos || []} 
+                tiposServicos={tiposServicos || []} 
+              />
+            </CardContent>
+          </Card>
+          </PlanoBloqueio>
         </div>
 
         {/* Relatório de Canais de Entrada */}
         <div id="canais-entrada">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-primary">📈 Canais de Entrada</CardTitle>
-            <CardDescription>
-              Análise detalhada da origem dos leads e efetividade dos canais
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CanaisEntradaReport 
-              clientes={clientes || []} 
-              canaisEntrada={canaisEntrada || []} 
-              eventos={eventos} 
-            />
-          </CardContent>
-        </Card>
+          <PlanoBloqueio funcionalidade="RELATORIOS_AVANCADOS">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-primary">📈 Canais de Entrada</CardTitle>
+              <CardDescription>
+                Análise detalhada da origem dos leads e efetividade dos canais
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CanaisEntradaReport 
+                clientes={clientes || []} 
+                canaisEntrada={canaisEntrada || []} 
+                eventos={eventos} 
+              />
+            </CardContent>
+          </Card>
+          </PlanoBloqueio>
         </div>
 
         {/* Relatório de Impressões */}
         <div id="impressoes">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-primary">🖨️ Impressões</CardTitle>
-            <CardDescription>
-              Análise detalhada do uso de impressões e custos de insumos
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ImpressoesReport eventos={eventos} />
-          </CardContent>
-        </Card>
+          <PlanoBloqueio funcionalidade="RELATORIOS_AVANCADOS">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-primary">🖨️ Impressões</CardTitle>
+              <CardDescription>
+                Análise detalhada do uso de impressões e custos de insumos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ImpressoesReport eventos={eventos} />
+            </CardContent>
+          </Card>
+          </PlanoBloqueio>
         </div>
       </div>
     </Layout>

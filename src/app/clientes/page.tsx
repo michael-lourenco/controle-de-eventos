@@ -10,6 +10,7 @@ import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { Cliente, CanalEntrada } from '@/types';
 import SelectWithSearch from '@/components/ui/SelectWithSearch';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
 import {
   PlusIcon,
   PencilIcon,
@@ -49,6 +50,7 @@ export default function ClientesPage() {
     canalEntradaId: ''
   });
   const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
+  const [erroCliente, setErroCliente] = useState<string | null>(null);
 
   // Carregar clientes e canais de entrada
   useEffect(() => {
@@ -112,8 +114,16 @@ export default function ClientesPage() {
         canalEntradaId: ''
       });
       setMostrarFormNovo(false);
-    } catch (error) {
+      setErroCliente(null);
+    } catch (error: any) {
       console.error('Erro ao criar cliente:', error);
+      
+      // Tratar erros específicos de plano/limite
+      if (error.status === 403 || error.message?.includes('plano') || error.message?.includes('limite')) {
+        setErroCliente(error.message || 'Não é possível criar cliente. Verifique seu plano e limites.');
+      } else {
+        setErroCliente(error.message || 'Erro ao criar cliente. Tente novamente.');
+      }
     }
   };
 
@@ -309,11 +319,17 @@ export default function ClientesPage() {
 
         {/* Formulário Novo Cliente */}
         {mostrarFormNovo && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Novo Cliente</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <PlanoBloqueio limite="clientes">
+            <Card>
+              <CardHeader>
+                <CardTitle>Novo Cliente</CardTitle>
+              </CardHeader>
+              {erroCliente && (
+                <div className="mx-6 mb-4 p-3 rounded-lg bg-error-bg border border-error-border text-error-text text-sm">
+                  {erroCliente}
+                </div>
+              )}
+              <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   label="Nome *"
@@ -399,6 +415,7 @@ export default function ClientesPage() {
               </div>
             </CardContent>
           </Card>
+          </PlanoBloqueio>
         )}
 
         {/* Lista de Clientes */}

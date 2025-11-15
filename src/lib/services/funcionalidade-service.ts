@@ -4,6 +4,7 @@ import { UserRepository } from '../repositories/user-repository';
 import { Funcionalidade, LimitesUsuario } from '@/types/funcionalidades';
 import { EventoRepository } from '../repositories/evento-repository';
 import { ClienteRepository } from '../repositories/cliente-repository';
+import { AssinaturaService, PlanoStatus } from './assinatura-service';
 
 export class FuncionalidadeService {
   private funcionalidadeRepo: FuncionalidadeRepository;
@@ -11,6 +12,7 @@ export class FuncionalidadeService {
   private userRepo: UserRepository;
   private eventoRepo: EventoRepository;
   private clienteRepo: ClienteRepository;
+  private assinaturaService: AssinaturaService;
 
   constructor() {
     this.funcionalidadeRepo = new FuncionalidadeRepository();
@@ -18,6 +20,7 @@ export class FuncionalidadeService {
     this.userRepo = new UserRepository();
     this.eventoRepo = new EventoRepository();
     this.clienteRepo = new ClienteRepository();
+    this.assinaturaService = new AssinaturaService();
   }
 
   async verificarPermissao(userId: string, codigoFuncionalidade: string): Promise<boolean> {
@@ -160,6 +163,118 @@ export class FuncionalidadeService {
         return valorAtual < limites.usuariosLimite;
       default:
         return true;
+    }
+  }
+
+  /**
+   * Verifica se pode criar mais eventos
+   */
+  async verificarLimiteEventos(userId: string): Promise<{ pode: boolean; limite?: number; usado: number; restante?: number }> {
+    const limites = await this.obterLimitesUsuario(userId);
+    
+    if (!limites.eventosLimiteMes) {
+      return { pode: true, usado: limites.eventosMesAtual };
+    }
+
+    const restante = Math.max(0, limites.eventosLimiteMes - limites.eventosMesAtual);
+    return {
+      pode: limites.eventosMesAtual < limites.eventosLimiteMes,
+      limite: limites.eventosLimiteMes,
+      usado: limites.eventosMesAtual,
+      restante
+    };
+  }
+
+  /**
+   * Verifica se pode criar mais clientes
+   */
+  async verificarLimiteClientes(userId: string): Promise<{ pode: boolean; limite?: number; usado: number; restante?: number }> {
+    const limites = await this.obterLimitesUsuario(userId);
+    
+    if (!limites.clientesLimite) {
+      return { pode: true, usado: limites.clientesTotal };
+    }
+
+    const restante = Math.max(0, limites.clientesLimite - limites.clientesTotal);
+    return {
+      pode: limites.clientesTotal < limites.clientesLimite,
+      limite: limites.clientesLimite,
+      usado: limites.clientesTotal,
+      restante
+    };
+  }
+
+  /**
+   * Verifica acesso a relatórios
+   */
+  async verificarAcessoRelatorio(userId: string, tipoRelatorio: 'BASICOS' | 'AVANCADOS' | 'FLUXO_CAIXA'): Promise<boolean> {
+    const codigos: Record<string, string> = {
+      'BASICOS': 'RELATORIOS_BASICOS',
+      'AVANCADOS': 'RELATORIOS_AVANCADOS',
+      'FLUXO_CAIXA': 'FLUXO_CAIXA'
+    };
+
+    const codigoFuncionalidade = codigos[tipoRelatorio];
+    if (!codigoFuncionalidade) {
+      return false;
+    }
+
+    return this.verificarPermissao(userId, codigoFuncionalidade);
+  }
+
+  /**
+   * Obtém status completo da assinatura
+   */
+  async obterStatusAssinatura(userId: string): Promise<PlanoStatus> {
+    return this.assinaturaService.obterStatusPlanoUsuario(userId);
+  }
+
+  /**
+   * Verifica se usuário pode realizar uma ação (permissão + limite)
+   */
+  async verificarPodeCriar(userId: string, tipo: 'eventos' | 'clientes'): Promise<{ 
+    pode: boolean; 
+    motivo?: string; 
+    limite?: number; 
+    usado?: number;
+    restante?: number;
+  }> {
+    // Verificar permissão
+    const codigoFuncionalidade = tipo === 'eventos' ? 'EVENTOS_LIMITADOS' : 'CLIENTES_LIMITADOS';
+    const temPermissao = await this.verificarPermissao(userId, codigoFuncionalidade);
+    
+    if (!temPermissao) {
+      return { 
+        pode: false, 
+        motivo: `Seu plano não permite criar ${tipo}` 
+      };
+    }
+
+    // Verificar limite
+    if (tipo === 'eventos') {
+      const limiteEventos = await this.verificarLimiteEventos(userId);
+      if (!limiteEventos.pode) {
+        return {
+          pode: false,
+          motivo: `Limite de ${tipo} do mês atingido`,
+          limite: limiteEventos.limite,
+          usado: limiteEventos.usado,
+          restante: limiteEventos.restante
+        };
+      }
+      return limiteEventos;
+    } else {
+      const limiteClientes = await this.verificarLimiteClientes(userId);
+      if (!limiteClientes.pode) {
+        return {
+          pode: false,
+          motivo: `Limite de ${tipo} atingido`,
+          limite: limiteClientes.limite,
+          usado: limiteClientes.usado,
+          restante: limiteClientes.restante
+        };
+      }
+      return limiteClientes;
     }
   }
 }

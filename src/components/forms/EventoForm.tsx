@@ -19,6 +19,8 @@ import { useClientes, useCanaisEntrada } from '@/hooks/useData';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
 import EventoServicosSection from '@/components/forms/EventoServicosSection';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
+import { usePlano } from '@/lib/hooks/usePlano';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -78,6 +80,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   const { data: clientes } = useClientes();
   const { data: canaisEntrada, refetch: refetchCanaisEntrada } = useCanaisEntrada();
   const { userId, isLoading } = useCurrentUser();
+  const { podeCriar: podeCriarEvento } = usePlano();
 
   const [formData, setFormData] = useState<FormData>({
     nomeEvento: '',
@@ -780,8 +783,20 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         await sincronizarServicosEvento(novoEvento.id);
         onSave(novoEvento);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar evento:', error);
+      
+      // Tratar erros específicos de plano/limite
+      if (error.status === 403 || error.message?.includes('plano') || error.message?.includes('limite')) {
+        setErrors({ 
+          general: error.message || 'Não é possível criar evento. Verifique seu plano e limites.' 
+        });
+      } else {
+        setErrors({ 
+          general: error.message || 'Erro ao salvar evento. Tente novamente.' 
+        });
+      }
+      
       setSubmitting(false);
     }
   };

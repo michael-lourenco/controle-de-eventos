@@ -16,6 +16,7 @@ import {
   DEFAULT_TIPOS_EVENTO
 } from '@/types';
 import { initializeAllCollections, initializeTiposCusto } from './collections-init';
+import { FuncionalidadeService } from './services/funcionalidade-service';
 
 export class DataService {
   private clienteRepo = repositoryFactory.getClienteRepository();
@@ -27,6 +28,7 @@ export class DataService {
   private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
   private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
   private tipoEventoRepo = repositoryFactory.getTipoEventoRepository();
+  private funcionalidadeService = new FuncionalidadeService();
 
   // Método para inicializar collections automaticamente
   private async ensureCollectionsInitialized(): Promise<void> {
@@ -82,6 +84,18 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para criar cliente');
     }
+
+    // Validar permissão e limite antes de criar
+    const validacao = await this.funcionalidadeService.verificarPodeCriar(userId, 'clientes');
+    if (!validacao.pode) {
+      const erro = new Error(validacao.motivo || 'Não é possível criar cliente');
+      (erro as any).status = 403;
+      (erro as any).limite = validacao.limite;
+      (erro as any).usado = validacao.usado;
+      (erro as any).restante = validacao.restante;
+      throw erro;
+    }
+
     return this.clienteRepo.createCliente(cliente, userId);
   }
 
@@ -116,6 +130,18 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para criar evento');
     }
+
+    // Validar permissão e limite antes de criar
+    const validacao = await this.funcionalidadeService.verificarPodeCriar(userId, 'eventos');
+    if (!validacao.pode) {
+      const erro = new Error(validacao.motivo || 'Não é possível criar evento');
+      (erro as any).status = 403;
+      (erro as any).limite = validacao.limite;
+      (erro as any).usado = validacao.usado;
+      (erro as any).restante = validacao.restante;
+      throw erro;
+    }
+
     console.log('DataService: Criando evento:', evento);
     try {
       const resultado = await this.eventoRepo.createEvento(evento, userId);
@@ -173,6 +199,14 @@ export class DataService {
   }
 
   async createPagamento(userId: string, eventoId: string, pagamento: Omit<Pagamento, 'id'>): Promise<Pagamento> {
+    // Validar permissão para registrar pagamentos
+    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'PAGAMENTOS_REGISTRAR');
+    if (!temPermissao) {
+      const erro = new Error('Seu plano não permite registrar pagamentos');
+      (erro as any).status = 403;
+      throw erro;
+    }
+
     return this.pagamentoRepo.createPagamento(userId, eventoId, pagamento);
   }
 
@@ -281,6 +315,15 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para criar tipo de custo');
     }
+
+    // Validar permissão para gerenciar custos
+    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'CUSTOS_GERENCIAR');
+    if (!temPermissao) {
+      const erro = new Error('Seu plano não permite gerenciar custos');
+      (erro as any).status = 403;
+      throw erro;
+    }
+
     return this.tipoCustoRepo.createTipoCusto(tipoCusto, userId);
   }
 
@@ -379,6 +422,14 @@ export class DataService {
   }
 
   async createTipoServico(tipoServico: Omit<TipoServico, 'id' | 'dataCadastro'>, userId: string): Promise<TipoServico> {
+    // Validar permissão para gerenciar serviços
+    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'SERVICOS_GERENCIAR');
+    if (!temPermissao) {
+      const erro = new Error('Seu plano não permite gerenciar serviços');
+      (erro as any).status = 403;
+      throw erro;
+    }
+
     return this.tipoServicoRepo.createTipoServico(tipoServico, userId);
   }
 
@@ -404,6 +455,14 @@ export class DataService {
   }
 
   async createServicoEvento(userId: string, eventoId: string, servicoEvento: Omit<ServicoEvento, 'id'>): Promise<ServicoEvento> {
+    // Validar permissão para gerenciar serviços
+    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'SERVICOS_GERENCIAR');
+    if (!temPermissao) {
+      const erro = new Error('Seu plano não permite gerenciar serviços');
+      (erro as any).status = 403;
+      throw erro;
+    }
+
     return this.servicoEventoRepo.createServicoEvento(userId, eventoId, servicoEvento);
   }
 
