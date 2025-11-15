@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import EventoForm from '@/components/forms/EventoForm';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
 import { Evento } from '@/types';
 import {
   ArrowLeftIcon
@@ -43,21 +44,27 @@ export default function NovoEventoPage() {
           </div>
         </div>
 
-        {/* Formulário */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Dados do Evento</CardTitle>
-            <CardDescription>
-              Preencha todas as informações necessárias para cadastrar o evento
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <EventoForm
-              onSave={handleSave}
-              onCancel={handleCancel}
-            />
-          </CardContent>
-        </Card>
+        {/* Bloqueio de Plano */}
+        <PlanoBloqueio
+          limite="eventos"
+          mensagem="Você precisa de um plano ativo para criar eventos"
+        >
+          {/* Formulário */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dados do Evento</CardTitle>
+              <CardDescription>
+                Preencha todas as informações necessárias para cadastrar o evento
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EventoForm
+                onSave={handleSave}
+                onCancel={handleCancel}
+              />
+            </CardContent>
+          </Card>
+        </PlanoBloqueio>
       </div>
     </Layout>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,8 @@ import { useCurrentUser } from '@/hooks/useAuth';
 import EventoServicosSection from '@/components/forms/EventoServicosSection';
 import PlanoBloqueio from '@/components/PlanoBloqueio';
 import { usePlano } from '@/lib/hooks/usePlano';
+import { useToast } from '@/components/ui/toast';
+import { handlePlanoError } from '@/lib/utils/plano-errors';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -77,6 +80,8 @@ const statusOptions = [
 const diasSemana = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
 
 export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps) {
+  const router = useRouter();
+  const { showToast } = useToast();
   const { data: clientes } = useClientes();
   const { data: canaisEntrada, refetch: refetchCanaisEntrada } = useCanaisEntrada();
   const { userId, isLoading } = useCurrentUser();
@@ -786,14 +791,19 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     } catch (error: any) {
       console.error('Erro ao salvar evento:', error);
       
-      // Tratar erros específicos de plano/limite
-      if (error.status === 403 || error.message?.includes('plano') || error.message?.includes('limite')) {
-        setErrors({ 
-          general: error.message || 'Não é possível criar evento. Verifique seu plano e limites.' 
-        });
-      } else {
+      // Tratar erros de plano
+      const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
+      
+      if (!erroTratado) {
+        // Se não for erro de plano, mostrar erro genérico
         setErrors({ 
           general: error.message || 'Erro ao salvar evento. Tente novamente.' 
+        });
+        showToast(error.message || 'Erro ao salvar evento. Tente novamente.', 'error');
+      } else {
+        // Mesmo tratando com toast, pode ser útil mostrar no formulário também
+        setErrors({ 
+          general: error.message || 'Não é possível criar evento. Verifique seu plano e limites.' 
         });
       }
       

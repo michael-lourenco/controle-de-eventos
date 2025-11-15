@@ -6,15 +6,21 @@ import { cn } from '@/lib/utils';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 interface Toast {
   id: string;
   message: string;
   type: ToastType;
   duration?: number;
+  action?: ToastAction;
 }
 
 interface ToastContextType {
-  showToast: (message: string, type?: ToastType, duration?: number) => void;
+  showToast: (message: string, type?: ToastType, duration?: number, action?: ToastAction) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -22,16 +28,18 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, type: ToastType = 'info', duration = 5000) => {
+  const showToast = useCallback((message: string, type: ToastType = 'info', duration = 5000, action?: ToastAction) => {
     const id = Math.random().toString(36).substring(7);
-    const newToast: Toast = { id, message, type, duration };
+    const newToast: Toast = { id, message, type, duration, action };
 
     setToasts((prev) => [...prev, newToast]);
 
-    if (duration > 0) {
+    // Se tiver ação, aumentar a duração para dar tempo do usuário clicar
+    const finalDuration = action ? (duration || 10000) : duration;
+    if (finalDuration > 0) {
       setTimeout(() => {
         setToasts((prev) => prev.filter((toast) => toast.id !== id));
-      }, duration);
+      }, finalDuration);
     }
   }, []);
 
@@ -102,6 +110,20 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
       <Icon className={cn('h-5 w-5 flex-shrink-0 mt-0.5', config.text)} />
       <div className="flex-1 min-w-0">
         <p className={cn('text-sm font-medium', config.text)}>{toast.message}</p>
+        {toast.action && (
+          <button
+            onClick={() => {
+              toast.action?.onClick();
+              onClose();
+            }}
+            className={cn(
+              'mt-2 text-xs font-semibold underline hover:no-underline transition-all',
+              config.text
+            )}
+          >
+            {toast.action.label}
+          </button>
+        )}
       </div>
       <button
         onClick={onClose}

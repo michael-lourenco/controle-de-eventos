@@ -25,6 +25,7 @@ import {
 } from '@heroicons/react/24/outline';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
+import { handlePlanoError } from '@/lib/utils/plano-errors';
 
 export default function ClientesPage() {
   const router = useRouter();
@@ -148,10 +149,12 @@ export default function ClientesPage() {
       console.error('Erro ao criar cliente:', error);
       
       // Tratar erros específicos de plano/limite
-      if (error.status === 403 || error.message?.includes('plano') || error.message?.includes('limite')) {
-        setErroCliente(error.message || 'Não é possível criar cliente. Verifique seu plano e limites.');
-      } else {
+      const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
+      
+      if (!erroTratado) {
+        // Se não for erro de plano, mostrar erro genérico
         setErroCliente(error.message || 'Erro ao criar cliente. Tente novamente.');
+        showToast(error.message || 'Erro ao criar cliente. Tente novamente.', 'error');
       }
     }
   };

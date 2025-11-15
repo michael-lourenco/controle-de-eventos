@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,8 +21,10 @@ import {
 } from '@heroicons/react/24/outline';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
+import { handlePlanoError } from '@/lib/utils/plano-errors';
 
 export default function CanaisEntradaPage() {
+  const router = useRouter();
   const { userId } = useCurrentUser();
   const [canaisEntrada, setCanaisEntrada] = useState<CanalEntrada[]>([]);
   const [canaisInativos, setCanaisInativos] = useState<CanalEntrada[]>([]);
@@ -102,8 +105,15 @@ export default function CanaisEntradaPage() {
       await recarregarCanais();
       setNovoCanal({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar canal de entrada:', error);
+      
+      // Tratar erros de plano
+      const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
+      
+      if (!erroTratado) {
+        showToast(error.message || 'Erro ao criar canal de entrada. Tente novamente.', 'error');
+      }
     }
   };
 

@@ -847,6 +847,16 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para criar canal de entrada');
     }
+
+    // Validar se usuário tem plano ativo - usar validação de funcionalidade genérica
+    // Como não existe funcionalidade específica para canais de entrada, verificamos se tem plano ativo
+    const statusPlano = await this.funcionalidadeService.obterStatusAssinatura(userId);
+    if (!statusPlano.ativo) {
+      const erro = new Error('Seu plano não permite gerenciar canais de entrada');
+      (erro as any).status = 403;
+      throw erro;
+    }
+
     return this.canalEntradaRepo.createCanalEntrada(userId, canal);
   }
 
@@ -915,6 +925,16 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para criar tipo de evento');
     }
+
+    // Validar se usuário tem plano ativo - usar validação de funcionalidade genérica
+    // Como não existe funcionalidade específica para tipos de evento, verificamos se tem plano ativo
+    const statusPlano = await this.funcionalidadeService.obterStatusAssinatura(userId);
+    if (!statusPlano.ativo) {
+      const erro = new Error('Seu plano não permite gerenciar tipos de evento');
+      (erro as any).status = 403;
+      throw erro;
+    }
+
     return this.tipoEventoRepo.createTipoEvento(
       {
         ...tipoEvento,
