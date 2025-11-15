@@ -51,7 +51,29 @@ export class ClienteRepository extends SubcollectionRepository<Cliente> {
   }
 
   async deleteCliente(id: string, userId: string): Promise<void> {
-    return this.delete(id, userId);
+    // Arquivamento ao invés de exclusão física
+    await this.update(id, {
+      arquivado: true,
+      dataArquivamento: new Date()
+    }, userId);
+  }
+  
+  async desarquivarCliente(id: string, userId: string): Promise<void> {
+    await this.update(id, {
+      arquivado: false,
+      dataArquivamento: undefined,
+      motivoArquivamento: undefined
+    }, userId);
+  }
+  
+  async getArquivados(userId: string): Promise<Cliente[]> {
+    return this.findWhere('arquivado', '==', true, userId);
+  }
+  
+  async getAtivos(userId: string): Promise<Cliente[]> {
+    // Buscar clientes não arquivados (arquivado !== true ou arquivado é undefined/null)
+    const todos = await this.findAll(userId);
+    return todos.filter(c => !c.arquivado);
   }
 
   async getClienteById(id: string, userId: string): Promise<Cliente | null> {

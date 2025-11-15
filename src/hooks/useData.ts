@@ -10,7 +10,7 @@ export interface UseDataResult<T> {
   refetch: () => Promise<void>;
 }
 
-// Hook para clientes
+// Hook para clientes (apenas ativos por padrão)
 export function useClientes(): UseDataResult<Cliente[]> {
   const [data, setData] = useState<Cliente[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +28,39 @@ export function useClientes(): UseDataResult<Cliente[]> {
       setLoading(true);
       setError(null);
       const result = await dataService.getClientes(userId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar clientes');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
+// Hook para todos os clientes (incluindo arquivados) - usado em relatórios
+export function useAllClientes(): UseDataResult<Cliente[]> {
+  const [data, setData] = useState<Cliente[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getAllClientes(userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar clientes');
@@ -75,7 +108,7 @@ export function useCliente(id: string): UseDataResult<Cliente> {
   return { data, loading, error, refetch: fetchData };
 }
 
-// Hook para eventos
+// Hook para eventos (apenas ativos por padrão)
 export function useEventos(): UseDataResult<Evento[]> {
   const [data, setData] = useState<Evento[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -93,6 +126,39 @@ export function useEventos(): UseDataResult<Evento[]> {
       setLoading(true);
       setError(null);
       const result = await dataService.getEventos(userId);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar eventos');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
+// Hook para todos os eventos (incluindo arquivados) - usado em relatórios
+export function useAllEventos(): UseDataResult<Evento[]> {
+  const [data, setData] = useState<Evento[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getAllEventos(userId);
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar eventos');

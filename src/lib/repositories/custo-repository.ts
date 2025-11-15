@@ -57,8 +57,12 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
   }
 
   async deleteCustoEvento(userId: string, eventoId: string, custoId: string): Promise<void> {
+    // Marcação como removido ao invés de exclusão física
     const custoRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.CUSTOS, custoId);
-    await deleteDoc(custoRef);
+    await updateDoc(custoRef, {
+      removido: true,
+      dataRemocao: new Date()
+    });
   }
 
   async findByEventoId(userId: string, eventoId: string): Promise<CustoEvento[]> {
@@ -91,7 +95,10 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
 
   async getTotalCustosPorEvento(userId: string, eventoId: string): Promise<number> {
     const custos = await this.findByEventoId(userId, eventoId);
-    return custos.reduce((total, custo) => total + custo.valor, 0);
+    // Filtrar custos removidos nos cálculos
+    return custos
+      .filter(custo => !custo.removido)
+      .reduce((total, custo) => total + (custo.valor * (custo.quantidade || 1)), 0);
   }
 
   async getResumoCustosPorEvento(userId: string, eventoId: string): Promise<{
@@ -101,19 +108,21 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
     quantidadeItens: number;
   }> {
     const custos = await this.findByEventoId(userId, eventoId);
-    const total = custos.reduce((sum, custo) => sum + custo.valor, 0);
+    // Filtrar custos removidos nos cálculos
+    const custosAtivos = custos.filter(custo => !custo.removido);
+    const total = custosAtivos.reduce((sum, custo) => sum + (custo.valor * (custo.quantidade || 1)), 0);
     
     const porCategoria: Record<string, number> = {};
-    custos.forEach(custo => {
+    custosAtivos.forEach(custo => {
       const tipoNome = custo.tipoCusto?.nome || 'Sem tipo';
-      porCategoria[tipoNome] = (porCategoria[tipoNome] || 0) + custo.valor;
+      porCategoria[tipoNome] = (porCategoria[tipoNome] || 0) + (custo.valor * (custo.quantidade || 1));
     });
 
     return {
-      custos,
+      custos: custos, // Retornar todos (incluindo removidos) para histórico, mas calcular apenas ativos
       total,
       porCategoria,
-      quantidadeItens: custos.length
+      quantidadeItens: custosAtivos.length
     };
   }
 }
@@ -191,7 +200,18 @@ export class TipoCustoRepository extends SubcollectionRepository<TipoCusto> {
 
   async deleteTipoCusto(id: string, userId: string): Promise<void> {
     await this.ensureSubcollectionExists(userId);
-    return this.delete(id, userId);
+    // Inativação ao invés de exclusão física
+    await this.update(id, { ativo: false }, userId);
+  }
+  
+  async reativarTipoCusto(id: string, userId: string): Promise<void> {
+    await this.ensureSubcollectionExists(userId);
+    await this.update(id, { ativo: true }, userId);
+  }
+  
+  async getInativos(userId: string): Promise<TipoCusto[]> {
+    await this.ensureSubcollectionExists(userId);
+    return this.findWhere('ativo', '==', false, userId);
   }
 
   async getTipoCustoById(id: string, userId: string): Promise<TipoCusto | null> {

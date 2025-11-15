@@ -15,16 +15,24 @@ import {
   PencilIcon,
   PlusIcon,
   TrashIcon,
-  XMarkIcon
+  XMarkIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 export default function TiposEventoPage() {
   const { userId } = useCurrentUser();
   const [tiposEvento, setTiposEvento] = useState<TipoEvento[]>([]);
+  const [tiposInativos, setTiposInativos] = useState<TipoEvento[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
+  const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'inativos'>('ativos');
+  const [tipoParaExcluir, setTipoParaExcluir] = useState<TipoEvento | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { showToast } = useToast();
   const [novoTipo, setNovoTipo] = useState({
     nome: '',
     descricao: ''
@@ -42,8 +50,10 @@ export default function TiposEventoPage() {
       }
 
       try {
-        const tipos = await dataService.getTiposEvento(userId);
+        const tipos = await dataService.getTiposEventoAtivos(userId);
         setTiposEvento(tipos);
+        const inativos = await dataService.getTiposEventoInativos(userId);
+        setTiposInativos(inativos);
       } catch (error) {
         console.error('TiposEventoPage: Erro ao carregar tipos de evento', error);
       } finally {
@@ -54,7 +64,20 @@ export default function TiposEventoPage() {
     carregarTiposEvento();
   }, [userId]);
 
-  const tiposFiltrados = tiposEvento.filter(tipo =>
+  const recarregarTipos = async () => {
+    if (!userId) return;
+    try {
+      const tipos = await dataService.getTiposEventoAtivos(userId);
+      setTiposEvento(tipos);
+      const inativos = await dataService.getTiposEventoInativos(userId);
+      setTiposInativos(inativos);
+    } catch (error) {
+      console.error('Erro ao recarregar tipos:', error);
+    }
+  };
+
+  const tiposExibidos = abaAtiva === 'ativos' ? tiposEvento : tiposInativos;
+  const tiposFiltrados = tiposExibidos.filter(tipo =>
     tipo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (tipo.descricao || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -71,7 +94,8 @@ export default function TiposEventoPage() {
         },
         userId
       );
-      setTiposEvento(prev => [novo, ...prev]);
+      showToast('Tipo de evento criado com sucesso!', 'success');
+      await recarregarTipos();
       setNovoTipo({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
     } catch (error) {
@@ -92,21 +116,43 @@ export default function TiposEventoPage() {
         },
         userId
       );
-      setTiposEvento(prev => prev.map(t => (t.id === tipo.id ? atualizado : t)));
+      showToast('Tipo de evento atualizado com sucesso!', 'success');
+      await recarregarTipos();
       setEditandoId(null);
     } catch (error) {
       console.error('Erro ao atualizar tipo de evento:', error);
     }
   };
 
-  const handleExcluirTipo = async (tipo: TipoEvento) => {
+  const handleExcluirTipo = (tipo: TipoEvento) => {
+    setTipoParaExcluir(tipo);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmarExclusao = async () => {
+    if (!tipoParaExcluir || !userId) return;
+
+    try {
+      await dataService.deleteTipoEvento(tipoParaExcluir.id, userId);
+      showToast('Tipo de evento inativado com sucesso!', 'success');
+      await recarregarTipos();
+      setTipoParaExcluir(null);
+    } catch (error) {
+      console.error('Erro ao inativar tipo de evento:', error);
+      showToast('Erro ao inativar tipo de evento', 'error');
+    }
+  };
+
+  const handleReativar = async (tipo: TipoEvento) => {
     if (!userId) return;
 
     try {
-      await dataService.deleteTipoEvento(tipo.id, userId);
-      setTiposEvento(prev => prev.filter(t => t.id !== tipo.id));
+      await dataService.reativarTipoEvento(tipo.id, userId);
+      showToast('Tipo de evento reativado com sucesso!', 'success');
+      await recarregarTipos();
     } catch (error) {
-      console.error('Erro ao excluir tipo de evento:', error);
+      console.error('Erro ao reativar tipo de evento:', error);
+      showToast('Erro ao reativar tipo de evento', 'error');
     }
   };
 
@@ -139,7 +185,10 @@ export default function TiposEventoPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Tipos de Evento</h1>
+            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+              <CalendarDaysIcon className="h-6 w-6" />
+              Tipos de Evento
+            </h1>
             <p className="text-text-secondary">Gerencie as categorias dos seus eventos</p>
           </div>
           <Button
@@ -151,43 +200,44 @@ export default function TiposEventoPage() {
           </Button>
         </div>
 
+        {/* Abas */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setAbaAtiva('ativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'ativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Ativos ({tiposEvento.length})
+              </button>
+              <button
+                onClick={() => setAbaAtiva('inativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'inativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Inativos ({tiposInativos.length})
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardContent className="p-6">
             <Input
               label="Buscar"
-              placeholder="Buscar tipos de evento..."
+              placeholder={`Buscar tipos de evento ${abaAtiva === 'ativos' ? 'ativos' : 'inativos'}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </CardContent>
         </Card>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <CalendarDaysIcon className="h-8 w-8 text-primary mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Total de Tipos</p>
-                  <p className="text-2xl font-bold text-text-primary">{tiposFiltrados.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <CalendarDaysIcon className="h-8 w-8 text-success mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Tipos Ativos</p>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {tiposFiltrados.filter(t => t.ativo).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {mostrarFormNovo && (
           <Card>
@@ -305,15 +355,27 @@ export default function TiposEventoPage() {
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleExcluirTipo(tipo)}
-                        title="Excluir"
-                        className="text-error hover:text-error hover:bg-error/10"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      {abaAtiva === 'ativos' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleExcluirTipo(tipo)}
+                          title="Inativar"
+                          className="text-error hover:text-error hover:bg-error/10"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleReativar(tipo)}
+                          title="Reativar"
+                          className="text-success hover:text-success hover:bg-success/10"
+                        >
+                          <ArrowPathIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -327,16 +389,38 @@ export default function TiposEventoPage() {
             <CardContent className="text-center py-12">
               <CalendarDaysIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">
-                {searchTerm ? 'Nenhum tipo encontrado' : 'Nenhum tipo de evento cadastrado'}
+                {searchTerm 
+                  ? 'Nenhum tipo encontrado' 
+                  : abaAtiva === 'ativos' 
+                    ? 'Nenhum tipo de evento ativo' 
+                    : 'Nenhum tipo de evento inativo'}
               </h3>
               <p className="mt-1 text-sm text-text-secondary">
                 {searchTerm
                   ? 'Tente ajustar o termo de busca.'
-                  : 'Comece criando um novo tipo de evento.'}
+                  : abaAtiva === 'ativos'
+                    ? 'Comece criando um novo tipo de evento.'
+                    : 'Não há tipos inativos no momento.'}
               </p>
             </CardContent>
           </Card>
         )}
+
+        {/* Modal de Confirmação de Inativação */}
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Inativar Tipo de Evento"
+          description={
+            tipoParaExcluir
+              ? `Tem certeza que deseja inativar o tipo de evento "${tipoParaExcluir.nome}"? Ele não aparecerá em listas de seleção, mas continuará disponível para eventos existentes.`
+              : 'Tem certeza que deseja inativar este tipo de evento?'
+          }
+          confirmText="Inativar"
+          cancelText="Cancelar"
+          variant="default"
+          onConfirm={confirmarExclusao}
+        />
       </div>
     </Layout>
   );

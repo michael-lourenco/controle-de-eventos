@@ -60,8 +60,12 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
   }
 
   async deleteServicoEvento(userId: string, eventoId: string, servicoId: string): Promise<void> {
+    // Marcação como removido ao invés de exclusão física
     const servicoRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.SERVICOS_EVENTO, servicoId);
-    await deleteDoc(servicoRef);
+    await updateDoc(servicoRef, {
+      removido: true,
+      dataRemocao: new Date()
+    });
   }
 
   async findByEventoId(userId: string, eventoId: string): Promise<ServicoEvento[]> {
@@ -217,7 +221,18 @@ export class TipoServicoRepository extends SubcollectionRepository<TipoServico> 
 
   async deleteTipoServico(id: string, userId: string): Promise<void> {
     await this.ensureSubcollectionExists(userId);
-    return this.delete(id, userId);
+    // Inativação ao invés de exclusão física
+    await this.update(id, { ativo: false }, userId);
+  }
+  
+  async reativarTipoServico(id: string, userId: string): Promise<void> {
+    await this.ensureSubcollectionExists(userId);
+    await this.update(id, { ativo: true }, userId);
+  }
+  
+  async getInativos(userId: string): Promise<TipoServico[]> {
+    await this.ensureSubcollectionExists(userId);
+    return this.findWhere('ativo', '==', false, userId);
   }
 
   async getTipoServicoById(id: string, userId: string): Promise<TipoServico | null> {

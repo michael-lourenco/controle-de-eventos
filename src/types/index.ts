@@ -47,6 +47,9 @@ export interface Cliente {
   instagram?: string;
   canalEntradaId?: string;
   canalEntrada?: CanalEntrada;
+  arquivado?: boolean;
+  dataArquivamento?: Date;
+  motivoArquivamento?: string;
   dataCadastro: Date;
 }
 
@@ -87,6 +90,9 @@ export interface Evento {
   status: 'Agendado' | 'Confirmado' | 'Em andamento' | 'Concluído' | 'Cancelado';
   valorTotal: number; // Valor total a ser pago pelo evento
   diaFinalPagamento: Date; // Dia final para pagamento completo
+  arquivado?: boolean;
+  dataArquivamento?: Date;
+  motivoArquivamento?: string;
   dataCadastro: Date;
   dataAtualizacao: Date;
 }
@@ -144,6 +150,9 @@ export interface Pagamento {
   observacoes?: string;
   comprovante?: string; // Campo texto mantido para compatibilidade
   anexoId?: string; // Referência para subcollection de anexos
+  cancelado?: boolean;
+  dataCancelamento?: Date;
+  motivoCancelamento?: string;
   dataCadastro: Date;
   dataAtualizacao: Date;
 }
@@ -307,6 +316,9 @@ export interface CustoEvento {
   valor: number;
   quantidade?: number;
   observacoes?: string;
+  removido?: boolean;
+  dataRemocao?: Date;
+  motivoRemocao?: string;
   dataCadastro: Date;
 }
 
@@ -342,6 +354,9 @@ export interface ServicoEvento {
   tipoServicoId: string;
   tipoServico: TipoServico;
   observacoes?: string;
+  removido?: boolean;
+  dataRemocao?: Date;
+  motivoRemocao?: string;
   dataCadastro: Date;
 }
 

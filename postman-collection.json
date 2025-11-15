@@ -641,6 +641,60 @@
             },
             "description": "Simula migração sem aplicar mudanças (dryRun=true)"
           }
+        },
+        {
+          "name": "Migrar Campos de Integridade de Dados",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dryRun\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-data-integrity-fields",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-data-integrity-fields"]
+            },
+            "description": "Adiciona campos de integridade (ativo, arquivado) em dados existentes. dryRun=true apenas simula sem aplicar mudanças. Requer autenticação admin."
+          }
+        },
+        {
+          "name": "Migrar Campos de Integridade - Dry Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dryRun\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-data-integrity-fields",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-data-integrity-fields"]
+            },
+            "description": "Simula migração de campos de integridade sem aplicar mudanças (dryRun=true)"
+          }
         }
       ]
     }

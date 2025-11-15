@@ -15,15 +15,23 @@ import {
   TrashIcon,
   CurrencyDollarIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 export default function TiposCustosPage() {
   const { userId } = useCurrentUser();
   const [tiposCusto, setTiposCusto] = useState<TipoCusto[]>([]);
+  const [tiposInativos, setTiposInativos] = useState<TipoCusto[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'inativos'>('ativos');
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [tipoParaExcluir, setTipoParaExcluir] = useState<TipoCusto | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { showToast } = useToast();
   const [novoTipo, setNovoTipo] = useState({
     nome: '',
     descricao: ''
@@ -45,9 +53,11 @@ export default function TiposCustosPage() {
 
       try {
         console.log('TiposCustosPage: Carregando tipos de custo');
-        const tipos = await dataService.getTiposCusto(userId);
+        const tipos = await dataService.getTiposCustoAtivos(userId);
+        const inativos = await dataService.getTiposCustoInativos(userId);
         console.log('TiposCustosPage: Tipos carregados:', tipos);
         setTiposCusto(tipos);
+        setTiposInativos(inativos);
       } catch (error) {
         console.error('TiposCustosPage: Erro ao carregar tipos de custo:', error);
       } finally {
@@ -58,8 +68,21 @@ export default function TiposCustosPage() {
     carregarTiposCusto();
   }, [userId]);
 
+  const recarregarTipos = async () => {
+    if (!userId) return;
+    try {
+      const tipos = await dataService.getTiposCustoAtivos(userId);
+      const inativos = await dataService.getTiposCustoInativos(userId);
+      setTiposCusto(tipos);
+      setTiposInativos(inativos);
+    } catch (error) {
+      console.error('Erro ao recarregar tipos:', error);
+    }
+  };
+
   // Filtrar tipos de custo
-  const tiposFiltrados = tiposCusto.filter(tipo =>
+  const tiposExibidos = abaAtiva === 'ativos' ? tiposCusto : tiposInativos;
+  const tiposFiltrados = tiposExibidos.filter(tipo =>
     tipo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tipo.descricao.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -68,13 +91,14 @@ export default function TiposCustosPage() {
     if (!userId || !novoTipo.nome.trim()) return;
 
     try {
-      const novoTipoData = await dataService.createTipoCusto({
+      await dataService.createTipoCusto({
         nome: novoTipo.nome.trim(),
         descricao: novoTipo.descricao.trim() || '',
         ativo: true
       }, userId);
       
-      setTiposCusto(prev => [novoTipoData, ...prev]);
+      showToast('Tipo de custo criado com sucesso!', 'success');
+      await recarregarTipos();
       setNovoTipo({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
     } catch (error) {
@@ -86,27 +110,49 @@ export default function TiposCustosPage() {
     if (!userId || !editandoTipo.nome.trim()) return;
 
     try {
-      const tipoAtualizado = await dataService.updateTipoCusto(tipo.id, {
+      await dataService.updateTipoCusto(tipo.id, {
         nome: editandoTipo.nome.trim(),
         descricao: editandoTipo.descricao.trim() || '',
         ativo: editandoTipo.ativo
       }, userId);
       
-      setTiposCusto(prev => prev.map(t => t.id === tipo.id ? tipoAtualizado : t));
+      showToast('Tipo de custo atualizado com sucesso!', 'success');
+      await recarregarTipos();
       setEditandoId(null);
     } catch (error) {
       console.error('Erro ao atualizar tipo de custo:', error);
     }
   };
 
-  const handleExcluirTipo = async (tipo: TipoCusto) => {
+  const handleExcluirTipo = (tipo: TipoCusto) => {
+    setTipoParaExcluir(tipo);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!tipoParaExcluir || !userId) return;
+
+    try {
+      await dataService.deleteTipoCusto(tipoParaExcluir.id, userId);
+      showToast('Tipo de custo inativado com sucesso!', 'success');
+      await recarregarTipos();
+      setTipoParaExcluir(null);
+    } catch (error) {
+      console.error('Erro ao inativar tipo de custo:', error);
+      showToast('Erro ao inativar tipo de custo', 'error');
+    }
+  };
+
+  const handleReativar = async (tipo: TipoCusto) => {
     if (!userId) return;
 
     try {
-      await dataService.deleteTipoCusto(tipo.id, userId);
-      setTiposCusto(prev => prev.filter(t => t.id !== tipo.id));
+      await dataService.reativarTipoCusto(tipo.id, userId);
+      showToast('Tipo de custo reativado com sucesso!', 'success');
+      await recarregarTipos();
     } catch (error) {
-      console.error('Erro ao excluir tipo de custo:', error);
+      console.error('Erro ao reativar tipo de custo:', error);
+      showToast('Erro ao reativar tipo de custo', 'error');
     }
   };
 
@@ -140,7 +186,10 @@ export default function TiposCustosPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Tipos de Custo</h1>
+            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+              <CurrencyDollarIcon className="h-6 w-6" />
+              Tipos de Custo
+            </h1>
             <p className="text-text-secondary">
               Gerencie os tipos de custo para eventos
             </p>
@@ -154,45 +203,45 @@ export default function TiposCustosPage() {
           </Button>
         </div>
 
+        {/* Abas */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setAbaAtiva('ativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'ativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Ativos ({tiposCusto.length})
+              </button>
+              <button
+                onClick={() => setAbaAtiva('inativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'inativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Inativos ({tiposInativos.length})
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Busca */}
         <Card>
           <CardContent className="p-6">
             <Input
               label="Buscar"
-              placeholder="Buscar tipos de custo..."
+              placeholder={`Buscar tipos de custo ${abaAtiva === 'ativos' ? 'ativos' : 'inativos'}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </CardContent>
         </Card>
-
-        {/* Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <CurrencyDollarIcon className="h-8 w-8 text-primary mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Total de Tipos</p>
-                  <p className="text-2xl font-bold text-text-primary">{tiposFiltrados.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <CurrencyDollarIcon className="h-8 w-8 text-success mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Tipos Ativos</p>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {tiposFiltrados.filter(t => t.ativo).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Formulário Novo Tipo - No TOPO */}
         {mostrarFormNovo && (
@@ -319,15 +368,27 @@ export default function TiposCustosPage() {
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleExcluirTipo(tipo)}
-                        title="Excluir"
-                        className="text-error hover:text-error hover:bg-error/10"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      {abaAtiva === 'ativos' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleExcluirTipo(tipo)}
+                          title="Inativar"
+                          className="text-error hover:text-error hover:bg-error/10"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleReativar(tipo)}
+                          title="Reativar"
+                          className="text-success hover:text-success hover:bg-success/10"
+                        >
+                          <ArrowPathIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -341,17 +402,38 @@ export default function TiposCustosPage() {
             <CardContent className="text-center py-12">
               <CurrencyDollarIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">
-                {searchTerm ? 'Nenhum tipo encontrado' : 'Nenhum tipo de custo cadastrado'}
+                {searchTerm 
+                  ? 'Nenhum tipo encontrado' 
+                  : abaAtiva === 'ativos' 
+                    ? 'Nenhum tipo de custo ativo' 
+                    : 'Nenhum tipo de custo inativo'}
               </h3>
               <p className="mt-1 text-sm text-text-secondary">
                 {searchTerm 
                   ? 'Tente ajustar o termo de busca.'
-                  : 'Comece criando um novo tipo de custo.'
-                }
+                  : abaAtiva === 'ativos'
+                    ? 'Comece criando um novo tipo de custo.'
+                    : 'Não há tipos inativos no momento.'}
               </p>
             </CardContent>
           </Card>
         )}
+
+        {/* Modal de Confirmação de Inativação */}
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Inativar Tipo de Custo"
+          description={
+            tipoParaExcluir
+              ? `Tem certeza que deseja inativar o tipo de custo "${tipoParaExcluir.nome}"? Ele não aparecerá em listas de seleção, mas continuará disponível para eventos existentes.`
+              : 'Tem certeza que deseja inativar este tipo de custo?'
+          }
+          confirmText="Inativar"
+          cancelText="Cancelar"
+          variant="default"
+          onConfirm={handleConfirmarExclusao}
+        />
       </div>
     </Layout>
   );

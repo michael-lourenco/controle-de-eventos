@@ -54,7 +54,18 @@ export class CanalEntradaRepository extends SubcollectionRepository<CanalEntrada
 
   async deleteCanalEntrada(userId: string, canalId: string): Promise<void> {
     await this.ensureSubcollectionExists(userId);
-    return super.delete(canalId, userId);
+    // Inativação ao invés de exclusão física
+    await super.update(canalId, { ativo: false }, userId);
+  }
+  
+  async reativarCanalEntrada(userId: string, canalId: string): Promise<void> {
+    await this.ensureSubcollectionExists(userId);
+    await super.update(canalId, { ativo: true }, userId);
+  }
+  
+  async getInativos(userId: string): Promise<CanalEntrada[]> {
+    await this.ensureSubcollectionExists(userId);
+    return this.findWhere('ativo', '==', false, userId);
   }
 
   async getCanalEntradaById(userId: string, canalId: string): Promise<CanalEntrada | null> {

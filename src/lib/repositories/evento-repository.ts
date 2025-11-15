@@ -45,11 +45,13 @@ export class EventoRepository extends SubcollectionRepository<Evento> {
 
   async getProximosEventos(userId: string, limit: number = 10): Promise<Evento[]> {
     const hoje = new Date();
-    return this.query([
+    const eventos = await this.query([
       where('dataEvento', '>=', hoje),
       orderBy('dataEvento', 'asc'),
-      firestoreLimit(limit)
+      firestoreLimit(limit * 2) // Buscar mais para compensar filtro
     ], userId);
+    // Filtrar apenas eventos não arquivados
+    return eventos.filter(e => !e.arquivado).slice(0, limit);
   }
 
   async getEventosPorMes(mes: number, ano: number, userId: string): Promise<Evento[]> {
@@ -93,7 +95,29 @@ export class EventoRepository extends SubcollectionRepository<Evento> {
   }
 
   async deleteEvento(id: string, userId: string): Promise<void> {
-    return this.delete(id, userId);
+    // Arquivamento ao invés de exclusão física
+    await this.update(id, {
+      arquivado: true,
+      dataArquivamento: new Date()
+    }, userId);
+  }
+  
+  async desarquivarEvento(id: string, userId: string): Promise<void> {
+    await this.update(id, {
+      arquivado: false,
+      dataArquivamento: undefined,
+      motivoArquivamento: undefined
+    }, userId);
+  }
+  
+  async getArquivados(userId: string): Promise<Evento[]> {
+    return this.findWhere('arquivado', '==', true, userId);
+  }
+  
+  async getAtivos(userId: string): Promise<Evento[]> {
+    // Buscar eventos não arquivados (arquivado !== true ou arquivado é undefined/null)
+    const todos = await this.findAll(userId);
+    return todos.filter(e => !e.arquivado);
   }
 
   async getEventoById(id: string, userId: string): Promise<Evento | null> {

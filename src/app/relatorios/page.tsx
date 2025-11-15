@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
-import { useEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos, useClientes, useCanaisEntrada, useAllCustos } from '@/hooks/useData';
+import { useAllEventos, useDashboardData, useAllPagamentos, useAllServicos, useTiposServicos, useAllClientes, useCanaisEntrada, useAllCustos } from '@/hooks/useData';
 import PerformanceEventosReport from '@/components/relatorios/PerformanceEventosReport';
 import FluxoCaixaReport from '@/components/relatorios/FluxoCaixaReport';
 import ServicosReport from '@/components/relatorios/ServicosReport';
@@ -15,12 +15,13 @@ import DetalhamentoReceberReport from '@/components/relatorios/DetalhamentoReceb
 import PlanoBloqueio from '@/components/PlanoBloqueio';
 
 export default function RelatoriosPage() {
-  const { data: eventos, loading: loadingEventos } = useEventos();
+  // Usar hooks que incluem arquivados para relatórios completos
+  const { data: eventos, loading: loadingEventos } = useAllEventos();
   const { data: dashboardData, loading: loadingDashboard } = useDashboardData();
   const { data: pagamentos, loading: loadingPagamentos } = useAllPagamentos();
   const { data: servicos, loading: loadingServicos } = useAllServicos();
   const { data: tiposServicos, loading: loadingTiposServicos } = useTiposServicos();
-  const { data: clientes, loading: loadingClientes } = useClientes();
+  const { data: clientes, loading: loadingClientes } = useAllClientes();
   const { data: canaisEntrada, loading: loadingCanaisEntrada } = useCanaisEntrada();
   const { data: custos, loading: loadingCustos } = useAllCustos();
   

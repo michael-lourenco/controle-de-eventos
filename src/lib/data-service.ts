@@ -70,6 +70,15 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar clientes');
     }
+    // Retornar apenas clientes não arquivados por padrão
+    return this.clienteRepo.getAtivos(userId);
+  }
+  
+  async getAllClientes(userId: string): Promise<Cliente[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar clientes');
+    }
+    // Retornar todos os clientes (incluindo arquivados) - usado em relatórios
     return this.clienteRepo.findAll(userId);
   }
 
@@ -106,6 +115,14 @@ export class DataService {
   async deleteCliente(id: string, userId: string): Promise<void> {
     return this.clienteRepo.deleteCliente(id, userId);
   }
+  
+  async desarquivarCliente(id: string, userId: string): Promise<void> {
+    return this.clienteRepo.desarquivarCliente(id, userId);
+  }
+  
+  async getClientesArquivados(userId: string): Promise<Cliente[]> {
+    return this.clienteRepo.getArquivados(userId);
+  }
 
   async searchClientesByName(name: string, userId: string): Promise<Cliente[]> {
     return this.clienteRepo.searchByName(name, userId);
@@ -116,6 +133,15 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar eventos');
     }
+    // Retornar apenas eventos não arquivados por padrão
+    return this.eventoRepo.getAtivos(userId);
+  }
+  
+  async getAllEventos(userId: string): Promise<Evento[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar eventos');
+    }
+    // Retornar todos os eventos (incluindo arquivados) - usado em relatórios
     return this.eventoRepo.findAll(userId);
   }
 
@@ -159,6 +185,14 @@ export class DataService {
 
   async deleteEvento(id: string, userId: string): Promise<void> {
     return this.eventoRepo.deleteEvento(id, userId);
+  }
+  
+  async desarquivarEvento(id: string, userId: string): Promise<void> {
+    return this.eventoRepo.desarquivarEvento(id, userId);
+  }
+  
+  async getEventosArquivados(userId: string): Promise<Evento[]> {
+    return this.eventoRepo.getArquivados(userId);
   }
 
   async getEventosHoje(userId: string): Promise<Evento[]> {
@@ -299,8 +333,8 @@ export class DataService {
       // Garantir que os tipos de custo estejam inicializados
       await initializeTiposCusto(userId);
       
-      // Buscar apenas tipos do usuário (agora personalizados)
-      return this.tipoCustoRepo.findAll(userId);
+      // Buscar apenas tipos ativos por padrão
+      return this.tipoCustoRepo.getAtivos(userId);
     } catch (error) {
       console.error('Erro ao carregar tipos de custo:', error);
       return [];
@@ -334,9 +368,17 @@ export class DataService {
   async deleteTipoCusto(id: string, userId: string): Promise<void> {
     return this.tipoCustoRepo.deleteTipoCusto(id, userId);
   }
-
+  
+  async reativarTipoCusto(id: string, userId: string): Promise<void> {
+    return this.tipoCustoRepo.reativarTipoCusto(id, userId);
+  }
+  
   async getTiposCustoAtivos(userId: string): Promise<TipoCusto[]> {
     return this.tipoCustoRepo.getAtivos(userId);
+  }
+  
+  async getTiposCustoInativos(userId: string): Promise<TipoCusto[]> {
+    return this.tipoCustoRepo.getInativos(userId);
   }
 
   // Métodos para Custos de Evento
@@ -410,6 +452,21 @@ export class DataService {
     }
     try {
       await this.ensureCollectionsInitialized();
+      // Buscar apenas tipos ativos por padrão
+      return this.tipoServicoRepo.getAtivos(userId);
+    } catch (error) {
+      console.error('Erro ao buscar tipos de serviço:', error);
+      throw error;
+    }
+  }
+  
+  async getAllTiposServico(userId: string): Promise<TipoServico[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar tipos de serviço');
+    }
+    try {
+      await this.ensureCollectionsInitialized();
+      // Retornar todos (incluindo inativos) - usado em relatórios
       return this.tipoServicoRepo.findAll(userId);
     } catch (error) {
       console.error('Erro ao buscar tipos de serviço:', error);
@@ -439,6 +496,14 @@ export class DataService {
 
   async deleteTipoServico(id: string, userId: string): Promise<void> {
     return this.tipoServicoRepo.deleteTipoServico(id, userId);
+  }
+  
+  async reativarTipoServico(id: string, userId: string): Promise<void> {
+    return this.tipoServicoRepo.reativarTipoServico(id, userId);
+  }
+  
+  async getTiposServicoInativos(userId: string): Promise<TipoServico[]> {
+    return this.tipoServicoRepo.getInativos(userId);
   }
 
   async getTiposServicoAtivos(userId: string): Promise<TipoServico[]> {
@@ -798,6 +863,20 @@ export class DataService {
     }
     return this.canalEntradaRepo.deleteCanalEntrada(userId, id);
   }
+  
+  async reativarCanalEntrada(id: string, userId: string): Promise<void> {
+    if (!id || !userId) {
+      throw new Error('id e userId são obrigatórios para reativar canal de entrada');
+    }
+    return this.canalEntradaRepo.reativarCanalEntrada(userId, id);
+  }
+  
+  async getCanaisEntradaInativos(userId: string): Promise<CanalEntrada[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar canais de entrada inativos');
+    }
+    return this.canalEntradaRepo.getInativos(userId);
+  }
 
   async searchCanaisEntrada(searchTerm: string, userId: string): Promise<CanalEntrada[]> {
     if (!userId) {
@@ -857,6 +936,22 @@ export class DataService {
       throw new Error('id e userId são obrigatórios para deletar tipo de evento');
     }
     return this.tipoEventoRepo.deleteTipoEvento(id, userId);
+  }
+  
+  async reativarTipoEvento(id: string, userId: string): Promise<void> {
+    if (!id || !userId) {
+      throw new Error('id e userId são obrigatórios para reativar tipo de evento');
+    }
+    return this.tipoEventoRepo.reativarTipoEvento(id, userId);
+  }
+  
+  async getTiposEventoInativos(userId: string): Promise<TipoEvento[]> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para buscar tipos de evento inativos');
+    }
+    await this.ensureTiposEventoInitialized(userId);
+    const tipos = await this.tipoEventoRepo.getInativos(userId);
+    return tipos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   }
 
   // Métodos para serviços

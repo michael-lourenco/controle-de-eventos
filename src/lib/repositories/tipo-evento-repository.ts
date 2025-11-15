@@ -77,7 +77,18 @@ export class TipoEventoRepository extends SubcollectionRepository<TipoEvento> {
 
   async deleteTipoEvento(id: string, userId: string): Promise<void> {
     await this.ensureSubcollectionExists(userId);
-    return this.delete(id, userId);
+    // Inativação ao invés de exclusão física
+    await this.update(id, { ativo: false }, userId);
+  }
+  
+  async reativarTipoEvento(id: string, userId: string): Promise<void> {
+    await this.ensureSubcollectionExists(userId);
+    await this.update(id, { ativo: true }, userId);
+  }
+  
+  async getInativos(userId: string): Promise<TipoEvento[]> {
+    await this.ensureSubcollectionExists(userId);
+    return this.findWhere('ativo', '==', false, userId);
   }
 
   async getTipoEventoById(id: string, userId: string): Promise<TipoEvento | null> {

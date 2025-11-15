@@ -15,15 +15,23 @@ import {
   TrashIcon,
   TagIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 export default function CanaisEntradaPage() {
   const { userId } = useCurrentUser();
   const [canaisEntrada, setCanaisEntrada] = useState<CanalEntrada[]>([]);
+  const [canaisInativos, setCanaisInativos] = useState<CanalEntrada[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'inativos'>('ativos');
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [canalParaExcluir, setCanalParaExcluir] = useState<CanalEntrada | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { showToast } = useToast();
   const [novoCanal, setNovoCanal] = useState({
     nome: '',
     descricao: ''
@@ -45,9 +53,11 @@ export default function CanaisEntradaPage() {
 
       try {
         console.log('CanaisEntradaPage: Carregando canais de entrada');
-        const canais = await dataService.getCanaisEntrada(userId);
+        const canais = await dataService.getCanaisEntradaAtivos(userId);
+        const inativos = await dataService.getCanaisEntradaInativos(userId);
         console.log('CanaisEntradaPage: Canais carregados:', canais);
         setCanaisEntrada(canais);
+        setCanaisInativos(inativos);
       } catch (error) {
         console.error('CanaisEntradaPage: Erro ao carregar canais de entrada:', error);
       } finally {
@@ -58,8 +68,21 @@ export default function CanaisEntradaPage() {
     carregarCanaisEntrada();
   }, [userId]);
 
+  const recarregarCanais = async () => {
+    if (!userId) return;
+    try {
+      const canais = await dataService.getCanaisEntradaAtivos(userId);
+      const inativos = await dataService.getCanaisEntradaInativos(userId);
+      setCanaisEntrada(canais);
+      setCanaisInativos(inativos);
+    } catch (error) {
+      console.error('Erro ao recarregar canais:', error);
+    }
+  };
+
   // Filtrar canais de entrada
-  const canaisFiltrados = canaisEntrada.filter(canal =>
+  const canaisExibidos = abaAtiva === 'ativos' ? canaisEntrada : canaisInativos;
+  const canaisFiltrados = canaisExibidos.filter(canal =>
     canal.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     canal.descricao.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -68,14 +91,15 @@ export default function CanaisEntradaPage() {
     if (!userId || !novoCanal.nome.trim()) return;
 
     try {
-      const novoCanalData = await dataService.createCanalEntrada({
+      await dataService.createCanalEntrada({
         nome: novoCanal.nome.trim(),
         descricao: novoCanal.descricao.trim() || '',
         ativo: true,
         dataCadastro: new Date()
       }, userId);
       
-      setCanaisEntrada(prev => [novoCanalData, ...prev]);
+      showToast('Canal de entrada criado com sucesso!', 'success');
+      await recarregarCanais();
       setNovoCanal({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
     } catch (error) {
@@ -87,27 +111,49 @@ export default function CanaisEntradaPage() {
     if (!userId || !editandoCanal.nome.trim()) return;
 
     try {
-      const canalAtualizado = await dataService.updateCanalEntrada(canal.id, {
+      await dataService.updateCanalEntrada(canal.id, {
         nome: editandoCanal.nome.trim(),
         descricao: editandoCanal.descricao.trim() || '',
         ativo: editandoCanal.ativo
       }, userId);
       
-      setCanaisEntrada(prev => prev.map(c => c.id === canal.id ? canalAtualizado : c));
+      showToast('Canal de entrada atualizado com sucesso!', 'success');
+      await recarregarCanais();
       setEditandoId(null);
     } catch (error) {
       console.error('Erro ao atualizar canal de entrada:', error);
     }
   };
 
-  const handleExcluirCanal = async (canal: CanalEntrada) => {
+  const handleExcluirCanal = (canal: CanalEntrada) => {
+    setCanalParaExcluir(canal);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!canalParaExcluir || !userId) return;
+
+    try {
+      await dataService.deleteCanalEntrada(canalParaExcluir.id, userId);
+      showToast('Canal de entrada inativado com sucesso!', 'success');
+      await recarregarCanais();
+      setCanalParaExcluir(null);
+    } catch (error) {
+      console.error('Erro ao inativar canal de entrada:', error);
+      showToast('Erro ao inativar canal de entrada', 'error');
+    }
+  };
+
+  const handleReativar = async (canal: CanalEntrada) => {
     if (!userId) return;
 
     try {
-      await dataService.deleteCanalEntrada(canal.id, userId);
-      setCanaisEntrada(prev => prev.filter(c => c.id !== canal.id));
+      await dataService.reativarCanalEntrada(canal.id, userId);
+      showToast('Canal de entrada reativado com sucesso!', 'success');
+      await recarregarCanais();
     } catch (error) {
-      console.error('Erro ao excluir canal de entrada:', error);
+      console.error('Erro ao reativar canal de entrada:', error);
+      showToast('Erro ao reativar canal de entrada', 'error');
     }
   };
 
@@ -141,7 +187,10 @@ export default function CanaisEntradaPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Canais de Entrada</h1>
+            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+              <TagIcon className="h-6 w-6" />
+              Canais de Entrada
+            </h1>
             <p className="text-text-secondary">
               Gerencie os canais pelos quais os clientes chegam
             </p>
@@ -155,45 +204,45 @@ export default function CanaisEntradaPage() {
           </Button>
         </div>
 
+        {/* Abas */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setAbaAtiva('ativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'ativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Ativos ({canaisEntrada.length})
+              </button>
+              <button
+                onClick={() => setAbaAtiva('inativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'inativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Inativos ({canaisInativos.length})
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Busca */}
         <Card>
           <CardContent className="p-6">
             <Input
               label="Buscar"
-              placeholder="Buscar canais de entrada..."
+              placeholder={`Buscar canais de entrada ${abaAtiva === 'ativos' ? 'ativos' : 'inativos'}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </CardContent>
         </Card>
-
-        {/* Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <TagIcon className="h-8 w-8 text-primary mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Total de Canais</p>
-                  <p className="text-2xl font-bold text-text-primary">{canaisFiltrados.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <TagIcon className="h-8 w-8 text-success mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Canais Ativos</p>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {canaisFiltrados.filter(c => c.ativo).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Formulário Novo Canal - No TOPO */}
         {mostrarFormNovo && (
@@ -320,15 +369,27 @@ export default function CanaisEntradaPage() {
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleExcluirCanal(canal)}
-                        title="Excluir"
-                        className="text-error hover:text-error hover:bg-error/10"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      {abaAtiva === 'ativos' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleExcluirCanal(canal)}
+                          title="Inativar"
+                          className="text-error hover:text-error hover:bg-error/10"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleReativar(canal)}
+                          title="Reativar"
+                          className="text-success hover:text-success hover:bg-success/10"
+                        >
+                          <ArrowPathIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -342,17 +403,38 @@ export default function CanaisEntradaPage() {
             <CardContent className="text-center py-12">
               <TagIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">
-                {searchTerm ? 'Nenhum canal encontrado' : 'Nenhum canal de entrada cadastrado'}
+                {searchTerm 
+                  ? 'Nenhum canal encontrado' 
+                  : abaAtiva === 'ativos' 
+                    ? 'Nenhum canal de entrada ativo' 
+                    : 'Nenhum canal de entrada inativo'}
               </h3>
               <p className="mt-1 text-sm text-text-secondary">
                 {searchTerm 
                   ? 'Tente ajustar o termo de busca.'
-                  : 'Comece criando um novo canal de entrada.'
-                }
+                  : abaAtiva === 'ativos'
+                    ? 'Comece criando um novo canal de entrada.'
+                    : 'Não há canais inativos no momento.'}
               </p>
             </CardContent>
           </Card>
         )}
+
+        {/* Modal de Confirmação de Inativação */}
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Inativar Canal de Entrada"
+          description={
+            canalParaExcluir
+              ? `Tem certeza que deseja inativar o canal de entrada "${canalParaExcluir.nome}"? Ele não aparecerá em listas de seleção, mas continuará disponível para clientes existentes.`
+              : 'Tem certeza que deseja inativar este canal de entrada?'
+          }
+          confirmText="Inativar"
+          cancelText="Cancelar"
+          variant="default"
+          onConfirm={handleConfirmarExclusao}
+        />
       </div>
     </Layout>
   );

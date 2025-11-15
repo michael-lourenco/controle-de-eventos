@@ -20,17 +20,25 @@ import {
   UserIcon,
   CheckIcon,
   XMarkIcon,
-  EyeIcon
+  EyeIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 export default function ClientesPage() {
   const router = useRouter();
   const { userId } = useCurrentUser();
   const { limites } = usePlano();
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientesArquivados, setClientesArquivados] = useState<Cliente[]>([]);
   const [canaisEntrada, setCanaisEntrada] = useState<CanalEntrada[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados'>('ativos');
+  const [clienteParaArquivar, setClienteParaArquivar] = useState<Cliente | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { showToast } = useToast();
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [novoCliente, setNovoCliente] = useState({
     nome: '',
@@ -65,12 +73,14 @@ export default function ClientesPage() {
 
       try {
         console.log('ClientesPage: Carregando clientes e canais de entrada');
-        const [clientesData, canaisData] = await Promise.all([
+        const [clientesData, arquivadosData, canaisData] = await Promise.all([
           dataService.getClientes(userId),
-          dataService.getCanaisEntrada(userId)
+          dataService.getClientesArquivados(userId),
+          dataService.getCanaisEntradaAtivos(userId)
         ]);
-        console.log('ClientesPage: Dados carregados:', { clientesData, canaisData });
+        console.log('ClientesPage: Dados carregados:', { clientesData, arquivadosData, canaisData });
         setClientes(clientesData);
+        setClientesArquivados(arquivadosData);
         setCanaisEntrada(canaisData);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -82,8 +92,23 @@ export default function ClientesPage() {
     carregarDados();
   }, [userId]);
 
+  const recarregarClientes = async () => {
+    if (!userId) return;
+    try {
+      const [clientesData, arquivadosData] = await Promise.all([
+        dataService.getClientes(userId),
+        dataService.getClientesArquivados(userId)
+      ]);
+      setClientes(clientesData);
+      setClientesArquivados(arquivadosData);
+    } catch (error) {
+      console.error('Erro ao recarregar clientes:', error);
+    }
+  };
+
   // Filtrar clientes
-  const clientesFiltrados = clientes.filter(cliente => 
+  const clientesExibidos = abaAtiva === 'ativos' ? clientes : clientesArquivados;
+  const clientesFiltrados = clientesExibidos.filter(cliente => 
     cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cliente.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cliente.telefone.includes(searchTerm) ||
@@ -94,7 +119,7 @@ export default function ClientesPage() {
     if (!userId || !novoCliente.nome.trim() || !novoCliente.email.trim() || !novoCliente.telefone.trim()) return;
 
     try {
-      const novoClienteData = await dataService.createCliente({
+      await dataService.createCliente({
         nome: novoCliente.nome.trim(),
         cpf: novoCliente.cpf.trim() || '',
         email: novoCliente.email.trim(),
@@ -105,7 +130,8 @@ export default function ClientesPage() {
         canalEntradaId: novoCliente.canalEntradaId || undefined
       }, userId);
       
-      setClientes(prev => [...prev, novoClienteData]);
+      showToast('Cliente criado com sucesso!', 'success');
+      await recarregarClientes();
       setNovoCliente({
         nome: '',
         cpf: '',
@@ -134,7 +160,7 @@ export default function ClientesPage() {
     if (!userId || !editandoCliente.nome.trim() || !editandoCliente.email.trim() || !editandoCliente.telefone.trim()) return;
 
     try {
-      const clienteAtualizado = await dataService.updateCliente(cliente.id, {
+      await dataService.updateCliente(cliente.id, {
         nome: editandoCliente.nome.trim(),
         cpf: editandoCliente.cpf.trim() || '',
         email: editandoCliente.email.trim(),
@@ -145,21 +171,56 @@ export default function ClientesPage() {
         canalEntradaId: editandoCliente.canalEntradaId || undefined
       }, userId);
       
-      setClientes(prev => prev.map(c => c.id === cliente.id ? clienteAtualizado : c));
+      showToast('Cliente atualizado com sucesso!', 'success');
+      await recarregarClientes();
       setEditandoId(null);
     } catch (error) {
       console.error('Erro ao atualizar cliente:', error);
     }
   };
 
-  const handleExcluirCliente = async (cliente: Cliente) => {
+  const handleExcluirCliente = (cliente: Cliente) => {
+    setClienteParaArquivar(cliente);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmarArquivamento = async () => {
+    if (!clienteParaArquivar || !userId) return;
+
+    try {
+      // Validar se há eventos futuros (FASE 4 - validação)
+      const eventos = await dataService.getEventos(userId);
+      const eventosFuturosCliente = eventos.filter(e => 
+        e.clienteId === clienteParaArquivar.id && 
+        new Date(e.dataEvento) >= new Date()
+      );
+
+      if (eventosFuturosCliente.length > 0) {
+        showToast(`Não é possível arquivar este cliente. Ele possui ${eventosFuturosCliente.length} evento(s) agendado(s).`, 'error');
+        setClienteParaArquivar(null);
+        return;
+      }
+
+      await dataService.deleteCliente(clienteParaArquivar.id, userId);
+      showToast('Cliente arquivado com sucesso!', 'success');
+      await recarregarClientes();
+      setClienteParaArquivar(null);
+    } catch (error) {
+      console.error('Erro ao arquivar cliente:', error);
+      showToast('Erro ao arquivar cliente', 'error');
+    }
+  };
+
+  const handleDesarquivar = async (cliente: Cliente) => {
     if (!userId) return;
 
     try {
-      await dataService.deleteCliente(cliente.id, userId);
-      setClientes(prev => prev.filter(c => c.id !== cliente.id));
+      await dataService.desarquivarCliente(cliente.id, userId);
+      showToast('Cliente desarquivado com sucesso!', 'success');
+      await recarregarClientes();
     } catch (error) {
-      console.error('Erro ao excluir cliente:', error);
+      console.error('Erro ao desarquivar cliente:', error);
+      showToast('Erro ao desarquivar cliente', 'error');
     }
   };
 
@@ -208,8 +269,8 @@ export default function ClientesPage() {
         dataCadastro: new Date()
       }, userId);
       
-      // Recarregar a lista de canais de entrada
-      const canaisAtualizados = await dataService.getCanaisEntrada(userId);
+      // Recarregar a lista de canais de entrada (apenas ativos)
+      const canaisAtualizados = await dataService.getCanaisEntradaAtivos(userId);
       setCanaisEntrada(canaisAtualizados);
       
       // Retornar o ID do novo canal para atualizar automaticamente o campo
@@ -253,7 +314,10 @@ export default function ClientesPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Clientes</h1>
+            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+              <UserIcon className="h-6 w-6" />
+              Clientes
+            </h1>
             <p className="text-text-secondary">
               Gerencie os clientes cadastrados
             </p>
@@ -279,58 +343,45 @@ export default function ClientesPage() {
           </div>
         )}
 
+        {/* Abas */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setAbaAtiva('ativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'ativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Ativos ({clientes.length})
+              </button>
+              <button
+                onClick={() => setAbaAtiva('arquivados')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'arquivados'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Arquivados ({clientesArquivados.length})
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Busca */}
         <Card>
           <CardContent className="p-6">
             <Input
               label="Buscar"
-              placeholder="Nome, email, telefone ou CPF..."
+              placeholder={`Nome, email, telefone ou CPF ${abaAtiva === 'ativos' ? '(ativos)' : '(arquivados)'}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </CardContent>
         </Card>
-
-        {/* Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <UserIcon className="h-8 w-8 text-primary mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Total de Clientes</p>
-                  <p className="text-2xl font-bold text-text-primary">{clientesFiltrados.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <UserIcon className="h-8 w-8 text-success mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Com Canal de Entrada</p>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {clientesFiltrados.filter(c => c.canalEntradaId).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <UserIcon className="h-8 w-8 text-warning mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Sem Canal de Entrada</p>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {clientesFiltrados.filter(c => !c.canalEntradaId).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Formulário Novo Cliente */}
         {mostrarFormNovo && (
@@ -569,15 +620,27 @@ export default function ClientesPage() {
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleExcluirCliente(cliente)}
-                        title="Excluir"
-                        className="text-error hover:text-error hover:bg-error/10"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      {abaAtiva === 'ativos' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleExcluirCliente(cliente)}
+                          title="Arquivar"
+                          className="text-error hover:text-error hover:bg-error/10"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDesarquivar(cliente)}
+                          title="Desarquivar"
+                          className="text-success hover:text-success hover:bg-success/10"
+                        >
+                          <ArrowPathIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -591,17 +654,38 @@ export default function ClientesPage() {
             <CardContent className="text-center py-12">
               <UserIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">
-                {searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente cadastrado'}
+                {searchTerm 
+                  ? 'Nenhum cliente encontrado' 
+                  : abaAtiva === 'ativos' 
+                    ? 'Nenhum cliente ativo' 
+                    : 'Nenhum cliente arquivado'}
               </h3>
               <p className="mt-1 text-sm text-text-secondary">
                 {searchTerm 
                   ? 'Tente ajustar o termo de busca.'
-                  : 'Comece criando um novo cliente.'
-                }
+                  : abaAtiva === 'ativos'
+                    ? 'Comece criando um novo cliente.'
+                    : 'Não há clientes arquivados no momento.'}
               </p>
             </CardContent>
           </Card>
         )}
+
+        {/* Modal de Confirmação de Arquivamento */}
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Arquivar Cliente"
+          description={
+            clienteParaArquivar
+              ? `Tem certeza que deseja arquivar o cliente "${clienteParaArquivar.nome}"? Ele não aparecerá nas listas ativas, mas continuará disponível nos relatórios históricos. Verificando se há eventos futuros agendados...`
+              : 'Tem certeza que deseja arquivar este cliente?'
+          }
+          confirmText="Arquivar"
+          cancelText="Cancelar"
+          variant="default"
+          onConfirm={handleConfirmarArquivamento}
+        />
       </div>
     </Layout>
   );

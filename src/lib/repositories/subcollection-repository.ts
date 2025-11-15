@@ -191,7 +191,13 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
         );
         
         // Filtrar apenas os ativos e ordenar
-        const activeResults = allResults.filter((item: any) => item.ativo === true);
+        // IMPORTANTE: itens com ativo === false NÃO devem aparecer aqui
+        const activeResults = allResults.filter((item: any) => {
+          const ativo = item.ativo;
+          // Apenas itens com ativo === true OU undefined/null (dados antigos sem migração)
+          // Itens com ativo === false são explicitamente inativos e NÃO devem aparecer
+          return ativo === true || ativo === undefined || ativo === null;
+        });
         
         return activeResults.sort((a, b) => (a as any).nome.localeCompare((b as any).nome));
       } catch (error) {

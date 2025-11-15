@@ -62,8 +62,13 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
   }
 
   async deletePagamento(userId: string, eventoId: string, pagamentoId: string): Promise<void> {
+    // Marcação como cancelado ao invés de exclusão física
     const pagamentoRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.PAGAMENTOS, pagamentoId);
-    await deleteDoc(pagamentoRef);
+    await updateDoc(pagamentoRef, {
+      cancelado: true,
+      dataCancelamento: new Date(),
+      status: 'Cancelado'
+    });
   }
 
   async findByEventoId(userId: string, eventoId: string): Promise<Pagamento[]> {
@@ -139,8 +144,9 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
   }> {
     const pagamentos = await this.findByEventoId(userId, eventoId);
     
+    // Filtrar pagamentos cancelados nos cálculos
     const totalPago = pagamentos
-      .filter(p => p.status === 'Pago')
+      .filter(p => p.status === 'Pago' && !p.cancelado)
       .reduce((total, p) => total + p.valor, 0);
     
     const valorPendente = valorTotalEvento - totalPago;
@@ -159,11 +165,14 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
     
     const isAtrasado = hoje > dataFinalPagamento && valorPendente > 0;
     
+    // Contar apenas pagamentos não cancelados
+    const pagamentosAtivos = pagamentos.filter(p => !p.cancelado);
+    
     return {
       totalPago,
       valorPendente: isAtrasado ? 0 : valorPendente,
       valorAtrasado: isAtrasado ? valorPendente : 0,
-      quantidadePagamentos: pagamentos.length,
+      quantidadePagamentos: pagamentosAtivos.length,
       isAtrasado
     };
   }

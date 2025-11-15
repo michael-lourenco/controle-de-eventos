@@ -15,15 +15,23 @@ import {
   TrashIcon,
   TagIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import { useToast } from '@/components/ui/toast';
 
 export default function ServicosPage() {
   const { userId } = useCurrentUser();
   const [tiposServico, setTiposServico] = useState<TipoServico[]>([]);
+  const [tiposInativos, setTiposInativos] = useState<TipoServico[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'inativos'>('ativos');
   const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [tipoParaExcluir, setTipoParaExcluir] = useState<TipoServico | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { showToast } = useToast();
   const [novoTipo, setNovoTipo] = useState({ nome: '', descricao: '' });
   const [editandoTipo, setEditandoTipo] = useState({ nome: '', descricao: '', ativo: true });
   const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
@@ -38,9 +46,11 @@ export default function ServicosPage() {
 
       try {
         console.log('ServicosPage: Carregando tipos de serviço');
-        const tipos = await dataService.getTiposServicos(userId);
+        const tipos = await dataService.getTiposServicoAtivos(userId);
+        const inativos = await dataService.getTiposServicoInativos(userId);
         console.log('ServicosPage: Tipos carregados:', tipos);
         setTiposServico(tipos);
+        setTiposInativos(inativos);
       } catch (error) {
         console.error('Erro ao carregar tipos de serviço:', error);
       } finally {
@@ -51,8 +61,21 @@ export default function ServicosPage() {
     carregarTiposServico();
   }, [userId]);
 
+  const recarregarTipos = async () => {
+    if (!userId) return;
+    try {
+      const tipos = await dataService.getTiposServicoAtivos(userId);
+      const inativos = await dataService.getTiposServicoInativos(userId);
+      setTiposServico(tipos);
+      setTiposInativos(inativos);
+    } catch (error) {
+      console.error('Erro ao recarregar tipos:', error);
+    }
+  };
+
   // Filtrar tipos de serviço
-  const tiposFiltrados = tiposServico.filter(tipo => 
+  const tiposExibidos = abaAtiva === 'ativos' ? tiposServico : tiposInativos;
+  const tiposFiltrados = tiposExibidos.filter(tipo => 
     tipo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     tipo.descricao?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -61,17 +84,19 @@ export default function ServicosPage() {
     if (!userId || !novoTipo.nome.trim()) return;
 
     try {
-      const novoTipoServico = await dataService.createTipoServico({
+      await dataService.createTipoServico({
         nome: novoTipo.nome.trim(),
         descricao: novoTipo.descricao.trim() || '',
         ativo: true
       }, userId);
       
-      setTiposServico(prev => [...prev, novoTipoServico]);
+      showToast('Tipo de serviço criado com sucesso!', 'success');
+      await recarregarTipos();
       setNovoTipo({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
     } catch (error) {
       console.error('Erro ao criar tipo de serviço:', error);
+      showToast('Erro ao criar tipo de serviço', 'error');
     }
   };
 
@@ -79,27 +104,50 @@ export default function ServicosPage() {
     if (!userId || !editandoTipo.nome.trim()) return;
 
     try {
-      const tipoAtualizado = await dataService.updateTipoServico(tipo.id, {
+      await dataService.updateTipoServico(tipo.id, {
         nome: editandoTipo.nome.trim(),
         descricao: editandoTipo.descricao.trim() || '',
         ativo: editandoTipo.ativo
       }, userId);
       
-      setTiposServico(prev => prev.map(t => t.id === tipo.id ? tipoAtualizado : t));
+      showToast('Tipo de serviço atualizado com sucesso!', 'success');
+      await recarregarTipos();
       setEditandoId(null);
     } catch (error) {
       console.error('Erro ao atualizar tipo de serviço:', error);
+      showToast('Erro ao atualizar tipo de serviço', 'error');
     }
   };
 
-  const handleExcluirTipo = async (tipo: TipoServico) => {
+  const handleExcluirTipo = (tipo: TipoServico) => {
+    setTipoParaExcluir(tipo);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!tipoParaExcluir || !userId) return;
+
+    try {
+      await dataService.deleteTipoServico(userId, tipoParaExcluir.id);
+      showToast('Tipo de serviço inativado com sucesso!', 'success');
+      await recarregarTipos();
+      setTipoParaExcluir(null);
+    } catch (error) {
+      console.error('Erro ao inativar tipo de serviço:', error);
+      showToast('Erro ao inativar tipo de serviço', 'error');
+    }
+  };
+
+  const handleReativar = async (tipo: TipoServico) => {
     if (!userId) return;
 
     try {
-      await dataService.deleteTipoServico(userId, tipo.id);
-      setTiposServico(prev => prev.filter(t => t.id !== tipo.id));
+      await dataService.reativarTipoServico(tipo.id, userId);
+      showToast('Tipo de serviço reativado com sucesso!', 'success');
+      await recarregarTipos();
     } catch (error) {
-      console.error('Erro ao excluir tipo de serviço:', error);
+      console.error('Erro ao reativar tipo de serviço:', error);
+      showToast('Erro ao reativar tipo de serviço', 'error');
     }
   };
 
@@ -148,7 +196,10 @@ export default function ServicosPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Tipos de Serviço</h1>
+            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+              <TagIcon className="h-6 w-6" />
+              Tipos de Serviço
+            </h1>
             <p className="text-text-secondary">
               Gerencie os tipos de serviços disponíveis
             </p>
@@ -162,45 +213,45 @@ export default function ServicosPage() {
           </Button>
         </div>
 
+        {/* Abas */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="flex border-b border-border">
+              <button
+                onClick={() => setAbaAtiva('ativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'ativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Ativos ({tiposServico.length})
+              </button>
+              <button
+                onClick={() => setAbaAtiva('inativos')}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                  abaAtiva === 'inativos'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                Inativos ({tiposInativos.length})
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Busca */}
         <Card>
           <CardContent className="p-6">
             <Input
               label="Buscar"
-              placeholder="Nome ou descrição do tipo de serviço..."
+              placeholder={`Nome ou descrição do tipo de serviço ${abaAtiva === 'ativos' ? 'ativos' : 'inativos'}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </CardContent>
         </Card>
-
-        {/* Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <TagIcon className="h-8 w-8 text-primary mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Total de Tipos</p>
-                  <p className="text-2xl font-bold text-text-primary">{tiposFiltrados.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <TagIcon className="h-8 w-8 text-success mr-3" />
-                <div>
-                  <p className="text-sm font-medium text-text-secondary">Tipos Ativos</p>
-                  <p className="text-2xl font-bold text-text-primary">
-                    {tiposFiltrados.filter(t => t.ativo).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Formulário Novo Tipo */}
         {mostrarFormNovo && (
@@ -300,7 +351,7 @@ export default function ServicosPage() {
                           {tipo.nome}
                         </span>
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          tipo.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          tipo.ativo ? 'bg-success-bg text-success-text' : 'bg-error-bg text-error-text'
                         }`}>
                           {tipo.ativo ? 'Ativo' : 'Inativo'}
                         </span>
@@ -320,15 +371,27 @@ export default function ServicosPage() {
                       >
                         <PencilIcon className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleExcluirTipo(tipo)}
-                        title="Excluir"
-                        className="text-error hover:text-error hover:bg-error/10"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      {abaAtiva === 'ativos' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleExcluirTipo(tipo)}
+                          title="Inativar"
+                          className="text-error hover:text-error hover:bg-error/10"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleReativar(tipo)}
+                          title="Reativar"
+                          className="text-success hover:text-success hover:bg-success/10"
+                        >
+                          <ArrowPathIcon className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -342,17 +405,46 @@ export default function ServicosPage() {
             <CardContent className="text-center py-12">
               <TagIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">
-                {searchTerm ? 'Nenhum tipo encontrado' : 'Nenhum tipo cadastrado'}
+                {searchTerm 
+                  ? 'Nenhum tipo encontrado' 
+                  : abaAtiva === 'ativos' 
+                    ? 'Nenhum tipo de serviço ativo' 
+                    : 'Nenhum tipo de serviço inativo'}
               </h3>
               <p className="mt-1 text-sm text-text-secondary">
                 {searchTerm 
                   ? 'Tente ajustar o termo de busca.'
-                  : 'Comece criando um novo tipo de serviço.'
-                }
+                  : abaAtiva === 'ativos'
+                    ? 'Comece criando um novo tipo de serviço.'
+                    : 'Não há tipos inativos no momento.'}
               </p>
+              {!searchTerm && abaAtiva === 'ativos' && (
+                <div className="mt-6">
+                  <Button onClick={() => setMostrarFormNovo(true)}>
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Novo Tipo
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
+
+        {/* Modal de Confirmação de Inativação */}
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Inativar Tipo de Serviço"
+          description={
+            tipoParaExcluir
+              ? `Tem certeza que deseja inativar o tipo de serviço "${tipoParaExcluir.nome}"? Ele não aparecerá em listas de seleção, mas continuará disponível para eventos existentes.`
+              : 'Tem certeza que deseja inativar este tipo de serviço?'
+          }
+          confirmText="Inativar"
+          cancelText="Cancelar"
+          variant="default"
+          onConfirm={handleConfirmarExclusao}
+        />
       </div>
     </Layout>
   );
