@@ -3,23 +3,63 @@ import { PlanoRepository } from '../repositories/plano-repository';
 import { UserRepository } from '../repositories/user-repository';
 import { PlanoService } from './plano-service';
 import { StatusAssinatura } from '@/types/funcionalidades';
+import crypto from 'crypto';
 
 export interface HotmartWebhookPayload {
   event: string;
-  data: {
+  data?: {
     subscription?: {
-      code: string;
-      plan: {
-        code: string;
+      code?: string;
+      subscription_code?: string;
+      plan?: {
+        code?: string;
+        plan_code?: string;
+        name?: string;
       };
-      buyer: {
-        email: string;
-        name: string;
+      buyer?: {
+        email?: string;
+        name?: string;
       };
-      status: string;
+      subscriber?: {
+        email?: string;
+        name?: string;
+      };
+      status?: string;
+      trial?: {
+        end_date?: string;
+      };
       trial_period_end?: string;
       date_next_charge?: string;
+      next_charge_date?: string;
+      cancellation_date?: string;
+      expiration_date?: string;
     };
+  };
+  subscription?: {
+    code?: string;
+    subscription_code?: string;
+    plan?: {
+      code?: string;
+      plan_code?: string;
+      name?: string;
+    };
+    buyer?: {
+      email?: string;
+      name?: string;
+    };
+    subscriber?: {
+      email?: string;
+      name?: string;
+    };
+    status?: string;
+    trial?: {
+      end_date?: string;
+    };
+    trial_period_end?: string;
+    date_next_charge?: string;
+    next_charge_date?: string;
+    cancellation_date?: string;
+    expiration_date?: string;
   };
 }
 
@@ -36,55 +76,125 @@ export class HotmartWebhookService {
     this.planoService = new PlanoService();
   }
 
-  async processarWebhook(payload: HotmartWebhookPayload): Promise<{ success: boolean; message: string }> {
+  async processarWebhook(payload: any): Promise<{ success: boolean; message: string }> {
+    const event = payload.event;
+    console.log(`📥 Webhook recebido: ${event}`, {
+      timestamp: new Date().toISOString(),
+      payloadKeys: Object.keys(payload)
+    });
+
     try {
-      // Validar estrutura do payload
-      if (!payload.event || !payload.data?.subscription) {
-        return { success: false, message: 'Payload inválido' };
+      // Normalizar estrutura do payload (suportar diferentes formatos do Hotmart)
+      const subscription = payload.data?.subscription || payload.subscription;
+      
+      if (!subscription) {
+        console.error('❌ Payload inválido: subscription não encontrado', payload);
+        return { success: false, message: 'Payload inválido: subscription não encontrado' };
       }
 
-      const { subscription } = payload.data;
-      const codigoPlano = subscription.plan.code;
-      const email = subscription.buyer.email;
-      const hotmartSubscriptionId = subscription.code;
+      if (!event) {
+        console.error('❌ Payload inválido: event não encontrado', payload);
+        return { success: false, message: 'Payload inválido: event não encontrado' };
+      }
+
+      // Extrair dados normalizados (suportar diferentes formatos)
+      const hotmartSubscriptionId = subscription.subscription_code || subscription.code;
+      const codigoPlano = subscription.plan?.plan_code || subscription.plan?.code;
+      const email = (subscription.buyer?.email || subscription.subscriber?.email)?.toLowerCase().trim();
+
+      if (!hotmartSubscriptionId) {
+        console.error('❌ Dados incompletos: subscription_id não encontrado', subscription);
+        return { success: false, message: 'Dados incompletos: subscription_id não encontrado' };
+      }
+
+      if (!codigoPlano) {
+        console.error('❌ Dados incompletos: código do plano não encontrado', subscription);
+        return { success: false, message: 'Dados incompletos: código do plano não encontrado' };
+      }
+
+      if (!email) {
+        console.error('❌ Dados incompletos: email não encontrado', subscription);
+        return { success: false, message: 'Dados incompletos: email não encontrado' };
+      }
+
+      console.log(`🔍 Processando webhook:`, {
+        event,
+        hotmartSubscriptionId,
+        codigoPlano,
+        email
+      });
 
       // Buscar usuário por email
       const user = await this.userRepo.findByEmail(email);
       if (!user) {
-        return { success: false, message: `Usuário não encontrado: ${email}` };
+        console.warn(`⚠️ Usuário não encontrado para email: ${email}`);
+        return { 
+          success: false, 
+          message: `Usuário não encontrado: ${email}. Verifique se o email está cadastrado no sistema.` 
+        };
       }
 
       // Buscar plano pelo código Hotmart
       const plano = await this.planoRepo.findByCodigoHotmart(codigoPlano);
       if (!plano) {
-        return { success: false, message: `Plano não encontrado: ${codigoPlano}` };
+        console.error(`❌ Plano não encontrado: ${codigoPlano}`);
+        return { 
+          success: false, 
+          message: `Plano não encontrado: ${codigoPlano}. Verifique se o código do plano está correto no banco de dados.` 
+        };
       }
 
+      console.log(`✅ Dados validados:`, {
+        userId: user.id,
+        userName: user.nome,
+        planoId: plano.id,
+        planoNome: plano.nome
+      });
+
       // Processar evento
-      switch (payload.event) {
+      let result;
+      switch (event) {
         case 'SUBSCRIPTION_PURCHASE':
-          return await this.processarCompra(user.id, plano.id, hotmartSubscriptionId, subscription);
+          result = await this.processarCompra(user.id, plano.id, hotmartSubscriptionId, subscription);
+          break;
         
         case 'SUBSCRIPTION_ACTIVATED':
-          return await this.processarAtivacao(hotmartSubscriptionId, subscription);
+          result = await this.processarAtivacao(hotmartSubscriptionId, subscription);
+          break;
         
         case 'SUBSCRIPTION_CANCELLED':
-          return await this.processarCancelamento(hotmartSubscriptionId);
+          result = await this.processarCancelamento(hotmartSubscriptionId);
+          break;
         
         case 'SUBSCRIPTION_EXPIRED':
-          return await this.processarExpiracao(hotmartSubscriptionId);
+          result = await this.processarExpiracao(hotmartSubscriptionId);
+          break;
         
         case 'SUBSCRIPTION_RENEWED':
-          return await this.processarRenovacao(hotmartSubscriptionId, subscription);
+          result = await this.processarRenovacao(hotmartSubscriptionId, subscription);
+          break;
         
         case 'SUBSCRIPTION_SUSPENDED':
-          return await this.processarSuspensao(hotmartSubscriptionId);
+          result = await this.processarSuspensao(hotmartSubscriptionId);
+          break;
         
         default:
-          return { success: false, message: `Evento não reconhecido: ${payload.event}` };
+          console.warn(`⚠️ Evento não reconhecido: ${event}`);
+          return { success: false, message: `Evento não reconhecido: ${event}` };
       }
+
+      if (result.success) {
+        console.log(`✅ Webhook processado com sucesso: ${event}`, {
+          userId: user.id,
+          email: email,
+          planoId: plano.id,
+          hotmartSubscriptionId
+        });
+      }
+
+      return result;
     } catch (error: any) {
-      console.error('Erro ao processar webhook:', error);
+      console.error(`❌ Erro ao processar webhook ${event}:`, error);
       return { success: false, message: error.message || 'Erro ao processar webhook' };
     }
   }
@@ -114,8 +224,9 @@ export class HotmartWebhookService {
       return { success: false, message: 'Assinatura não encontrada' };
     }
 
+    const nextCharge = subscription.date_next_charge || subscription.next_charge_date;
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'active', {
-      dataRenovacao: subscription.date_next_charge ? new Date(subscription.date_next_charge) : undefined
+      dataRenovacao: nextCharge ? new Date(nextCharge) : undefined
     });
 
     // Atualizar usuário
@@ -189,8 +300,9 @@ export class HotmartWebhookService {
       return { success: false, message: 'Assinatura não encontrada' };
     }
 
+    const nextCharge = subscription.date_next_charge || subscription.next_charge_date;
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'active', {
-      dataRenovacao: subscription.date_next_charge ? new Date(subscription.date_next_charge) : undefined
+      dataRenovacao: nextCharge ? new Date(nextCharge) : undefined
     });
 
     return { success: true, message: 'Assinatura renovada com sucesso' };
@@ -220,11 +332,56 @@ export class HotmartWebhookService {
     return { success: true, message: 'Assinatura suspensa - Funcionalidades desabilitadas' };
   }
 
-  // Método para validar HMAC (quando integrar com Hotmart real)
+  /**
+   * Valida a assinatura HMAC SHA256 do webhook do Hotmart
+   * O Hotmart envia o HMAC no header e precisamos recalcular usando o secret
+   */
   validarAssinatura(payload: any, signature: string, secret: string): boolean {
-    // TODO: Implementar validação HMAC real quando integrar
-    // Por enquanto, sempre retorna true para modo mockado
-    return true;
+    try {
+      if (!signature || !secret) {
+        console.warn('⚠️ Validação HMAC: signature ou secret não fornecidos');
+        return false;
+      }
+
+      // Converter payload para string JSON (ordem de chaves preservada)
+      const payloadString = typeof payload === 'string' 
+        ? payload 
+        : JSON.stringify(payload);
+      
+      // Criar HMAC SHA256
+      const hmac = crypto.createHmac('sha256', secret);
+      hmac.update(payloadString);
+      const expectedSignature = hmac.digest('hex');
+      
+      // Comparar assinaturas (comparação segura contra timing attacks)
+      const signatureBuffer = Buffer.from(signature, 'hex');
+      const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+      
+      // Verificar se os tamanhos são iguais antes de comparar
+      if (signatureBuffer.length !== expectedBuffer.length) {
+        console.error('❌ HMAC: Tamanhos diferentes', {
+          received: signatureBuffer.length,
+          expected: expectedBuffer.length
+        });
+        return false;
+      }
+      
+      const isValid = crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+      
+      if (!isValid) {
+        console.error('❌ HMAC: Assinatura inválida', {
+          received: signature.substring(0, 20) + '...',
+          expected: expectedSignature.substring(0, 20) + '...'
+        });
+      } else {
+        console.log('✅ HMAC: Assinatura válida');
+      }
+      
+      return isValid;
+    } catch (error: any) {
+      console.error('❌ Erro ao validar assinatura HMAC:', error);
+      return false;
+    }
   }
 }
 

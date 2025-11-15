@@ -3,32 +3,84 @@ import { HotmartWebhookService } from '@/lib/services/hotmart-webhook-service';
 
 export async function POST(request: NextRequest) {
   try {
-    const payload = await request.json();
-    const service = new HotmartWebhookService();
-
-    // Validação HMAC mockada (sempre retorna true por enquanto)
-    // Quando integrar com Hotmart real, usar: service.validarAssinatura(payload, signature, secret)
-    const isValid = true; // TODO: Implementar validação HMAC real
-
-    if (!isValid) {
+    // Obter o body como texto primeiro (para validação HMAC)
+    const bodyText = await request.text();
+    let payload: any;
+    
+    try {
+      payload = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error('❌ Erro ao fazer parse do JSON:', parseError);
       return NextResponse.json(
-        { error: 'Assinatura inválida' },
-        { status: 401 }
+        { error: 'Payload JSON inválido' },
+        { status: 400 }
       );
     }
 
+    const service = new HotmartWebhookService();
+
+    // Obter assinatura HMAC do header (Hotmart pode enviar em diferentes headers)
+    const signature = request.headers.get('x-hotmart-hmac-sha256') || 
+                     request.headers.get('hotmart-hmac-sha256') ||
+                     request.headers.get('x-hmac-sha256') ||
+                     '';
+    
+    // Obter secret da variável de ambiente
+    const secret = process.env.HOTMART_WEBHOOK_SECRET || '';
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const validateHmac = process.env.HOTMART_VALIDATE_HMAC !== 'false';
+
+    console.log('🔐 Validação HMAC:', {
+      hasSignature: !!signature,
+      hasSecret: !!secret,
+      validateHmac,
+      isDevelopment,
+      headers: Object.fromEntries(request.headers.entries())
+    });
+
+    // Validar HMAC se estiver habilitado e em produção
+    if (validateHmac && secret && !isDevelopment) {
+      if (!signature) {
+        console.error('❌ Webhook sem assinatura HMAC no header');
+        return NextResponse.json(
+          { error: 'Assinatura HMAC não fornecida' },
+          { status: 401 }
+        );
+      }
+
+      // Validar usando o body como texto (ordem original preservada)
+      const isValid = service.validarAssinatura(bodyText, signature, secret);
+      
+      if (!isValid) {
+        console.error('❌ Webhook HMAC inválido');
+        return NextResponse.json(
+          { error: 'Assinatura HMAC inválida' },
+          { status: 401 }
+        );
+      }
+    } else if (isDevelopment) {
+      console.warn('⚠️ Modo desenvolvimento: Validação HMAC desabilitada');
+    } else if (!secret) {
+      console.warn('⚠️ HOTMART_WEBHOOK_SECRET não configurado: Validação HMAC desabilitada');
+    }
+
+    // Processar webhook
     const result = await service.processarWebhook(payload);
 
     if (!result.success) {
+      console.error('❌ Erro ao processar webhook:', result.message);
       return NextResponse.json(
         { error: result.message },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({ success: true, message: result.message });
+    return NextResponse.json({ 
+      success: true, 
+      message: result.message 
+    });
   } catch (error: any) {
-    console.error('Erro ao processar webhook:', error);
+    console.error('❌ Erro ao processar webhook:', error);
     return NextResponse.json(
       { error: error.message || 'Erro ao processar webhook' },
       { status: 500 }
