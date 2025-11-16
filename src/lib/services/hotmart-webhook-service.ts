@@ -192,6 +192,11 @@ export class HotmartWebhookService {
         subscription.subscriber?.email
       )?.toLowerCase().trim();
 
+      // Regra de sandbox: se o código do plano for "123", aplicar o plano BASICO_MENSAL
+      if (codigoPlano === '123') {
+        console.log(`${isSandbox ? 'ℹ️ [SANDBOX]' : 'ℹ️'} Mapeando codigoPlano=123 para BASICO_MENSAL`);
+        codigoPlano = 'BASICO_MENSAL';
+      }
       // Fallbacks para shape do Sandbox v2: subscription.subscriber.code e plan.id/name
       if (!hotmartSubscriptionId) {
         hotmartSubscriptionId = subscription.subscriber?.code || subscription.subscriber_code || payload.data?.subscriber?.code;
