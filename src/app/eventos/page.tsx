@@ -196,78 +196,83 @@ export default function EventosPage() {
     }
   };
 
-  const formatEventInfoForCopy = (evento: Evento) => {
+  const formatEventInfoForCopy = (evento: Evento, servicosNomes: string[]) => {
     let text = '';
 
-    // Informações do Cliente
-    text += '👤 *INFORMAÇÕES DO CLIENTE*\n\n';
-    text += `Nome: ${evento.cliente.nome}\n`;
-    text += `Email: ${evento.cliente.email}\n`;
-    text += `Telefone: ${evento.cliente.telefone}\n`;
-    text += `Endereço: ${evento.cliente.endereco}\n`;
-    if (evento.cliente.instagram) {
-      text += `Instagram: ${evento.cliente.instagram}\n`;
-    }
-    if (evento.cliente.canalEntrada) {
-      text += `Canal de Entrada: ${evento.cliente.canalEntrada.nome}\n`;
-    }
-    
+    // Helpers para data com fuso horário de São Paulo
+    const formatDatePtBR = (value: any) => {
+      const d = value instanceof Date ? value : new Date(value);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    };
+    const getWeekdayPtBR = (value: any) => {
+      const d = value instanceof Date ? value : new Date(value);
+      return d
+        .toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'America/Sao_Paulo' })
+        .toUpperCase();
+    };
+
+    // Nome do Evento
+    const nomeEvento =
+      (evento as any).nomeEvento ||
+      (evento.tipoEvento ? `${evento.tipoEvento}${evento.cliente?.nome ? ` - ${evento.cliente.nome}` : ''}` : '') ||
+      evento.local ||
+      'Evento';
+    text += 'Nome do Evento\n\n';
+    text += `${nomeEvento}\n`;
+
     text += '\n────────────────────────\n\n';
 
     // Informações do Evento
-    text += '📅 *INFORMAÇÕES DO EVENTO*\n\n';
-    text += `Data: ${format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} - ${evento.diaSemana}\n`;
-    text += `Local: ${evento.local}\n`;
-    text += `Endereço: ${evento.endereco}\n`;
-    text += `Convidados: ${evento.numeroConvidados}\n`;
-    text += `Tipo: ${evento.tipoEvento}\n`;
-    if (evento.contratante) {
-      text += `Contratante: ${evento.contratante}\n`;
-    }
-    
+    text += 'Informações do Evento\n\n';
+    text += `Data: ${formatDatePtBR(evento.dataEvento)} - ${getWeekdayPtBR(evento.dataEvento)}\n`;
+    if (evento.local) text += `Local: ${evento.local}\n`;
+    if (evento.endereco) text += `Endereço: ${evento.endereco}\n`;
+    if (evento.numeroConvidados) text += `Convidados: ${evento.numeroConvidados}\n`;
+    if (evento.tipoEvento) text += `Tipo: ${evento.tipoEvento}\n`;
+
     text += '\n────────────────────────\n\n';
 
     // Detalhes do Serviço
-    text += '⚙️ *DETALHES DO SERVIÇO*\n\n';
-    if (evento.saida) {
-      text += `Saída: ${evento.saida}\n`;
-    }
-    if (evento.chegadaNoLocal) {
-      text += `Chegada no local: ${evento.chegadaNoLocal}\n`;
-    }
-    if (evento.horarioInicio) {
-      text += `Horário de início: ${evento.horarioInicio}\n`;
-    }
-    if (evento.horarioDesmontagem) {
-      text += `Horário de Desmontagem: ${evento.horarioDesmontagem}\n`;
-    }
-    if (evento.tempoEvento) {
-      text += `Duração: ${evento.tempoEvento}\n`;
-    }
-    if (evento.quantidadeMesas) {
-      text += `Mesas: ${evento.quantidadeMesas}\n`;
-    }
-    if (evento.numeroImpressoes) {
-      text += `Impressões: ${evento.numeroImpressoes}\n`;
-    }
-    if (evento.hashtag) {
-      text += `Hashtag: ${evento.hashtag}\n`;
-    }
-    if (evento.cerimonialista) {
-      text += `\nCerimonialista: ${evento.cerimonialista.nome}\n`;
-      if (evento.cerimonialista.telefone) {
-        text += `Telefone: ${evento.cerimonialista.telefone}\n`;
-      }
-    }
-    if (evento.observacoes) {
-      text += `\nObservações:\n${evento.observacoes}\n`;
-    }
+    text += 'Detalhes do Serviço\n\n';
+    if ((evento as any).saida) text += `Saída: ${(evento as any).saida}\n`;
+    if ((evento as any).chegadaNoLocal) text += `Chegada no local: ${(evento as any).chegadaNoLocal}\n`;
+    if ((evento as any).horarioInicio) text += `Horário de início: ${(evento as any).horarioInicio}\n`;
+    if ((evento as any).horarioDesmontagem) text += `Horário de Desmontagem: ${(evento as any).horarioDesmontagem}\n`;
+    if ((evento as any).tempoEvento) text += `Duração: ${(evento as any).tempoEvento}\n`;
+    if ((evento as any).quantidadeMesas) text += `Mesas: ${(evento as any).quantidadeMesas}\n`;
+    if ((evento as any).numeroImpressoes) text += `Impressões: ${(evento as any).numeroImpressoes}\n`;
+    if ((evento as any).hashtag) text += `Hashtag: ${(evento as any).hashtag}\n`;
+
+    text += '\n────────────────────────\n\n';
+
+    // Cerimonialista
+    text += 'Cerimonialista\n\n';
+    if ((evento as any).cerimonialista?.nome) text += `Nome: ${(evento as any).cerimonialista.nome}\n`;
+    if ((evento as any).cerimonialista?.telefone) text += `Telefone: ${(evento as any).cerimonialista.telefone}\n`;
+
+    text += '\n────────────────────────\n\n';
+
+    // Serviços do Evento
+    text += 'Serviços do Evento\n\n';
+    text += servicosNomes.length > 0 ? servicosNomes.join(', ') : '-';
+    text += '\n';
 
     return text;
   };
 
   const handleCopyInfo = async (evento: Evento) => {
-    const text = formatEventInfoForCopy(evento);
+    // Buscar serviços do evento para compor a lista (nomes separados por vírgula)
+    let servicosNomes: string[] = [];
+    try {
+      if (userId) {
+        const servicos = await dataService.getServicosPorEvento(userId, evento.id);
+        servicosNomes = (servicos || []).map((s: any) => s?.tipoServico?.nome || s?.nome || s?.descricao).filter(Boolean);
+      }
+    } catch (e) {
+      console.warn('Não foi possível carregar serviços do evento para cópia:', e);
+    }
+
+    const text = formatEventInfoForCopy(evento, servicosNomes);
     
     // Tentar usar a API moderna do clipboard
     if (navigator.clipboard && navigator.clipboard.writeText) {
