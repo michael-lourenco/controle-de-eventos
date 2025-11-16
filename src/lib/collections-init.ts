@@ -77,44 +77,12 @@ export async function initializeTiposCusto(userId?: string): Promise<void> {
       return;
     }
     
-    // Dados dos tipos de custo do mock
+    // Itens default solicitados
     const tiposCustoData = [
-      {
-        nome: 'TOTEM',
-        descricao: 'Custo do serviço de totem',
-        ativo: true,
-        dataCadastro: new Date('2023-01-01')
-      },
-      {
-        nome: 'PROMOTER',
-        descricao: 'Custo com promoters',
-        ativo: true,
-        dataCadastro: new Date('2023-01-01')
-      },
-      {
-        nome: 'MOTORISTA',
-        descricao: 'Custo com motorista',
-        ativo: true,
-        dataCadastro: new Date('2023-01-01')
-      },
-      {
-        nome: 'COMBUSTÍVEL',
-        descricao: 'Custo com combustível',
-        ativo: true,
-        dataCadastro: new Date('2023-01-01')
-      },
-      {
-        nome: 'ALIMENTAÇÃO',
-        descricao: 'Custo com alimentação',
-        ativo: true,
-        dataCadastro: new Date('2023-01-01')
-      },
-      {
-        nome: 'HOSPEDAGEM',
-        descricao: 'Custo com hospedagem',
-        ativo: true,
-        dataCadastro: new Date('2023-01-01')
-      }
+      { nome: 'insumos', descricao: 'Custos de insumos', ativo: true, dataCadastro: new Date() },
+      { nome: 'transporte', descricao: 'Custos de transporte', ativo: true, dataCadastro: new Date() },
+      { nome: 'promotor', descricao: 'Custos com promotor', ativo: true, dataCadastro: new Date() },
+      { nome: 'outros', descricao: 'Outros custos', ativo: true, dataCadastro: new Date() }
     ];
     
     console.log('Inserindo tipos de custo no Firestore...');

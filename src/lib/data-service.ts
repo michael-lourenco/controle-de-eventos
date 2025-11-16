@@ -65,6 +65,53 @@ export class DataService {
     }
   }
 
+  // Inicializar Canais de Entrada padrão
+  private async ensureCanaisEntradaInitialized(userId: string): Promise<void> {
+    if (!userId) return;
+    try {
+      const existentes = await this.canalEntradaRepo.findAll(userId);
+      if (existentes.length === 0) {
+        const defaults = [
+          { nome: 'instagram', descricao: 'Origem: Instagram' },
+          { nome: 'indicação', descricao: 'Origem: Indicação' },
+          { nome: 'outros', descricao: 'Origem: Outros' }
+        ];
+        for (const item of defaults) {
+          await this.canalEntradaRepo.createCanalEntrada(userId, {
+            ...item,
+            ativo: true,
+            dataCadastro: new Date()
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao garantir canais de entrada padrões:', error);
+    }
+  }
+
+  // Inicializar Tipos de Serviço padrão
+  private async ensureTiposServicoInitialized(userId: string): Promise<void> {
+    if (!userId) return;
+    try {
+      const existentes = await this.tipoServicoRepo.findAll(userId);
+      if (existentes.length === 0) {
+        const defaults = [
+          { nome: 'totem fotográfico', descricao: 'Serviço de totem fotográfico' },
+          { nome: 'instaprint', descricao: 'Serviço de Instaprint' },
+          { nome: 'outros', descricao: 'Outros serviços' }
+        ];
+        for (const item of defaults) {
+          await this.tipoServicoRepo.createTipoServico(
+            { ...item, dataCadastro: new Date(), ativo: true },
+            userId
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao garantir tipos de serviço padrões:', error);
+    }
+  }
+
   // Métodos para Clientes
   async getClientes(userId: string): Promise<Cliente[]> {
     if (!userId) {
@@ -452,6 +499,7 @@ export class DataService {
     }
     try {
       await this.ensureCollectionsInitialized();
+      await this.ensureTiposServicoInitialized(userId);
       // Buscar apenas tipos ativos por padrão
       return this.tipoServicoRepo.getAtivos(userId);
     } catch (error) {
@@ -466,6 +514,7 @@ export class DataService {
     }
     try {
       await this.ensureCollectionsInitialized();
+      await this.ensureTiposServicoInitialized(userId);
       // Retornar todos (incluindo inativos) - usado em relatórios
       return this.tipoServicoRepo.findAll(userId);
     } catch (error) {
@@ -507,6 +556,7 @@ export class DataService {
   }
 
   async getTiposServicoAtivos(userId: string): Promise<TipoServico[]> {
+    await this.ensureTiposServicoInitialized(userId);
     return this.tipoServicoRepo.getAtivos(userId);
   }
 
@@ -821,6 +871,7 @@ export class DataService {
       throw new Error('userId é obrigatório para buscar canais de entrada');
     }
     try {
+      await this.ensureCanaisEntradaInitialized(userId);
       return await this.canalEntradaRepo.findAll(userId);
     } catch (error) {
       console.error('Erro ao buscar canais de entrada:', error);
@@ -833,6 +884,7 @@ export class DataService {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar canais de entrada ativos');
     }
+    await this.ensureCanaisEntradaInitialized(userId);
     return this.canalEntradaRepo.getAtivos(userId);
   }
 
