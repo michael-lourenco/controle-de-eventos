@@ -167,9 +167,30 @@ export class HotmartWebhookService {
       }
 
       // Extrair dados normalizados (suportar diferentes formatos)
-      let hotmartSubscriptionId = subscription.subscription_code || subscription.code;
-      let codigoPlano = subscription.plan?.plan_code || subscription.plan?.code;
-      const email = (subscription.buyer?.email || subscription.subscriber?.email || payload.data?.user?.email)?.toLowerCase().trim();
+      // Preferir campos conforme payload v2 do Hotmart (exemplo enviado):
+      // subscription.subscriber.code (ID da assinatura)
+      // subscription.plan.id | subscription.plan.name (identificação do plano)
+      // buyer.email | user.email
+      let hotmartSubscriptionId =
+        subscription.subscriber?.code ||
+        subscription.subscription_code ||
+        subscription.code ||
+        payload.data?.subscriber?.code;
+
+      let codigoPlano =
+        subscription.plan?.plan_code ||
+        subscription.plan?.code ||
+        (subscription.plan?.id ? String(subscription.plan.id) : undefined) ||
+        (typeof subscription.plan?.name === 'string' ? subscription.plan.name : undefined) ||
+        (payload.data?.plan?.id ? String(payload.data?.plan?.id) : undefined) ||
+        (typeof payload.data?.plan?.name === 'string' ? payload.data?.plan?.name : undefined);
+
+      const email = (
+        subscription.buyer?.email ||
+        payload.data?.buyer?.email ||
+        payload.data?.user?.email ||
+        subscription.subscriber?.email
+      )?.toLowerCase().trim();
 
       // Fallbacks para shape do Sandbox v2: subscription.subscriber.code e plan.id/name
       if (!hotmartSubscriptionId) {
