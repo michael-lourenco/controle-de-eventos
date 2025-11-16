@@ -102,7 +102,7 @@ export class DataService {
         ];
         for (const item of defaults) {
           await this.tipoServicoRepo.createTipoServico(
-            { ...item, dataCadastro: new Date(), ativo: true },
+            { ...item, ativo: true },
             userId
           );
         }
