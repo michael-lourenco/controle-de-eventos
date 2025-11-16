@@ -167,9 +167,21 @@ export class HotmartWebhookService {
       }
 
       // Extrair dados normalizados (suportar diferentes formatos)
-      const hotmartSubscriptionId = subscription.subscription_code || subscription.code;
-      const codigoPlano = subscription.plan?.plan_code || subscription.plan?.code;
-      const email = (subscription.buyer?.email || subscription.subscriber?.email)?.toLowerCase().trim();
+      let hotmartSubscriptionId = subscription.subscription_code || subscription.code;
+      let codigoPlano = subscription.plan?.plan_code || subscription.plan?.code;
+      const email = (subscription.buyer?.email || subscription.subscriber?.email || payload.data?.user?.email)?.toLowerCase().trim();
+
+      // Fallbacks para shape do Sandbox v2: subscription.subscriber.code e plan.id/name
+      if (!hotmartSubscriptionId) {
+        hotmartSubscriptionId = subscription.subscriber?.code || subscription.subscriber_code || payload.data?.subscriber?.code;
+      }
+      if (!codigoPlano) {
+        // Se vier id/name apenas, use id; como último recurso, name
+        codigoPlano = subscription.plan?.id || subscription.plan?.name || payload.data?.plan?.id || payload.data?.plan?.name;
+        if (codigoPlano && typeof codigoPlano !== 'string') {
+          codigoPlano = String(codigoPlano);
+        }
+      }
 
       if (!hotmartSubscriptionId) {
         const errorMsg = 'Dados incompletos: subscription_id não encontrado';
