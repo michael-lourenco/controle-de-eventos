@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,10 +68,19 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-2">
-            <span className="text-primary">Clickse</span>
-            <span className="text-accent">hub</span>
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <Image 
+              src="/logo.png" 
+              alt="Clicksehub Logo" 
+              width={48} 
+              height={48}
+              className="object-contain"
+            />
+            <h1 className="text-4xl font-bold">
+              <span className="text-primary">Clickse</span>
+              <span style={{ color: '#FF4001' }}>hub</span>
+            </h1>
+          </div>
           <h2 className="text-2xl font-semibold text-text-primary">
             Sistema de Gestão de Eventos
           </h2>
