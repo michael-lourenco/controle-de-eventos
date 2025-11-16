@@ -11,6 +11,137 @@
       "type": "string"
     },
     {
+      "name": "Webhook Hotmart - Sandbox",
+      "item": [
+        {
+          "name": "Sandbox - Testar Webhook (GET - Mockado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/sandbox?email=usuario@exemplo.com&plano=BASICO_MENSAL&evento=PURCHASE_APPROVED",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "sandbox"],
+              "query": [
+                { "key": "email", "value": "usuario@exemplo.com" },
+                { "key": "plano", "value": "BASICO_MENSAL" },
+                { "key": "evento", "value": "PURCHASE_APPROVED" }
+              ]
+            },
+            "description": "Endpoint GET para testar o webhook mockado do Hotmart no sandbox"
+          }
+        },
+        {
+          "name": "Sandbox - PURCHASE_APPROVED",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"PURCHASE_APPROVED\",\n  \"data\": {\n    \"subscription\": {\n      \"subscription_code\": \"SUB-SANDBOX-123456\",\n      \"plan\": { \"plan_code\": \"BASICO_MENSAL\" },\n      \"buyer\": { \"email\": \"cliente@exemplo.com\", \"name\": \"Nome do Cliente\" },\n      \"status\": \"TRIAL\",\n      \"trial_period_end\": \"2025-01-15T00:00:00Z\",\n      \"date_next_charge\": \"2025-01-22T00:00:00Z\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/sandbox",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "sandbox"]
+            }
+          }
+        },
+        {
+          "name": "Sandbox - PURCHASE_COMPLETED",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"PURCHASE_COMPLETED\",\n  \"data\": {\n    \"subscription\": {\n      \"subscription_code\": \"SUB-SANDBOX-123456\",\n      \"plan\": { \"plan_code\": \"BASICO_MENSAL\" },\n      \"buyer\": { \"email\": \"cliente@exemplo.com\", \"name\": \"Nome do Cliente\" },\n      \"status\": \"ACTIVE\",\n      \"date_next_charge\": \"2025-02-22T00:00:00Z\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/sandbox",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "sandbox"]
+            }
+          }
+        },
+        {
+          "name": "Sandbox - PURCHASE_RENEWED (CHARGED/UPDATED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"PURCHASE_CHARGED\",\n  \"data\": {\n    \"subscription\": {\n      \"subscription_code\": \"SUB-SANDBOX-123456\",\n      \"plan\": { \"plan_code\": \"BASICO_MENSAL\" },\n      \"buyer\": { \"email\": \"cliente@exemplo.com\" },\n      \"status\": \"ACTIVE\",\n      \"date_next_charge\": \"2025-03-22T00:00:00Z\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/sandbox",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "sandbox"]
+            }
+          }
+        },
+        {
+          "name": "Sandbox - PURCHASE_CANCELLED",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"PURCHASE_CANCELLED\",\n  \"data\": {\n    \"subscription\": {\n      \"subscription_code\": \"SUB-SANDBOX-123456\",\n      \"plan\": { \"plan_code\": \"BASICO_MENSAL\" },\n      \"buyer\": { \"email\": \"cliente@exemplo.com\" },\n      \"status\": \"CANCELLED\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/sandbox",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "sandbox"]
+            }
+          }
+        },
+        {
+          "name": "Sandbox - PURCHASE_EXPIRED",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"PURCHASE_EXPIRED\",\n  \"data\": {\n    \"subscription\": {\n      \"subscription_code\": \"SUB-SANDBOX-123456\",\n      \"plan\": { \"plan_code\": \"BASICO_MENSAL\" },\n      \"buyer\": { \"email\": \"cliente@exemplo.com\" },\n      \"status\": \"EXPIRED\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/sandbox",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "sandbox"]
+            }
+          }
+        },
+        {
+          "name": "Sandbox - SUBSCRIPTION_SUSPENDED (Compatível)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"SUBSCRIPTION_SUSPENDED\",\n  \"data\": {\n    \"subscription\": {\n      \"code\": \"SUB-SANDBOX-123456\",\n      \"plan\": { \"code\": \"BASICO_MENSAL\" },\n      \"buyer\": { \"email\": \"cliente@exemplo.com\" },\n      \"status\": \"SUSPENDED\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/sandbox",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "sandbox"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "key": "auth_token",
       "value": "",
       "type": "string"

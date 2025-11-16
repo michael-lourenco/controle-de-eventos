@@ -128,7 +128,31 @@ export class HotmartWebhookService {
       };
 
       // Normalizar estrutura do payload (suportar diferentes formatos do Hotmart)
-      const subscription = payload.data?.subscription || payload.subscription;
+      let subscription = payload.data?.subscription || payload.subscription;
+      
+      // Fallback SANDBOX: alguns eventos do sandbox vêm sem data.subscription
+      // Ex.: { data: { subscriber: { code }, plan: { id|name }, user: { email } }, event: 'PURCHASE_*' }
+      if (!subscription && isSandbox && payload.data) {
+        const d = payload.data;
+        // Tentar sintetizar um objeto subscription mínimo para nosso fluxo
+        const synthesized = {
+          subscription_code: d.subscriber?.code || d.subscriber_code || d.subscription_code || d.id,
+          plan: {
+            // Preferimos plan_code/code; se vier apenas id/name, tentamos montar uma string estável
+            plan_code: d.plan?.plan_code || d.plan?.code || d.plan?.id || d.plan?.name
+          },
+          buyer: {
+            email: d.user?.email || d.buyer?.email || d.subscriber?.email
+          },
+          status: d.status || 'ACTIVE',
+          date_next_charge: d.next_charge_date || d.date_next_charge
+        };
+        // Apenas use se houver pelo menos subscription_code e email
+        if (synthesized.subscription_code && synthesized.buyer.email) {
+          subscription = synthesized as any;
+          console.log(`${isSandbox ? 'ℹ️ [SANDBOX]' : 'ℹ️'} Subscription sintetizada a partir do payload alternativo`);
+        }
+      }
       
       if (!subscription) {
         const errorMsg = 'Payload inválido: subscription não encontrado';
