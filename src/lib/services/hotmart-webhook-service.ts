@@ -77,7 +77,9 @@ export class HotmartWebhookService {
   }
 
   async processarWebhook(payload: any, isSandbox: boolean = false): Promise<{ success: boolean; message: string }> {
-    const event = payload.event;
+    const rawEvent = payload.event;
+    // Normalizar nome do evento (evitar diferenças de caixa/variações do sandbox)
+    const event = typeof rawEvent === 'string' ? rawEvent.trim().toUpperCase() : '';
     const receivedPrefix = isSandbox ? '🧪 [SANDBOX]' : '📥';
     console.log(`${receivedPrefix} Webhook recebido: ${event}`, {
       timestamp: new Date().toISOString(),
@@ -86,6 +88,45 @@ export class HotmartWebhookService {
     });
 
     try {
+      // Mapeamento para alinhar nomenclatura do Hotmart aos nossos handlers
+      // Mantém compatibilidade com SUBSCRIPTION_* e adiciona PURCHASE_*
+      const mapEventToAction = (evt: string): 'purchase' | 'activated' | 'renewed' | 'cancelled' | 'expired' | 'suspended' | 'unknown' => {
+        switch (evt) {
+          // Hotmart PURCHASE_* (relevantes para assinatura)
+          case 'PURCHASE_APPROVED':
+          case 'PURCHASE_COMPLETED':
+          case 'PURCHASE_FINISHED':
+            return 'purchase';
+          case 'PURCHASE_CANCELED':
+          case 'PURCHASE_CANCELLED':
+            return 'cancelled';
+          case 'PURCHASE_EXPIRED':
+            return 'expired';
+          // Alguns ambientes enviam atualização/recorrência
+          case 'PURCHASE_BILLET_PRINTED':
+          case 'PURCHASE_UPDATED':
+          case 'PURCHASE_CHARGED':
+            // Podemos tratar como 'renewed' quando acompanhadas de subscription.next_charge_date
+            return 'renewed';
+          // Nomenclatura anterior SUBSCRIPTION_*
+          case 'SUBSCRIPTION_PURCHASE':
+            return 'purchase';
+          case 'SUBSCRIPTION_ACTIVATED':
+            return 'activated';
+          case 'SUBSCRIPTION_RENEWED':
+            return 'renewed';
+          case 'SUBSCRIPTION_CANCELLED':
+          case 'SUBSCRIPTION_CANCELED':
+            return 'cancelled';
+          case 'SUBSCRIPTION_EXPIRED':
+            return 'expired';
+          case 'SUBSCRIPTION_SUSPENDED':
+            return 'suspended';
+          default:
+            return 'unknown';
+        }
+      };
+
       // Normalizar estrutura do payload (suportar diferentes formatos do Hotmart)
       const subscription = payload.data?.subscription || payload.subscription;
       
@@ -170,33 +211,29 @@ export class HotmartWebhookService {
 
       // Processar evento
       let result;
-      switch (event) {
-        case 'SUBSCRIPTION_PURCHASE':
+      const action = mapEventToAction(event);
+      switch (action) {
+        case 'purchase':
           result = await this.processarCompra(user.id, plano.id, hotmartSubscriptionId, subscription);
           break;
-        
-        case 'SUBSCRIPTION_ACTIVATED':
+        case 'activated':
           result = await this.processarAtivacao(hotmartSubscriptionId, subscription);
           break;
-        
-        case 'SUBSCRIPTION_CANCELLED':
-          result = await this.processarCancelamento(hotmartSubscriptionId);
-          break;
-        
-        case 'SUBSCRIPTION_EXPIRED':
-          result = await this.processarExpiracao(hotmartSubscriptionId);
-          break;
-        
-        case 'SUBSCRIPTION_RENEWED':
+        case 'renewed':
           result = await this.processarRenovacao(hotmartSubscriptionId, subscription);
           break;
-        
-        case 'SUBSCRIPTION_SUSPENDED':
+        case 'cancelled':
+          result = await this.processarCancelamento(hotmartSubscriptionId);
+          break;
+        case 'expired':
+          result = await this.processarExpiracao(hotmartSubscriptionId);
+          break;
+        case 'suspended':
           result = await this.processarSuspensao(hotmartSubscriptionId);
           break;
-        
+        case 'unknown':
         default:
-          const errorMsg = `Evento não reconhecido: ${event}`;
+          const errorMsg = `Evento não reconhecido ou não suportado: ${event}`;
           console.warn(`${isSandbox ? '⚠️ [SANDBOX]' : '⚠️'} ${errorMsg}`);
           return { success: false, message: errorMsg };
       }
