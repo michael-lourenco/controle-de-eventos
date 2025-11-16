@@ -826,6 +826,33 @@
             },
             "description": "Simula migração de campos de integridade sem aplicar mudanças (dryRun=true)"
           }
+        },
+        {
+          "name": "Gerar Eventos Aleatórios (Teste de Estresse)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (opcional)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@exemplo.com\",\n  \"quantidadeEventos\": 100,\n  \"custos\": true,\n  \"pagamento\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/test/generate-events",
+              "host": ["{{base_url}}"],
+              "path": ["api", "test", "generate-events"]
+            },
+            "description": "Gera eventos aleatórios para testes de estresse. Parâmetros: email (string) - email da conta, quantidadeEventos (number) - número de eventos (1-1000), custos (boolean) - adiciona 3 custos por evento, pagamento (boolean) - adiciona pagamento por evento. Cada evento inclui: cliente aleatório, tipo de evento aleatório, status aleatório, 2 serviços aleatórios. Ignora validações de plano."
+          }
         }
       ]
     }
