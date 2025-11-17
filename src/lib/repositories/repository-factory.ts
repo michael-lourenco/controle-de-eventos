@@ -1,6 +1,7 @@
 import { ClienteRepository } from './cliente-repository';
 import { EventoRepository } from './evento-repository';
 import { PagamentoRepository } from './pagamento-repository';
+import { PagamentoGlobalRepository } from './pagamento-global-repository';
 import { CustoEventoRepository, TipoCustoRepository } from './custo-repository';
 import { ServicoEventoRepository, TipoServicoRepository } from './servico-repository';
 import { CanalEntradaRepository } from './canal-entrada-repository';
@@ -14,6 +15,7 @@ export class RepositoryFactory {
   private clienteRepository: ClienteRepository;
   private eventoRepository: EventoRepository;
   private pagamentoRepository: PagamentoRepository;
+  private pagamentoGlobalRepository: PagamentoGlobalRepository;
   private custoEventoRepository: CustoEventoRepository;
   private tipoCustoRepository: TipoCustoRepository;
   private servicoEventoRepository: ServicoEventoRepository;
@@ -27,6 +29,7 @@ export class RepositoryFactory {
     this.clienteRepository = new ClienteRepository();
     this.eventoRepository = new EventoRepository();
     this.pagamentoRepository = new PagamentoRepository();
+    this.pagamentoGlobalRepository = new PagamentoGlobalRepository();
     this.custoEventoRepository = new CustoEventoRepository();
     this.tipoCustoRepository = new TipoCustoRepository();
     this.servicoEventoRepository = new ServicoEventoRepository();
@@ -54,6 +57,10 @@ export class RepositoryFactory {
 
   public getPagamentoRepository(): PagamentoRepository {
     return this.pagamentoRepository;
+  }
+
+  public getPagamentoGlobalRepository(): PagamentoGlobalRepository {
+    return this.pagamentoGlobalRepository;
   }
 
   public getCustoEventoRepository(): CustoEventoRepository {

@@ -22,6 +22,7 @@ export class DataService {
   private clienteRepo = repositoryFactory.getClienteRepository();
   private eventoRepo = repositoryFactory.getEventoRepository();
   private pagamentoRepo = repositoryFactory.getPagamentoRepository();
+  private pagamentoGlobalRepo = repositoryFactory.getPagamentoGlobalRepository();
   private tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
   private custoEventoRepo = repositoryFactory.getCustoEventoRepository();
   private tipoServicoRepo = repositoryFactory.getTipoServicoRepository();
@@ -320,41 +321,38 @@ export class DataService {
   }
 
   // Método para buscar todos os pagamentos de todos os eventos do usuário
+  // Usa a collection global para melhor performance
   async getAllPagamentos(userId: string): Promise<Pagamento[]> {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar pagamentos');
     }
     
     try {
-      // Buscar todos os eventos do usuário
-      const eventos = await this.getEventos(userId);
-      const todosPagamentos: Pagamento[] = [];
+      // Buscar todos os pagamentos da collection global (muito mais eficiente)
+      const todosPagamentos = await this.pagamentoGlobalRepo.findAll(userId);
       
-      // Buscar pagamentos de todos os eventos
-      for (const evento of eventos) {
-        try {
-          const pagamentosEvento = await this.getPagamentosPorEvento(userId, evento.id);
-          // Adicionar informações do evento a cada pagamento
-          const pagamentosComEvento = pagamentosEvento.map(pagamento => ({
-            ...pagamento,
-            evento: {
-              id: evento.id,
-              nome: evento.cliente.nome, // Usar nome do cliente como identificador do evento
-              dataEvento: evento.dataEvento,
-              local: evento.local,
-              cliente: evento.cliente
-            }
-          }));
-          todosPagamentos.push(...pagamentosComEvento);
-        } catch (error) {
-          console.error(`Erro ao buscar pagamentos do evento ${evento.id}:`, error);
-        }
-      }
+      // Buscar todos os eventos do usuário para preencher informações do evento
+      const eventos = await this.getAllEventos(userId);
+      const eventosMap = new Map(eventos.map(evento => [evento.id, evento]));
       
-      // Ordenar por data de pagamento (mais recente primeiro)
-      return todosPagamentos.sort((a, b) => 
-        new Date(b.dataPagamento).getTime() - new Date(a.dataPagamento).getTime()
-      );
+      // Adicionar informações do evento a cada pagamento
+      const pagamentosComEvento = todosPagamentos.map(pagamento => {
+        const evento = pagamento.eventoId ? eventosMap.get(pagamento.eventoId) : null;
+        
+        return {
+          ...pagamento,
+          evento: evento ? {
+            id: evento.id,
+            nome: evento.cliente.nome, // Usar nome do cliente como identificador do evento
+            dataEvento: evento.dataEvento,
+            local: evento.local,
+            cliente: evento.cliente
+          } : undefined
+        };
+      });
+      
+      // Já vem ordenado por data de pagamento (mais recente primeiro) do repository
+      return pagamentosComEvento;
     } catch (error) {
       console.error('Erro ao buscar todos os pagamentos:', error);
       return [];

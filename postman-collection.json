@@ -634,6 +634,38 @@
       ]
     },
     {
+      "name": "Pagamentos",
+      "item": [
+        {
+          "name": "Atualizar Pagamentos (Normalização)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"seu_user_id_aqui\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pagamentos/atualiza-pagamento",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pagamentos", "atualiza-pagamento"]
+            },
+            "description": "Normaliza pagamentos existentes da collection de eventos para a collection global. Busca todos os pagamentos em users/{userId}/eventos/{eventoId}/pagamentos e os cria em users/{userId}/pagamentos. Pode ser executado múltiplas vezes (idempotente).\n\nOpções de autenticação:\n1. Via sessão (se estiver logado no navegador)\n2. Via API key (x-api-key header) + userId no body\n3. Em modo dev, apenas userId no body"
+          }
+        }
+      ]
+    },
+    {
       "name": "Seed e Setup",
       "item": [
         {

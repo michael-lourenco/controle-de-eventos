@@ -11,6 +11,7 @@ export const COLLECTIONS = {
   TIPO_CUSTOS: 'tipo_custos',
   TIPO_SERVICOS: 'tipo_servicos',
   CANAIS_ENTRADA: 'canais_entrada',
+  RELATORIOS_CACHE: 'relatorios_cache',
   
   // Subcollections de eventos
   PAGAMENTOS: 'pagamentos',
