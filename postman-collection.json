@@ -725,6 +725,38 @@
       ]
     },
     {
+      "name": "Planos",
+      "item": [
+        {
+          "name": "Alterar Plano",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@exemplo.com\",\n  \"codigoHotmart\": \"PROFISSIONAL_MENSAL\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/alterar-plano",
+              "host": ["{{base_url}}"],
+              "path": ["api", "alterar-plano"]
+            },
+            "description": "Altera o plano de um usuário pelo email e codigoHotmart. Se o usuário não tiver plano, cria uma nova assinatura. Se já tiver, atualiza para o novo plano.\n\nParâmetros:\n- email (string): Email do usuário\n- codigoHotmart (string): Código do plano na Hotmart (ex: PROFISSIONAL_MENSAL, BASICO_MENSAL, ENTERPRISE_MENSAL)\n\nOpções de autenticação:\n1. Via sessão admin\n2. Via API key (x-api-key header)\n3. Em modo dev, sem autenticação"
+          }
+        }
+      ]
+    },
+    {
       "name": "Seed e Setup",
       "item": [
         {
