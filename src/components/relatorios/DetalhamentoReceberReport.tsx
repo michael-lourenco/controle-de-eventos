@@ -99,23 +99,22 @@ export default function DetalhamentoReceberReport({
       setCarregandoResumos(true);
 
       try {
-        const resultados = await Promise.all(
-          eventos.map(async (evento) => {
-            try {
-              const resumo = await dataService.getResumoFinanceiroPorEvento(
-                userId,
-                evento.id,
-                evento.valorTotal || 0,
-                parseDate(evento.diaFinalPagamento)
-              );
+        // Usar pagamentos já carregados para calcular resumos (muito mais rápido)
+        const resultados = eventos.map((evento) => {
+          try {
+            const resumo = dataService.calcularResumoFinanceiroPorEvento(
+              evento.id,
+              evento.valorTotal || 0,
+              pagamentos || [],
+              parseDate(evento.diaFinalPagamento)
+            );
 
-              return [evento.id, resumo] as const;
-            } catch (error) {
-              console.error('Erro ao calcular resumo financeiro do evento', evento.id, error);
-              return [evento.id, null] as const;
-            }
-          })
-        );
+            return [evento.id, resumo] as const;
+          } catch (error) {
+            console.error('Erro ao calcular resumo financeiro do evento', evento.id, error);
+            return [evento.id, null] as const;
+          }
+        });
 
         if (!ativo) {
           return;

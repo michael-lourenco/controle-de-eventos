@@ -176,6 +176,7 @@ export class RelatorioCacheService {
 
   /**
    * Calcula resumo financeiro de cada evento
+   * Otimizado para usar collections globais de pagamentos e custos
    */
   private async calcularEventosResumo(
     userId: string,
@@ -187,68 +188,70 @@ export class RelatorioCacheService {
     const eventosAtivos = eventos.filter(e => !e.arquivado);
     const hoje = new Date();
 
-    return Promise.all(
-      eventosAtivos.map(async (evento) => {
-        // Pagamentos do evento (buscar usando evento.id ou evento?.id)
-        const pagamentosEvento = pagamentos.filter(p => {
-          const eventoId = p.eventoId || p.evento?.id;
-          return eventoId === evento.id && !p.cancelado;
-        });
-        const totalPago = pagamentosEvento
-          .filter(p => p.status === 'Pago')
-          .reduce((sum, p) => sum + p.valor, 0);
-
-        const valorTotal = evento.valorTotal || 0;
-        const valorPendente = valorTotal - totalPago;
-
-        // Buscar custos e serviços do evento diretamente (mais eficiente que buscar todos)
-        // Nota: Isso ainda faz N queries, mas é necessário porque getAllCustos/getAllServicos não incluem eventoId
-        let custosTotal = 0;
-        let servicosTotal = 0;
-
-        try {
-          const custosEvento = await dataService.getCustosPorEvento(userId, evento.id);
-          const custosAtivos = custosEvento.filter(c => !c.removido);
-          custosTotal = custosAtivos.reduce((sum, c) => sum + (c.valor * (c.quantidade || 1)), 0);
-        } catch (error) {
-          console.error(`Erro ao buscar custos do evento ${evento.id}:`, error);
+    // Criar mapas para lookup rápido
+    const servicosPorEvento = new Map<string, any[]>();
+    servicos.forEach(servico => {
+      const eventoId = servico.eventoId || servico.evento?.id;
+      if (eventoId) {
+        if (!servicosPorEvento.has(eventoId)) {
+          servicosPorEvento.set(eventoId, []);
         }
+        servicosPorEvento.get(eventoId)!.push(servico);
+      }
+    });
 
-        try {
-          const servicosEvento = await dataService.getServicosPorEvento(userId, evento.id);
-          const servicosAtivos = servicosEvento.filter(s => !s.removido);
-          servicosTotal = servicosAtivos.length; // Quantidade de serviços
-        } catch (error) {
-          console.error(`Erro ao buscar serviços do evento ${evento.id}:`, error);
-        }
+    // Processar todos os eventos sem queries adicionais
+    return eventosAtivos.map((evento) => {
+      // Pagamentos do evento (usando dados já carregados)
+      const pagamentosEvento = pagamentos.filter(p => {
+        const eventoId = p.eventoId || p.evento?.id;
+        return eventoId === evento.id && !p.cancelado;
+      });
+      const totalPago = pagamentosEvento
+        .filter(p => p.status === 'Pago')
+        .reduce((sum, p) => sum + p.valor, 0);
 
-        // Verificar se está atrasado
-        const dataFinalPagamento = evento.diaFinalPagamento ? new Date(evento.diaFinalPagamento) : null;
-        const isAtrasado = dataFinalPagamento ? (hoje > dataFinalPagamento && valorPendente > 0) : false;
-        const valorAtrasado = isAtrasado ? valorPendente : 0;
+      const valorTotal = evento.valorTotal || 0;
+      const valorPendente = valorTotal - totalPago;
 
-        const lucro = valorTotal - custosTotal - servicosTotal;
-        const margemLucro = valorTotal > 0 ? (lucro / valorTotal) * 100 : 0;
+      // Custos do evento (usando dados já carregados da collection global)
+      const custosEvento = custos.filter(c => {
+        const eventoId = c.eventoId || c.evento?.id;
+        return eventoId === evento.id && !c.removido;
+      });
+      const custosTotal = custosEvento.reduce((sum, c) => sum + (c.valor * (c.quantidade || 1)), 0);
 
-        return {
-          eventoId: evento.id,
-          clienteId: evento.clienteId || evento.cliente?.id || '',
-          clienteNome: evento.cliente?.nome || 'Cliente não identificado',
-          dataEvento: new Date(evento.dataEvento),
-          tipoEvento: evento.tipoEvento || '',
-          valorTotal,
-          totalPago,
-          valorPendente: isAtrasado ? 0 : valorPendente,
-          valorAtrasado,
-          quantidadePagamentos: pagamentosEvento.length,
-          custosTotal,
-          servicosTotal,
-          lucro,
-          margemLucro,
-          isAtrasado
-        };
-      })
-    );
+      // Serviços do evento (usando dados já carregados)
+      const servicosEvento = servicosPorEvento.get(evento.id) || [];
+      const servicosAtivos = servicosEvento.filter(s => !s.removido);
+      const servicosTotal = servicosAtivos.length; // Quantidade de serviços
+
+      // Verificar se está atrasado
+      const dataFinalPagamento = evento.diaFinalPagamento ? new Date(evento.diaFinalPagamento) : null;
+      const isAtrasado = dataFinalPagamento ? (hoje > dataFinalPagamento && valorPendente > 0) : false;
+      const valorAtrasado = isAtrasado ? valorPendente : 0;
+
+      const lucro = valorTotal - custosTotal - servicosTotal;
+      const margemLucro = valorTotal > 0 ? (lucro / valorTotal) * 100 : 0;
+
+      return {
+        eventoId: evento.id,
+        clienteId: evento.clienteId || evento.cliente?.id || '',
+        clienteNome: evento.cliente?.nome || 'Cliente não identificado',
+        dataEvento: new Date(evento.dataEvento),
+        tipoEvento: evento.tipoEvento || '',
+        valorTotal,
+        totalPago,
+        valorPendente: isAtrasado ? 0 : valorPendente,
+        valorAtrasado,
+        quantidadePagamentos: pagamentosEvento.length,
+        custosTotal,
+        servicosTotal,
+        lucro,
+        margemLucro,
+        isAtrasado
+      };
+    });
   }
 
   /**

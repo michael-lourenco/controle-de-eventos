@@ -3,10 +3,14 @@ import { ServicoEvento, TipoServico } from '@/types';
 import { orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, limit, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '../firestore/collections';
+import { ServicoGlobalRepository } from './servico-global-repository';
 
 export class ServicoEventoRepository extends SubcollectionRepository<ServicoEvento> {
+  private servicoGlobalRepo: ServicoGlobalRepository;
+
   constructor() {
     super(COLLECTIONS.EVENTOS, COLLECTIONS.SERVICOS_EVENTO);
+    this.servicoGlobalRepo = new ServicoGlobalRepository();
   }
 
   // Métodos específicos para subcollections de serviços por evento
@@ -29,7 +33,7 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
     
     const docRef = await addDoc(servicosCollection, servicoData);
     
-    return {
+    const servicoCriado = {
       id: docRef.id,
       eventoId: servico.eventoId,
       tipoServicoId: servico.tipoServicoId,
@@ -37,6 +41,29 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
       observacoes: servico.observacoes,
       dataCadastro: new Date()
     } as ServicoEvento;
+
+    // Sincronizar com a collection global
+    try {
+      await this.servicoGlobalRepo.createServico(
+        userId,
+        eventoId,
+        docRef.id,
+        {
+          eventoId: servico.eventoId,
+          tipoServicoId: servico.tipoServicoId,
+          observacoes: servico.observacoes,
+          removido: servico.removido,
+          dataRemocao: servico.dataRemocao,
+          motivoRemocao: servico.motivoRemocao,
+          dataCadastro: servicoCriado.dataCadastro
+        }
+      );
+    } catch (error) {
+      console.error('Erro ao sincronizar serviço com collection global:', error);
+      // Não lançar erro para não quebrar o fluxo principal
+    }
+    
+    return servicoCriado;
   }
 
   async updateServicoEvento(userId: string, eventoId: string, servicoId: string, servico: Partial<ServicoEvento>): Promise<ServicoEvento> {
@@ -48,6 +75,21 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
     if (servico.observacoes !== undefined) updateData.observacoes = servico.observacoes;
     
     await updateDoc(servicoRef, updateData);
+
+    // Sincronizar com a collection global
+    try {
+      // Filtrar apenas os campos que não são objetos relacionados
+      const { tipoServico, ...servicoData } = servico as any;
+      await this.servicoGlobalRepo.updateServico(
+        userId,
+        eventoId,
+        servicoId,
+        servicoData
+      );
+    } catch (error) {
+      console.error('Erro ao sincronizar atualização de serviço com collection global:', error);
+      // Não lançar erro para não quebrar o fluxo principal
+    }
     
     return {
       id: servicoId,
@@ -66,6 +108,14 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
       removido: true,
       dataRemocao: new Date()
     });
+
+    // Sincronizar com a collection global
+    try {
+      await this.servicoGlobalRepo.deleteServico(userId, eventoId, servicoId);
+    } catch (error) {
+      console.error('Erro ao sincronizar remoção de serviço com collection global:', error);
+      // Não lançar erro para não quebrar o fluxo principal
+    }
   }
 
   async findByEventoId(userId: string, eventoId: string): Promise<ServicoEvento[]> {

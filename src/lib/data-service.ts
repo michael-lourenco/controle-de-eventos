@@ -25,8 +25,10 @@ export class DataService {
   private pagamentoGlobalRepo = repositoryFactory.getPagamentoGlobalRepository();
   private tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
   private custoEventoRepo = repositoryFactory.getCustoEventoRepository();
+  private custoGlobalRepo = repositoryFactory.getCustoGlobalRepository();
   private tipoServicoRepo = repositoryFactory.getTipoServicoRepository();
   private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
+  private servicoGlobalRepo = repositoryFactory.getServicoGlobalRepository();
   private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
   private tipoEventoRepo = repositoryFactory.getTipoEventoRepository();
   private funcionalidadeService = new FuncionalidadeService();
@@ -369,6 +371,61 @@ export class DataService {
     return this.pagamentoRepo.getResumoFinanceiroPorEvento(userId, eventoId, valorTotalEvento, dataFinalPagamento);
   }
 
+  /**
+   * Calcula resumo financeiro usando pagamentos já carregados (otimizado)
+   * Usa a collection global de pagamentos para melhor performance
+   */
+  calcularResumoFinanceiroPorEvento(
+    eventoId: string,
+    valorTotalEvento: number,
+    pagamentos: Pagamento[],
+    dataFinalPagamento?: Date
+  ): {
+    totalPago: number;
+    valorPendente: number;
+    valorAtrasado: number;
+    quantidadePagamentos: number;
+    isAtrasado: boolean;
+  } {
+    // Filtrar pagamentos do evento usando dados já carregados
+    const pagamentosEvento = pagamentos.filter(p => {
+      const pEventoId = p.eventoId || (p as any).evento?.id;
+      return pEventoId === eventoId && !p.cancelado;
+    });
+    
+    // Filtrar pagamentos cancelados nos cálculos
+    const totalPago = pagamentosEvento
+      .filter(p => p.status === 'Pago')
+      .reduce((total, p) => total + p.valor, 0);
+    
+    const valorPendente = valorTotalEvento - totalPago;
+    const hoje = new Date();
+    
+    // Se não tem data final de pagamento, considera como pendente
+    if (!dataFinalPagamento) {
+      return {
+        totalPago,
+        valorPendente,
+        valorAtrasado: 0,
+        quantidadePagamentos: pagamentosEvento.length,
+        isAtrasado: false
+      };
+    }
+    
+    const isAtrasado = hoje > dataFinalPagamento && valorPendente > 0;
+    
+    // Contar apenas pagamentos não cancelados
+    const pagamentosAtivos = pagamentosEvento.filter(p => !p.cancelado);
+    
+    return {
+      totalPago,
+      valorPendente: isAtrasado ? 0 : valorPendente,
+      valorAtrasado: isAtrasado ? valorPendente : 0,
+      quantidadePagamentos: pagamentosAtivos.length,
+      isAtrasado
+    };
+  }
+
   // Métodos para Tipos de Custo
   async getTiposCusto(userId: string): Promise<TipoCusto[]> {
     if (!userId) {
@@ -460,30 +517,18 @@ export class DataService {
   }
 
   // Método para buscar todos os custos de todos os eventos do usuário
+  // Usa a collection global para melhor performance
   async getAllCustos(userId: string): Promise<CustoEvento[]> {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar custos');
     }
     
     try {
-      // Buscar todos os eventos do usuário
-      const eventos = await this.getEventos(userId);
-      const todosCustos: CustoEvento[] = [];
+      // Buscar todos os custos da collection global (muito mais eficiente)
+      const todosCustos = await this.custoGlobalRepo.findAll(userId);
       
-      // Buscar custos de todos os eventos
-      for (const evento of eventos) {
-        try {
-          const custosEvento = await this.getCustosPorEvento(userId, evento.id);
-          todosCustos.push(...custosEvento);
-        } catch (error) {
-          console.error(`Erro ao buscar custos do evento ${evento.id}:`, error);
-        }
-      }
-      
-      // Ordenar por data de cadastro (mais recente primeiro)
-      return todosCustos.sort((a, b) => 
-        new Date(b.dataCadastro).getTime() - new Date(a.dataCadastro).getTime()
-      );
+      // Já vem ordenado por data de cadastro (mais recente primeiro) do repository
+      return todosCustos;
     } catch (error) {
       console.error('Erro ao buscar todos os custos:', error);
       return [];
@@ -1030,17 +1075,36 @@ export class DataService {
       throw new Error('userId é obrigatório para buscar serviços');
     }
     
-    // Buscar todos os eventos do usuário
-    const eventos = await this.eventoRepo.findAll(userId);
-    const todosServicos: ServicoEvento[] = [];
-    
-    // Para cada evento, buscar seus serviços
-    for (const evento of eventos) {
-      const servicos = await this.servicoEventoRepo.findByEventoId(userId, evento.id);
-      todosServicos.push(...servicos);
+    try {
+      // Buscar todos os serviços da collection global (muito mais eficiente)
+      const todosServicos = await this.servicoGlobalRepo.findAll(userId);
+      
+      // Buscar tipos de serviço para popular os objetos
+      const tiposServico = await this.getTiposServicos(userId);
+      const tiposMap = new Map(tiposServico.map(tipo => [tipo.id, tipo]));
+      
+      // Adicionar tipoServico a cada serviço
+      const servicosComTipo = todosServicos.map(servico => {
+        const tipoServico = tiposMap.get(servico.tipoServicoId) || {
+          id: servico.tipoServicoId,
+          nome: 'Tipo não encontrado',
+          descricao: '',
+          ativo: false,
+          dataCadastro: new Date()
+        } as TipoServico;
+        
+        return {
+          ...servico,
+          tipoServico
+        };
+      });
+      
+      // Já vem ordenado por data de cadastro (mais recente primeiro) do repository
+      return servicosComTipo;
+    } catch (error) {
+      console.error('Erro ao buscar todos os serviços:', error);
+      return [];
     }
-    
-    return todosServicos;
   }
 
   async getTiposServicos(userId: string): Promise<TipoServico[]> {

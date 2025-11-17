@@ -106,8 +106,9 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
     // Despesas por categoria
     const despesasPorCategoria: Record<string, number> = {};
     custosPeriodo.forEach(custo => {
-      const categoria = custo.tipoCusto.nome;
-      despesasPorCategoria[categoria] = (despesasPorCategoria[categoria] || 0) + custo.valor;
+      const categoria = custo.tipoCusto?.nome || 'Sem categoria';
+      const valorTotal = custo.valor * (custo.quantidade || 1);
+      despesasPorCategoria[categoria] = (despesasPorCategoria[categoria] || 0) + valorTotal;
     });
 
     const totalDespesas = Object.values(despesasPorCategoria).reduce((sum, val) => sum + val, 0);
