@@ -20,6 +20,8 @@
   --text-primary: #1b2126;
   --text-secondary: #5d6b74;
   --text-muted: #7d8d96;
+  --link: #2563eb;
+  --link-hover: #1d4ed8;
   --background: #ffffff;
 
   /* Cores semânticas Light Mode - Tons mais suaves */
@@ -123,6 +125,8 @@
   --text-primary: #f8fafc;
   --text-secondary: #a4b3ba;
   --text-muted: #7d8d96;
+  --link: #60a5fa;
+  --link-hover: #3b82f6;
 
   /* Cores semânticas Dark Mode - Tons mais suaves */
   --success: #34d399;
@@ -300,5 +304,14 @@ select:focus {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .text-link {
+    color: var(--link) !important;
+  }
+  .text-link:hover {
+    color: var(--link-hover) !important;
   }
 }

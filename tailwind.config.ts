@@ -25,6 +25,8 @@ const config: Config = {
         "text-primary": "var(--text-primary)",
         "text-secondary": "var(--text-secondary)",
         "text-muted": "var(--text-muted)",
+        "link": "var(--link)",
+        "link-hover": "var(--link-hover)",
         success: "var(--success)",
         "success-bg": "var(--success-bg)",
         "success-text": "var(--success-text)",

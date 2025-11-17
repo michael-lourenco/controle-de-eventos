@@ -164,7 +164,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => router.push('/esqueci-senha')}
-                className="text-sm text-text-secondary hover:text-primary cursor-pointer block w-full"
+                className="text-sm text-link cursor-pointer block w-full transition-colors"
               >
                 Esqueci minha senha
               </button>
@@ -173,7 +173,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => router.push('/register')}
-                  className="font-medium text-primary hover:text-primary/80 cursor-pointer"
+                  className="font-medium text-link cursor-pointer transition-colors"
                 >
                   Criar conta
                 </button>

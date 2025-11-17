@@ -260,7 +260,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => router.push('/login')}
-                    className="font-semibold text-primary hover:text-primary/80 cursor-pointer transition-colors"
+                    className="font-semibold text-link cursor-pointer transition-colors"
                   >
                     Faça login
                   </button>

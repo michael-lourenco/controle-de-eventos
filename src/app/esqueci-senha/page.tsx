@@ -153,7 +153,7 @@ export default function EsqueciSenhaPage() {
               <button
                 type="button"
                 onClick={() => router.push('/login')}
-                className="text-sm text-text-secondary hover:text-text-primary flex items-center justify-center gap-2 cursor-pointer"
+                className="text-sm text-link flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <ArrowLeftIcon className="h-4 w-4" />
                 Voltar para o login
