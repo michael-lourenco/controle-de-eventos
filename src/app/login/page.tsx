@@ -161,6 +161,13 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 text-center space-y-3">
+              <button
+                type="button"
+                onClick={() => router.push('/esqueci-senha')}
+                className="text-sm text-text-secondary hover:text-primary cursor-pointer block w-full"
+              >
+                Esqueci minha senha
+              </button>
               <p className="text-sm text-text-secondary">
                 Não tem uma conta?{' '}
                 <button

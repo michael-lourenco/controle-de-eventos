@@ -2,6 +2,9 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  verifyPasswordResetCode,
   User
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -109,6 +112,54 @@ export const authService = {
       return { 
         success: false, 
         error: error.message || 'Erro ao atualizar usuário' 
+      };
+    }
+  },
+
+  // Enviar email de redefinição de senha
+  async sendPasswordReset(email: string) {
+    try {
+      const actionCodeSettings = {
+        url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha`,
+        handleCodeInApp: false,
+      };
+      
+      await sendPasswordResetEmail(auth, email, actionCodeSettings);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Erro ao enviar email de redefinição:', error);
+      // Não expor se o email existe ou não por segurança
+      return { 
+        success: false, 
+        error: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
+      };
+    }
+  },
+
+  // Verificar código de redefinição
+  async verifyResetCode(code: string) {
+    try {
+      const email = await verifyPasswordResetCode(auth, code);
+      return { success: true, email };
+    } catch (error: any) {
+      console.error('Erro ao verificar código:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Código de redefinição inválido ou expirado'
+      };
+    }
+  },
+
+  // Confirmar redefinição de senha
+  async confirmPasswordReset(code: string, newPassword: string) {
+    try {
+      await confirmPasswordReset(auth, code, newPassword);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Erro ao confirmar redefinição:', error);
+      return { 
+        success: false, 
+        error: error.message || 'Erro ao redefinir senha'
       };
     }
   }
