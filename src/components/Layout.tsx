@@ -85,7 +85,7 @@ export default function Layout({ children }: LayoutProps) {
     <div className="min-h-screen">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" onClick={() => setSidebarOpen(false)} />
         <div className="relative flex w-64 flex-col bg-surface/95 backdrop-blur-md shadow-2xl border-r border-border">
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
+                className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer"
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 {item.name}
@@ -133,7 +133,7 @@ export default function Layout({ children }: LayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
+                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer"
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}
@@ -170,7 +170,7 @@ export default function Layout({ children }: LayoutProps) {
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
+                className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer"
               >
                 <item.icon className="mr-3 h-5 w-5" />
                 {item.name}
@@ -188,7 +188,7 @@ export default function Layout({ children }: LayoutProps) {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm"
+                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer"
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}

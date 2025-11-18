@@ -296,7 +296,7 @@ export default function TiposServicosPage() {
             <div className="flex gap-2 p-2">
               <button
                 onClick={() => setAbaAtiva('ativos')}
-                className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg ${
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg cursor-pointer ${
                   abaAtiva === 'ativos'
                     ? 'bg-primary/10 text-primary shadow-sm'
                     : 'text-text-secondary hover:text-text-primary hover:bg-surface'
@@ -306,7 +306,7 @@ export default function TiposServicosPage() {
               </button>
               <button
                 onClick={() => setAbaAtiva('inativos')}
-                className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg ${
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg cursor-pointer ${
                   abaAtiva === 'inativos'
                     ? 'bg-primary/10 text-primary shadow-sm'
                     : 'text-text-secondary hover:text-text-primary hover:bg-surface'

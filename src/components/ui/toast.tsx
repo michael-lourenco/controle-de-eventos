@@ -128,7 +128,7 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
       <button
         onClick={onClose}
         className={cn(
-          'flex-shrink-0 rounded-md p-1 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2',
+          'flex-shrink-0 rounded-md p-1 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer',
           config.text,
           'opacity-70 hover:opacity-100'
         )}
