@@ -239,19 +239,27 @@ export class FuncionalidadeService {
     usado?: number;
     restante?: number;
   }> {
-    // Verificar permissão
-    const codigoFuncionalidade = tipo === 'eventos' ? 'EVENTOS_LIMITADOS' : 'CLIENTES_LIMITADOS';
-    const temPermissao = await this.verificarPermissao(userId, codigoFuncionalidade);
-    
-    if (!temPermissao) {
-      return { 
-        pode: false, 
-        motivo: `Seu plano não permite criar ${tipo}` 
-      };
-    }
-
-    // Verificar limite
     if (tipo === 'eventos') {
+      // Primeiro verificar se tem EVENTOS_ILIMITADOS (não precisa verificar limite)
+      const temIlimitados = await this.verificarPermissao(userId, 'EVENTOS_ILIMITADOS');
+      if (temIlimitados) {
+        const limites = await this.obterLimitesUsuario(userId);
+        return { 
+          pode: true, 
+          usado: limites.eventosMesAtual 
+        };
+      }
+
+      // Se não tem ilimitados, verificar se tem EVENTOS_LIMITADOS
+      const temLimitados = await this.verificarPermissao(userId, 'EVENTOS_LIMITADOS');
+      if (!temLimitados) {
+        return { 
+          pode: false, 
+          motivo: `Seu plano não permite criar ${tipo}` 
+        };
+      }
+
+      // Verificar limite para eventos limitados
       const limiteEventos = await this.verificarLimiteEventos(userId);
       if (!limiteEventos.pode) {
         return {
@@ -264,6 +272,26 @@ export class FuncionalidadeService {
       }
       return limiteEventos;
     } else {
+      // Primeiro verificar se tem CLIENTES_ILIMITADOS (não precisa verificar limite)
+      const temIlimitados = await this.verificarPermissao(userId, 'CLIENTES_ILIMITADOS');
+      if (temIlimitados) {
+        const limites = await this.obterLimitesUsuario(userId);
+        return { 
+          pode: true, 
+          usado: limites.clientesTotal 
+        };
+      }
+
+      // Se não tem ilimitados, verificar se tem CLIENTES_LIMITADOS
+      const temLimitados = await this.verificarPermissao(userId, 'CLIENTES_LIMITADOS');
+      if (!temLimitados) {
+        return { 
+          pode: false, 
+          motivo: `Seu plano não permite criar ${tipo}` 
+        };
+      }
+
+      // Verificar limite para clientes limitados
       const limiteClientes = await this.verificarLimiteClientes(userId);
       if (!limiteClientes.pode) {
         return {
