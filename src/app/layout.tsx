@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Clicksehub - Sistema de Gestão de Eventos",
-  description: "Sistema completo de gestão para empresas de eventos. Gerencie eventos, clientes, pagamentos e relatórios em uma única plataforma.",
+  title: "Clicksehub - Gestão para Empresas de Totens Fotográficos",
+  description: "Sistema completo para gerenciar seu negócio de totens fotográficos. Controle eventos, clientes, pagamentos e serviços de forma simples e organizada.",
 };
 
 export default function RootLayout({

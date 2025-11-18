@@ -71,7 +71,7 @@ Redefinir sua senha - Clicksehub
     <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
     
     <p style="color: #999; font-size: 12px; text-align: center;">
-      Clicksehub - Sistema de Gestão de Eventos<br>
+      Clicksehub - Gestão para Empresas de Totens Fotográficos<br>
       © 2025 Todos os direitos reservados
     </p>
   </div>
