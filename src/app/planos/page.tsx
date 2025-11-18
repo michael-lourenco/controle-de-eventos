@@ -154,7 +154,7 @@ export default function PlanosPage() {
 
         {/* Resumo do Plano Atual */}
         {statusPlano?.plano && (
-          <Card className="border-primary border-2">
+          <Card className="border-primary border-2 mb-8">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -200,13 +200,13 @@ export default function PlanosPage() {
             return (
               <Card
                 key={plano.id}
-                className={`relative transition-all hover:shadow-lg ${
+                className={`relative transition-all hover:shadow-lg flex flex-col ${
                   plano.destaque ? 'border-2 border-primary scale-105' : ''
                 } ${planoAtual ? 'border-2 border-success' : ''}`}
               >
-                {plano.destaque && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+                {plano.nome.toLowerCase().includes('profissional') && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <span className="bg-[#10b981] text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
                       <SparklesIcon className="h-3 w-3" />
                       Popular
                     </span>
@@ -214,8 +214,8 @@ export default function PlanosPage() {
                 )}
 
                 {planoAtual && (
-                  <div className="absolute -top-3 right-3">
-                    <span className="bg-success text-success-text px-2 py-1 rounded-full text-xs font-semibold">
+                  <div className="absolute -top-3 right-3 z-10">
+                    <span className="bg-[#3b82f6] text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 shadow-lg">
                       Atual
                     </span>
                   </div>
@@ -234,7 +234,7 @@ export default function PlanosPage() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className="flex flex-col flex-1 space-y-4">
                   {/* Limites */}
                   {(plano.limiteEventos || plano.limiteClientes) && (
                     <div className="space-y-2 p-3 bg-surface rounded-lg">
@@ -261,11 +261,11 @@ export default function PlanosPage() {
 
                   {/* Funcionalidades */}
                   {Object.keys(categorias).length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3 flex-1">
                       <p className="text-sm font-semibold text-text-primary">
                         {funcionalidades.length} Funcionalidade(s) Incluída(s):
                       </p>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                      <div className="space-y-2">
                         {Object.entries(categorias).map(([categoria, funcs]) => (
                           <div key={categoria} className="space-y-1">
                             <p className="text-xs font-medium text-text-secondary uppercase">
@@ -274,7 +274,7 @@ export default function PlanosPage() {
                             <div className="space-y-1 pl-2">
                               {funcs.map(func => (
                                 <div key={func.id} className="flex items-start gap-2">
-                                  <CheckIcon className="h-4 w-4 text-success-text mt-0.5 flex-shrink-0" />
+                                  <CheckIcon className="h-5 w-5 text-[#10b981] mt-0.5 flex-shrink-0 font-bold" strokeWidth={3} />
                                   <p className="text-xs text-text-secondary">{func.nome}</p>
                                 </div>
                               ))}
@@ -284,15 +284,15 @@ export default function PlanosPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-4">
+                    <div className="text-center py-4 flex-1">
                       <p className="text-sm text-text-secondary">
                         {funcionalidades.length === 0 ? 'Sem funcionalidades definidas' : 'Carregando funcionalidades...'}
                       </p>
                     </div>
                   )}
 
-                  {/* Botão de Ação */}
-                  <div className="pt-4">
+                  {/* Botão de Ação - sempre no bottom */}
+                  <div className="pt-4 mt-auto">
                     {planoAtual ? (
                       <Button
                         variant="outline"
@@ -303,7 +303,7 @@ export default function PlanosPage() {
                       </Button>
                     ) : (
                       <Button
-                        className="w-full"
+                        className="w-full bg-primary hover:bg-accent hover:text-white cursor-pointer"
                         onClick={() => handleAssinar(plano)}
                       >
                         {plano.destaque ? 'Assinar Agora' : 'Escolher Plano'}
