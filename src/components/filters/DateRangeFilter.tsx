@@ -6,13 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   CalendarIcon, 
-  ClockIcon,
   FunnelIcon,
   XMarkIcon,
   ChevronDownIcon,
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
-import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface DateRange {
@@ -31,17 +30,13 @@ interface DateRangeFilterProps {
   className?: string;
 }
 
-const QUICK_FILTERS = [
-  { key: 'today', label: 'Hoje', icon: '📅' },
-  { key: 'yesterday', label: 'Ontem', icon: '⏮️' },
-  { key: 'tomorrow', label: 'Amanhã', icon: '⏭️' },
-  { key: 'thisWeek', label: 'Esta Semana', icon: '📊' },
-  { key: 'lastWeek', label: 'Semana Passada', icon: '📉' },
-  { key: 'thisMonth', label: 'Este Mês', icon: '🗓️' },
-  { key: 'lastMonth', label: 'Mês Passado', icon: '📆' },
-  { key: 'last7Days', label: 'Últimos 7 dias', icon: '⏰' },
-  { key: 'last30Days', label: 'Últimos 30 dias', icon: '📈' },
-  { key: 'last90Days', label: 'Últimos 90 dias', icon: '📊' },
+const QUICK_FILTERS: { key: string; label: string; description?: string }[] = [
+  { key: 'today', label: 'Hoje', description: 'Eventos do dia' },
+  { key: 'thisWeek', label: 'Esta semana', description: 'Seg - Dom' },
+  { key: 'next7Days', label: 'Próximos 7 dias', description: 'Planeje a semana' },
+  { key: 'next30Days', label: 'Próximos 30 dias', description: 'Agenda do mês' },
+  { key: 'thisMonth', label: 'Este mês', description: '1º ao último dia' },
+  { key: 'lastMonth', label: 'Mês passado', description: 'Histórico recente' },
 ];
 
 export default function DateRangeFilter({ onFilterChange, className = '' }: DateRangeFilterProps) {
@@ -77,6 +72,16 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
         return {
           startDate: startOfWeek(now, { locale: ptBR }),
           endDate: endOfWeek(now, { locale: ptBR })
+        };
+      case 'next7Days':
+        return {
+          startDate: startOfDay(now),
+          endDate: endOfDay(addDays(now, 7))
+        };
+      case 'next30Days':
+        return {
+          startDate: startOfDay(now),
+          endDate: endOfDay(addDays(now, 30))
         };
       case 'lastWeek':
         const lastWeek = subWeeks(now, 1);
@@ -211,21 +216,30 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
           <CardContent className="space-y-6">
             {/* Filtros Rápidos */}
             <div>
-              <h4 className="text-sm font-medium text-text-primary mb-3 flex items-center">
-                <ClockIcon className="h-4 w-4 mr-2" />
-                Filtros Rápidos
+              <h4 className="text-sm font-medium text-text-primary mb-3">
+                Filtros rápidos essenciais
               </h4>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {QUICK_FILTERS.map((filter) => (
                   <Button
                     key={filter.key}
                     variant={selectedQuickFilter === filter.key ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleQuickFilterSelect(filter.key)}
-                    className={`text-xs ${selectedQuickFilter === filter.key ? 'bg-primary text-white' : ''}`}
+                    className={`w-full justify-start text-left h-auto py-3 px-4 flex-col items-start gap-1 border transition-all ${
+                      selectedQuickFilter === filter.key
+                        ? 'bg-primary text-primary-foreground border-primary shadow-md'
+                        : 'bg-background text-text-primary border-border hover:bg-primary/5'
+                    }`}
                   >
-                    <span className="mr-1">{filter.icon}</span>
-                    {filter.label}
+                    <span className="text-sm font-semibold leading-tight">{filter.label}</span>
+                    {filter.description && (
+                      <span className={`text-xs leading-tight ${
+                        selectedQuickFilter === filter.key ? 'text-primary-foreground/80' : 'text-text-secondary'
+                      }`}>
+                        {filter.description}
+                      </span>
+                    )}
                   </Button>
                 ))}
               </div>
