@@ -26,6 +26,9 @@ export const COLLECTIONS = {
   PROMOTERS: 'controle_promoters',
   INSUMOS: 'controle_insumos',
   ANEXOS_EVENTOS: 'controle_anexos_eventos',
+  
+  // Google Calendar Integration (opcional)
+  GOOGLE_CALENDAR_TOKENS: 'google_calendar_tokens',
 } as const;
 
 // Estrutura das collections para documentação

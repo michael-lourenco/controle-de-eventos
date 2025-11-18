@@ -10,6 +10,7 @@ import { CanalEntradaRepository } from './canal-entrada-repository';
 import { UserRepository } from './user-repository';
 import { ArquivoRepository } from './arquivo-repository';
 import { TipoEventoRepository } from './tipo-evento-repository';
+import { GoogleCalendarTokenRepository } from './google-calendar-token-repository';
 
 export class RepositoryFactory {
   private static instance: RepositoryFactory;
@@ -28,6 +29,7 @@ export class RepositoryFactory {
   private tipoEventoRepository: TipoEventoRepository;
   private userRepository: UserRepository;
   private arquivoRepository: ArquivoRepository;
+  private googleCalendarTokenRepository: GoogleCalendarTokenRepository;
 
   private constructor() {
     this.clienteRepository = new ClienteRepository();
@@ -44,6 +46,7 @@ export class RepositoryFactory {
     this.tipoEventoRepository = new TipoEventoRepository();
     this.userRepository = new UserRepository();
     this.arquivoRepository = new ArquivoRepository();
+    this.googleCalendarTokenRepository = new GoogleCalendarTokenRepository();
   }
 
   public static getInstance(): RepositoryFactory {
@@ -107,6 +110,10 @@ export class RepositoryFactory {
 
   public getTipoEventoRepository(): TipoEventoRepository {
     return this.tipoEventoRepository;
+  }
+
+  public getGoogleCalendarTokenRepository(): GoogleCalendarTokenRepository {
+    return this.googleCalendarTokenRepository;
   }
 }
 

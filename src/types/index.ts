@@ -95,6 +95,9 @@ export interface Evento {
   motivoArquivamento?: string;
   dataCadastro: Date;
   dataAtualizacao: Date;
+  // Campos opcionais para integração com Google Calendar
+  googleCalendarEventId?: string;
+  googleCalendarSyncedAt?: Date;
 }
 
 export interface Servico {
