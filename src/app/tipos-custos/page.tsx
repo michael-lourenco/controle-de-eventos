@@ -206,7 +206,7 @@ export default function TiposCustosPage() {
           </div>
           <Button
             onClick={() => setMostrarFormNovo(true)}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
           >
             <PlusIcon className="h-4 w-4" />
             Novo Tipo

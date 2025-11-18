@@ -363,7 +363,7 @@ export default function EventosPage() {
               <ArrowPathIcon className="h-4 w-4 mr-2" />
               Atualizar
             </Button>
-            <Button variant="outline" onClick={() => router.push('/eventos/novo')}>
+            <Button onClick={() => router.push('/eventos/novo')} className="bg-primary hover:bg-accent hover:text-white cursor-pointer">
               <PlusIcon className="h-4 w-4 mr-2" />
               Novo Evento
             </Button>

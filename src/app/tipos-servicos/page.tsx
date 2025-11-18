@@ -215,7 +215,7 @@ export default function TiposServicosPage() {
               Gerencie os tipos de serviços disponíveis
             </p>
           </div>
-          <Button onClick={handleNovoTipo}>
+          <Button onClick={handleNovoTipo} className="bg-primary hover:bg-accent hover:text-white cursor-pointer">
             <PlusIcon className="h-4 w-4 mr-2" />
             Novo Tipo
           </Button>
