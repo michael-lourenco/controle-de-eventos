@@ -217,23 +217,23 @@ export default function CanaisEntradaPage() {
         {/* Abas */}
         <Card>
           <CardContent className="p-0">
-            <div className="flex border-b border-border">
+            <div className="flex gap-2 p-2">
               <button
                 onClick={() => setAbaAtiva('ativos')}
-                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg ${
                   abaAtiva === 'ativos'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-primary/10 text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-surface'
                 }`}
               >
                 Ativos ({canaisEntrada.length})
               </button>
               <button
                 onClick={() => setAbaAtiva('inativos')}
-                className={`flex-1 px-6 py-3 text-sm font-medium transition-colors ${
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg ${
                   abaAtiva === 'inativos'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-primary/10 text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-surface'
                 }`}
               >
                 Inativos ({canaisInativos.length})
