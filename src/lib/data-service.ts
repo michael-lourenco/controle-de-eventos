@@ -527,8 +527,28 @@ export class DataService {
       // Buscar todos os custos da collection global (muito mais eficiente)
       const todosCustos = await this.custoGlobalRepo.findAll(userId);
       
+      // Buscar todos os tipos de custo uma vez e criar um Map para lookup eficiente
+      const tiposCusto = await this.getTiposCusto(userId);
+      const tiposMap = new Map(tiposCusto.map(tipo => [tipo.id, tipo]));
+      
+      // Enriquecer custos com dados de TipoCusto
+      const custosComTipo = todosCustos.map(custo => {
+        const tipoCusto = tiposMap.get(custo.tipoCustoId) || {
+          id: custo.tipoCustoId,
+          nome: 'Tipo não encontrado',
+          descricao: '',
+          ativo: false,
+          dataCadastro: new Date()
+        } as TipoCusto;
+        
+        return {
+          ...custo,
+          tipoCusto
+        };
+      });
+      
       // Já vem ordenado por data de cadastro (mais recente primeiro) do repository
-      return todosCustos;
+      return custosComTipo;
     } catch (error) {
       console.error('Erro ao buscar todos os custos:', error);
       return [];
@@ -654,8 +674,9 @@ export class DataService {
       const inicioAno = new Date(hoje.getFullYear(), 0, 1);
       const fimAno = new Date(hoje.getFullYear(), 11, 31);
 
-      // Buscar apenas eventos (UMA QUERY) - SIMPLIFICADO
-      const eventos = await this.getEventos(userId).catch(() => []);
+      // Buscar todos os eventos (incluindo arquivados) para cálculo correto
+      // Usar getAllEventos para garantir consistência com relatórios
+      const eventos = await this.getAllEventos(userId).catch(() => []);
       
       // ========== CÁLCULOS COMPLEXOS COMENTADOS (lento com muitos eventos) ==========
       // 
@@ -731,68 +752,67 @@ export class DataService {
       //   .filter(p => p.status === 'Pago')
       //   .reduce((total, p) => total + p.valor, 0);
 
-      // ========== VALORES SIMPLES BASEADOS APENAS NOS EVENTOS ==========
-      // Receita do mês: soma de valorTotal dos eventos concluídos do mês (SIMPLIFICADO)
-      const eventosConcluidosMes = eventosMes.filter(e => e.status === 'Concluído');
-      const receitaMes = eventosConcluidosMes.reduce((total, e) => total + (e.valorTotal || 0), 0);
-
-      // Receita do ano: soma de valorTotal dos eventos concluídos do ano (SIMPLIFICADO)
-      const eventosConcluidosAno = eventos.filter(evento => {
-        const dataEvento = new Date(evento.dataEvento);
-        return dataEvento >= inicioAno && dataEvento <= fimAno && evento.status === 'Concluído';
+      // Calcular receita e valores pendentes usando collection global de pagamentos (CORRETO)
+      // Buscar todos os pagamentos de uma vez (1 query)
+      const todosPagamentos = await this.getAllPagamentos(userId).catch(() => []);
+      
+      // Calcular pagamentos do mês
+      const pagamentosMes = todosPagamentos.filter(pagamento => {
+        if (pagamento.dataPagamento) {
+          const dataPagamento = new Date(pagamento.dataPagamento);
+          return dataPagamento >= inicioMes && dataPagamento <= fimMes && pagamento.status === 'Pago' && !pagamento.cancelado;
+        }
+        return false;
       });
-      const receitaAno = eventosConcluidosAno.reduce((total, e) => total + (e.valorTotal || 0), 0);
-
-      // Receita total: receita do ano (SIMPLIFICADO)
+      
+      // Calcular pagamentos do ano
+      const pagamentosAno = todosPagamentos.filter(pagamento => {
+        if (pagamento.dataPagamento) {
+          const dataPagamento = new Date(pagamento.dataPagamento);
+          return dataPagamento >= inicioAno && dataPagamento <= fimAno && pagamento.status === 'Pago' && !pagamento.cancelado;
+        }
+        return false;
+      });
+      
+      const receitaMes = pagamentosMes.reduce((total, p) => total + p.valor, 0);
+      const receitaAno = pagamentosAno.reduce((total, p) => total + p.valor, 0);
       const receitaTotal = receitaAno;
+      
+      let valorPendente = 0;
+      let valorAtrasado = 0;
+      let pagamentosPendentes = 0;
 
-      // ========== CÁLCULOS COMPLEXOS DE PAGAMENTOS PENDENTES/ATRASADOS COMENTADOS ==========
-      // 
-      // // Calcular pagamentos pendentes e atrasados baseados nos eventos
-      // // COMENTADO: Requer buscar pagamentos de cada evento (N queries) - MUITO LENTO
-      // let valorPendente = 0;
-      // let valorAtrasado = 0;
-      // let pagamentosPendentes = 0;
-      // let pagamentosAtrasados = 0;
-      // 
-      // // Para cada evento, calcular o resumo financeiro
-      // // COMENTADO: Loop que faz N queries ao banco - MUITO LENTO com muitos eventos
-      // for (const evento of todosEventos) {
-      //   try {
-      //     const resumoEvento = await this.getResumoFinanceiroPorEvento(
-      //       userId, 
-      //       evento.id, 
-      //       evento.valorTotal, 
-      //       evento.diaFinalPagamento
-      //     );
-      //     
-      //     valorPendente += resumoEvento.valorPendente;
-      //     valorAtrasado += resumoEvento.valorAtrasado;
-      //     
-      //     if (resumoEvento.valorPendente > 0) {
-      //       pagamentosPendentes++;
-      //     }
-      //     if (resumoEvento.valorAtrasado > 0) {
-      //       pagamentosAtrasados++;
-      //     }
-      //   } catch (error) {
-      //     console.error(`Erro ao calcular resumo financeiro do evento ${evento.id}:`, error);
-      //   }
-      // }
+      // Para cada evento, calcular o resumo financeiro usando pagamentos já carregados
+      // Usar a mesma lógica do relatório para garantir consistência
+      for (const evento of eventos) {
+        // Filtrar eventos sem valor (mesma lógica do relatório)
+        const valorPrevisto = evento.valorTotal || 0;
+        if (valorPrevisto <= 0) {
+          continue;
+        }
 
-      // Valores simplificados baseados apenas nos eventos (SEM buscar pagamentos)
-      // Valor pendente: soma de valorTotal dos eventos não concluídos (SIMPLIFICADO)
-      const eventosNaoConcluidos = eventos.filter(e => e.status !== 'Concluído');
-      const valorPendente = eventosNaoConcluidos.reduce((total, e) => total + (e.valorTotal || 0), 0);
-      const pagamentosPendentes = eventosNaoConcluidos.length;
-
-      // Valor atrasado: 0 (não pode ser calculado sem buscar pagamentos)
-      // COMENTADO: Para calcular valor atrasado, seria necessário:
-      // 1. Buscar pagamentos de cada evento
-      // 2. Comparar valorTotal com totalPago
-      // 3. Verificar se dataFinalPagamento passou
-      // Isso requer N queries ao banco - MUITO LENTO
-      const valorAtrasado = 0;
+        try {
+          const resumoEvento = this.calcularResumoFinanceiroPorEvento(
+            evento.id,
+            valorPrevisto,
+            todosPagamentos,
+            evento.diaFinalPagamento ? new Date(evento.diaFinalPagamento) : undefined
+          );
+          
+          // Só somar se houver valor restante (mesma lógica do relatório)
+          const valorRestante = resumoEvento.valorPendente + resumoEvento.valorAtrasado;
+          if (valorRestante > 0) {
+            valorPendente += resumoEvento.valorPendente;
+            valorAtrasado += resumoEvento.valorAtrasado;
+            
+            if (resumoEvento.valorPendente > 0 || resumoEvento.valorAtrasado > 0) {
+              pagamentosPendentes++;
+            }
+          }
+        } catch (error) {
+          console.error(`Erro ao calcular resumo financeiro do evento ${evento.id}:`, error);
+        }
+      }
 
       // ========== CÁLCULOS DE GRÁFICOS COMENTADOS (requer buscar pagamentos) ==========
       // 

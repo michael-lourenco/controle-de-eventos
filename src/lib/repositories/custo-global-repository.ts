@@ -90,11 +90,12 @@ export class CustoGlobalRepository {
     });
 
     // Garantir que eventoId e custoId estão presentes
+    // Preservar dataCadastro original se existir, senão usar data atual
     const custoData = {
       ...cleanData,
       eventoId,
       custoId, // Armazenar o custoId original para facilitar recuperação
-      dataCadastro: new Date()
+      dataCadastro: custo.dataCadastro || new Date()
     };
     
     const docRef = doc(custosCollection, documentId);

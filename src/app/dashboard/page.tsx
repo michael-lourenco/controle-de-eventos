@@ -50,10 +50,21 @@ export default function DashboardPage() {
     );
   }
 
+  const totalReceber = dashboardData.resumoFinanceiro.valorPendente + dashboardData.resumoFinanceiro.valorAtrasado;
+
+  // Função para formatar valores
+  const formatarValor = (valor: number) => {
+    const valorFormatado = valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    return `R$ ${valorFormatado}`;
+  };
+
+  const receitaTotalFormatado = formatarValor(dashboardData.resumoFinanceiro.receitaTotal);
+  const totalReceberFormatado = formatarValor(totalReceber);
+
   const stats = [
     {
       name: 'Receita Total',
-      value: `R$ ${dashboardData.resumoFinanceiro.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      value: receitaTotalFormatado,
       icon: CurrencyDollarIcon,
       color: 'text-success',
       bgColor: 'bg-success-bg',
@@ -70,24 +81,16 @@ export default function DashboardPage() {
       }
     },
     {
-      name: 'Valor a Receber',
-      value: `R$ ${dashboardData.resumoFinanceiro.valorPendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      name: 'Total a Receber',
+      value: totalReceberFormatado,
       icon: ClockIcon,
       color: 'text-warning',
       bgColor: 'bg-warning-bg',
       onClick: () => router.push('/relatorios')
     },
     {
-      name: 'Valor Atrasado',
-      value: `R$ ${dashboardData.resumoFinanceiro.valorAtrasado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      icon: ExclamationTriangleIcon,
-      color: 'text-error',
-      bgColor: 'bg-error-bg',
-      onClick: () => router.push('/relatorios')
-    },
-    {
       name: 'Total de Eventos',
-      value: dashboardData.resumoFinanceiro.totalEventos,
+      value: dashboardData.resumoFinanceiro.totalEventos.toString(),
       icon: CalendarIcon,
       color: 'text-accent',
       bgColor: 'bg-accent/10',
@@ -95,7 +98,7 @@ export default function DashboardPage() {
     },
     {
       name: 'Eventos Concluídos',
-      value: dashboardData.resumoFinanceiro.eventosConcluidos,
+      value: dashboardData.resumoFinanceiro.eventosConcluidos.toString(),
       icon: CalendarIcon,
       color: 'text-success',
       bgColor: 'bg-success-bg',
@@ -115,26 +118,31 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <Card 
               key={stat.name}
               onClick={stat.onClick}
               className="cursor-pointer transition-all hover:shadow-lg hover:scale-105 active:scale-95"
             >
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center space-y-4 p-6">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-4">
                   {/* Ícone */}
-                  <div className={`flex-shrink-0 rounded-full p-6 ${stat.bgColor}`}>
-                    <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                  <div className={`flex-shrink-0 rounded-full p-4 ${stat.bgColor}`}>
+                    <stat.icon className={`h-6 w-6 ${stat.color}`} />
                   </div>
                   
                   {/* Conteúdo */}
-                  <div className="space-y-2 w-full">
-                    <p className="text-sm font-medium text-text-secondary leading-tight">
+                  <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                    <p className="text-xs font-medium text-text-secondary leading-tight mb-1">
                       {stat.name}
                     </p>
-                    <p className="text-2xl font-bold text-text-primary leading-none">
+                    <p 
+                      className="font-bold text-text-primary leading-none whitespace-nowrap"
+                      style={{ 
+                        fontSize: 'clamp(0.875rem, 2.5vw, 1.5rem)'
+                      }}
+                    >
                       {stat.value}
                     </p>
                   </div>

@@ -219,16 +219,19 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
       </Card>
 
       {/* Resumo Geral */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-md p-3 bg-success-bg">
-                <span className="text-success text-2xl">💰</span>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-shrink-0 rounded-md p-2 bg-success-bg">
+                <span className="text-success text-lg">💰</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">Receita Total</p>
-                <p className="text-2xl font-semibold text-text-primary">
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Receita Total</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
+                >
                   R$ {(dadosReceitaMensal?.resumoGeral?.receitaTotal || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -237,14 +240,17 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-md p-3 bg-primary/10">
-                <span className="text-primary text-2xl">📊</span>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-shrink-0 rounded-md p-2 bg-primary/10">
+                <span className="text-primary text-lg">📊</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">Média Mensal</p>
-                <p className="text-2xl font-semibold text-text-primary">
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Média Mensal</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
+                >
                   R$ {(dadosReceitaMensal?.resumoGeral?.receitaMedia || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -253,14 +259,17 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-md p-3 bg-accent/10">
-                <span className="text-accent text-2xl">📈</span>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-shrink-0 rounded-md p-2 bg-accent/10">
+                <span className="text-accent text-lg">📈</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">Maior Receita</p>
-                <p className="text-2xl font-semibold text-text-primary">
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Maior Receita</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
+                >
                   R$ {(dadosReceitaMensal?.resumoGeral?.maiorValor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -269,14 +278,17 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-md p-3 bg-warning-bg">
-                <span className="text-warning text-2xl">📉</span>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-shrink-0 rounded-md p-2 bg-warning-bg">
+                <span className="text-warning text-lg">📉</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">Menor Receita</p>
-                <p className="text-2xl font-semibold text-text-primary">
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Menor Receita</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
+                >
                   R$ {(dadosReceitaMensal?.resumoGeral?.menorValor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -285,14 +297,17 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-md p-3 bg-primary/10">
-                <span className="text-primary text-2xl">📅</span>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-shrink-0 rounded-md p-2 bg-primary/10">
+                <span className="text-primary text-lg">📅</span>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-text-secondary">Meses c/ Receita</p>
-                <p className="text-2xl font-semibold text-text-primary">
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Meses c/ Receita</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1.25rem)' }}
+                >
                   {dadosReceitaMensal?.resumoGeral?.mesesComReceita || 0} / {dadosReceitaMensal?.resumoGeral?.totalMeses || 0}
                 </p>
               </div>

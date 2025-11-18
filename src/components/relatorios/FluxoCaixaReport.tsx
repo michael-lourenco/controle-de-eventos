@@ -11,8 +11,6 @@ import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, ArrowTrending
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { 
-  StatCard, 
-  StatGrid, 
   TabbedChart, 
   PieChart, 
   BarChart,
@@ -46,8 +44,25 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
     });
 
     const custosPeriodo = custos.filter(c => {
-      const dataCusto = new Date(c.dataCadastro);
-      return dataCusto >= inicio && dataCusto <= fim;
+      // Filtrar custos removidos
+      if (c.removido) {
+        return false;
+      }
+      // Validar se tem dataCadastro
+      if (!c.dataCadastro) {
+        return false;
+      }
+      try {
+        const dataCusto = new Date(c.dataCadastro);
+        // Verificar se a data é válida
+        if (isNaN(dataCusto.getTime())) {
+          return false;
+        }
+        return dataCusto >= inicio && dataCusto <= fim;
+      } catch (error) {
+        console.warn('Erro ao processar dataCadastro do custo:', c.id, error);
+        return false;
+      }
     });
 
     // Calcular receitas por mês
@@ -61,7 +76,9 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
     const despesasPorMes: Record<string, number> = {};
     custosPeriodo.forEach(custo => {
       const mes = format(new Date(custo.dataCadastro), 'yyyy-MM');
-      despesasPorMes[mes] = (despesasPorMes[mes] || 0) + custo.valor;
+      // Multiplicar valor pela quantidade (mesma lógica do cálculo por categoria)
+      const valorTotal = custo.valor * (custo.quantidade || 1);
+      despesasPorMes[mes] = (despesasPorMes[mes] || 0) + valorTotal;
     });
 
     // Gerar fluxo mensal
@@ -357,32 +374,87 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
       )}
 
       {/* Resumo Geral */}
-      <StatGrid>
-        <StatCard
-          title="Receita Total"
-          value={`R$ ${dadosFluxoCaixa.resumoGeral.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          color="success"
-        />
-        <StatCard
-          title="Despesa Total"
-          value={`R$ ${dadosFluxoCaixa.resumoGeral.despesaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          color="error"
-        />
-        <StatCard
-          title="Saldo Atual"
-          value={`R$ ${dadosFluxoCaixa.resumoGeral.saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-          color={dadosFluxoCaixa.resumoGeral.saldoAtual >= 0 ? "success" : "error"}
-          trend={{
-            value: Number(Math.abs(dadosFluxoCaixa.resumoGeral.percentualVariacao).toFixed(1)),
-            isPositive: dadosFluxoCaixa.resumoGeral.percentualVariacao >= 0
-          }}
-        />
-        <StatCard
-          title="Variação do Saldo"
-          value={`${dadosFluxoCaixa.resumoGeral.percentualVariacao.toFixed(1)}%`}
-          color={dadosFluxoCaixa.resumoGeral.percentualVariacao >= 0 ? "success" : "error"}
-        />
-      </StatGrid>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-shrink-0 rounded-md p-2 bg-success-bg">
+                <span className="text-success text-lg">💰</span>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Receita Total</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
+                >
+                  R$ {dadosFluxoCaixa.resumoGeral.receitaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-shrink-0 rounded-md p-2 bg-error-bg">
+                <span className="text-error text-lg">💸</span>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Despesa Total</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
+                >
+                  R$ {dadosFluxoCaixa.resumoGeral.despesaTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className={`flex-shrink-0 rounded-md p-2 ${dadosFluxoCaixa.resumoGeral.saldoAtual >= 0 ? 'bg-success-bg' : 'bg-error-bg'}`}>
+                <span className={`${dadosFluxoCaixa.resumoGeral.saldoAtual >= 0 ? 'text-success' : 'text-error'} text-lg`}>💵</span>
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Saldo Atual</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
+                >
+                  R$ {dadosFluxoCaixa.resumoGeral.saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className={`flex-shrink-0 rounded-md p-2 ${dadosFluxoCaixa.resumoGeral.percentualVariacao >= 0 ? 'bg-success-bg' : 'bg-error-bg'}`}>
+                {dadosFluxoCaixa.resumoGeral.percentualVariacao >= 0 ? (
+                  <ArrowTrendingUpIcon className={`h-5 w-5 ${dadosFluxoCaixa.resumoGeral.percentualVariacao >= 0 ? 'text-success' : 'text-error'}`} />
+                ) : (
+                  <ArrowTrendingDownIcon className={`h-5 w-5 ${dadosFluxoCaixa.resumoGeral.percentualVariacao >= 0 ? 'text-success' : 'text-error'}`} />
+                )}
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col items-end text-right">
+                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Variação do Saldo</p>
+                <p 
+                  className="font-bold text-text-primary leading-none whitespace-nowrap"
+                  style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
+                >
+                  {dadosFluxoCaixa.resumoGeral.percentualVariacao >= 0 ? '+' : ''}{dadosFluxoCaixa.resumoGeral.percentualVariacao.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Fluxo Mensal */}
       <TabbedChart
