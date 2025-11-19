@@ -1,8 +1,17 @@
+/* 
+ * COMENTADO: Aguardando permissões diretas da Google para dados sensíveis
+ * Este serviço será reativado no futuro após obtenção das permissões necessárias
+ * 
+ * Data de comentário: 2025-01-XX
+ */
+
 /**
  * Serviço de sincronização com Google Calendar
  * 
  * Este serviço é chamado após operações de eventos para sincronizar com Google Calendar.
  * Usa importação dinâmica para evitar bundle no cliente.
+ * 
+ * TODO: Reativar quando tivermos permissões diretas da Google
  */
 
 import { Evento } from '@/types';
@@ -10,8 +19,13 @@ import { Evento } from '@/types';
 export class GoogleCalendarSyncService {
   /**
    * Sincroniza evento com Google Calendar após criação
+   * COMENTADO: Aguardando permissões diretas da Google
    */
   static async syncAfterCreate(evento: Evento, userId: string): Promise<void> {
+    // Funcionalidade desabilitada temporariamente
+    return;
+    
+    /*
     try {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
@@ -51,16 +65,22 @@ export class GoogleCalendarSyncService {
     } catch (error) {
       console.error('[GoogleCalendarSyncService] Erro ao sincronizar evento criado:', error);
     }
+    */
   }
 
   /**
    * Sincroniza evento com Google Calendar após atualização
+   * COMENTADO: Aguardando permissões diretas da Google
    */
   static async syncAfterUpdate(
     evento: Evento, 
     userId: string, 
     eventoAntigo?: Evento | null
   ): Promise<void> {
+    // Funcionalidade desabilitada temporariamente
+    return;
+    
+    /*
     try {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
@@ -129,12 +149,18 @@ export class GoogleCalendarSyncService {
     } catch (error) {
       console.error('[GoogleCalendarSyncService] Erro ao sincronizar evento atualizado:', error);
     }
+    */
   }
 
   /**
    * Remove evento do Google Calendar após arquivamento
+   * COMENTADO: Aguardando permissões diretas da Google
    */
   static async syncAfterDelete(evento: Evento, userId: string): Promise<void> {
+    // Funcionalidade desabilitada temporariamente
+    return;
+    
+    /*
     try {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
@@ -164,6 +190,6 @@ export class GoogleCalendarSyncService {
     } catch (error) {
       console.error('[GoogleCalendarSyncService] Erro ao remover evento do Google Calendar:', error);
     }
+    */
   }
 }
-
