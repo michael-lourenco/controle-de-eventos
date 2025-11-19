@@ -8,13 +8,6 @@ const nextConfig: NextConfig = {
     'google-auth-library',
     'gcp-metadata',
   ],
-  experimental: {
-    serverComponentsExternalPackages: [
-      'googleapis',
-      'google-auth-library',
-      'gcp-metadata',
-    ],
-  },
   webpack: (config, { isServer }) => {
     // Configurar para não fazer bundle de módulos Node.js no cliente
     if (!isServer) {

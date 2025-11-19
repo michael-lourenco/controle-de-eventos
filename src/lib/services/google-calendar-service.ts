@@ -109,7 +109,10 @@ export class GoogleCalendarService {
     const accessToken = await this.getAccessToken(userId);
     const oauth2Client = this.getOAuth2Client();
     oauth2Client.setCredentials({ access_token: accessToken });
-    return google.calendar({ version: 'v3', auth: oauth2Client });
+    return google.calendar({
+      version: 'v3',
+      auth: oauth2Client as any
+    });
   }
 
   /**
@@ -301,11 +304,17 @@ export class GoogleCalendarService {
         // Se userId fornecido, obter token e configurar
         const token = await this.getAccessToken(userId);
         oauth2Client.setCredentials({ access_token: token });
-        calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+        calendar = google.calendar({
+          version: 'v3',
+          auth: oauth2Client as any
+        });
       } else if (accessToken) {
         // Se accessToken fornecido diretamente
         oauth2Client.setCredentials({ access_token: accessToken });
-        calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+        calendar = google.calendar({
+          version: 'v3',
+          auth: oauth2Client as any
+        });
       } else {
         throw new Error('userId ou accessToken deve ser fornecido');
       }
