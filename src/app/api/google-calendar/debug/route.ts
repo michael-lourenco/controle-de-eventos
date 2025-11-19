@@ -94,20 +94,46 @@ export async function GET(request: NextRequest) {
     // Tentar validar o token fazendo uma requisição simples ao calendário
     let tokenValid = false;
     let tokenValidationError = null;
+    let tokenTestDetails = null;
     
     try {
       const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
       const googleService = new GoogleCalendarService();
+      
       // Tentar obter informações do calendário (vai validar e renovar token se necessário)
       const calendarInfo = await googleService.getCalendarInfo(session.user.id);
       tokenValid = !!calendarInfo && !!calendarInfo.email;
+      tokenTestDetails = {
+        success: true,
+        calendarEmail: calendarInfo.email,
+        calendarId: calendarInfo.calendarId
+      };
     } catch (error: any) {
       tokenValid = false;
       tokenValidationError = {
         message: error.message,
         code: error.code,
-        status: error.response?.status
+        status: error.response?.status,
+        response: error.response?.data
       };
+      
+      // Tentar fazer uma requisição direta com o token para ver o erro exato
+      try {
+        // Usar o accessToken descriptografado que já temos
+        const testResponse = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
+        const tokenInfo = await testResponse.json();
+        tokenTestDetails = {
+          success: false,
+          tokenInfo: tokenInfo,
+          httpStatus: testResponse.status,
+          httpStatusText: testResponse.statusText
+        };
+      } catch (tokenInfoError: any) {
+        tokenTestDetails = {
+          success: false,
+          tokenInfoError: tokenInfoError.message
+        };
+      }
     }
 
     return NextResponse.json({
@@ -134,7 +160,8 @@ export async function GET(request: NextRequest) {
       calendarError: calendarError,
       tokenValidation: {
         valid: tokenValid,
-        error: tokenValidationError
+        error: tokenValidationError,
+        testDetails: tokenTestDetails
       },
       user: {
         id: session.user.id,

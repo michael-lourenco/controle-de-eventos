@@ -571,7 +571,7 @@ function GoogleCalendarConfigContent() {
                               {/* Validação do Token */}
                               <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border">
                                 <h3 className="font-semibold text-text-primary mb-2">✅ Validação do Token</h3>
-                                <div className="space-y-1 text-sm">
+                                <div className="space-y-2 text-sm">
                                   <p>
                                     <span className="font-medium">Status:</span>{' '}
                                     <span className={debugInfo.tokenValidation?.valid ? 'text-green-600' : 'text-red-600'}>
@@ -579,22 +579,109 @@ function GoogleCalendarConfigContent() {
                                     </span>
                                   </p>
                                   {debugInfo.tokenValidation?.error && (
-                                    <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                                      <p className="text-red-600 dark:text-red-400 text-xs">
-                                        <span className="font-medium">Erro:</span> {debugInfo.tokenValidation.error.message}
-                                      </p>
-                                      {debugInfo.tokenValidation.error.code && (
-                                        <p className="text-red-600 dark:text-red-400 text-xs">
-                                          <span className="font-medium">Código:</span> {debugInfo.tokenValidation.error.code}
+                                    <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded border border-red-200 dark:border-red-800">
+                                      <p className="text-red-600 dark:text-red-400 text-xs font-medium mb-2">Erro de Validação:</p>
+                                      <div className="space-y-1 text-xs">
+                                        <p className="text-red-600 dark:text-red-400">
+                                          <span className="font-medium">Mensagem:</span> {debugInfo.tokenValidation.error.message}
                                         </p>
-                                      )}
+                                        {debugInfo.tokenValidation.error.code && (
+                                          <p className="text-red-600 dark:text-red-400">
+                                            <span className="font-medium">Código:</span> {debugInfo.tokenValidation.error.code}
+                                          </p>
+                                        )}
+                                        {debugInfo.tokenValidation.error.status && (
+                                          <p className="text-red-600 dark:text-red-400">
+                                            <span className="font-medium">Status HTTP:</span> {debugInfo.tokenValidation.error.status}
+                                          </p>
+                                        )}
+                                        {debugInfo.tokenValidation.error.response && (
+                                          <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/30 rounded">
+                                            <p className="text-red-700 dark:text-red-300 text-xs font-medium mb-1">Resposta da API:</p>
+                                            <pre className="text-xs overflow-auto max-h-32">
+                                              {JSON.stringify(debugInfo.tokenValidation.error.response, null, 2)}
+                                            </pre>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {debugInfo.tokenValidation?.testDetails && (
+                                    <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                                      <p className="text-blue-600 dark:text-blue-400 text-xs font-medium mb-2">Detalhes do Teste:</p>
+                                      <div className="space-y-1 text-xs">
+                                        {debugInfo.tokenValidation.testDetails.success ? (
+                                          <>
+                                            <p className="text-green-600 dark:text-green-400">
+                                              ✅ Teste bem-sucedido
+                                            </p>
+                                            {debugInfo.tokenValidation.testDetails.calendarEmail && (
+                                              <p className="text-text-secondary">
+                                                <span className="font-medium">Email do Calendário:</span> {debugInfo.tokenValidation.testDetails.calendarEmail}
+                                              </p>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <>
+                                            <p className="text-red-600 dark:text-red-400">
+                                              ❌ Teste falhou
+                                            </p>
+                                            {debugInfo.tokenValidation.testDetails.tokenInfo && (
+                                              <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                                                <p className="text-xs font-medium mb-1">Informações do Token (Google API):</p>
+                                                <pre className="text-xs overflow-auto max-h-32">
+                                                  {JSON.stringify(debugInfo.tokenValidation.testDetails.tokenInfo, null, 2)}
+                                                </pre>
+                                              </div>
+                                            )}
+                                            {debugInfo.tokenValidation.testDetails.httpStatus && (
+                                              <p className="text-text-secondary">
+                                                <span className="font-medium">Status HTTP:</span> {debugInfo.tokenValidation.testDetails.httpStatus}
+                                              </p>
+                                            )}
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
                                   )}
                                 </div>
                               </div>
 
-                              {/* Botão para Recarregar */}
-                              <div className="flex justify-end">
+                              {/* Botões de Ação */}
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  onClick={async () => {
+                                    try {
+                                      setLoadingDebug(true);
+                                      const response = await fetch('/api/google-calendar/refresh-token', {
+                                        method: 'POST'
+                                      });
+                                      const data = await response.json();
+                                      
+                                      if (response.ok) {
+                                        showToast('Token renovado com sucesso!', 'success');
+                                        await loadDebugInfo();
+                                      } else {
+                                        showToast(data.message || 'Erro ao renovar token', 'error');
+                                        if (data.requiresReconnect) {
+                                          showToast('Por favor, desconecte e conecte novamente sua conta do Google Calendar', 'error');
+                                        }
+                                      }
+                                    } catch (error: any) {
+                                      console.error('Erro ao renovar token:', error);
+                                      showToast('Erro ao renovar token', 'error');
+                                    } finally {
+                                      setLoadingDebug(false);
+                                    }
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={loadingDebug}
+                                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                                >
+                                  <ArrowPathIcon className={`h-4 w-4 mr-2 ${loadingDebug ? 'animate-spin' : ''}`} />
+                                  Forçar Renovação do Token
+                                </Button>
                                 <Button
                                   onClick={loadDebugInfo}
                                   variant="outline"
