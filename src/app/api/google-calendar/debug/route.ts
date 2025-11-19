@@ -188,37 +188,20 @@ export async function GET(request: NextRequest) {
       // Tentar também com o OAuth2Client para ver se funciona
       try {
         console.log('[Debug] Testando com OAuth2Client...');
-        const { google } = await import('googleapis');
-        const { OAuth2Client } = await import('google-auth-library');
+        const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
+        const googleService = new GoogleCalendarService();
         
-        const oauth2Client = new OAuth2Client(
-          process.env.GOOGLE_CLIENT_ID,
-          process.env.GOOGLE_CLIENT_SECRET,
-          process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD
-        );
+        // Usar o método getCalendarInfo que já usa OAuth2Client internamente
+        const calendarInfo = await googleService.getCalendarInfo(session.user.id);
         
-        oauth2Client.setCredentials({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
-        
-        const calendar = google.calendar({
-          version: 'v3',
-          auth: oauth2Client
-        });
-        
-        const testResponse = await calendar.calendars.get({
-          calendarId: 'primary'
-        });
-        
-        console.log('[Debug] Teste com OAuth2Client bem-sucedido:', testResponse.data.id);
+        console.log('[Debug] Teste com OAuth2Client bem-sucedido:', calendarInfo.email);
         
         tokenTestDetails = {
           ...tokenTestDetails,
           oauth2ClientTest: {
             success: true,
-            calendarId: testResponse.data.id,
-            calendarEmail: testResponse.data.id
+            calendarId: calendarInfo.calendarId,
+            calendarEmail: calendarInfo.email
           }
         };
       } catch (oauth2Error: any) {
