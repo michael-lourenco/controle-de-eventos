@@ -222,6 +222,13 @@ export class DataService {
     try {
       const resultado = await this.eventoRepo.createEvento(evento, userId);
       console.log('DataService: Evento criado com sucesso:', resultado);
+      
+      // Sincronizar com Google Calendar (não bloquear se falhar)
+      const { GoogleCalendarSyncService } = await import('./services/google-calendar-sync-service');
+      GoogleCalendarSyncService.syncAfterCreate(resultado, userId).catch(error => {
+        console.error('DataService: Erro ao sincronizar evento com Google Calendar:', error);
+      });
+      
       return resultado;
     } catch (error) {
       console.error('DataService: Erro ao criar evento:', error);
@@ -230,15 +237,55 @@ export class DataService {
   }
 
   async updateEvento(id: string, evento: Partial<Evento>, userId: string): Promise<Evento> {
-    return this.eventoRepo.updateEvento(id, evento, userId);
+    // Buscar evento antigo para comparação
+    const eventoAntigo = await this.eventoRepo.getEventoById(id, userId);
+    
+    // Atualizar evento
+    const resultado = await this.eventoRepo.updateEvento(id, evento, userId);
+    
+    // Buscar evento atualizado completo (pode ter mudado durante a atualização)
+    const eventoAtualizado = await this.eventoRepo.getEventoById(id, userId) || resultado;
+    
+    // Sincronizar com Google Calendar (não bloquear se falhar)
+    const { GoogleCalendarSyncService } = await import('./services/google-calendar-sync-service');
+    GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch(error => {
+      console.error('DataService: Erro ao sincronizar evento atualizado com Google Calendar:', error);
+    });
+    
+    return resultado;
   }
 
   async deleteEvento(id: string, userId: string): Promise<void> {
-    return this.eventoRepo.deleteEvento(id, userId);
+    // Buscar evento antes de arquivar para sincronização
+    const evento = await this.eventoRepo.getEventoById(id, userId);
+    
+    await this.eventoRepo.deleteEvento(id, userId);
+    
+    // Sincronizar com Google Calendar (não bloquear se falhar)
+    if (evento) {
+      const { GoogleCalendarSyncService } = await import('./services/google-calendar-sync-service');
+      GoogleCalendarSyncService.syncAfterDelete({ ...evento, arquivado: true }, userId).catch(error => {
+        console.error('DataService: Erro ao sincronizar evento arquivado com Google Calendar:', error);
+      });
+    }
   }
   
   async desarquivarEvento(id: string, userId: string): Promise<void> {
-    return this.eventoRepo.desarquivarEvento(id, userId);
+    // Buscar evento antes de desarquivar para sincronização
+    const eventoAntigo = await this.eventoRepo.getEventoById(id, userId);
+    
+    await this.eventoRepo.desarquivarEvento(id, userId);
+    
+    // Buscar evento atualizado após desarquivamento
+    const eventoAtualizado = await this.eventoRepo.getEventoById(id, userId);
+    
+    // Sincronizar com Google Calendar (não bloquear se falhar)
+    if (eventoAtualizado) {
+      const { GoogleCalendarSyncService } = await import('./services/google-calendar-sync-service');
+      GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch(error => {
+        console.error('DataService: Erro ao sincronizar evento desarquivado com Google Calendar:', error);
+      });
+    }
   }
   
   async getEventosArquivados(userId: string): Promise<Evento[]> {

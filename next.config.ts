@@ -2,11 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Configurar pacotes que devem ser tratados como externos no servidor
-  // Isso evita que o webpack/Turbopack tente processá-los no cliente
+  // Isso evita que o webpack tente processá-los no cliente
   serverExternalPackages: [
     'googleapis',
     'google-auth-library',
     'gcp-metadata',
+    'gtoken',
+    'googleapis-common',
   ],
   webpack: (config, { isServer }) => {
     // Configurar para não fazer bundle de módulos Node.js no cliente
@@ -22,6 +24,7 @@ const nextConfig: NextConfig = {
         path: false,
         https: false,
         http: false,
+        http2: false,
         buffer: false,
         stream: false,
         util: false,
@@ -35,7 +38,9 @@ const nextConfig: NextConfig = {
         config.externals.push(
           'googleapis',
           'google-auth-library',
-          'gcp-metadata'
+          'gcp-metadata',
+          'gtoken',
+          'googleapis-common'
         );
       } else if (typeof config.externals === 'function') {
         const originalExternals = config.externals;
@@ -43,15 +48,31 @@ const nextConfig: NextConfig = {
           originalExternals,
           'googleapis',
           'google-auth-library',
-          'gcp-metadata'
+          'gcp-metadata',
+          'gtoken',
+          'googleapis-common'
         ];
       } else {
         config.externals = [
           ...(Array.isArray(config.externals) ? config.externals : [config.externals]),
           'googleapis',
           'google-auth-library',
-          'gcp-metadata'
+          'gcp-metadata',
+          'gtoken',
+          'googleapis-common'
         ];
+      }
+    } else {
+      // No servidor, também marcar como externos para evitar problemas
+      config.externals = config.externals || [];
+      if (Array.isArray(config.externals)) {
+        config.externals.push(
+          'googleapis',
+          'google-auth-library',
+          'gcp-metadata',
+          'gtoken',
+          'googleapis-common'
+        );
       }
     }
     return config;
