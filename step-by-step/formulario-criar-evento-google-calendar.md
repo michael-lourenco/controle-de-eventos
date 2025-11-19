@@ -6,7 +6,8 @@ Este documento descreve a implementação de um formulário na página de config
 
 **Data de Implementação:** 2025-01-XX  
 **Status:** ✅ Concluído  
-**Prioridade:** Média
+**Prioridade:** Média  
+**Última Atualização:** 2025-01-XX (Adicionada seção de debug)
 
 ---
 
@@ -50,7 +51,29 @@ Após análise do código, foi confirmado que:
 
 ## 📁 Arquivos Criados/Modificados
 
-### 1. Nova API Route: `/api/google-calendar/events`
+### 1. Nova API Route: `/api/google-calendar/debug`
+
+**Arquivo:** `src/app/api/google-calendar/debug/route.ts`
+
+**Função:** Retornar informações detalhadas de debug sobre tokens e conexão do Google Calendar
+
+**Características:**
+- Retorna access token e refresh token completos (para debug em desenvolvimento)
+- Mostra status de expiração do token
+- Exibe informações do usuário do Google Calendar
+- Valida o token tentando fazer uma requisição ao calendário
+- Mostra erros detalhados se houver problemas
+
+**Informações retornadas:**
+- Dados do usuário do sistema (id, nome, email)
+- Token completo (accessToken e refreshToken descriptografados)
+- Preview dos tokens (primeiros e últimos caracteres)
+- Data de expiração e status (válido/expirado)
+- Informações do calendário (email, calendarId)
+- Erros de validação do token
+- Última sincronização
+
+### 2. Nova API Route: `/api/google-calendar/events`
 
 **Arquivo:** `src/app/api/google-calendar/events/route.ts`
 
@@ -88,7 +111,32 @@ Após análise do código, foi confirmado que:
 - Token é obtido do repositório `GoogleCalendarTokenRepository`
 - Não usa token de autenticação do sistema
 
-### 3. Formulário na Página de Configurações
+### 3. Seção de Debug Visual
+
+**Arquivo:** `src/app/configuracoes/calendario/page.tsx`
+
+**Modificações:**
+- Adicionado estado para informações de debug
+- Adicionado função `loadDebugInfo` para carregar informações
+- Adicionado Card com seção de debug expansível
+- Exibe informações detalhadas sobre tokens, usuário e validação
+
+**Informações Exibidas:**
+- 👤 Usuário do Sistema (ID, Nome, Email)
+- 🔑 Token do Google Calendar (Access Token completo, Refresh Token completo, previews)
+- Status de expiração (válido/expirado, minutos restantes)
+- 📅 Informações do Calendário (Email, Calendar ID)
+- ✅ Validação do Token (status e erros se houver)
+- ❌ Erros detalhados se houver problemas
+
+**Comportamento:**
+- Seção aparece apenas quando sincronização está conectada
+- Botão "Mostrar Debug" / "Ocultar Debug" para expandir/colapsar
+- Botão "Recarregar Informações" para atualizar dados
+- Loading state durante carregamento
+- Exibe tokens completos para debug (desenvolvimento)
+
+### 4. Formulário na Página de Configurações
 
 **Arquivo:** `src/app/configuracoes/calendario/page.tsx`
 
@@ -244,16 +292,35 @@ Content-Type: application/json
    - Mensagem: "Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Enterprise."
 
 3. **Token não encontrado:**
-   - Status: 500
+   - Status: 404
    - Mensagem: "Token não encontrado. Conecte sua conta do Google Calendar primeiro."
 
-4. **Campos obrigatórios faltando:**
+4. **Token expirado ou inválido (Login Required):**
+   - Status: 401
+   - Mensagem: "Token expirado ou inválido. Tente desconectar e conectar novamente sua conta do Google Calendar."
+   - Detalhes: Inclui código de erro e dados da resposta da API do Google
+
+5. **Campos obrigatórios faltando:**
    - Status: 400
    - Mensagem: "Título do evento é obrigatório" ou "Data/hora de início é obrigatória"
 
-5. **Erro na API do Google:**
+6. **Erro na API do Google:**
    - Status: 500
    - Mensagem: Erro retornado pela API do Google Calendar
+   - Detalhes: Inclui código de erro e dados da resposta quando disponível
+
+### Erro "Login Required"
+
+Este erro geralmente ocorre quando:
+- O access token expirou e não foi renovado corretamente
+- O refresh token é inválido ou foi revogado
+- As credenciais OAuth2 não estão configuradas corretamente
+
+**Solução:**
+1. Verificar informações de debug na página de configurações
+2. Verificar se o token está expirado
+3. Tentar desconectar e conectar novamente
+4. Verificar se as variáveis de ambiente estão configuradas corretamente
 
 ---
 

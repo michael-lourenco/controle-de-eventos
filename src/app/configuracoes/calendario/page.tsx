@@ -21,7 +21,9 @@ import {
   ArrowPathIcon,
   LinkIcon,
   CalendarIcon,
-  PlusIcon
+  PlusIcon,
+  InformationCircleIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 function GoogleCalendarConfigContent() {
@@ -43,6 +45,11 @@ function GoogleCalendarConfigContent() {
     endDateTime: '',
     location: ''
   });
+
+  // Estados de debug
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [loadingDebug, setLoadingDebug] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   // Verificar mensagens da URL
   useEffect(() => {
@@ -86,6 +93,13 @@ function GoogleCalendarConfigContent() {
     loadStatus();
   }, []);
 
+  // Carregar informações de debug quando status mudar
+  useEffect(() => {
+    if (status?.connected) {
+      loadDebugInfo();
+    }
+  }, [status?.connected]);
+
   const loadStatus = async () => {
     try {
       setLoading(true);
@@ -103,6 +117,25 @@ function GoogleCalendarConfigContent() {
       showToast('Erro ao carregar status do Google Calendar', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadDebugInfo = async () => {
+    try {
+      setLoadingDebug(true);
+      const response = await fetch('/api/google-calendar/debug');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDebugInfo(data);
+      } else {
+        const error = await response.json();
+        console.error('Erro ao carregar debug:', error);
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar informações de debug:', error);
+    } finally {
+      setLoadingDebug(false);
     }
   };
 
@@ -402,6 +435,187 @@ function GoogleCalendarConfigContent() {
                     </>
                   )}
                 </div>
+
+                {/* Seção de Debug - Informações Detalhadas */}
+                {status.connected && (
+                  <div className="mt-6">
+                    <Card className="border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <InformationCircleIcon className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                            <CardTitle className="text-lg">Informações de Debug (Desenvolvimento)</CardTitle>
+                          </div>
+                          <Button
+                            onClick={() => {
+                              setShowDebug(!showDebug);
+                              if (!showDebug && !debugInfo) {
+                                loadDebugInfo();
+                              }
+                            }}
+                            variant="outline"
+                            size="sm"
+                          >
+                            {showDebug ? 'Ocultar' : 'Mostrar'} Debug
+                          </Button>
+                        </div>
+                        <CardDescription>
+                          Informações detalhadas sobre tokens e conexão para debug
+                        </CardDescription>
+                      </CardHeader>
+                      {showDebug && (
+                        <CardContent>
+                          {loadingDebug ? (
+                            <div className="flex items-center justify-center py-8">
+                              <ArrowPathIcon className="h-6 w-6 animate-spin text-primary mr-2" />
+                              <span>Carregando informações de debug...</span>
+                            </div>
+                          ) : debugInfo ? (
+                            <div className="space-y-4">
+                              {/* Informações do Usuário */}
+                              <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border">
+                                <h3 className="font-semibold text-text-primary mb-2">👤 Usuário do Sistema</h3>
+                                <div className="space-y-1 text-sm">
+                                  <p><span className="font-medium">ID:</span> <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{debugInfo.user?.id}</code></p>
+                                  <p><span className="font-medium">Nome:</span> {debugInfo.user?.name}</p>
+                                  <p><span className="font-medium">Email:</span> {debugInfo.user?.email}</p>
+                                </div>
+                              </div>
+
+                              {/* Informações do Token */}
+                              <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border">
+                                <h3 className="font-semibold text-text-primary mb-2">🔑 Token do Google Calendar</h3>
+                                <div className="space-y-2 text-sm">
+                                  <div>
+                                    <span className="font-medium">Token ID:</span>
+                                    <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded ml-2">{debugInfo.token?.id}</code>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Access Token:</span>
+                                    <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded font-mono text-xs break-all">
+                                      {debugInfo.token?.accessToken || 'Não disponível'}
+                                    </div>
+                                    <p className="text-xs text-text-secondary mt-1">
+                                      Preview: {debugInfo.token?.accessTokenPreview}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Refresh Token:</span>
+                                    <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-700 rounded font-mono text-xs break-all">
+                                      {debugInfo.token?.refreshToken || 'Não disponível'}
+                                    </div>
+                                    <p className="text-xs text-text-secondary mt-1">
+                                      Preview: {debugInfo.token?.refreshTokenPreview}
+                                    </p>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4 mt-3">
+                                    <div>
+                                      <span className="font-medium">Expira em:</span>
+                                      <p className="text-text-secondary">{debugInfo.token?.expiresAtFormatted}</p>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Status:</span>
+                                      <p className={debugInfo.token?.isExpired ? 'text-red-600' : 'text-green-600'}>
+                                        {debugInfo.token?.isExpired ? '❌ Expirado' : `✅ Válido (${debugInfo.token?.minutesUntilExpiry} min restantes)`}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4 mt-3">
+                                    <div>
+                                      <span className="font-medium">Calendar ID:</span>
+                                      <p className="text-text-secondary">{debugInfo.token?.calendarId || 'primary'}</p>
+                                    </div>
+                                    <div>
+                                      <span className="font-medium">Sincronização:</span>
+                                      <p className={debugInfo.token?.syncEnabled ? 'text-green-600' : 'text-gray-600'}>
+                                        {debugInfo.token?.syncEnabled ? '✅ Ativa' : '❌ Inativa'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {debugInfo.token?.lastSyncAtFormatted && (
+                                    <div>
+                                      <span className="font-medium">Última Sincronização:</span>
+                                      <p className="text-text-secondary">{debugInfo.token?.lastSyncAtFormatted}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Informações do Calendário */}
+                              {debugInfo.calendarInfo && (
+                                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border">
+                                  <h3 className="font-semibold text-text-primary mb-2">📅 Informações do Calendário</h3>
+                                  <div className="space-y-1 text-sm">
+                                    <p><span className="font-medium">Email:</span> {debugInfo.calendarInfo.email}</p>
+                                    <p><span className="font-medium">Calendar ID:</span> <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{debugInfo.calendarInfo.calendarId}</code></p>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Erro do Calendário */}
+                              {debugInfo.calendarError && (
+                                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                  <h3 className="font-semibold text-red-700 dark:text-red-400 mb-2">❌ Erro ao Obter Informações do Calendário</h3>
+                                  <div className="space-y-1 text-sm text-red-600 dark:text-red-400">
+                                    <p><span className="font-medium">Mensagem:</span> {debugInfo.calendarError.message}</p>
+                                    {debugInfo.calendarError.code && (
+                                      <p><span className="font-medium">Código:</span> {debugInfo.calendarError.code}</p>
+                                    )}
+                                    {debugInfo.calendarError.status && (
+                                      <p><span className="font-medium">Status HTTP:</span> {debugInfo.calendarError.status}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Validação do Token */}
+                              <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border">
+                                <h3 className="font-semibold text-text-primary mb-2">✅ Validação do Token</h3>
+                                <div className="space-y-1 text-sm">
+                                  <p>
+                                    <span className="font-medium">Status:</span>{' '}
+                                    <span className={debugInfo.tokenValidation?.valid ? 'text-green-600' : 'text-red-600'}>
+                                      {debugInfo.tokenValidation?.valid ? '✅ Token Válido' : '❌ Token Inválido'}
+                                    </span>
+                                  </p>
+                                  {debugInfo.tokenValidation?.error && (
+                                    <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                                      <p className="text-red-600 dark:text-red-400 text-xs">
+                                        <span className="font-medium">Erro:</span> {debugInfo.tokenValidation.error.message}
+                                      </p>
+                                      {debugInfo.tokenValidation.error.code && (
+                                        <p className="text-red-600 dark:text-red-400 text-xs">
+                                          <span className="font-medium">Código:</span> {debugInfo.tokenValidation.error.code}
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Botão para Recarregar */}
+                              <div className="flex justify-end">
+                                <Button
+                                  onClick={loadDebugInfo}
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={loadingDebug}
+                                >
+                                  <ArrowPathIcon className={`h-4 w-4 mr-2 ${loadingDebug ? 'animate-spin' : ''}`} />
+                                  Recarregar Informações
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-center py-4 text-text-secondary">
+                              <p>Nenhuma informação de debug disponível</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      )}
+                    </Card>
+                  </div>
+                )}
               </>
             )}
           </CardContent>

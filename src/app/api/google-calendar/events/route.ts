@@ -73,15 +73,43 @@ export async function POST(request: NextRequest) {
     const googleService = new GoogleCalendarService();
 
     // Criar evento no Google Calendar
-    const eventId = await googleService.createEventDirectly(session.user.id, googleEvent);
+    try {
+      const eventId = await googleService.createEventDirectly(session.user.id, googleEvent);
 
-    return NextResponse.json({
-      success: true,
-      eventId,
-      message: 'Evento criado com sucesso no Google Calendar'
-    });
+      return NextResponse.json({
+        success: true,
+        eventId,
+        message: 'Evento criado com sucesso no Google Calendar'
+      });
+    } catch (createError: any) {
+      console.error('Erro ao criar evento no Google Calendar:', createError);
+      
+      // Tratar erros específicos
+      let errorMessage = createError.message || 'Erro desconhecido';
+      let statusCode = 500;
+      
+      if (errorMessage.includes('Login Required') || errorMessage.includes('401')) {
+        errorMessage = 'Token expirado ou inválido. Tente desconectar e conectar novamente sua conta do Google Calendar.';
+        statusCode = 401;
+      } else if (errorMessage.includes('invalid_grant')) {
+        errorMessage = 'Token inválido. Por favor, reconecte sua conta do Google Calendar.';
+        statusCode = 401;
+      } else if (errorMessage.includes('Token não encontrado')) {
+        errorMessage = 'Token não encontrado. Conecte sua conta do Google Calendar primeiro.';
+        statusCode = 404;
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Erro ao criar evento',
+          message: errorMessage,
+          details: createError.response?.data || createError.code || null
+        },
+        { status: statusCode }
+      );
+    }
   } catch (error: any) {
-    console.error('Erro ao criar evento no Google Calendar:', error);
+    console.error('Erro geral ao criar evento no Google Calendar:', error);
     return NextResponse.json(
       { 
         error: 'Erro ao criar evento',
