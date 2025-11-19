@@ -35,7 +35,6 @@ function decrypt(encrypted: string, key: string): string {
 
 export class GoogleCalendarService {
   private tokenRepo: GoogleCalendarTokenRepository;
-  private oauth2Client: OAuth2Client | null = null;
 
   constructor() {
     this.tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
@@ -43,16 +42,22 @@ export class GoogleCalendarService {
 
   /**
    * Inicializa o cliente OAuth2
+   * IMPORTANTE: Sempre cria uma nova instância para evitar problemas de estado compartilhado
+   * entre diferentes requisições/usuários. Isso garante que cada requisição tenha seu próprio
+   * OAuth2Client com as credenciais corretas.
    */
   private getOAuth2Client(): OAuth2Client {
-    if (!this.oauth2Client) {
-      this.oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_CLIENT_SECRET,
-        process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD
-      );
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD;
+    
+    if (!clientId || !clientSecret) {
+      throw new Error('GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET devem estar configurados');
     }
-    return this.oauth2Client;
+    
+    // Sempre criar nova instância para evitar problemas de estado compartilhado
+    // Isso é especialmente importante quando múltiplas requisições acontecem simultaneamente
+    return new OAuth2Client(clientId, clientSecret, redirectUri);
   }
 
   /**
@@ -174,15 +179,24 @@ export class GoogleCalendarService {
     const refreshTokenDecrypted = decrypt(tokenData.refreshToken, ENCRYPTION_KEY);
     
     // Configurar com ambos os tokens
+    // IMPORTANTE: 
+    // 1. OAuth2Client deve ter client_id e client_secret configurados (já está no construtor)
+    // 2. Configurar credentials ANTES de criar o cliente calendar
+    // 3. Sempre incluir refresh_token para permitir renovação automática
     oauth2Client.setCredentials({ 
       access_token: accessToken,
       refresh_token: refreshTokenDecrypted
     });
     
-    return google.calendar({
+    // Criar cliente calendar com OAuth2Client já configurado
+    // A biblioteca googleapis usa o OAuth2Client para adicionar automaticamente
+    // o header Authorization: Bearer {access_token}
+    const calendar = google.calendar({
       version: 'v3',
-      auth: oauth2Client as any
+      auth: oauth2Client
     });
+    
+    return calendar;
   }
 
   /**
@@ -474,10 +488,27 @@ export class GoogleCalendarService {
         calendarId: 'primary'
       });
 
-      console.log('[GoogleCalendarService] Informações do calendário obtidas:', response.data.id);
+      console.log('[GoogleCalendarService] Informações do calendário obtidas:', {
+        id: response.data.id,
+        summary: response.data.summary,
+        timeZone: response.data.timeZone
+      });
+      
+      // O ID do calendário geralmente é o email do usuário
+      const calendarId = response.data.id || '';
+      
+      // Validar se obtivemos um ID válido (não vazio)
+      if (!calendarId || calendarId.trim() === '') {
+        console.warn('[GoogleCalendarService] Calendar ID vazio, usando "primary"');
+        return {
+          email: '',
+          calendarId: 'primary'
+        };
+      }
+      
       return {
-        email: response.data.id || '',
-        calendarId: response.data.id || 'primary'
+        email: calendarId,
+        calendarId: calendarId
       };
     } catch (error: any) {
       console.error('[GoogleCalendarService] Erro ao obter informações do calendário:', {

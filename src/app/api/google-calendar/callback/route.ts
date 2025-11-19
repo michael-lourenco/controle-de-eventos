@@ -117,14 +117,54 @@ export async function GET(request: NextRequest) {
     let calendarInfo;
     try {
       calendarInfo = await googleService.getCalendarInfo(undefined, tokens.accessToken);
-      console.log('[Google Calendar Callback] Informações do calendário obtidas:', calendarInfo.email);
+      console.log('[Google Calendar Callback] Informações do calendário obtidas:', {
+        email: calendarInfo.email,
+        calendarId: calendarInfo.calendarId
+      });
+      
+      // Validar se obteve o email/calendarId
+      if (!calendarInfo.email && !calendarInfo.calendarId) {
+        console.warn('[Google Calendar Callback] Email e calendarId vazios, usando fallback');
+        calendarInfo = {
+          email: '',
+          calendarId: 'primary'
+        };
+      }
     } catch (infoError: any) {
-      console.error('[Google Calendar Callback] Erro ao obter informações do calendário:', infoError);
-      // Continuar mesmo se não conseguir obter email
-      calendarInfo = {
-        email: '',
-        calendarId: 'primary'
-      };
+      console.error('[Google Calendar Callback] Erro ao obter informações do calendário:', {
+        message: infoError.message,
+        code: infoError.code,
+        response: infoError.response?.data,
+        status: infoError.response?.status
+      });
+      
+      // Tentar obter email de forma alternativa usando o token diretamente
+      try {
+        console.log('[Google Calendar Callback] Tentando obter email alternativamente...');
+        const emailResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: {
+            'Authorization': `Bearer ${tokens.accessToken}`
+          }
+        });
+        
+        if (emailResponse.ok) {
+          const userInfo = await emailResponse.json();
+          console.log('[Google Calendar Callback] Email obtido via userinfo:', userInfo.email);
+          calendarInfo = {
+            email: userInfo.email || '',
+            calendarId: userInfo.email || 'primary'
+          };
+        } else {
+          throw new Error('Não foi possível obter email via userinfo');
+        }
+      } catch (altError: any) {
+        console.error('[Google Calendar Callback] Erro ao obter email alternativamente:', altError);
+        // Continuar mesmo se não conseguir obter email
+        calendarInfo = {
+          email: '',
+          calendarId: 'primary'
+        };
+      }
     }
 
     // Verificar se já existe token para este usuário

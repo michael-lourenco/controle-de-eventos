@@ -978,6 +978,127 @@
           }
         }
       ]
+    },
+    {
+      "name": "Google Calendar",
+      "item": [
+        {
+          "name": "Status da Conexão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/google-calendar/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-calendar", "status"]
+            },
+            "description": "Obtém o status da conexão com Google Calendar. Retorna se está conectado, se sincronização está ativa, email da conta, etc. Requer autenticação."
+          }
+        },
+        {
+          "name": "Iniciar Conexão OAuth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/google-calendar/auth?force=false",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-calendar", "auth"],
+              "query": [
+                {
+                  "key": "force",
+                  "value": "false",
+                  "description": "Se true, força nova autorização mesmo se já autorizou antes"
+                }
+              ]
+            },
+            "description": "Inicia o fluxo OAuth do Google Calendar. Redireciona para página de autorização do Google. Requer autenticação e plano permitido (Profissional ou Enterprise)."
+          }
+        },
+        {
+          "name": "Desconectar Google Calendar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/google-calendar/disconnect",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-calendar", "disconnect"]
+            },
+            "description": "Desconecta a conta do Google Calendar. Remove tokens armazenados. Requer autenticação."
+          }
+        },
+        {
+          "name": "Ativar/Desativar Sincronização",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"syncEnabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/google-calendar/toggle-sync",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-calendar", "toggle-sync"]
+            },
+            "description": "Ativa ou desativa a sincronização automática com Google Calendar. Requer autenticação e conexão ativa."
+          }
+        },
+        {
+          "name": "Informações de Debug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/google-calendar/debug",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-calendar", "debug"]
+            },
+            "description": "Retorna informações detalhadas de debug sobre tokens, conexão e validação. Inclui access token, refresh token, status de expiração, validação do token, etc. Útil para desenvolvimento. Requer autenticação."
+          }
+        },
+        {
+          "name": "Criar Evento no Google Calendar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"summary\": \"Reunião com cliente\",\n  \"description\": \"Discussão sobre novo projeto\",\n  \"startDateTime\": \"2025-01-20T14:00:00\",\n  \"endDateTime\": \"2025-01-20T15:30:00\",\n  \"location\": \"Rua das Flores, 123 - São Paulo, SP\",\n  \"timeZone\": \"America/Sao_Paulo\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/google-calendar/events",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-calendar", "events"]
+            },
+            "description": "Cria um evento diretamente no Google Calendar. Campos obrigatórios: summary, startDateTime. Campos opcionais: description, endDateTime, location, timeZone (padrão: America/Sao_Paulo). Requer autenticação, plano permitido e sincronização ativa."
+          }
+        },
+        {
+          "name": "Forçar Renovação do Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/google-calendar/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-calendar", "refresh-token"]
+            },
+            "description": "Força a renovação do access token usando o refresh token. Útil quando o token está expirado ou inválido. Requer autenticação e conexão ativa."
+          }
+        }
+      ]
     }
   ]
 }

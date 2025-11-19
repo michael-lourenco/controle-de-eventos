@@ -53,17 +53,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validar que endDateTime >= startDateTime (se fornecido)
+    if (endDateTime && new Date(endDateTime) < new Date(startDateTime)) {
+      return NextResponse.json(
+        { error: 'Data/hora de término deve ser posterior à data/hora de início' },
+        { status: 400 }
+      );
+    }
+
+    // Validar timezone (se fornecido)
+    const timeZoneValue = timeZone || 'America/Sao_Paulo';
+    try {
+      // Verificar se timezone é válido
+      Intl.DateTimeFormat(undefined, { timeZone: timeZoneValue });
+    } catch {
+      return NextResponse.json(
+        { error: 'Timezone inválido' },
+        { status: 400 }
+      );
+    }
+
     // Criar objeto de evento do Google Calendar
     const googleEvent: GoogleCalendarEvent = {
       summary: summary.trim(),
       description: description?.trim() || undefined,
       start: {
         dateTime: startDateTime,
-        timeZone: timeZone || 'America/Sao_Paulo'
+        timeZone: timeZoneValue
       },
       end: {
         dateTime: endDateTime || startDateTime, // Se não tiver fim, usar o mesmo que início
-        timeZone: timeZone || 'America/Sao_Paulo'
+        timeZone: timeZoneValue
       },
       location: location?.trim() || undefined
     };
@@ -84,26 +104,64 @@ export async function POST(request: NextRequest) {
     } catch (createError: any) {
       console.error('Erro ao criar evento no Google Calendar:', createError);
       
-      // Tratar erros específicos
+      // Mapear erros específicos da API do Google Calendar
+      const errorCode = createError.code || createError.response?.status;
+      const errorData = createError.response?.data;
+      
       let errorMessage = createError.message || 'Erro desconhecido';
       let statusCode = 500;
       
-      if (errorMessage.includes('Login Required') || errorMessage.includes('401')) {
-        errorMessage = 'Token expirado ou inválido. Tente desconectar e conectar novamente sua conta do Google Calendar.';
-        statusCode = 401;
-      } else if (errorMessage.includes('invalid_grant')) {
-        errorMessage = 'Token inválido. Por favor, reconecte sua conta do Google Calendar.';
-        statusCode = 401;
-      } else if (errorMessage.includes('Token não encontrado')) {
-        errorMessage = 'Token não encontrado. Conecte sua conta do Google Calendar primeiro.';
-        statusCode = 404;
+      // Erros específicos da API do Google Calendar
+      switch (errorCode) {
+        case 400:
+          errorMessage = errorData?.error?.message || 'Dados inválidos. Verifique os campos do evento.';
+          statusCode = 400;
+          break;
+        case 401:
+        case 'UNAUTHENTICATED':
+          if (errorMessage.includes('Login Required') || errorMessage.includes('invalid_grant')) {
+            errorMessage = 'Token expirado ou inválido. Tente desconectar e conectar novamente sua conta do Google Calendar.';
+          } else {
+            errorMessage = 'Token inválido. Por favor, reconecte sua conta do Google Calendar.';
+          }
+          statusCode = 401;
+          break;
+        case 403:
+        case 'PERMISSION_DENIED':
+          errorMessage = 'Sem permissão para criar eventos neste calendário. Verifique as permissões da sua conta Google.';
+          statusCode = 403;
+          break;
+        case 404:
+        case 'NOT_FOUND':
+          if (errorMessage.includes('Token não encontrado')) {
+            errorMessage = 'Token não encontrado. Conecte sua conta do Google Calendar primeiro.';
+          } else {
+            errorMessage = 'Calendário não encontrado.';
+          }
+          statusCode = 404;
+          break;
+        case 429:
+        case 'RESOURCE_EXHAUSTED':
+          errorMessage = 'Muitas requisições. Tente novamente em alguns instantes.';
+          statusCode = 429;
+          break;
+        default:
+          // Manter mensagem original se não for um erro conhecido
+          if (errorMessage.includes('invalid_grant')) {
+            errorMessage = 'Token inválido. Por favor, reconecte sua conta do Google Calendar.';
+            statusCode = 401;
+          } else if (errorMessage.includes('Token não encontrado')) {
+            errorMessage = 'Token não encontrado. Conecte sua conta do Google Calendar primeiro.';
+            statusCode = 404;
+          }
       }
       
       return NextResponse.json(
         { 
           error: 'Erro ao criar evento',
           message: errorMessage,
-          details: createError.response?.data || createError.code || null
+          code: errorCode,
+          details: errorData || null
         },
         { status: statusCode }
       );

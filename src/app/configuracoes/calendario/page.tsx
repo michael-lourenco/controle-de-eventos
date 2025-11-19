@@ -50,6 +50,11 @@ function GoogleCalendarConfigContent() {
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [loadingDebug, setLoadingDebug] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  
+  // Estados para etapas detalhadas
+  const [detailedSteps, setDetailedSteps] = useState<any[]>([]);
+  const [loadingSteps, setLoadingSteps] = useState(false);
+  const [showDetailedSteps, setShowDetailedSteps] = useState(true); // Sempre mostrar por padrão
 
   // Verificar mensagens da URL
   useEffect(() => {
@@ -88,15 +93,37 @@ function GoogleCalendarConfigContent() {
     }
   }, [searchParams, router, showToast]);
 
+  // Carregar etapas detalhadas
+  const loadDetailedSteps = async () => {
+    try {
+      setLoadingSteps(true);
+      const response = await fetch('/api/google-calendar/detailed-status');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDetailedSteps(data.steps || []);
+      } else {
+        const error = await response.json();
+        console.error('Erro ao carregar etapas detalhadas:', error);
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar etapas detalhadas:', error);
+    } finally {
+      setLoadingSteps(false);
+    }
+  };
+
   // Carregar status
   useEffect(() => {
     loadStatus();
+    loadDetailedSteps(); // Carregar etapas ao montar componente
   }, []);
 
   // Carregar informações de debug quando status mudar
   useEffect(() => {
     if (status?.connected) {
       loadDebugInfo();
+      loadDetailedSteps();
     }
   }, [status?.connected]);
 
@@ -434,6 +461,122 @@ function GoogleCalendarConfigContent() {
                       </Button>
                     </>
                   )}
+                </div>
+
+                {/* Seção de Etapas Detalhadas - Todas as Etapas do Processo */}
+                <div className="mt-6">
+                  <Card className="border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/10">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg flex items-center">
+                            <InformationCircleIcon className="h-6 w-6 mr-2 text-blue-600" />
+                            Etapas do Processo - Diagnóstico Completo
+                          </CardTitle>
+                          <CardDescription className="mt-1">
+                            Visualize todas as etapas e retornos do processo de conexão e validação do Google Calendar
+                          </CardDescription>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={loadDetailedSteps}
+                            disabled={loadingSteps}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <ArrowPathIcon className={`h-4 w-4 mr-2 ${loadingSteps ? 'animate-spin' : ''}`} />
+                            Atualizar
+                          </Button>
+                          <Button
+                            onClick={() => setShowDetailedSteps(!showDetailedSteps)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            {showDetailedSteps ? 'Ocultar' : 'Mostrar'} Etapas
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    {showDetailedSteps && (
+                      <CardContent>
+                        {loadingSteps ? (
+                          <div className="flex items-center justify-center py-8">
+                            <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-600 mr-3" />
+                            <span className="text-text-secondary">Carregando etapas...</span>
+                          </div>
+                        ) : detailedSteps.length === 0 ? (
+                          <div className="text-center py-8 text-text-secondary">
+                            Nenhuma etapa executada ainda. Conecte o Google Calendar para ver as etapas.
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {detailedSteps.map((step: any, index: number) => {
+                              const getStatusColor = () => {
+                                switch (step.status) {
+                                  case 'success':
+                                    return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+                                  case 'error':
+                                    return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+                                  case 'warning':
+                                    return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
+                                  default:
+                                    return 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
+                                }
+                              };
+                              
+                              const getStatusIcon = () => {
+                                switch (step.status) {
+                                  case 'success':
+                                    return <CheckCircleIcon className="h-5 w-5 text-green-600" />;
+                                  case 'error':
+                                    return <XCircleIcon className="h-5 w-5 text-red-600" />;
+                                  case 'warning':
+                                    return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600" />;
+                                  default:
+                                    return <ArrowPathIcon className="h-5 w-5 text-gray-400 animate-spin" />;
+                                }
+                              };
+                              
+                              return (
+                                <div
+                                  key={index}
+                                  className={`p-4 rounded-lg border-2 ${getStatusColor()}`}
+                                >
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="flex items-center gap-2 flex-1">
+                                      {getStatusIcon()}
+                                      <h3 className="font-semibold text-text-primary">{step.step}</h3>
+                                    </div>
+                                    <span className="text-xs text-text-secondary">
+                                      {new Date(step.timestamp).toLocaleTimeString()}
+                                    </span>
+                                  </div>
+                                  
+                                  <p className={`text-sm mb-3 ${
+                                    step.status === 'success' ? 'text-green-700 dark:text-green-400' :
+                                    step.status === 'error' ? 'text-red-700 dark:text-red-400' :
+                                    step.status === 'warning' ? 'text-yellow-700 dark:text-yellow-400' :
+                                    'text-text-secondary'
+                                  }`}>
+                                    {step.message}
+                                  </p>
+                                  
+                                  {step.details && (
+                                    <div className="mt-3 p-3 bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
+                                      <p className="text-xs font-semibold text-text-secondary mb-2">Detalhes:</p>
+                                      <pre className="text-xs overflow-auto max-h-64 bg-gray-100 dark:bg-gray-800 p-3 rounded">
+                                        {JSON.stringify(step.details, null, 2)}
+                                      </pre>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </CardContent>
+                    )}
+                  </Card>
                 </div>
 
                 {/* Seção de Debug - Informações Detalhadas */}
