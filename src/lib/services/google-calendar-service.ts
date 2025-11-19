@@ -193,7 +193,7 @@ export class GoogleCalendarService {
     // o header Authorization: Bearer {access_token}
     const calendar = google.calendar({
       version: 'v3',
-      auth: oauth2Client
+      auth: oauth2Client as any
     });
     
     return calendar;
