@@ -223,11 +223,19 @@ export class DataService {
       const resultado = await this.eventoRepo.createEvento(evento, userId);
       console.log('DataService: Evento criado com sucesso:', resultado);
       
-      // Sincronizar com Google Calendar (não bloquear se falhar)
-      const { GoogleCalendarSyncService } = await import('./services/google-calendar-sync-service');
-      GoogleCalendarSyncService.syncAfterCreate(resultado, userId).catch(error => {
-        console.error('DataService: Erro ao sincronizar evento com Google Calendar:', error);
-      });
+      // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
+      // Usar eval para evitar que webpack analise a importação
+      if (typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
+        try {
+          // Importação dinâmica que só funciona no servidor
+          const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
+          syncModule.GoogleCalendarSyncService.syncAfterCreate(resultado, userId).catch((error: any) => {
+            console.error('DataService: Erro ao sincronizar evento com Google Calendar:', error);
+          });
+        } catch (error) {
+          // Ignorar erro silenciosamente (pode não estar disponível no cliente)
+        }
+      }
       
       return resultado;
     } catch (error) {
@@ -246,11 +254,19 @@ export class DataService {
     // Buscar evento atualizado completo (pode ter mudado durante a atualização)
     const eventoAtualizado = await this.eventoRepo.getEventoById(id, userId) || resultado;
     
-    // Sincronizar com Google Calendar (não bloquear se falhar)
-    const { GoogleCalendarSyncService } = await import('./services/google-calendar-sync-service');
-    GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch(error => {
-      console.error('DataService: Erro ao sincronizar evento atualizado com Google Calendar:', error);
-    });
+    // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
+    // Usar eval para evitar que webpack analise a importação
+    if (typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
+      try {
+        // Importação dinâmica que só funciona no servidor
+        const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
+        syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch((error: any) => {
+          console.error('DataService: Erro ao sincronizar evento atualizado com Google Calendar:', error);
+        });
+      } catch (error) {
+        // Ignorar erro silenciosamente (pode não estar disponível no cliente)
+      }
+    }
     
     return resultado;
   }
@@ -261,12 +277,18 @@ export class DataService {
     
     await this.eventoRepo.deleteEvento(id, userId);
     
-    // Sincronizar com Google Calendar (não bloquear se falhar)
-    if (evento) {
-      const { GoogleCalendarSyncService } = await import('./services/google-calendar-sync-service');
-      GoogleCalendarSyncService.syncAfterDelete({ ...evento, arquivado: true }, userId).catch(error => {
-        console.error('DataService: Erro ao sincronizar evento arquivado com Google Calendar:', error);
-      });
+    // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
+    // Usar eval para evitar que webpack analise a importação
+    if (evento && typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
+      try {
+        // Importação dinâmica que só funciona no servidor
+        const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
+        syncModule.GoogleCalendarSyncService.syncAfterDelete({ ...evento, arquivado: true }, userId).catch((error: any) => {
+          console.error('DataService: Erro ao sincronizar evento arquivado com Google Calendar:', error);
+        });
+      } catch (error) {
+        // Ignorar erro silenciosamente (pode não estar disponível no cliente)
+      }
     }
   }
   
@@ -279,12 +301,18 @@ export class DataService {
     // Buscar evento atualizado após desarquivamento
     const eventoAtualizado = await this.eventoRepo.getEventoById(id, userId);
     
-    // Sincronizar com Google Calendar (não bloquear se falhar)
-    if (eventoAtualizado) {
-      const { GoogleCalendarSyncService } = await import('./services/google-calendar-sync-service');
-      GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch(error => {
-        console.error('DataService: Erro ao sincronizar evento desarquivado com Google Calendar:', error);
-      });
+    // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
+    // Usar eval para evitar que webpack analise a importação
+    if (eventoAtualizado && typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
+      try {
+        // Importação dinâmica que só funciona no servidor
+        const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
+        syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch((error: any) => {
+          console.error('DataService: Erro ao sincronizar evento desarquivado com Google Calendar:', error);
+        });
+      } catch (error) {
+        // Ignorar erro silenciosamente (pode não estar disponível no cliente)
+      }
     }
   }
   
