@@ -11,6 +11,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { GoogleCalendarSyncStatus } from '@/types/google-calendar';
 import {
@@ -18,7 +20,8 @@ import {
   XCircleIcon,
   ArrowPathIcon,
   LinkIcon,
-  CalendarIcon
+  CalendarIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 
 function GoogleCalendarConfigContent() {
@@ -29,6 +32,17 @@ function GoogleCalendarConfigContent() {
   const [status, setStatus] = useState<GoogleCalendarSyncStatus | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  
+  // Estados do formulário de evento
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [creatingEvent, setCreatingEvent] = useState(false);
+  const [eventForm, setEventForm] = useState({
+    summary: '',
+    description: '',
+    startDateTime: '',
+    endDateTime: '',
+    location: ''
+  });
 
   // Verificar mensagens da URL
   useEffect(() => {
@@ -163,6 +177,66 @@ function GoogleCalendarConfigContent() {
     } catch (error: any) {
       console.error('Erro ao alterar sincronização:', error);
       showToast('Erro ao alterar sincronização', 'error');
+    }
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!status?.connected || !status?.syncEnabled) {
+      showToast('Conecte e ative a sincronização primeiro', 'error');
+      return;
+    }
+
+    if (!eventForm.summary.trim()) {
+      showToast('Título do evento é obrigatório', 'error');
+      return;
+    }
+
+    if (!eventForm.startDateTime) {
+      showToast('Data/hora de início é obrigatória', 'error');
+      return;
+    }
+
+    try {
+      setCreatingEvent(true);
+      
+      const response = await fetch('/api/google-calendar/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          summary: eventForm.summary,
+          description: eventForm.description,
+          startDateTime: eventForm.startDateTime,
+          endDateTime: eventForm.endDateTime || eventForm.startDateTime,
+          location: eventForm.location,
+          timeZone: 'America/Sao_Paulo'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        showToast('Evento criado com sucesso no Google Calendar!', 'success');
+        // Limpar formulário
+        setEventForm({
+          summary: '',
+          description: '',
+          startDateTime: '',
+          endDateTime: '',
+          location: ''
+        });
+        setShowEventForm(false);
+      } else {
+        const error = await response.json();
+        showToast(error.message || 'Erro ao criar evento', 'error');
+      }
+    } catch (error: any) {
+      console.error('Erro ao criar evento:', error);
+      showToast('Erro ao criar evento no Google Calendar', 'error');
+    } finally {
+      setCreatingEvent(false);
     }
   };
 
@@ -333,6 +407,114 @@ function GoogleCalendarConfigContent() {
           </CardContent>
         </Card>
 
+        {/* Formulário de Criação de Evento */}
+        {status?.connected && status?.syncEnabled && (
+          <Card className="mt-6">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Criar Evento no Google Calendar</CardTitle>
+                  <CardDescription>
+                    Crie eventos diretamente na sua agenda sincronizada
+                  </CardDescription>
+                </div>
+                {!showEventForm && (
+                  <Button
+                    onClick={() => setShowEventForm(true)}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <PlusIcon className="h-4 w-4" />
+                    Novo Evento
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            {showEventForm && (
+              <CardContent>
+                <form onSubmit={handleCreateEvent} className="space-y-4">
+                  <Input
+                    label="Título do Evento *"
+                    placeholder="Ex: Reunião com cliente"
+                    value={eventForm.summary}
+                    onChange={(e) => setEventForm({ ...eventForm, summary: e.target.value })}
+                    required
+                  />
+
+                  <Textarea
+                    label="Descrição"
+                    placeholder="Detalhes do evento..."
+                    value={eventForm.description}
+                    onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                    rows={3}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Data/Hora de Início *"
+                      type="datetime-local"
+                      value={eventForm.startDateTime}
+                      onChange={(e) => setEventForm({ ...eventForm, startDateTime: e.target.value })}
+                      required
+                    />
+
+                    <Input
+                      label="Data/Hora de Término"
+                      type="datetime-local"
+                      value={eventForm.endDateTime}
+                      onChange={(e) => setEventForm({ ...eventForm, endDateTime: e.target.value })}
+                    />
+                  </div>
+
+                  <Input
+                    label="Localização"
+                    placeholder="Ex: Rua das Flores, 123 - São Paulo, SP"
+                    value={eventForm.location}
+                    onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                  />
+
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowEventForm(false);
+                        setEventForm({
+                          summary: '',
+                          description: '',
+                          startDateTime: '',
+                          endDateTime: '',
+                          location: ''
+                        });
+                      }}
+                      disabled={creatingEvent}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={creatingEvent}
+                      className="bg-primary hover:bg-accent hover:text-white"
+                    >
+                      {creatingEvent ? (
+                        <>
+                          <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                          Criando...
+                        </>
+                      ) : (
+                        <>
+                          <PlusIcon className="h-4 w-4 mr-2" />
+                          Criar Evento
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
         {/* Informações */}
         <Card className="mt-6">
           <CardHeader>
@@ -344,6 +526,7 @@ function GoogleCalendarConfigContent() {
               <li>• Alterações nos eventos também serão sincronizadas</li>
               <li>• Eventos arquivados serão removidos do Google Calendar</li>
               <li>• Apenas data/hora de início é sincronizada nesta versão</li>
+              <li>• Você também pode criar eventos diretamente no Google Calendar usando o formulário acima</li>
             </ul>
           </CardContent>
         </Card>
