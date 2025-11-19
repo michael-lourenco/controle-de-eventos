@@ -18,18 +18,26 @@ export function mapEventoToGoogleCalendar(evento: Evento): GoogleCalendarEvent {
     ? evento.dataEvento 
     : new Date(evento.dataEvento);
   
-  // Parse do horário (formato HH:mm)
-  const [horas, minutos] = evento.horarioInicio.split(':').map(Number);
+  // Parse do horário (formato HH:mm) - usar 00:00 como padrão se não tiver
+  let horas = 0;
+  let minutos = 0;
+  if (evento.horarioInicio && evento.horarioInicio.includes(':')) {
+    const partes = evento.horarioInicio.split(':').map(Number);
+    horas = partes[0] || 0;
+    minutos = partes[1] || 0;
+  }
+  
   const startDateTime = new Date(dataEvento);
-  startDateTime.setHours(horas || 0, minutos || 0, 0, 0);
+  startDateTime.setHours(horas, minutos, 0, 0);
   
   // Título do evento (nome do evento ou nome do cliente)
-  const summary = evento.nomeEvento || evento.cliente?.nome || 'Evento sem título';
+  const clienteNome = evento.cliente?.nome || (evento.clienteId ? `Cliente ID: ${evento.clienteId}` : '');
+  const summary = evento.nomeEvento || clienteNome || 'Evento sem título';
   
   // Descrição com informações do evento
   const description = [
     evento.tipoEvento && `Tipo: ${evento.tipoEvento}`,
-    evento.cliente?.nome && `Cliente: ${evento.cliente.nome}`,
+    clienteNome && `Cliente: ${clienteNome}`,
     evento.local && `Local: ${evento.local}`,
     evento.observacoes && `Observações: ${evento.observacoes}`
   ].filter(Boolean).join('\n');
