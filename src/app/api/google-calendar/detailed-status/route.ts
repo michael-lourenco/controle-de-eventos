@@ -212,7 +212,7 @@ export async function GET(request: NextRequest) {
           const { google } = await import('googleapis');
           const calendar = google.calendar({
             version: 'v3',
-            auth: oauth2Client
+            auth: oauth2Client as any
           });
           
           const calendarResponse = await calendar.calendars.get({
@@ -241,7 +241,7 @@ export async function GET(request: NextRequest) {
           const { google } = await import('googleapis');
           const calendar = google.calendar({
             version: 'v3',
-            auth: oauth2Client
+            auth: oauth2Client as any
           });
           
           const eventsResponse = await calendar.events.list({
