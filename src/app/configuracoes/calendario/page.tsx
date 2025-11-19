@@ -35,8 +35,10 @@ function GoogleCalendarConfigContent() {
     const success = searchParams.get('success');
     const error = searchParams.get('error');
 
-    if (success === 'connected') {
+    if (success === 'connected' || success === 'already_connected') {
       showToast('Google Calendar conectado com sucesso!', 'success');
+      // Recarregar status após sucesso
+      loadStatus();
       // Limpar URL
       router.replace('/configuracoes/calendario');
     } else if (error) {
@@ -46,10 +48,20 @@ function GoogleCalendarConfigContent() {
         'no_code': 'Código de autorização não recebido.',
         'invalid_state': 'Estado de segurança inválido. Tente novamente.',
       };
-      showToast(
-        errorMessages[error] || `Erro: ${error}`,
-        'error'
-      );
+      
+      // Verificar se é erro de código já usado
+      const errorLower = error.toLowerCase();
+      if (errorLower.includes('invalid_grant') || errorLower.includes('código de autorização inválido')) {
+        showToast(
+          'Código de autorização inválido. Se você já autorizou antes, tente desconectar e conectar novamente.',
+          'error'
+        );
+      } else {
+        showToast(
+          errorMessages[error] || `Erro: ${error}`,
+          'error'
+        );
+      }
       // Limpar URL
       router.replace('/configuracoes/calendario');
     }
@@ -80,11 +92,15 @@ function GoogleCalendarConfigContent() {
     }
   };
 
-  const handleConnect = async () => {
+  const handleConnect = async (force: boolean = false) => {
     try {
       setConnecting(true);
       // Redirecionar para iniciar OAuth
-      window.location.href = '/api/google-calendar/auth';
+      // Se force=true, forçar nova autorização mesmo se já autorizou antes
+      const url = force 
+        ? '/api/google-calendar/auth?force=true'
+        : '/api/google-calendar/auth';
+      window.location.href = url;
     } catch (error: any) {
       console.error('Erro ao conectar:', error);
       showToast('Erro ao iniciar conexão', 'error');
@@ -242,25 +258,45 @@ function GoogleCalendarConfigContent() {
                 )}
 
                 {/* Ações */}
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-wrap">
                   {!status.connected ? (
-                    <Button
-                      onClick={handleConnect}
-                      disabled={connecting}
-                      className="bg-primary hover:bg-accent hover:text-white"
-                    >
-                      {connecting ? (
-                        <>
-                          <ArrowPathIcon className="h-5 w-5 animate-spin mr-2" />
-                          Conectando...
-                        </>
-                      ) : (
-                        <>
-                          <LinkIcon className="h-5 w-5 mr-2" />
-                          Conectar Google Calendar
-                        </>
-                      )}
-                    </Button>
+                    <>
+                      <Button
+                        onClick={() => handleConnect(false)}
+                        disabled={connecting}
+                        className="bg-primary hover:bg-accent hover:text-white"
+                      >
+                        {connecting ? (
+                          <>
+                            <ArrowPathIcon className="h-5 w-5 animate-spin mr-2" />
+                            Conectando...
+                          </>
+                        ) : (
+                          <>
+                            <LinkIcon className="h-5 w-5 mr-2" />
+                            Conectar Google Calendar
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => handleConnect(true)}
+                        disabled={connecting}
+                        variant="outline"
+                        className="text-text-secondary"
+                      >
+                        {connecting ? (
+                          <>
+                            <ArrowPathIcon className="h-5 w-5 animate-spin mr-2" />
+                            Conectando...
+                          </>
+                        ) : (
+                          <>
+                            <LinkIcon className="h-5 w-5 mr-2" />
+                            Forçar Nova Conexão
+                          </>
+                        )}
+                      </Button>
+                    </>
                   ) : (
                     <>
                       <Button

@@ -49,10 +49,20 @@ export async function GET(request: NextRequest) {
     const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
     const googleService = new GoogleCalendarService();
 
-    // Gerar URL de autorização com state = userId para segurança
-    const authUrl = googleService.getAuthUrl(session.user.id);
+    // Verificar se há parâmetro para forçar nova autorização
+    const searchParams = request.nextUrl.searchParams;
+    const forcePrompt = searchParams.get('force') === 'true';
 
-    return NextResponse.redirect(authUrl);
+    // Gerar URL de autorização com state = userId para segurança
+    // getAuthUrl já inclui prompt=consent, então se forcePrompt, apenas garantir que está na URL
+    const authUrl = googleService.getAuthUrl(session.user.id);
+    
+    // Se forcePrompt, garantir que prompt=consent está presente (pode já estar)
+    const finalAuthUrl = forcePrompt && !authUrl.includes('prompt=consent')
+      ? `${authUrl}&prompt=consent`
+      : authUrl;
+
+    return NextResponse.redirect(finalAuthUrl);
   } catch (error: any) {
     console.error('Erro ao iniciar autenticação Google Calendar:', error);
     return NextResponse.json(

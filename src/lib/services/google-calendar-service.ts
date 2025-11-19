@@ -277,8 +277,28 @@ export class GoogleCalendarService {
       const oauth2Client = this.getOAuth2Client();
       const { tokens } = await oauth2Client.getToken(code);
       
-      if (!tokens.access_token || !tokens.refresh_token || !tokens.expiry_date) {
-        throw new Error('Tokens inválidos recebidos do Google');
+      if (!tokens.access_token) {
+        throw new Error('Access token não recebido do Google');
+      }
+
+      // Refresh token pode não vir se o usuário já autorizou antes
+      // Nesse caso, precisamos usar o refresh token existente
+      if (!tokens.refresh_token) {
+        console.warn('[GoogleCalendarService] Refresh token não recebido - usuário pode já ter autorizado antes');
+        // Se não tem refresh_token, o código já foi usado
+        // Isso significa que o usuário já autorizou antes
+        throw new Error('Código de autorização já foi usado. Se você já conectou antes, o token pode estar salvo. Tente desconectar e conectar novamente.');
+      }
+
+      if (!tokens.expiry_date) {
+        // Se não tem expiry_date, usar 1 hora como padrão
+        const expiryDate = new Date();
+        expiryDate.setHours(expiryDate.getHours() + 1);
+        return {
+          accessToken: tokens.access_token,
+          refreshToken: tokens.refresh_token,
+          expiresAt: expiryDate
+        };
       }
 
       return {
@@ -287,8 +307,18 @@ export class GoogleCalendarService {
         expiresAt: new Date(tokens.expiry_date)
       };
     } catch (error: any) {
-      console.error('Erro ao trocar código por tokens:', error);
-      throw new Error(`Erro na autenticação: ${error.message}`);
+      console.error('[GoogleCalendarService] Erro ao trocar código por tokens:', {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data
+      });
+      
+      // Mensagens de erro mais específicas
+      if (error.message?.includes('invalid_grant') || error.code === 'invalid_grant') {
+        throw new Error('Código de autorização inválido ou já usado. Tente desconectar e conectar novamente.');
+      }
+      
+      throw new Error(`Erro na autenticação: ${error.message || 'Erro desconhecido'}`);
     }
   }
 

@@ -24,15 +24,21 @@ function encrypt(text: string, key: string): string {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('[Google Calendar Callback] Iniciando callback OAuth');
+    
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
+      console.error('[Google Calendar Callback] Sessão não encontrada');
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
     }
+
+    console.log('[Google Calendar Callback] Usuário autenticado:', session.user.id);
 
     // Verificar se usuário tem plano permitido
     const temAcesso = await verificarAcessoGoogleCalendar(session.user.id);
     if (!temAcesso) {
+      console.warn('[Google Calendar Callback] Acesso negado para usuário:', session.user.id);
       return NextResponse.redirect(
         new URL('/configuracoes/calendario?error=access_denied', request.url)
       );
@@ -43,14 +49,24 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
 
+    console.log('[Google Calendar Callback] Parâmetros recebidos:', {
+      hasCode: !!code,
+      hasState: !!state,
+      hasError: !!error,
+      stateValue: state,
+      expectedState: session.user.id
+    });
+
     // Verificar se usuário cancelou autorização
     if (error) {
+      console.warn('[Google Calendar Callback] Erro do Google:', error);
       return NextResponse.redirect(
-        new URL('/configuracoes/calendario?error=user_cancelled', request.url)
+        new URL(`/configuracoes/calendario?error=user_cancelled&details=${encodeURIComponent(error)}`, request.url)
       );
     }
 
     if (!code) {
+      console.error('[Google Calendar Callback] Código não recebido');
       return NextResponse.redirect(
         new URL('/configuracoes/calendario?error=no_code', request.url)
       );
@@ -58,10 +74,16 @@ export async function GET(request: NextRequest) {
 
     // Validar state (deve ser o userId)
     if (state !== session.user.id) {
+      console.error('[Google Calendar Callback] State inválido:', {
+        received: state,
+        expected: session.user.id
+      });
       return NextResponse.redirect(
         new URL('/configuracoes/calendario?error=invalid_state', request.url)
       );
     }
+
+    console.log('[Google Calendar Callback] Validando código com Google...');
 
     // Importação dinâmica do serviço
     const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
@@ -69,49 +91,113 @@ export async function GET(request: NextRequest) {
     const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
 
     // Trocar código por tokens
-    const tokens = await googleService.exchangeCodeForTokens(code);
+    let tokens;
+    try {
+      tokens = await googleService.exchangeCodeForTokens(code);
+      console.log('[Google Calendar Callback] Tokens recebidos com sucesso');
+    } catch (tokenError: any) {
+      console.error('[Google Calendar Callback] Erro ao trocar código por tokens:', tokenError);
+      // Se o código já foi usado, pode ser que o token já existe
+      if (tokenError.message?.includes('invalid_grant') || tokenError.message?.includes('code')) {
+        // Verificar se já existe token
+        const tokenExistente = await tokenRepo.findByUserId(session.user.id);
+        if (tokenExistente) {
+          console.log('[Google Calendar Callback] Token já existe, redirecionando com sucesso');
+          return NextResponse.redirect(
+            new URL('/configuracoes/calendario?success=already_connected', request.url)
+          );
+        }
+      }
+      throw tokenError;
+    }
+
+    console.log('[Google Calendar Callback] Obtendo informações do calendário...');
 
     // Obter informações do calendário usando o access token
-    const calendarInfo = await googleService.getCalendarInfo(undefined, tokens.accessToken);
+    let calendarInfo;
+    try {
+      calendarInfo = await googleService.getCalendarInfo(undefined, tokens.accessToken);
+      console.log('[Google Calendar Callback] Informações do calendário obtidas:', calendarInfo.email);
+    } catch (infoError: any) {
+      console.error('[Google Calendar Callback] Erro ao obter informações do calendário:', infoError);
+      // Continuar mesmo se não conseguir obter email
+      calendarInfo = {
+        email: '',
+        calendarId: 'primary'
+      };
+    }
 
     // Verificar se já existe token para este usuário
     const tokenExistente = await tokenRepo.findByUserId(session.user.id);
+    console.log('[Google Calendar Callback] Token existente:', !!tokenExistente);
 
     // Criptografar tokens antes de armazenar
-    const encryptedAccessToken = encrypt(tokens.accessToken, ENCRYPTION_KEY);
-    const encryptedRefreshToken = encrypt(tokens.refreshToken, ENCRYPTION_KEY);
+    try {
+      const encryptedAccessToken = encrypt(tokens.accessToken, ENCRYPTION_KEY);
+      const encryptedRefreshToken = encrypt(tokens.refreshToken, ENCRYPTION_KEY);
+      console.log('[Google Calendar Callback] Tokens criptografados');
 
-    if (tokenExistente) {
-      // Atualizar token existente
-      await tokenRepo.update(tokenExistente.id, {
-        accessToken: encryptedAccessToken,
-        refreshToken: encryptedRefreshToken,
-        expiresAt: tokens.expiresAt,
-        calendarId: calendarInfo.calendarId,
-        syncEnabled: true,
-        dataAtualizacao: new Date()
-      });
+      if (tokenExistente) {
+        // Atualizar token existente
+        console.log('[Google Calendar Callback] Atualizando token existente:', tokenExistente.id);
+        await tokenRepo.update(tokenExistente.id, {
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken,
+          expiresAt: tokens.expiresAt,
+          calendarId: calendarInfo.calendarId,
+          syncEnabled: true,
+          dataAtualizacao: new Date()
+        });
+        console.log('[Google Calendar Callback] Token atualizado com sucesso');
+      } else {
+        // Criar novo token
+        console.log('[Google Calendar Callback] Criando novo token');
+        const novoToken = await tokenRepo.create({
+          userId: session.user.id,
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken,
+          expiresAt: tokens.expiresAt,
+          calendarId: calendarInfo.calendarId,
+          syncEnabled: true,
+          dataCadastro: new Date(),
+          dataAtualizacao: new Date()
+        });
+        console.log('[Google Calendar Callback] Token criado com sucesso:', novoToken.id);
+      }
+
+      // Verificar se foi salvo corretamente
+      const tokenVerificado = await tokenRepo.findByUserId(session.user.id);
+      if (!tokenVerificado) {
+        throw new Error('Token não foi salvo corretamente');
+      }
+      console.log('[Google Calendar Callback] Token verificado e salvo corretamente');
+
+      return NextResponse.redirect(
+        new URL('/configuracoes/calendario?success=connected', request.url)
+      );
+    } catch (saveError: any) {
+      console.error('[Google Calendar Callback] Erro ao salvar token:', saveError);
+      throw saveError;
+    }
+  } catch (error: any) {
+    console.error('[Google Calendar Callback] Erro geral no callback:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // Mensagem de erro mais amigável
+    let errorMessage = 'Erro ao conectar Google Calendar';
+    if (error.message?.includes('invalid_grant')) {
+      errorMessage = 'Código de autorização inválido ou já usado. Tente conectar novamente.';
+    } else if (error.message?.includes('ENCRYPTION_KEY')) {
+      errorMessage = 'Erro de configuração. Contate o administrador.';
     } else {
-      // Criar novo token
-      await tokenRepo.create({
-        userId: session.user.id,
-        accessToken: encryptedAccessToken,
-        refreshToken: encryptedRefreshToken,
-        expiresAt: tokens.expiresAt,
-        calendarId: calendarInfo.calendarId,
-        syncEnabled: true,
-        dataCadastro: new Date(),
-        dataAtualizacao: new Date()
-      });
+      errorMessage = error.message || 'Erro desconhecido';
     }
 
     return NextResponse.redirect(
-      new URL('/configuracoes/calendario?success=connected', request.url)
-    );
-  } catch (error: any) {
-    console.error('Erro no callback OAuth:', error);
-    return NextResponse.redirect(
-      new URL(`/configuracoes/calendario?error=${encodeURIComponent(error.message)}`, request.url)
+      new URL(`/configuracoes/calendario?error=${encodeURIComponent(errorMessage)}`, request.url)
     );
   }
 }
