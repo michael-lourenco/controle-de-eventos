@@ -472,6 +472,39 @@ function GoogleCalendarConfigContent() {
                             </div>
                           ) : debugInfo ? (
                             <div className="space-y-4">
+                              {/* Variáveis de Ambiente */}
+                              {debugInfo.environment && (
+                                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border">
+                                  <h3 className="font-semibold text-text-primary mb-2">⚙️ Configuração do Ambiente</h3>
+                                  <div className="space-y-1 text-sm">
+                                    <p>
+                                      <span className="font-medium">GOOGLE_CLIENT_ID:</span>{' '}
+                                      <span className={debugInfo.environment.hasClientId ? 'text-green-600' : 'text-red-600'}>
+                                        {debugInfo.environment.hasClientId ? '✅ Configurado' : '❌ Não configurado'}
+                                      </span>
+                                      {debugInfo.environment.hasClientId && (
+                                        <span className="text-text-secondary ml-2">({debugInfo.environment.clientIdPreview})</span>
+                                      )}
+                                    </p>
+                                    <p>
+                                      <span className="font-medium">GOOGLE_CLIENT_SECRET:</span>{' '}
+                                      <span className={debugInfo.environment.hasClientSecret ? 'text-green-600' : 'text-red-600'}>
+                                        {debugInfo.environment.hasClientSecret ? '✅ Configurado' : '❌ Não configurado'}
+                                      </span>
+                                    </p>
+                                    <p>
+                                      <span className="font-medium">GOOGLE_REDIRECT_URI:</span>{' '}
+                                      <span className={debugInfo.environment.hasRedirectUri ? 'text-green-600' : 'text-red-600'}>
+                                        {debugInfo.environment.hasRedirectUri ? '✅ Configurado' : '❌ Não configurado'}
+                                      </span>
+                                      {debugInfo.environment.hasRedirectUri && (
+                                        <span className="text-text-secondary ml-2">({debugInfo.environment.redirectUri})</span>
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+
                               {/* Informações do Usuário */}
                               <div className="p-4 bg-white dark:bg-gray-800 rounded-lg border">
                                 <h3 className="font-semibold text-text-primary mb-2">👤 Usuário do Sistema</h3>
@@ -615,11 +648,24 @@ function GoogleCalendarConfigContent() {
                                             <p className="text-green-600 dark:text-green-400">
                                               ✅ Teste bem-sucedido
                                             </p>
-                                            {debugInfo.tokenValidation.testDetails.calendarEmail && (
-                                              <p className="text-text-secondary">
-                                                <span className="font-medium">Email do Calendário:</span> {debugInfo.tokenValidation.testDetails.calendarEmail}
-                                              </p>
+                                        {debugInfo.tokenValidation.testDetails.calendarEmail && (
+                                          <p className="text-text-secondary">
+                                            <span className="font-medium">Email do Calendário:</span> {debugInfo.tokenValidation.testDetails.calendarEmail}
+                                          </p>
+                                        )}
+                                        {debugInfo.tokenValidation.testDetails.calendarApiTest && (
+                                          <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                                            <p className="text-xs font-medium mb-1">Teste Direto na API do Calendar:</p>
+                                            <p className="text-xs text-text-secondary">
+                                              <span className="font-medium">Status HTTP:</span> {debugInfo.tokenValidation.testDetails.calendarApiTest.httpStatus} ({debugInfo.tokenValidation.testDetails.calendarApiTest.httpStatusText})
+                                            </p>
+                                            {debugInfo.tokenValidation.testDetails.calendarApiTest.response && (
+                                              <pre className="text-xs overflow-auto max-h-32 mt-2">
+                                                {JSON.stringify(debugInfo.tokenValidation.testDetails.calendarApiTest.response, null, 2)}
+                                              </pre>
                                             )}
+                                          </div>
+                                        )}
                                           </>
                                         ) : (
                                           <>

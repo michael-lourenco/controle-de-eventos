@@ -114,7 +114,9 @@ export async function GET(request: NextRequest) {
         message: error.message,
         code: error.code,
         status: error.response?.status,
-        response: error.response?.data
+        statusText: error.response?.statusText,
+        response: error.response?.data,
+        stack: error.stack
       };
       
       // Tentar fazer uma requisição direta com o token para ver o erro exato
@@ -134,10 +136,46 @@ export async function GET(request: NextRequest) {
           tokenInfoError: tokenInfoError.message
         };
       }
+
+      // Tentar fazer uma requisição direta à API do Calendar para ver o erro exato
+      try {
+        const calendarResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const calendarData = await calendarResponse.json();
+        tokenTestDetails = {
+          ...tokenTestDetails,
+          calendarApiTest: {
+            httpStatus: calendarResponse.status,
+            httpStatusText: calendarResponse.statusText,
+            response: calendarData
+          }
+        };
+      } catch (calendarApiError: any) {
+        tokenTestDetails = {
+          ...tokenTestDetails,
+          calendarApiError: calendarApiError.message
+        };
+      }
     }
+
+    // Verificar variáveis de ambiente
+    const envCheck = {
+      hasClientId: !!process.env.GOOGLE_CLIENT_ID,
+      hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+      hasRedirectUri: !!(process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD),
+      clientIdPreview: process.env.GOOGLE_CLIENT_ID ? 
+        `${process.env.GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'Não configurado',
+      redirectUri: process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD || 'Não configurado'
+    };
 
     return NextResponse.json({
       connected: true,
+      environment: envCheck,
       token: {
         id: token.id,
         userId: token.userId,
