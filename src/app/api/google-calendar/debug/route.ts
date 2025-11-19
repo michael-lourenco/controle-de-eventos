@@ -139,6 +139,7 @@ export async function GET(request: NextRequest) {
 
       // Tentar fazer uma requisição direta à API do Calendar para ver o erro exato
       try {
+        console.log('[Debug] Testando token diretamente na API do Calendar...');
         const calendarResponse = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
           headers: {
             'Authorization': `Bearer ${accessToken}`,
@@ -147,18 +148,85 @@ export async function GET(request: NextRequest) {
         });
         
         const calendarData = await calendarResponse.json();
+        console.log('[Debug] Resposta da API do Calendar:', {
+          status: calendarResponse.status,
+          data: calendarData
+        });
+        
         tokenTestDetails = {
           ...tokenTestDetails,
           calendarApiTest: {
             httpStatus: calendarResponse.status,
             httpStatusText: calendarResponse.statusText,
-            response: calendarData
+            response: calendarData,
+            success: calendarResponse.ok
           }
         };
       } catch (calendarApiError: any) {
+        console.error('[Debug] Erro ao testar API do Calendar:', calendarApiError);
         tokenTestDetails = {
           ...tokenTestDetails,
-          calendarApiError: calendarApiError.message
+          calendarApiError: {
+            message: calendarApiError.message,
+            stack: calendarApiError.stack
+          }
+        };
+      }
+
+      // Tentar também com o OAuth2Client para ver se funciona
+      try {
+        console.log('[Debug] Testando com OAuth2Client...');
+        const { google } = await import('googleapis');
+        const { OAuth2Client } = await import('google-auth-library');
+        
+        const oauth2Client = new OAuth2Client(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+          process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD
+        );
+        
+        oauth2Client.setCredentials({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        });
+        
+        const calendar = google.calendar({
+          version: 'v3',
+          auth: oauth2Client
+        });
+        
+        const testResponse = await calendar.calendars.get({
+          calendarId: 'primary'
+        });
+        
+        console.log('[Debug] Teste com OAuth2Client bem-sucedido:', testResponse.data.id);
+        
+        tokenTestDetails = {
+          ...tokenTestDetails,
+          oauth2ClientTest: {
+            success: true,
+            calendarId: testResponse.data.id,
+            calendarEmail: testResponse.data.id
+          }
+        };
+      } catch (oauth2Error: any) {
+        console.error('[Debug] Erro ao testar com OAuth2Client:', {
+          message: oauth2Error.message,
+          code: oauth2Error.code,
+          response: oauth2Error.response?.data
+        });
+        
+        tokenTestDetails = {
+          ...tokenTestDetails,
+          oauth2ClientTest: {
+            success: false,
+            error: {
+              message: oauth2Error.message,
+              code: oauth2Error.code,
+              response: oauth2Error.response?.data,
+              status: oauth2Error.response?.status
+            }
+          }
         };
       }
     }

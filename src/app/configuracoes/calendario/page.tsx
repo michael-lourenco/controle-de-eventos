@@ -655,14 +655,60 @@ function GoogleCalendarConfigContent() {
                                         )}
                                         {debugInfo.tokenValidation.testDetails.calendarApiTest && (
                                           <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                                            <p className="text-xs font-medium mb-1">Teste Direto na API do Calendar:</p>
-                                            <p className="text-xs text-text-secondary">
+                                            <p className="text-xs font-medium mb-1">Teste Direto na API do Calendar (Fetch):</p>
+                                            <p className={`text-xs ${debugInfo.tokenValidation.testDetails.calendarApiTest.success ? 'text-green-600' : 'text-red-600'}`}>
                                               <span className="font-medium">Status HTTP:</span> {debugInfo.tokenValidation.testDetails.calendarApiTest.httpStatus} ({debugInfo.tokenValidation.testDetails.calendarApiTest.httpStatusText})
+                                              {debugInfo.tokenValidation.testDetails.calendarApiTest.success ? ' ✅' : ' ❌'}
                                             </p>
                                             {debugInfo.tokenValidation.testDetails.calendarApiTest.response && (
                                               <pre className="text-xs overflow-auto max-h-32 mt-2">
                                                 {JSON.stringify(debugInfo.tokenValidation.testDetails.calendarApiTest.response, null, 2)}
                                               </pre>
+                                            )}
+                                          </div>
+                                        )}
+                                        {debugInfo.tokenValidation.testDetails.oauth2ClientTest && (
+                                          <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                                            <p className="text-xs font-medium mb-1">Teste com OAuth2Client (googleapis):</p>
+                                            {debugInfo.tokenValidation.testDetails.oauth2ClientTest.success ? (
+                                              <div>
+                                                <p className="text-xs text-green-600">
+                                                  ✅ Teste bem-sucedido
+                                                </p>
+                                                {debugInfo.tokenValidation.testDetails.oauth2ClientTest.calendarEmail && (
+                                                  <p className="text-xs text-text-secondary">
+                                                    <span className="font-medium">Email:</span> {debugInfo.tokenValidation.testDetails.oauth2ClientTest.calendarEmail}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            ) : (
+                                              <div>
+                                                <p className="text-xs text-red-600">
+                                                  ❌ Teste falhou
+                                                </p>
+                                                {debugInfo.tokenValidation.testDetails.oauth2ClientTest.error && (
+                                                  <div className="mt-2">
+                                                    <p className="text-xs text-red-600">
+                                                      <span className="font-medium">Erro:</span> {debugInfo.tokenValidation.testDetails.oauth2ClientTest.error.message}
+                                                    </p>
+                                                    {debugInfo.tokenValidation.testDetails.oauth2ClientTest.error.code && (
+                                                      <p className="text-xs text-red-600">
+                                                        <span className="font-medium">Código:</span> {debugInfo.tokenValidation.testDetails.oauth2ClientTest.error.code}
+                                                      </p>
+                                                    )}
+                                                    {debugInfo.tokenValidation.testDetails.oauth2ClientTest.error.status && (
+                                                      <p className="text-xs text-red-600">
+                                                        <span className="font-medium">Status HTTP:</span> {debugInfo.tokenValidation.testDetails.oauth2ClientTest.error.status}
+                                                      </p>
+                                                    )}
+                                                    {debugInfo.tokenValidation.testDetails.oauth2ClientTest.error.response && (
+                                                      <pre className="text-xs overflow-auto max-h-32 mt-2">
+                                                        {JSON.stringify(debugInfo.tokenValidation.testDetails.oauth2ClientTest.error.response, null, 2)}
+                                                      </pre>
+                                                    )}
+                                                  </div>
+                                                )}
+                                              </div>
                                             )}
                                           </div>
                                         )}
