@@ -124,11 +124,23 @@ export async function GET(request: NextRequest) {
         // Usar o accessToken descriptografado que já temos
         const testResponse = await fetch(`https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
         const tokenInfo = await testResponse.json();
+        
+        // Verificar se o client_id do token corresponde ao configurado
+        const tokenClientId = tokenInfo.issued_to || tokenInfo.audience;
+        const configuredClientId = process.env.GOOGLE_CLIENT_ID;
+        const clientIdMatch = tokenClientId === configuredClientId;
+        
         tokenTestDetails = {
           success: false,
           tokenInfo: tokenInfo,
           httpStatus: testResponse.status,
-          httpStatusText: testResponse.statusText
+          httpStatusText: testResponse.statusText,
+          clientIdValidation: {
+            tokenClientId: tokenClientId,
+            configuredClientId: configuredClientId,
+            match: clientIdMatch,
+            warning: !clientIdMatch ? '⚠️ O client_id do token não corresponde ao configurado no ambiente!' : null
+          }
         };
       } catch (tokenInfoError: any) {
         tokenTestDetails = {
@@ -236,8 +248,9 @@ export async function GET(request: NextRequest) {
       hasClientId: !!process.env.GOOGLE_CLIENT_ID,
       hasClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
       hasRedirectUri: !!(process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD),
+      clientId: process.env.GOOGLE_CLIENT_ID || 'Não configurado',
       clientIdPreview: process.env.GOOGLE_CLIENT_ID ? 
-        `${process.env.GOOGLE_CLIENT_ID.substring(0, 20)}...` : 'Não configurado',
+        `${process.env.GOOGLE_CLIENT_ID.substring(0, 20)}...${process.env.GOOGLE_CLIENT_ID.substring(process.env.GOOGLE_CLIENT_ID.length - 10)}` : 'Não configurado',
       redirectUri: process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD || 'Não configurado'
     };
 

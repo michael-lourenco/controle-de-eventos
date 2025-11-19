@@ -483,7 +483,13 @@ function GoogleCalendarConfigContent() {
                                         {debugInfo.environment.hasClientId ? '✅ Configurado' : '❌ Não configurado'}
                                       </span>
                                       {debugInfo.environment.hasClientId && (
-                                        <span className="text-text-secondary ml-2">({debugInfo.environment.clientIdPreview})</span>
+                                        <>
+                                          <span className="text-text-secondary ml-2">({debugInfo.environment.clientIdPreview})</span>
+                                          <br />
+                                          <code className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded mt-1 inline-block">
+                                            {debugInfo.environment.clientId}
+                                          </code>
+                                        </>
                                       )}
                                     </p>
                                     <p>
@@ -724,6 +730,32 @@ function GoogleCalendarConfigContent() {
                                                 <pre className="text-xs overflow-auto max-h-32">
                                                   {JSON.stringify(debugInfo.tokenValidation.testDetails.tokenInfo, null, 2)}
                                                 </pre>
+                                              </div>
+                                            )}
+                                            {debugInfo.tokenValidation.testDetails.clientIdValidation && (
+                                              <div className={`mt-2 p-2 rounded ${debugInfo.tokenValidation.testDetails.clientIdValidation.match ? 'bg-green-100 dark:bg-green-900/20' : 'bg-yellow-100 dark:bg-yellow-900/20 border-2 border-yellow-500'}`}>
+                                                <p className={`text-xs font-medium mb-1 ${debugInfo.tokenValidation.testDetails.clientIdValidation.match ? 'text-green-700 dark:text-green-400' : 'text-yellow-700 dark:text-yellow-400'}`}>
+                                                  {debugInfo.tokenValidation.testDetails.clientIdValidation.match ? '✅ Client ID corresponde' : '⚠️ Client ID não corresponde!'}
+                                                </p>
+                                                <div className="space-y-1 text-xs">
+                                                  <p className="text-text-secondary">
+                                                    <span className="font-medium">Client ID do Token:</span>{' '}
+                                                    <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded">
+                                                      {debugInfo.tokenValidation.testDetails.clientIdValidation.tokenClientId || 'N/A'}
+                                                    </code>
+                                                  </p>
+                                                  <p className="text-text-secondary">
+                                                    <span className="font-medium">Client ID Configurado:</span>{' '}
+                                                    <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded">
+                                                      {debugInfo.tokenValidation.testDetails.clientIdValidation.configuredClientId || 'N/A'}
+                                                    </code>
+                                                  </p>
+                                                  {debugInfo.tokenValidation.testDetails.clientIdValidation.warning && (
+                                                    <p className="text-yellow-700 dark:text-yellow-400 font-medium mt-2">
+                                                      {debugInfo.tokenValidation.testDetails.clientIdValidation.warning}
+                                                    </p>
+                                                  )}
+                                                </div>
                                               </div>
                                             )}
                                             {debugInfo.tokenValidation.testDetails.httpStatus && (
