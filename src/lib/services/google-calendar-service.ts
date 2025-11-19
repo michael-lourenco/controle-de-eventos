@@ -69,36 +69,72 @@ export class GoogleCalendarService {
     const accessToken = decrypt(token.accessToken, ENCRYPTION_KEY);
     const refreshToken = decrypt(token.refreshToken, ENCRYPTION_KEY);
 
-    // Verificar se token expirou
-    if (token.expiresAt && new Date() < token.expiresAt) {
-      return accessToken;
+    // Verificar se token ainda é válido (com margem de 5 minutos)
+    const agora = new Date();
+    const margemSeguranca = 5 * 60 * 1000; // 5 minutos em milissegundos
+    
+    if (token.expiresAt) {
+      const dataExpiracao = token.expiresAt instanceof Date 
+        ? token.expiresAt 
+        : new Date(token.expiresAt);
+      
+      // Se ainda não expirou (com margem de segurança), retornar token atual
+      if (agora.getTime() < (dataExpiracao.getTime() - margemSeguranca)) {
+        console.log('[GoogleCalendarService] Token ainda válido, usando token atual');
+        return accessToken;
+      }
+      
+      console.log('[GoogleCalendarService] Token expirado ou próximo de expirar, renovando...');
+    } else {
+      console.log('[GoogleCalendarService] Token sem data de expiração, tentando renovar...');
     }
 
-    // Token expirado, fazer refresh
-    const oauth2Client = await this.getOAuth2Client();
+    // Token expirado ou próximo de expirar, fazer refresh
+    const oauth2Client = this.getOAuth2Client();
     oauth2Client.setCredentials({
       refresh_token: refreshToken
     });
 
     try {
+      console.log('[GoogleCalendarService] Renovando token de acesso...');
       const { credentials } = await oauth2Client.refreshAccessToken();
       
-      if (!credentials.access_token || !credentials.expiry_date) {
-        throw new Error('Erro ao renovar token');
+      if (!credentials.access_token) {
+        throw new Error('Access token não recebido ao renovar');
+      }
+
+      // Calcular data de expiração (padrão: 1 hora se não fornecido)
+      let expiresAt: Date;
+      if (credentials.expiry_date) {
+        expiresAt = new Date(credentials.expiry_date);
+      } else {
+        expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 1);
       }
 
       // Criptografar e salvar novo token
       const encryptedAccessToken = encrypt(credentials.access_token, ENCRYPTION_KEY);
       await this.tokenRepo.update(token.id, {
         accessToken: encryptedAccessToken,
-        expiresAt: new Date(credentials.expiry_date),
+        expiresAt: expiresAt,
         dataAtualizacao: new Date()
       });
 
+      console.log('[GoogleCalendarService] Token renovado com sucesso');
       return credentials.access_token;
-    } catch (error) {
-      console.error('Erro ao renovar token:', error);
-      throw new Error('Erro ao renovar token de acesso. Reconecte sua conta Google.');
+    } catch (error: any) {
+      console.error('[GoogleCalendarService] Erro ao renovar token:', {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data
+      });
+      
+      // Se o refresh token é inválido, o usuário precisa reconectar
+      if (error.message?.includes('invalid_grant') || error.code === 'invalid_grant') {
+        throw new Error('Sessão expirada. Por favor, reconecte sua conta Google.');
+      }
+      
+      throw new Error(`Erro ao renovar token de acesso: ${error.message || 'Erro desconhecido'}. Reconecte sua conta Google.`);
     }
   }
 
@@ -332,14 +368,19 @@ export class GoogleCalendarService {
       
       if (userId) {
         // Se userId fornecido, obter token e configurar
+        console.log('[GoogleCalendarService] Obtendo token para userId:', userId);
         const token = await this.getAccessToken(userId);
-        oauth2Client.setCredentials({ access_token: token });
+        console.log('[GoogleCalendarService] Token obtido, configurando OAuth2Client');
+        oauth2Client.setCredentials({ 
+          access_token: token 
+        });
         calendar = google.calendar({
           version: 'v3',
           auth: oauth2Client as any
         });
       } else if (accessToken) {
         // Se accessToken fornecido diretamente
+        console.log('[GoogleCalendarService] Usando accessToken fornecido diretamente');
         oauth2Client.setCredentials({ access_token: accessToken });
         calendar = google.calendar({
           version: 'v3',
@@ -350,17 +391,58 @@ export class GoogleCalendarService {
       }
       
       // Obter informações do calendário principal
+      console.log('[GoogleCalendarService] Buscando informações do calendário...');
       const response = await calendar.calendars.get({
         calendarId: 'primary'
       });
 
+      console.log('[GoogleCalendarService] Informações do calendário obtidas:', response.data.id);
       return {
         email: response.data.id || '',
         calendarId: response.data.id || 'primary'
       };
     } catch (error: any) {
-      console.error('Erro ao obter informações do calendário:', error);
-      throw new Error(`Erro ao obter informações: ${error.message}`);
+      console.error('[GoogleCalendarService] Erro ao obter informações do calendário:', {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      // Se for erro de autenticação, tentar renovar token se tiver userId
+      if ((error.message?.includes('Login Required') || error.code === 401) && userId) {
+        console.log('[GoogleCalendarService] Erro 401, tentando renovar token...');
+        try {
+          // Forçar renovação do token
+          const token = await this.tokenRepo.findByUserId(userId);
+          if (token) {
+            // Atualizar expiresAt para forçar renovação
+            await this.tokenRepo.update(token.id, {
+              expiresAt: new Date(0) // Data no passado para forçar renovação
+            });
+            // Tentar novamente
+            const novoToken = await this.getAccessToken(userId);
+            const oauth2Client = this.getOAuth2Client();
+            oauth2Client.setCredentials({ access_token: novoToken });
+            const calendar = google.calendar({
+              version: 'v3',
+              auth: oauth2Client as any
+            });
+            const response = await calendar.calendars.get({
+              calendarId: 'primary'
+            });
+            return {
+              email: response.data.id || '',
+              calendarId: response.data.id || 'primary'
+            };
+          }
+        } catch (retryError: any) {
+          console.error('[GoogleCalendarService] Erro ao tentar renovar token:', retryError);
+          throw new Error('Erro de autenticação. Por favor, reconecte sua conta Google.');
+        }
+      }
+      
+      throw new Error(`Erro ao obter informações: ${error.message || 'Erro desconhecido'}`);
     }
   }
 }
