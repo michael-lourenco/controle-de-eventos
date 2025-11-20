@@ -208,7 +208,7 @@ export default function EventoViewPage() {
   const handleCopyInfo = async () => {
     // Verificar permissão antes de copiar
     if (!temAcessoCopiar) {
-      showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Enterprise', 'error');
+      showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Premium', 'error');
       return;
     }
 
@@ -347,7 +347,7 @@ export default function EventoViewPage() {
             <div className="flex items-center gap-2">
               <PlanoBloqueio 
                 funcionalidade="CONTRATO_AUTOMATIZADO"
-                mensagem="Preenchimento automatizado de contrato está disponível apenas no plano Enterprise"
+                mensagem="Preenchimento automatizado de contrato está disponível apenas no plano Premium"
               >
                 <Button
                   variant="outline"

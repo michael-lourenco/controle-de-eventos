@@ -184,9 +184,9 @@ export async function POST(request: NextRequest) {
         limiteUsuarios: 1,
       },
       {
-        nome: 'Enterprise',
+        nome: 'Premium',
         descricao: 'Plano premium com todas as funcionalidades',
-        codigoHotmart: 'ENTERPRISE_MENSAL',
+        codigoHotmart: 'PREMIUM_MENSAL',
         funcionalidades: [
           funcionalidadesMap.get('EVENTOS_LIMITADOS')?.id,
           funcionalidadesMap.get('CLIENTES_LIMITADOS')?.id,

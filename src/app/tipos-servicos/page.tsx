@@ -219,7 +219,7 @@ export default function TiposServicosPage() {
           </div>
           <PlanoBloqueio 
             funcionalidade="TIPOS_PERSONALIZADO"
-            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão."
           >
             <Button onClick={handleNovoTipo} className="bg-primary hover:bg-accent hover:text-white cursor-pointer">
               <PlusIcon className="h-4 w-4 mr-2" />
@@ -232,7 +232,7 @@ export default function TiposServicosPage() {
         {showForm && (
           <PlanoBloqueio 
             funcionalidade={!tipoEditando ? "TIPOS_PERSONALIZADO" : undefined}
-            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão."
           >
             <Card>
               <CardHeader>

@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     if (!planAllowed) {
       addStep('2. Verificação de Plano', 'error', 'Plano não permite Google Calendar', {
         planAllowed: false,
-        message: 'Esta funcionalidade está disponível apenas para planos Profissional e Enterprise'
+        message: 'Esta funcionalidade está disponível apenas para planos Profissional e Premium'
       });
       return NextResponse.json({ steps });
     }

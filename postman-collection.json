@@ -751,7 +751,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "alterar-plano"]
             },
-            "description": "Altera o plano de um usuário pelo email e codigoHotmart. Se o usuário não tiver plano, cria uma nova assinatura. Se já tiver, atualiza para o novo plano.\n\nParâmetros:\n- email (string): Email do usuário\n- codigoHotmart (string): Código do plano na Hotmart (ex: PROFISSIONAL_MENSAL, BASICO_MENSAL, ENTERPRISE_MENSAL)\n\nOpções de autenticação:\n1. Via sessão admin\n2. Via API key (x-api-key header)\n3. Em modo dev, sem autenticação"
+            "description": "Altera o plano de um usuário pelo email e codigoHotmart. Se o usuário não tiver plano, cria uma nova assinatura. Se já tiver, atualiza para o novo plano.\n\nParâmetros:\n- email (string): Email do usuário\n- codigoHotmart (string): Código do plano na Hotmart (ex: PROFISSIONAL_MENSAL, BASICO_MENSAL, PREMIUM_MENSAL)\n\nOpções de autenticação:\n1. Via sessão admin\n2. Via API key (x-api-key header)\n3. Em modo dev, sem autenticação"
           }
         }
       ]
@@ -783,7 +783,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "seed", "funcionalidades-planos"]
             },
-            "description": "Cria ou atualiza funcionalidades e planos de forma incremental (sem remover dados existentes).\n\n📋 Cria/Atualiza:\n- 14 funcionalidades\n- 3 planos (Básico, Profissional, Enterprise)\n\n💡 Use este endpoint para atualizações sem perder dados existentes. Para reset completo, use 'Seed com Reset'."
+            "description": "Cria ou atualiza funcionalidades e planos de forma incremental (sem remover dados existentes).\n\n📋 Cria/Atualiza:\n- 14 funcionalidades\n- 3 planos (Básico, Profissional, Premium)\n\n💡 Use este endpoint para atualizações sem perder dados existentes. Para reset completo, use 'Seed com Reset'."
           }
         },
         {
@@ -839,7 +839,7 @@
                 }
               ]
             },
-            "description": "🔄 EXECUTA SEED COM RESET COMPLETO - Reformulação dos Planos 2025\n\nRemove todas as funcionalidades e planos existentes e recria do zero com:\n\n📋 Funcionalidades (14 total):\n- EVENTOS_LIMITADOS\n- CLIENTES_LIMITADOS\n- PAGAMENTOS_REGISTRAR\n- PAGAMENTOS_COMPROVANTES\n- PAGAMENTOS_CONTROLE_PADRAO\n- PAGAMENTOS_CONTROLE_PERSONALIZADO\n- FLUXO_CAIXA\n- RELATORIOS_BASICOS\n- RELATORIOS_AVANCADOS\n- RELATORIOS_FULL\n- TIPOS_PADRAO\n- TIPOS_PERSONALIZADO\n- UPLOAD_ANEXOS\n- BOTAO_COPIAR\n- CONTRATO_AUTOMATIZADO\n\n📦 Planos:\n1. BÁSICO: 10 eventos/mês, 100 clientes/ano\n2. PROFISSIONAL: 50 eventos/mês, 600 clientes/ano\n3. ENTERPRISE: 400 eventos/mês, 4.800 clientes/ano\n\n⚠️ ATENÇÃO: Este endpoint remove TODOS os dados existentes de funcionalidades e planos antes de recriar!"
+            "description": "🔄 EXECUTA SEED COM RESET COMPLETO - Reformulação dos Planos 2025\n\nRemove todas as funcionalidades e planos existentes e recria do zero com:\n\n📋 Funcionalidades (14 total):\n- EVENTOS_LIMITADOS\n- CLIENTES_LIMITADOS\n- PAGAMENTOS_REGISTRAR\n- PAGAMENTOS_COMPROVANTES\n- PAGAMENTOS_CONTROLE_PADRAO\n- PAGAMENTOS_CONTROLE_PERSONALIZADO\n- FLUXO_CAIXA\n- RELATORIOS_BASICOS\n- RELATORIOS_AVANCADOS\n- RELATORIOS_FULL\n- TIPOS_PADRAO\n- TIPOS_PERSONALIZADO\n- UPLOAD_ANEXOS\n- BOTAO_COPIAR\n- CONTRATO_AUTOMATIZADO\n\n📦 Planos:\n1. BÁSICO: 10 eventos/mês, 100 clientes/ano\n2. PROFISSIONAL: 50 eventos/mês, 600 clientes/ano\n3. PREMIUM: 400 eventos/mês, 4.800 clientes/ano\n\n⚠️ ATENÇÃO: Este endpoint remove TODOS os dados existentes de funcionalidades e planos antes de recriar!"
           }
         },
         {
@@ -1066,7 +1066,7 @@
                 }
               ]
             },
-            "description": "Inicia o fluxo OAuth do Google Calendar. Redireciona para página de autorização do Google. Requer autenticação e plano permitido (Profissional ou Enterprise)."
+            "description": "Inicia o fluxo OAuth do Google Calendar. Redireciona para página de autorização do Google. Requer autenticação e plano permitido (Profissional ou Premium)."
           }
         },
         {

@@ -206,7 +206,7 @@ export class GoogleCalendarService {
     // Verificar acesso
     const temAcesso = await verificarAcessoGoogleCalendar(userId);
     if (!temAcesso) {
-      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Enterprise.');
+      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Premium.');
     }
 
     const calendar = await this.getCalendarClient(userId);
@@ -239,7 +239,7 @@ export class GoogleCalendarService {
     // Verificar acesso
     const temAcesso = await verificarAcessoGoogleCalendar(userId);
     if (!temAcesso) {
-      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Enterprise.');
+      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Premium.');
     }
 
     const calendar = await this.getCalendarClient(userId);
@@ -268,7 +268,7 @@ export class GoogleCalendarService {
   async updateEvent(userId: string, googleEventId: string, evento: Evento): Promise<void> {
     const temAcesso = await verificarAcessoGoogleCalendar(userId);
     if (!temAcesso) {
-      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Enterprise.');
+      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Premium.');
     }
 
     const calendar = await this.getCalendarClient(userId);
@@ -298,7 +298,7 @@ export class GoogleCalendarService {
   async deleteEvent(userId: string, googleEventId: string): Promise<void> {
     const temAcesso = await verificarAcessoGoogleCalendar(userId);
     if (!temAcesso) {
-      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Enterprise.');
+      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Premium.');
     }
 
     const calendar = await this.getCalendarClient(userId);

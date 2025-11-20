@@ -273,7 +273,7 @@ export default function EventosPage() {
   const handleCopyInfo = async (evento: Evento) => {
     // Verificar permissão antes de copiar
     if (!temAcessoCopiar) {
-      showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Enterprise', 'error');
+      showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Premium', 'error');
       return;
     }
 

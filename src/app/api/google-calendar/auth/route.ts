@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Acesso negado',
-          message: 'Esta funcionalidade está disponível apenas para planos Profissional e Enterprise.'
+          message: 'Esta funcionalidade está disponível apenas para planos Profissional e Premium.'
         },
         { status: 403 }
       );

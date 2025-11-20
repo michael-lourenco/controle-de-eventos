@@ -205,7 +205,7 @@ export default function TiposEventoPage() {
           </div>
           <PlanoBloqueio 
             funcionalidade="TIPOS_PERSONALIZADO"
-            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão."
           >
             <Button
               onClick={() => setMostrarFormNovo(true)}
@@ -259,7 +259,7 @@ export default function TiposEventoPage() {
         {mostrarFormNovo && (
           <PlanoBloqueio 
             funcionalidade="TIPOS_PERSONALIZADO"
-            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão."
           >
             <Card>
               <CardHeader>

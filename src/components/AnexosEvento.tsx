@@ -142,7 +142,7 @@ export default function AnexosEvento({
       {/* Upload de Anexos */}
       <PlanoBloqueio 
         funcionalidade="UPLOAD_ANEXOS"
-        mensagem="Upload de anexos está disponível apenas nos planos Profissional e Enterprise"
+        mensagem="Upload de anexos está disponível apenas nos planos Profissional e Premium"
       >
         <Card>
           <CardHeader>

@@ -8,7 +8,7 @@ import { repositoryFactory } from '../repositories/repository-factory';
 
 /**
  * Verifica se o usuário tem plano permitido para usar Google Calendar
- * Apenas PROFISSIONAL_MENSAL e ENTERPRISE_MENSAL têm acesso
+ * Apenas PROFISSIONAL_MENSAL e PREMIUM_MENSAL têm acesso
  * 
  * @param userId - ID do usuário
  * @returns Promise<boolean> - true se o usuário tem acesso, false caso contrário
@@ -28,7 +28,7 @@ export async function verificarAcessoGoogleCalendar(userId: string): Promise<boo
     }
     
     // Planos permitidos
-    const planosPermitidos = ['PROFISSIONAL_MENSAL', 'ENTERPRISE_MENSAL'];
+    const planosPermitidos = ['PROFISSIONAL_MENSAL', 'PREMIUM_MENSAL'];
     return planosPermitidos.includes(user.planoCodigoHotmart);
   } catch (error) {
     console.error('Erro ao verificar acesso Google Calendar:', error);
