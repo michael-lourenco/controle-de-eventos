@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
+import { usePlano } from '@/lib/hooks/usePlano';
 import {
   HomeIcon,
   CalendarIcon,
@@ -32,16 +33,14 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Eventos', href: '/eventos', icon: CalendarIcon },
   { name: 'Clientes', href: '/clientes', icon: UserIcon },
+  { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
+  { name: 'Contratos', href: '/contratos', icon: DocumentTextIcon },
   { name: 'Pagamentos', href: '/pagamentos', icon: CurrencyDollarIcon },
-  { name: 'Serviços', href: '/servicos', icon: WrenchScrewdriverIcon },
+  { name: 'Tipos de Serviços', href: '/servicos', icon: WrenchScrewdriverIcon },
   { name: 'Canais de Entrada', href: '/canais-entrada', icon: TagIcon },
   { name: 'Tipos de Evento', href: '/tipos-eventos', icon: CalendarDaysIcon },
   { name: 'Tipos de Custo', href: '/tipos-custos', icon: CurrencyDollarIcon },
-  { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
-  { name: 'Planos', href: '/planos', icon: CreditCardIcon },
-  { name: 'Assinatura', href: '/assinatura', icon: DocumentTextIcon },
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
-  { name: 'Contratos', href: '/contratos', icon: DocumentTextIcon },
   // { name: 'Google Calendar', href: '/configuracoes/calendario', icon: CalendarIcon }, // COMENTADO: Aguardando permissões diretas da Google para dados sensíveis
 ];
 
@@ -52,14 +51,19 @@ const adminNavigation = [
 
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showPlanoBanner, setShowPlanoBanner] = useState(true);
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { statusPlano, loading: loadingPlano } = usePlano();
 
   const loading = status === 'loading';
   const user = session?.user ? {
     name: session.user.name || 'Usuário',
     email: session.user.email || ''
   } : null;
+
+  // Verificar se usuário tem plano ativo
+  const temPlanoAtivo = statusPlano?.ativo === true;
 
   React.useEffect(() => {
     if (status === 'unauthenticated') {
@@ -225,8 +229,43 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Main content */}
       <div className="lg:pl-64">
+        {/* Banner de Oferta de Plano */}
+        {!loadingPlano && !temPlanoAtivo && showPlanoBanner && (
+          <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/10 to-accent/10 border-b border-primary/20 px-4 py-3 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                <CreditCardIcon className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-text-primary">
+                    Assine um plano para desbloquear todas as funcionalidades
+                  </p>
+                  <p className="text-xs text-text-secondary mt-0.5">
+                    Acesse as configurações para ver os planos disponíveis
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => router.push('/configuracoes')}
+                  className="bg-primary hover:bg-accent text-white"
+                >
+                  Ver Planos
+                </Button>
+                <button
+                  onClick={() => setShowPlanoBanner(false)}
+                  className="p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                  aria-label="Fechar banner"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-surface/80 backdrop-blur-md px-4 shadow-lg sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className={`sticky ${!loadingPlano && !temPlanoAtivo && showPlanoBanner ? 'top-[73px]' : 'top-0'} z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-surface/80 backdrop-blur-md px-4 shadow-lg sm:gap-x-6 sm:px-6 lg:px-8`}>
           <button
             type="button"
             className="-m-2.5 p-2.5 text-text-primary lg:hidden cursor-pointer"

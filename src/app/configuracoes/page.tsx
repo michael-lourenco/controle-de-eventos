@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { 
   Cog6ToothIcon, 
   DocumentTextIcon, 
-  CalendarIcon 
+  CalendarIcon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 
 export default function ConfiguracoesPage() {
@@ -67,6 +68,54 @@ export default function ConfiguracoesPage() {
               </p>
               <Button variant="outline" className="w-full">
                 Configurar
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Planos */}
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" 
+                onClick={() => router.push('/planos')}>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                  <CreditCardIcon className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <CardTitle>Planos</CardTitle>
+                  <CardDescription>Visualizar planos disponíveis</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-text-secondary mb-4">
+                Visualize e compare os planos disponíveis para sua conta
+              </p>
+              <Button variant="outline" className="w-full">
+                Ver Planos
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Assinatura */}
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" 
+                onClick={() => router.push('/assinatura')}>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
+                  <DocumentTextIcon className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <CardTitle>Assinatura</CardTitle>
+                  <CardDescription>Gerenciar sua assinatura</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-text-secondary mb-4">
+                Gerencie sua assinatura atual, altere de plano ou cancele
+              </p>
+              <Button variant="outline" className="w-full">
+                Gerenciar Assinatura
               </Button>
             </CardContent>
           </Card>
