@@ -16,6 +16,8 @@ import {
   CloudArrowUpIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
+import { usePlano } from '@/lib/hooks/usePlano';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
 
 interface AnexosEventoProps {
   evento: Evento;
@@ -31,6 +33,8 @@ export default function AnexosEvento({
   const [anexoParaExcluir, setAnexoParaExcluir] = useState<AnexoEvento | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const { temPermissao } = usePlano();
+  const [temAcessoUpload, setTemAcessoUpload] = useState<boolean | null>(null);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -125,61 +129,74 @@ export default function AnexosEvento({
     window.open(anexo.url, '_blank');
   };
 
+  useEffect(() => {
+    const verificarAcesso = async () => {
+      const acesso = await temPermissao('UPLOAD_ANEXOS');
+      setTemAcessoUpload(acesso);
+    };
+    verificarAcesso();
+  }, [temPermissao]);
+
   return (
     <div className="space-y-6">
       {/* Upload de Anexos */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <CloudArrowUpIcon className="h-5 w-5 mr-2" />
-            Anexar Arquivo
-          </CardTitle>
-          <CardDescription>
-            Faça upload de um arquivo
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {uploadError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{uploadError}</p>
-            </div>
-          )}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.txt"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="hidden"
-              id="file-upload"
-            />
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer flex flex-col items-center"
-            >
-              <CloudArrowUpIcon className="h-12 w-12 text-gray-400 mb-4" />
-              <div className="text-sm text-gray-600">
-                {isUploading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                    Fazendo upload...
-                  </div>
-                ) : (
-                  <>
-                    <span className="font-medium text-blue-600 hover:text-blue-500">
-                      Clique para fazer upload
-                    </span>
-                    <span className="block">ou arraste o arquivo aqui</span>
-                    <span className="text-xs text-text-secondary mt-1">
-                      PDF, JPG, PNG, GIF, DOC, DOCX, TXT (máx. 10MB)
-                    </span>
-                  </>
-                )}
+      <PlanoBloqueio 
+        funcionalidade="UPLOAD_ANEXOS"
+        mensagem="Upload de anexos está disponível apenas nos planos Profissional e Enterprise"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <CloudArrowUpIcon className="h-5 w-5 mr-2" />
+              Anexar Arquivo
+            </CardTitle>
+            <CardDescription>
+              Faça upload de um arquivo
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {uploadError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{uploadError}</p>
               </div>
-            </label>
-          </div>
-        </CardContent>
-      </Card>
+            )}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.txt"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+                className="hidden"
+                id="file-upload"
+              />
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer flex flex-col items-center"
+              >
+                <CloudArrowUpIcon className="h-12 w-12 text-gray-400 mb-4" />
+                <div className="text-sm text-gray-600">
+                  {isUploading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                      Fazendo upload...
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-medium text-blue-600 hover:text-blue-500">
+                        Clique para fazer upload
+                      </span>
+                      <span className="block">ou arraste o arquivo aqui</span>
+                      <span className="text-xs text-text-secondary mt-1">
+                        PDF, JPG, PNG, GIF, DOC, DOCX, TXT (máx. 10MB)
+                      </span>
+                    </>
+                  )}
+                </div>
+              </label>
+            </div>
+          </CardContent>
+        </Card>
+      </PlanoBloqueio>
 
       {/* Lista de Anexos */}
       <Card>

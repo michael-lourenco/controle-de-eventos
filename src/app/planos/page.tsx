@@ -244,7 +244,7 @@ export default function PlanosPage() {
                           <p>• {plano.limiteEventos} eventos/mês</p>
                         )}
                         {plano.limiteClientes && (
-                          <p>• {plano.limiteClientes} clientes</p>
+                          <p>• {plano.limiteClientes} clientes/ano</p>
                         )}
                         {plano.limiteUsuarios && (
                           <p>• {plano.limiteUsuarios} usuários</p>
@@ -263,7 +263,7 @@ export default function PlanosPage() {
                   {Object.keys(categorias).length > 0 ? (
                     <div className="space-y-3 flex-1">
                       <p className="text-sm font-semibold text-text-primary">
-                        {funcionalidades.length} Funcionalidade(s) Incluída(s):
+                        Funcionalidades Incluídas:
                       </p>
                       <div className="space-y-2">
                         {Object.entries(categorias).map(([categoria, funcs]) => (

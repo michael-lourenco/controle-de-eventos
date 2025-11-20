@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Layout from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { usePlano } from '@/lib/hooks/usePlano';
 import { dataService } from '@/lib/data-service';
 import { TipoServico } from '@/types';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -215,25 +217,34 @@ export default function TiposServicosPage() {
               Gerencie os tipos de serviços disponíveis
             </p>
           </div>
-          <Button onClick={handleNovoTipo} className="bg-primary hover:bg-accent hover:text-white cursor-pointer">
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Novo Tipo
-          </Button>
+          <PlanoBloqueio 
+            funcionalidade="TIPOS_PERSONALIZADO"
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
+          >
+            <Button onClick={handleNovoTipo} className="bg-primary hover:bg-accent hover:text-white cursor-pointer">
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Novo Tipo
+            </Button>
+          </PlanoBloqueio>
         </div>
 
         {/* Formulário */}
         {showForm && (
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {tipoEditando ? 'Editar Tipo de Serviço' : 'Novo Tipo de Serviço'}
-              </CardTitle>
-              <CardDescription>
-                {tipoEditando ? 'Atualize as informações do tipo' : 'Crie um novo tipo de serviço'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+          <PlanoBloqueio 
+            funcionalidade={!tipoEditando ? "TIPOS_PERSONALIZADO" : undefined}
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {tipoEditando ? 'Editar Tipo de Serviço' : 'Novo Tipo de Serviço'}
+                </CardTitle>
+                <CardDescription>
+                  {tipoEditando ? 'Atualize as informações do tipo' : 'Crie um novo tipo de serviço'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Input
                     label="Nome"
@@ -288,6 +299,7 @@ export default function TiposServicosPage() {
               </form>
             </CardContent>
           </Card>
+          </PlanoBloqueio>
         )}
 
         {/* Abas */}

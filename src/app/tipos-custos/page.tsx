@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Layout from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { usePlano } from '@/lib/hooks/usePlano';
 import { dataService } from '@/lib/data-service';
 import { TipoCusto } from '@/types';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
 import {
   PlusIcon,
   PencilIcon,
@@ -26,6 +28,7 @@ import { handlePlanoError } from '@/lib/utils/plano-errors';
 export default function TiposCustosPage() {
   const router = useRouter();
   const { userId } = useCurrentUser();
+  const { temPermissao } = usePlano();
   const [tiposCusto, setTiposCusto] = useState<TipoCusto[]>([]);
   const [tiposInativos, setTiposInativos] = useState<TipoCusto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +48,16 @@ export default function TiposCustosPage() {
     ativo: true
   });
   const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
+  const [temAcessoPersonalizado, setTemAcessoPersonalizado] = useState<boolean | null>(null);
+
+  // Verificar acesso a criação personalizada
+  useEffect(() => {
+    const verificarAcesso = async () => {
+      const acesso = await temPermissao('TIPOS_PERSONALIZADO');
+      setTemAcessoPersonalizado(acesso);
+    };
+    verificarAcesso();
+  }, [temPermissao]);
 
   // Carregar tipos de custo
   useEffect(() => {
@@ -204,13 +217,18 @@ export default function TiposCustosPage() {
               Gerencie os tipos de custo para eventos
             </p>
           </div>
-          <Button
-            onClick={() => setMostrarFormNovo(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
+          <PlanoBloqueio 
+            funcionalidade="TIPOS_PERSONALIZADO"
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
           >
-            <PlusIcon className="h-4 w-4" />
-            Novo Tipo
-          </Button>
+            <Button
+              onClick={() => setMostrarFormNovo(true)}
+              className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
+            >
+              <PlusIcon className="h-4 w-4" />
+              Novo Tipo
+            </Button>
+          </PlanoBloqueio>
         </div>
 
         {/* Abas */}
@@ -255,45 +273,50 @@ export default function TiposCustosPage() {
 
         {/* Formulário Novo Tipo - No TOPO */}
         {mostrarFormNovo && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Novo Tipo de Custo</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <Input
-                  label="Nome *"
-                  placeholder="Ex: TOTEM, PROMOTER, MOTORISTA..."
-                  value={novoTipo.nome}
-                  onChange={(e) => setNovoTipo(prev => ({ ...prev, nome: e.target.value }))}
-                />
-                <Textarea
-                  label="Descrição"
-                  placeholder="Descrição do tipo de custo"
-                  value={novoTipo.descricao}
-                  onChange={(e) => setNovoTipo(prev => ({ ...prev, descricao: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setMostrarFormNovo(false);
-                    setNovoTipo({ nome: '', descricao: '' });
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleNovoTipo}
-                  disabled={!novoTipo.nome.trim()}
-                >
-                  Criar Tipo
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <PlanoBloqueio 
+            funcionalidade="TIPOS_PERSONALIZADO"
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Novo Tipo de Custo</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <Input
+                    label="Nome *"
+                    placeholder="Ex: TOTEM, PROMOTER, MOTORISTA..."
+                    value={novoTipo.nome}
+                    onChange={(e) => setNovoTipo(prev => ({ ...prev, nome: e.target.value }))}
+                  />
+                  <Textarea
+                    label="Descrição"
+                    placeholder="Descrição do tipo de custo"
+                    value={novoTipo.descricao}
+                    onChange={(e) => setNovoTipo(prev => ({ ...prev, descricao: e.target.value }))}
+                    rows={3}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setMostrarFormNovo(false);
+                      setNovoTipo({ nome: '', descricao: '' });
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleNovoTipo}
+                    disabled={!novoTipo.nome.trim()}
+                  >
+                    Criar Tipo
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </PlanoBloqueio>
         )}
 
         {/* Lista de Tipos */}

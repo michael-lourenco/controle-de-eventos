@@ -1,6 +1,6 @@
 import { SubcollectionRepository } from './subcollection-repository';
 import { Cliente } from '@/types';
-import { orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { orderBy, limit as firestoreLimit, where, query } from 'firebase/firestore';
 import { COLLECTIONS } from '../firestore/collections';
 
 export class ClienteRepository extends SubcollectionRepository<Cliente> {
@@ -90,6 +90,31 @@ export class ClienteRepository extends SubcollectionRepository<Cliente> {
     } catch (error) {
       console.error('Erro ao carregar canal de entrada:', error);
       return cliente;
+    }
+  }
+
+  /**
+   * Conta clientes cadastrados no ano civil especificado
+   * @param ano Ano civil (ex: 2025)
+   * @param userId ID do usuário
+   * @returns Número de clientes cadastrados no ano (não arquivados)
+   */
+  async countClientesPorAno(ano: number, userId: string): Promise<number> {
+    try {
+      const inicioAno = new Date(ano, 0, 1); // 01/01 do ano
+      const fimAno = new Date(ano, 11, 31, 23, 59, 59, 999); // 31/12 do ano
+
+      // Buscar clientes do ano
+      const clientes = await this.query([
+        where('dataCadastro', '>=', inicioAno),
+        where('dataCadastro', '<=', fimAno)
+      ], userId);
+
+      // Filtrar apenas clientes não arquivados
+      return clientes.filter(c => !c.arquivado).length;
+    } catch (error) {
+      console.error('Erro ao contar clientes por ano:', error);
+      return 0;
     }
   }
 }

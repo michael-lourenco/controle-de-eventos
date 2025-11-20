@@ -117,9 +117,9 @@ export class FuncionalidadeService {
         e.dataCadastro >= inicioMes && e.dataCadastro <= agora
       ).length;
 
-      // Contar clientes
-      const clientes = await this.clienteRepo.findAll(userId);
-      const clientesTotal = clientes.length;
+      // Contar clientes do ano civil atual (reset em 01/01)
+      const anoAtual = agora.getFullYear();
+      const clientesAnoAtual = await this.clienteRepo.countClientesPorAno(anoAtual, userId);
 
       // TODO: Implementar contagem de usuários por conta
       const usuariosConta = 1;
@@ -130,8 +130,8 @@ export class FuncionalidadeService {
       return {
         eventosMesAtual,
         eventosLimiteMes: limiteEventos,
-        clientesTotal,
-        clientesLimite: limiteClientes,
+        clientesTotal: clientesAnoAtual, // Agora representa clientes do ano atual
+        clientesLimite: limiteClientes, // Limite anual
         usuariosConta,
         usuariosLimite: limiteUsuarios,
         armazenamentoUsado,
@@ -186,7 +186,7 @@ export class FuncionalidadeService {
   }
 
   /**
-   * Verifica se pode criar mais clientes
+   * Verifica se pode criar mais clientes (limite anual)
    */
   async verificarLimiteClientes(userId: string): Promise<{ pode: boolean; limite?: number; usado: number; restante?: number }> {
     const limites = await this.obterLimitesUsuario(userId);
@@ -195,6 +195,7 @@ export class FuncionalidadeService {
       return { pode: true, usado: limites.clientesTotal };
     }
 
+    // Limite é anual, então comparamos com clientes do ano atual
     const restante = Math.max(0, limites.clientesLimite - limites.clientesTotal);
     return {
       pode: limites.clientesTotal < limites.clientesLimite,
@@ -240,26 +241,16 @@ export class FuncionalidadeService {
     restante?: number;
   }> {
     if (tipo === 'eventos') {
-      // Primeiro verificar se tem EVENTOS_ILIMITADOS (não precisa verificar limite)
-      const temIlimitados = await this.verificarPermissao(userId, 'EVENTOS_ILIMITADOS');
-      if (temIlimitados) {
-        const limites = await this.obterLimitesUsuario(userId);
-        return { 
-          pode: true, 
-          usado: limites.eventosMesAtual 
-        };
-      }
-
-      // Se não tem ilimitados, verificar se tem EVENTOS_LIMITADOS
-      const temLimitados = await this.verificarPermissao(userId, 'EVENTOS_LIMITADOS');
-      if (!temLimitados) {
+      // Verificar se tem permissão para criar eventos limitados
+      const temPermissao = await this.verificarPermissao(userId, 'EVENTOS_LIMITADOS');
+      if (!temPermissao) {
         return { 
           pode: false, 
           motivo: `Seu plano não permite criar ${tipo}` 
         };
       }
 
-      // Verificar limite para eventos limitados
+      // Verificar limite mensal de eventos
       const limiteEventos = await this.verificarLimiteEventos(userId);
       if (!limiteEventos.pode) {
         return {
@@ -272,31 +263,21 @@ export class FuncionalidadeService {
       }
       return limiteEventos;
     } else {
-      // Primeiro verificar se tem CLIENTES_ILIMITADOS (não precisa verificar limite)
-      const temIlimitados = await this.verificarPermissao(userId, 'CLIENTES_ILIMITADOS');
-      if (temIlimitados) {
-        const limites = await this.obterLimitesUsuario(userId);
-        return { 
-          pode: true, 
-          usado: limites.clientesTotal 
-        };
-      }
-
-      // Se não tem ilimitados, verificar se tem CLIENTES_LIMITADOS
-      const temLimitados = await this.verificarPermissao(userId, 'CLIENTES_LIMITADOS');
-      if (!temLimitados) {
+      // Verificar se tem permissão para criar clientes limitados
+      const temPermissao = await this.verificarPermissao(userId, 'CLIENTES_LIMITADOS');
+      if (!temPermissao) {
         return { 
           pode: false, 
           motivo: `Seu plano não permite criar ${tipo}` 
         };
       }
 
-      // Verificar limite para clientes limitados
+      // Verificar limite anual de clientes
       const limiteClientes = await this.verificarLimiteClientes(userId);
       if (!limiteClientes.pode) {
         return {
           pode: false,
-          motivo: `Limite de ${tipo} atingido`,
+          motivo: `Limite de ${tipo} do ano atingido`,
           limite: limiteClientes.limite,
           usado: limiteClientes.usado,
           restante: limiteClientes.restante

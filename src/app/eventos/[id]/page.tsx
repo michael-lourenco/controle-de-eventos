@@ -27,6 +27,7 @@ import {
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { usePlano } from '@/lib/hooks/usePlano';
 import { dataService } from '@/lib/data-service';
 import { AnexoEvento } from '@/types';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
@@ -34,18 +35,22 @@ import CustosEvento from '@/components/CustosEvento';
 import ServicosEvento from '@/components/ServicosEvento';
 import AnexosEvento from '@/components/AnexosEvento';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
 import { useToast } from '@/components/ui/toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useEffect } from 'react';
 
 export default function EventoViewPage() {
   const params = useParams();
   const router = useRouter();
   const { userId } = useCurrentUser();
   const { showToast } = useToast();
+  const { temPermissao } = usePlano();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [temAcessoCopiar, setTemAcessoCopiar] = useState<boolean | null>(null);
   
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
@@ -54,6 +59,15 @@ export default function EventoViewPage() {
   const { anexos, loading: loadingAnexos, refetch: refetchAnexos } = useAnexos(params.id as string);
   
   const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingServicos || loadingAnexos;
+
+  // Verificar acesso ao botão copiar - chamado antes dos early returns
+  useEffect(() => {
+    const verificarAcesso = async () => {
+      const acesso = await temPermissao('BOTAO_COPIAR');
+      setTemAcessoCopiar(acesso);
+    };
+    verificarAcesso();
+  }, [temPermissao]);
 
   if (loading) {
     return (
@@ -192,6 +206,12 @@ export default function EventoViewPage() {
   };
 
   const handleCopyInfo = async () => {
+    // Verificar permissão antes de copiar
+    if (!temAcessoCopiar) {
+      showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Enterprise', 'error');
+      return;
+    }
+
     const text = formatEventInfoForCopy();
     
     // Tentar usar a API moderna do clipboard
@@ -325,31 +345,38 @@ export default function EventoViewPage() {
               Voltar
             </Button>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
+              <PlanoBloqueio 
+                funcionalidade="CONTRATO_AUTOMATIZADO"
+                mensagem="Preenchimento automatizado de contrato está disponível apenas no plano Enterprise"
               >
-                <DocumentTextIcon className="h-4 w-4 mr-2" />
-                Gerar Contrato
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleCopyInfo}
-                title="Copiar informações do evento"
-                className={copied ? 'bg-success-bg text-success-text' : ''}
-              >
-                {copied ? (
-                  <>
-                    <CheckIcon className="h-4 w-4 mr-2" />
-                    Copiado!
-                  </>
-                ) : (
-                  <>
-                    <ClipboardDocumentIcon className="h-4 w-4 mr-2" />
-                    Copiar
-                  </>
-                )}
-              </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
+                >
+                  <DocumentTextIcon className="h-4 w-4 mr-2" />
+                  Gerar Contrato
+                </Button>
+              </PlanoBloqueio>
+              {temAcessoCopiar && (
+                <Button 
+                  variant="outline" 
+                  onClick={handleCopyInfo}
+                  title="Copiar informações do evento"
+                  className={copied ? 'bg-success-bg text-success-text' : ''}
+                >
+                  {copied ? (
+                    <>
+                      <CheckIcon className="h-4 w-4 mr-2" />
+                      Copiado!
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardDocumentIcon className="h-4 w-4 mr-2" />
+                      Copiar
+                    </>
+                  )}
+                </Button>
+              )}
               <Button variant="outline" onClick={handleEdit}>
                 <PencilIcon className="h-4 w-4 mr-2" />
                 Editar

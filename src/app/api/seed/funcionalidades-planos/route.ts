@@ -7,25 +7,31 @@ import { Funcionalidade, Plano } from '@/types/funcionalidades';
 
 const FUNCIONALIDADES_INICIAIS: Omit<Funcionalidade, 'id' | 'dataCadastro'>[] = [
   // EVENTOS
-  { codigo: 'EVENTOS_ILIMITADOS', nome: 'Eventos Ilimitados', descricao: 'Criar eventos sem limite', categoria: 'EVENTOS', ativo: true, ordem: 1 },
-  { codigo: 'EVENTOS_LIMITADOS', nome: 'Eventos Limitados', descricao: 'Criar eventos com limite mensal', categoria: 'EVENTOS', ativo: true, ordem: 2 },
+  { codigo: 'EVENTOS_LIMITADOS', nome: 'Eventos Limitados', descricao: 'Criar eventos com limite mensal', categoria: 'EVENTOS', ativo: true, ordem: 1 },
   
   // CLIENTES
-  { codigo: 'CLIENTES_ILIMITADOS', nome: 'Clientes Ilimitados', descricao: 'Cadastrar clientes sem limite', categoria: 'EVENTOS', ativo: true, ordem: 10 },
-  { codigo: 'CLIENTES_LIMITADOS', nome: 'Clientes Limitados', descricao: 'Cadastrar clientes com limite', categoria: 'EVENTOS', ativo: true, ordem: 11 },
+  { codigo: 'CLIENTES_LIMITADOS', nome: 'Clientes Limitados', descricao: 'Cadastrar clientes com limite anual', categoria: 'EVENTOS', ativo: true, ordem: 2 },
   
   // FINANCEIRO
-  { codigo: 'PAGAMENTOS_REGISTRAR', nome: 'Registrar Pagamentos', descricao: 'Registrar pagamentos e parcelas', categoria: 'FINANCEIRO', ativo: true, ordem: 20 },
-  { codigo: 'PAGAMENTOS_COMPROVANTES', nome: 'Comprovantes de Pagamento', descricao: 'Upload de comprovantes de pagamento', categoria: 'FINANCEIRO', ativo: true, ordem: 22 },
-  { codigo: 'FLUXO_CAIXA', nome: 'Fluxo de Caixa', descricao: 'Acesso ao relatório de fluxo de caixa', categoria: 'FINANCEIRO', ativo: true, ordem: 23 },
+  { codigo: 'PAGAMENTOS_REGISTRAR', nome: 'Registrar Pagamentos', descricao: 'Registrar pagamentos e parcelas', categoria: 'FINANCEIRO', ativo: true, ordem: 10 },
+  { codigo: 'PAGAMENTOS_COMPROVANTES', nome: 'Comprovantes de Pagamento', descricao: 'Upload de comprovantes de pagamento', categoria: 'FINANCEIRO', ativo: true, ordem: 11 },
+  { codigo: 'PAGAMENTOS_CONTROLE_PADRAO', nome: 'Controle de Pagamentos Padrão', descricao: 'Controle de pagamentos com opções padrão', categoria: 'FINANCEIRO', ativo: true, ordem: 12 },
+  { codigo: 'PAGAMENTOS_CONTROLE_PERSONALIZADO', nome: 'Controle de Pagamentos Personalizado', descricao: 'Controle de pagamentos com opções personalizadas', categoria: 'FINANCEIRO', ativo: true, ordem: 13 },
+  { codigo: 'FLUXO_CAIXA', nome: 'Fluxo de Caixa', descricao: 'Acesso ao relatório de fluxo de caixa', categoria: 'FINANCEIRO', ativo: true, ordem: 14 },
   
   // RELATORIOS
-  { codigo: 'RELATORIOS_BASICOS', nome: 'Relatórios Básicos', descricao: 'Relatórios básicos (dashboard e receita mensal)', categoria: 'RELATORIOS', ativo: true, ordem: 30 },
-  { codigo: 'RELATORIOS_AVANCADOS', nome: 'Relatórios Avançados', descricao: 'Relatórios avançados (performance, serviços, canais, impressões)', categoria: 'RELATORIOS', ativo: true, ordem: 31 },
+  { codigo: 'RELATORIOS_BASICOS', nome: 'Relatórios Básicos', descricao: 'Relatórios básicos (dashboard e receita mensal)', categoria: 'RELATORIOS', ativo: true, ordem: 20 },
+  { codigo: 'RELATORIOS_AVANCADOS', nome: 'Relatórios Avançados', descricao: 'Relatórios avançados (performance, serviços, canais, impressões)', categoria: 'RELATORIOS', ativo: true, ordem: 21 },
+  { codigo: 'RELATORIOS_FULL', nome: 'Relatórios Full', descricao: 'Relatórios completos com métricas detalhadas para melhor tomada de decisão', categoria: 'RELATORIOS', ativo: true, ordem: 22 },
   
-  // SERVICOS E CUSTOS
-  { codigo: 'SERVICOS_GERENCIAR', nome: 'Gerenciar Serviços', descricao: 'Gerenciar serviços e tipos de serviços', categoria: 'EVENTOS', ativo: true, ordem: 40 },
-  { codigo: 'CUSTOS_GERENCIAR', nome: 'Gerenciar Custos', descricao: 'Gerenciar tipos de custos e custos por evento', categoria: 'EVENTOS', ativo: true, ordem: 41 },
+  // TIPOS (Padrão e Personalizado)
+  { codigo: 'TIPOS_PADRAO', nome: 'Tipos Padrão', descricao: 'Usar apenas tipos padrão (custos, serviços, eventos e canais de entrada)', categoria: 'EVENTOS', ativo: true, ordem: 30 },
+  { codigo: 'TIPOS_PERSONALIZADO', nome: 'Tipos Personalizados', descricao: 'Criar tipos personalizados além dos padrão (custos, serviços, eventos e canais de entrada)', categoria: 'EVENTOS', ativo: true, ordem: 31 },
+  
+  // OUTROS
+  { codigo: 'UPLOAD_ANEXOS', nome: 'Upload de Anexos', descricao: 'Upload de anexos (comprovantes de pagamentos, contratos, molduras e arquivos de cada Evento)', categoria: 'EVENTOS', ativo: true, ordem: 40 },
+  { codigo: 'BOTAO_COPIAR', nome: 'Botão Copiar', descricao: 'Copiar informações do evento para enviar para Colaboradores e Cerimonialistas', categoria: 'EVENTOS', ativo: true, ordem: 41 },
+  { codigo: 'CONTRATO_AUTOMATIZADO', nome: 'Preenchimento Automatizado de Contrato', descricao: 'Preenchimento automatizado de contrato com dados do evento', categoria: 'EVENTOS', ativo: true, ordem: 42 },
 ];
 
 export async function POST(request: NextRequest) {
@@ -134,22 +140,22 @@ export async function POST(request: NextRequest) {
     const PLANOS_INICIAIS: Omit<Plano, 'id' | 'dataCadastro' | 'dataAtualizacao'>[] = [
       {
         nome: 'Basico',
-        descricao: 'Plano ideal para comecar a usar o sistema',
+        descricao: 'Plano ideal para começar a usar o sistema',
         codigoHotmart: 'BASICO_MENSAL',
         funcionalidades: [
           funcionalidadesMap.get('EVENTOS_LIMITADOS')?.id,
           funcionalidadesMap.get('CLIENTES_LIMITADOS')?.id,
           funcionalidadesMap.get('PAGAMENTOS_REGISTRAR')?.id,
+          funcionalidadesMap.get('PAGAMENTOS_CONTROLE_PADRAO')?.id,
+          funcionalidadesMap.get('TIPOS_PADRAO')?.id,
           funcionalidadesMap.get('RELATORIOS_BASICOS')?.id,
-          funcionalidadesMap.get('SERVICOS_GERENCIAR')?.id,
-          funcionalidadesMap.get('CUSTOS_GERENCIAR')?.id,
         ].filter(Boolean) as string[],
         preco: 49.90,
         intervalo: 'mensal',
         ativo: true,
         destaque: true,
         limiteEventos: 10,
-        limiteClientes: 50,
+        limiteClientes: 100,
         limiteUsuarios: 1,
       },
       {
@@ -157,34 +163,52 @@ export async function POST(request: NextRequest) {
         descricao: 'Plano completo para profissionais',
         codigoHotmart: 'PROFISSIONAL_MENSAL',
         funcionalidades: [
-          funcionalidadesMap.get('EVENTOS_ILIMITADOS')?.id,
-          funcionalidadesMap.get('CLIENTES_ILIMITADOS')?.id,
+          funcionalidadesMap.get('EVENTOS_LIMITADOS')?.id,
+          funcionalidadesMap.get('CLIENTES_LIMITADOS')?.id,
           funcionalidadesMap.get('PAGAMENTOS_REGISTRAR')?.id,
           funcionalidadesMap.get('PAGAMENTOS_COMPROVANTES')?.id,
+          funcionalidadesMap.get('PAGAMENTOS_CONTROLE_PERSONALIZADO')?.id,
+          funcionalidadesMap.get('TIPOS_PERSONALIZADO')?.id,
           funcionalidadesMap.get('RELATORIOS_BASICOS')?.id,
           funcionalidadesMap.get('RELATORIOS_AVANCADOS')?.id,
-          funcionalidadesMap.get('SERVICOS_GERENCIAR')?.id,
-          funcionalidadesMap.get('CUSTOS_GERENCIAR')?.id,
           funcionalidadesMap.get('FLUXO_CAIXA')?.id,
+          funcionalidadesMap.get('UPLOAD_ANEXOS')?.id,
+          funcionalidadesMap.get('BOTAO_COPIAR')?.id,
         ].filter(Boolean) as string[],
         preco: 149.90,
         intervalo: 'mensal',
         ativo: true,
         destaque: true,
+        limiteEventos: 50,
+        limiteClientes: 600,
         limiteUsuarios: 1,
-        limiteArmazenamento: 5,
       },
       {
         nome: 'Enterprise',
         descricao: 'Plano premium com todas as funcionalidades',
         codigoHotmart: 'ENTERPRISE_MENSAL',
-        funcionalidades: todasFuncionalidades.map(f => f.id),
+        funcionalidades: [
+          funcionalidadesMap.get('EVENTOS_LIMITADOS')?.id,
+          funcionalidadesMap.get('CLIENTES_LIMITADOS')?.id,
+          funcionalidadesMap.get('PAGAMENTOS_REGISTRAR')?.id,
+          funcionalidadesMap.get('PAGAMENTOS_COMPROVANTES')?.id,
+          funcionalidadesMap.get('PAGAMENTOS_CONTROLE_PERSONALIZADO')?.id,
+          funcionalidadesMap.get('TIPOS_PERSONALIZADO')?.id,
+          funcionalidadesMap.get('RELATORIOS_BASICOS')?.id,
+          funcionalidadesMap.get('RELATORIOS_AVANCADOS')?.id,
+          funcionalidadesMap.get('RELATORIOS_FULL')?.id,
+          funcionalidadesMap.get('FLUXO_CAIXA')?.id,
+          funcionalidadesMap.get('UPLOAD_ANEXOS')?.id,
+          funcionalidadesMap.get('BOTAO_COPIAR')?.id,
+          funcionalidadesMap.get('CONTRATO_AUTOMATIZADO')?.id,
+        ].filter(Boolean) as string[],
         preco: 349.90,
         intervalo: 'mensal',
         ativo: true,
         destaque: true,
+        limiteEventos: 400,
+        limiteClientes: 4800,
         limiteUsuarios: 1,
-        limiteArmazenamento: 50,
       },
     ];
 

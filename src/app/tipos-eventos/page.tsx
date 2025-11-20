@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Layout from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { usePlano } from '@/lib/hooks/usePlano';
 import { dataService } from '@/lib/data-service';
 import { TipoEvento } from '@/types';
+import PlanoBloqueio from '@/components/PlanoBloqueio';
 import {
   CalendarDaysIcon,
   CheckIcon,
@@ -201,13 +203,18 @@ export default function TiposEventoPage() {
             </h1>
             <p className="text-text-secondary">Gerencie as categorias dos seus eventos</p>
           </div>
-          <Button
-            onClick={() => setMostrarFormNovo(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
+          <PlanoBloqueio 
+            funcionalidade="TIPOS_PERSONALIZADO"
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
           >
-            <PlusIcon className="h-4 w-4" />
-            Novo Tipo
-          </Button>
+            <Button
+              onClick={() => setMostrarFormNovo(true)}
+              className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
+            >
+              <PlusIcon className="h-4 w-4" />
+              Novo Tipo
+            </Button>
+          </PlanoBloqueio>
         </div>
 
         {/* Abas */}
@@ -250,11 +257,15 @@ export default function TiposEventoPage() {
         </Card>
 
         {mostrarFormNovo && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Novo Tipo de Evento</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <PlanoBloqueio 
+            funcionalidade="TIPOS_PERSONALIZADO"
+            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Enterprise. No plano Básico você pode usar apenas os tipos padrão."
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Novo Tipo de Evento</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
               <div className="grid grid-cols-1 gap-4">
                 <Input
                   label="Nome *"
@@ -286,6 +297,7 @@ export default function TiposEventoPage() {
               </div>
             </CardContent>
           </Card>
+          </PlanoBloqueio>
         )}
 
         <div className="space-y-4">

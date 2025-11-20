@@ -291,6 +291,32 @@ export default function RelatoriosPage() {
           </Card>
           </PlanoBloqueio>
         </div>
+
+        {/* Relatórios Full - Apenas Enterprise */}
+        <div id="relatorios-full">
+          <PlanoBloqueio 
+            funcionalidade="RELATORIOS_FULL"
+            mensagem="Relatórios Full com métricas completas e detalhadas estão disponíveis apenas no plano Enterprise"
+          >
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold text-primary">⭐ Relatórios Full - Enterprise</CardTitle>
+                <CardDescription>
+                  Métricas completas e detalhadas para melhor tomada de decisão
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-text-secondary">
+                    Esta seção contém relatórios avançados com análises mais profundas e métricas adicionais.
+                    Em breve, novos relatórios serão adicionados aqui exclusivamente para o plano Enterprise.
+                  </p>
+                  {/* Aqui podem ser adicionados relatórios específicos do Enterprise no futuro */}
+                </div>
+              </CardContent>
+            </Card>
+          </PlanoBloqueio>
+        </div>
       </div>
     </Layout>
   );

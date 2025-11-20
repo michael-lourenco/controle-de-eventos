@@ -760,7 +760,7 @@
       "name": "Seed e Setup",
       "item": [
         {
-          "name": "Seed Funcionalidades e Planos",
+          "name": "Seed Funcionalidades e Planos (Incremental)",
           "request": {
             "method": "POST",
             "header": [
@@ -783,7 +783,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "seed", "funcionalidades-planos"]
             },
-            "description": "Cria 24 funcionalidades e 3 planos iniciais (Básico, Profissional, Enterprise). Funciona em modo dev sem autenticação, ou com x-api-key header."
+            "description": "Cria ou atualiza funcionalidades e planos de forma incremental (sem remover dados existentes).\n\n📋 Cria/Atualiza:\n- 14 funcionalidades\n- 3 planos (Básico, Profissional, Enterprise)\n\n💡 Use este endpoint para atualizações sem perder dados existentes. Para reset completo, use 'Seed com Reset'."
           }
         },
         {
@@ -809,7 +809,7 @@
           }
         },
         {
-          "name": "Seed com Reset",
+          "name": "Seed com Reset (Reformulação 2025)",
           "request": {
             "method": "POST",
             "header": [
@@ -839,7 +839,7 @@
                 }
               ]
             },
-            "description": "Executa seed com reset completo (remove todas funcionalidades e planos antes de recriar)"
+            "description": "🔄 EXECUTA SEED COM RESET COMPLETO - Reformulação dos Planos 2025\n\nRemove todas as funcionalidades e planos existentes e recria do zero com:\n\n📋 Funcionalidades (14 total):\n- EVENTOS_LIMITADOS\n- CLIENTES_LIMITADOS\n- PAGAMENTOS_REGISTRAR\n- PAGAMENTOS_COMPROVANTES\n- PAGAMENTOS_CONTROLE_PADRAO\n- PAGAMENTOS_CONTROLE_PERSONALIZADO\n- FLUXO_CAIXA\n- RELATORIOS_BASICOS\n- RELATORIOS_AVANCADOS\n- RELATORIOS_FULL\n- TIPOS_PADRAO\n- TIPOS_PERSONALIZADO\n- UPLOAD_ANEXOS\n- BOTAO_COPIAR\n- CONTRATO_AUTOMATIZADO\n\n📦 Planos:\n1. BÁSICO: 10 eventos/mês, 100 clientes/ano\n2. PROFISSIONAL: 50 eventos/mês, 600 clientes/ano\n3. ENTERPRISE: 400 eventos/mês, 4.800 clientes/ano\n\n⚠️ ATENÇÃO: Este endpoint remove TODOS os dados existentes de funcionalidades e planos antes de recriar!"
           }
         },
         {
@@ -948,6 +948,60 @@
               "path": ["api", "admin", "migrate-data-integrity-fields"]
             },
             "description": "Simula migração de campos de integridade sem aplicar mudanças (dryRun=true)"
+          }
+        },
+        {
+          "name": "Atualizar Planos e Funcionalidades dos Usuários",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apenasAtivas\": true,\n  \"dryRun\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/atualizar-planos-usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "atualizar-planos-usuarios"]
+            },
+            "description": "Atualiza planos e funcionalidades de todos os usuários que têm assinaturas. Use após atualizar planos via seed.\n\n📋 Parâmetros:\n- apenasAtivas (boolean): true = apenas assinaturas ativas, false = todas (padrão: true)\n- dryRun (boolean): true = apenas simula sem aplicar mudanças (padrão: false)\n\n🔄 O que faz:\n1. Busca todas as assinaturas (ativas ou todas)\n2. Para cada assinatura, busca o plano atualizado\n3. Atualiza a assinatura com as novas funcionalidades do plano\n4. Sincroniza o plano no usuário (atualiza cache)\n5. Registra histórico de alterações\n\n💡 Use dryRun=true primeiro para testar sem aplicar mudanças.\n\n⚠️ Execute este endpoint após atualizar planos via seed!"
+          }
+        },
+        {
+          "name": "Atualizar Planos - Dry Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"apenasAtivas\": true,\n  \"dryRun\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/atualizar-planos-usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "atualizar-planos-usuarios"]
+            },
+            "description": "Simula atualização de planos sem aplicar mudanças (dryRun=true)"
           }
         },
         {

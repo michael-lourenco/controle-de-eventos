@@ -266,8 +266,20 @@ function NovoContratoPageContent() {
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {modelos.map((modelo) => (
+                <>
+                  <div className="mb-4 flex justify-end">
+                    <Button 
+                      onClick={handleInicializarModelos} 
+                      variant="outline" 
+                      size="sm"
+                      disabled={loading}
+                      title="Clique para sincronizar/atualizar modelos de contrato"
+                    >
+                      {loading ? 'Sincronizando...' : '🔄 Sincronizar Modelos'}
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {modelos.map((modelo) => (
                     <div
                       key={modelo.id}
                       className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50"
@@ -277,7 +289,8 @@ function NovoContratoPageContent() {
                       {modelo.descricao && <p className="text-sm text-text-secondary">{modelo.descricao}</p>}
                     </div>
                   ))}
-                </div>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

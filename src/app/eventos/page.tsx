@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ export default function EventosPage() {
   const { data: eventos, loading: loadingAtivos, error: errorAtivos, refetch: refetchAtivos } = useEventos();
   const { data: eventosArquivados, loading: loadingArquivados, error: errorArquivados, refetch: refetchArquivados } = useEventosArquivados();
   const { data: tiposEventoData } = useTiposEvento();
-  const { limites } = usePlano();
+  const { limites, temPermissao } = usePlano();
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
@@ -48,6 +48,7 @@ export default function EventosPage() {
   const [eventoParaArquivar, setEventoParaArquivar] = useState<Evento | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [eventoCopiado, setEventoCopiado] = useState<string | null>(null);
+  const [temAcessoCopiar, setTemAcessoCopiar] = useState<boolean | null>(null);
   
   const loading = loadingAtivos || loadingArquivados;
   const error = errorAtivos || errorArquivados;
@@ -123,6 +124,15 @@ export default function EventosPage() {
       return dataA - dataB;
     });
   }, [filteredEventos]);
+
+  // Verificar acesso ao botão copiar - chamado antes dos early returns
+  useEffect(() => {
+    const verificarAcesso = async () => {
+      const acesso = await temPermissao('BOTAO_COPIAR');
+      setTemAcessoCopiar(acesso);
+    };
+    verificarAcesso();
+  }, [temPermissao]);
 
   // Early returns após todos os hooks
   if (loading) {
@@ -261,6 +271,12 @@ export default function EventosPage() {
   };
 
   const handleCopyInfo = async (evento: Evento) => {
+    // Verificar permissão antes de copiar
+    if (!temAcessoCopiar) {
+      showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Enterprise', 'error');
+      return;
+    }
+
     // Buscar serviços do evento para compor a lista (nomes separados por vírgula)
     let servicosNomes: string[] = [];
     try {
@@ -551,22 +567,24 @@ export default function EventosPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-text-primary">{evento.tipoEvento}</span>
                     <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyInfo(evento);
-                        }}
-                        title="Copiar informações"
-                        className={eventoCopiado === evento.id ? 'bg-success-bg text-success-text' : 'hover:bg-info/10 hover:text-info'}
-                      >
-                        {eventoCopiado === evento.id ? (
-                          <CheckIcon className="h-4 w-4" />
-                        ) : (
-                          <ClipboardDocumentIcon className="h-4 w-4" />
-                        )}
-                      </Button>
+                      {temAcessoCopiar && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyInfo(evento);
+                          }}
+                          title="Copiar informações"
+                          className={eventoCopiado === evento.id ? 'bg-success-bg text-success-text' : 'hover:bg-info/10 hover:text-info'}
+                        >
+                          {eventoCopiado === evento.id ? (
+                            <CheckIcon className="h-4 w-4" />
+                          ) : (
+                            <ClipboardDocumentIcon className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                       <Button 
                         variant="ghost" 
                         size="sm"
