@@ -29,6 +29,9 @@ export const COLLECTIONS = {
   
   // Google Calendar Integration (opcional)
   GOOGLE_CALENDAR_TOKENS: 'google_calendar_tokens',
+  MODELOS_CONTRATO: 'modelos_contrato',
+  CONFIGURACAO_CONTRATO: 'configuracao_contrato',
+  CONTRATOS: 'contratos',
 } as const;
 
 // Estrutura das collections para documentação

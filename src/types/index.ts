@@ -142,6 +142,81 @@ export interface ContratoServico {
   dataAtualizacao: Date;
 }
 
+export interface CampoContrato {
+  id: string;
+  chave: string;
+  label: string;
+  tipo: 'text' | 'number' | 'date' | 'currency' | 'textarea' | 'select';
+  obrigatorio: boolean;
+  valorPadrao?: string;
+  opcoes?: string[];
+  ordem: number;
+}
+
+export interface ModeloContrato {
+  id: string;
+  nome: string;
+  descricao?: string;
+  template: string;
+  campos: CampoContrato[];
+  ativo: boolean;
+  dataCadastro: Date;
+  dataAtualizacao: Date;
+}
+
+export interface ConfiguracaoContrato {
+  id: string;
+  userId: string;
+  razaoSocial: string;
+  nomeFantasia?: string;
+  cnpj: string;
+  inscricaoEstadual?: string;
+  endereco: {
+    logradouro: string;
+    numero: string;
+    complemento?: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    cep: string;
+  };
+  contato: {
+    telefone: string;
+    email: string;
+    site?: string;
+  };
+  dadosBancarios?: {
+    banco: string;
+    agencia: string;
+    conta: string;
+    tipo: 'corrente' | 'poupanca';
+    pix?: string;
+  };
+  dataCadastro: Date;
+  dataAtualizacao: Date;
+}
+
+export interface Contrato {
+  id: string;
+  userId: string;
+  eventoId?: string;
+  evento?: Evento;
+  modeloContratoId: string;
+  modeloContrato?: ModeloContrato;
+  dadosPreenchidos: Record<string, any>;
+  status: 'rascunho' | 'gerado' | 'assinado' | 'cancelado';
+  pdfUrl?: string;
+  pdfPath?: string;
+  numeroContrato?: string;
+  dataGeracao: Date;
+  dataAssinatura?: Date;
+  assinadoPor?: string;
+  observacoes?: string;
+  dataCadastro: Date;
+  dataAtualizacao: Date;
+  criadoPor: string;
+}
+
 export interface Pagamento {
   id: string;
   userId: string; // ID do usuário que criou o pagamento

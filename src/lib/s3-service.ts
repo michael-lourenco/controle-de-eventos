@@ -201,6 +201,43 @@ export class S3Service {
 
     return Promise.all(uploadPromises);
   }
+
+  async uploadBuffer(
+    buffer: Buffer,
+    s3Key: string,
+    contentType: string = 'application/octet-stream'
+  ): Promise<UploadResult> {
+    try {
+      const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: s3Key,
+        Body: buffer,
+        ContentType: contentType,
+      });
+
+      await s3Client.send(command);
+
+      const getCommand = new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: s3Key,
+      });
+
+      // URLs pré-assinadas do S3 têm limite máximo de 7 dias (604800 segundos)
+      const url = await getSignedUrl(s3Client, getCommand, { expiresIn: 3600 * 24 * 7 }); // 7 dias
+
+      return {
+        success: true,
+        url,
+        key: s3Key,
+      };
+    } catch (error) {
+      console.error('Erro ao fazer upload de buffer para S3:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      };
+    }
+  }
 }
 
 export const s3Service = new S3Service();

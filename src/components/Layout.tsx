@@ -41,6 +41,7 @@ const navigation = [
   { name: 'Planos', href: '/planos', icon: CreditCardIcon },
   { name: 'Assinatura', href: '/assinatura', icon: DocumentTextIcon },
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
+  { name: 'Contratos', href: '/contratos', icon: DocumentTextIcon },
   // { name: 'Google Calendar', href: '/configuracoes/calendario', icon: CalendarIcon }, // COMENTADO: Aguardando permissões diretas da Google para dados sensíveis
 ];
 

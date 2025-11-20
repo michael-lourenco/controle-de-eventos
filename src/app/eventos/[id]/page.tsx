@@ -21,7 +21,8 @@ import {
   UserIcon,
   BriefcaseIcon,
   ClipboardDocumentIcon,
-  CheckIcon
+  CheckIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
@@ -324,6 +325,13 @@ export default function EventoViewPage() {
               Voltar
             </Button>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
+              >
+                <DocumentTextIcon className="h-4 w-4 mr-2" />
+                Gerar Contrato
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={handleCopyInfo}

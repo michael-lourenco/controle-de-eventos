@@ -11,6 +11,9 @@ import { UserRepository } from './user-repository';
 import { ArquivoRepository } from './arquivo-repository';
 import { TipoEventoRepository } from './tipo-evento-repository';
 import { GoogleCalendarTokenRepository } from './google-calendar-token-repository';
+import { ModeloContratoRepository } from './modelo-contrato-repository';
+import { ConfiguracaoContratoRepository } from './configuracao-contrato-repository';
+import { ContratoRepository } from './contrato-repository';
 
 export class RepositoryFactory {
   private static instance: RepositoryFactory;
@@ -30,6 +33,9 @@ export class RepositoryFactory {
   private userRepository: UserRepository;
   private arquivoRepository: ArquivoRepository;
   private googleCalendarTokenRepository: GoogleCalendarTokenRepository;
+  private modeloContratoRepository: ModeloContratoRepository;
+  private configuracaoContratoRepository: ConfiguracaoContratoRepository;
+  private contratoRepository: ContratoRepository;
 
   private constructor() {
     this.clienteRepository = new ClienteRepository();
@@ -47,6 +53,9 @@ export class RepositoryFactory {
     this.userRepository = new UserRepository();
     this.arquivoRepository = new ArquivoRepository();
     this.googleCalendarTokenRepository = new GoogleCalendarTokenRepository();
+    this.modeloContratoRepository = new ModeloContratoRepository();
+    this.configuracaoContratoRepository = new ConfiguracaoContratoRepository();
+    this.contratoRepository = new ContratoRepository();
   }
 
   public static getInstance(): RepositoryFactory {
@@ -114,6 +123,18 @@ export class RepositoryFactory {
 
   public getGoogleCalendarTokenRepository(): GoogleCalendarTokenRepository {
     return this.googleCalendarTokenRepository;
+  }
+
+  public getModeloContratoRepository(): ModeloContratoRepository {
+    return this.modeloContratoRepository;
+  }
+
+  public getConfiguracaoContratoRepository(): ConfiguracaoContratoRepository {
+    return this.configuracaoContratoRepository;
+  }
+
+  public getContratoRepository(): ContratoRepository {
+    return this.contratoRepository;
   }
 }
 
