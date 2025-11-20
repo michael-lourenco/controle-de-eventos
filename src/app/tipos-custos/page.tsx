@@ -11,7 +11,6 @@ import { useCurrentUser } from '@/hooks/useAuth';
 import { usePlano } from '@/lib/hooks/usePlano';
 import { dataService } from '@/lib/data-service';
 import { TipoCusto } from '@/types';
-import PlanoBloqueio from '@/components/PlanoBloqueio';
 import {
   PlusIcon,
   PencilIcon,
@@ -19,16 +18,19 @@ import {
   CurrencyDollarIcon,
   CheckIcon,
   XMarkIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Lock } from 'lucide-react';
 
 export default function TiposCustosPage() {
   const router = useRouter();
   const { userId } = useCurrentUser();
-  const { temPermissao } = usePlano();
+  const { temPermissao, statusPlano } = usePlano();
   const [tiposCusto, setTiposCusto] = useState<TipoCusto[]>([]);
   const [tiposInativos, setTiposInativos] = useState<TipoCusto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -217,10 +219,7 @@ export default function TiposCustosPage() {
               Gerencie os tipos de custo para eventos
             </p>
           </div>
-          <PlanoBloqueio 
-            funcionalidade="TIPOS_PERSONALIZADO"
-            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão."
-          >
+          {temAcessoPersonalizado === true ? (
             <Button
               onClick={() => setMostrarFormNovo(true)}
               className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
@@ -228,7 +227,61 @@ export default function TiposCustosPage() {
               <PlusIcon className="h-4 w-4" />
               Novo Tipo
             </Button>
-          </PlanoBloqueio>
+          ) : (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="cursor-not-allowed flex items-center gap-2"
+                    >
+                      <LockClosedIcon className="h-4 w-4" />
+                      Novo Tipo
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent 
+                  side="top" 
+                  sideOffset={8}
+                  className="max-w-sm border border-warning bg-warning-bg shadow-lg p-0 z-50 rounded-md"
+                  style={{
+                    backgroundColor: 'var(--warning-bg)',
+                    borderColor: 'var(--warning)',
+                    color: 'var(--warning-text)'
+                  }}
+                >
+                  <div className="p-4 space-y-4" style={{ color: 'var(--warning-text)' }}>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--warning-text)' }} />
+                        <div className="font-semibold" style={{ color: 'var(--warning-text)' }}>
+                          Acesso Bloqueado
+                        </div>
+                      </div>
+                      <div className="text-sm" style={{ color: 'var(--warning-text)', opacity: 0.8 }}>
+                        Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão.
+                      </div>
+                    </div>
+                    {statusPlano?.plano && (
+                      <div className="text-sm" style={{ color: 'var(--warning-text)', opacity: 0.8 }}>
+                        Plano atual: <span className="font-semibold" style={{ color: 'var(--warning-text)' }}>{statusPlano.plano.nome}</span>
+                      </div>
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={() => router.push('/assinatura')}
+                      className="w-full"
+                      variant="default"
+                    >
+                      Ver Planos Disponíveis
+                    </Button>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
 
         {/* Abas */}
@@ -273,11 +326,7 @@ export default function TiposCustosPage() {
 
         {/* Formulário Novo Tipo - No TOPO */}
         {mostrarFormNovo && (
-          <PlanoBloqueio 
-            funcionalidade="TIPOS_PERSONALIZADO"
-            mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão."
-          >
-            <Card>
+          <Card>
               <CardHeader>
                 <CardTitle>Novo Tipo de Custo</CardTitle>
               </CardHeader>
@@ -316,7 +365,6 @@ export default function TiposCustosPage() {
                 </div>
               </CardContent>
             </Card>
-          </PlanoBloqueio>
         )}
 
         {/* Lista de Tipos */}
