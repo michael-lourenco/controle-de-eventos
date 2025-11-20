@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 import { ToastProvider } from "@/components/ui/toast";
 
 const inter = Inter({
@@ -27,11 +28,13 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ThemeProvider>
-          <SessionProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
-          </SessionProvider>
+          <SidebarProvider>
+            <SessionProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </SessionProvider>
+          </SidebarProvider>
         </ThemeProvider>
       </body>
     </html>

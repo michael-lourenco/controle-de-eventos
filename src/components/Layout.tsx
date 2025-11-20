@@ -8,6 +8,8 @@ import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
 import { usePlano } from '@/lib/hooks/usePlano';
+import { useSidebar } from '@/contexts/SidebarContext';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   HomeIcon,
   CalendarIcon,
@@ -22,7 +24,11 @@ import {
   TagIcon,
   CalendarDaysIcon,
   CreditCardIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  BanknotesIcon,
+  CalculatorIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 interface LayoutProps {
@@ -35,11 +41,11 @@ const navigation = [
   { name: 'Clientes', href: '/clientes', icon: UserIcon },
   { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
   { name: 'Contratos', href: '/contratos', icon: DocumentTextIcon },
-  { name: 'Pagamentos', href: '/pagamentos', icon: CurrencyDollarIcon },
+  { name: 'Pagamentos', href: '/pagamentos', icon: BanknotesIcon },
   { name: 'Tipos de Serviços', href: '/servicos', icon: WrenchScrewdriverIcon },
   { name: 'Canais de Entrada', href: '/canais-entrada', icon: TagIcon },
   { name: 'Tipos de Evento', href: '/tipos-eventos', icon: CalendarDaysIcon },
-  { name: 'Tipos de Custo', href: '/tipos-custos', icon: CurrencyDollarIcon },
+  { name: 'Tipos de Custo', href: '/tipos-custos', icon: CalculatorIcon },
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
   // { name: 'Google Calendar', href: '/configuracoes/calendario', icon: CalendarIcon }, // COMENTADO: Aguardando permissões diretas da Google para dados sensíveis
 ];
@@ -55,6 +61,7 @@ export default function Layout({ children }: LayoutProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { statusPlano, loading: loadingPlano } = usePlano();
+  const { isCollapsed, toggleSidebar } = useSidebar();
 
   const loading = status === 'loading';
   const user = session?.user ? {
@@ -154,81 +161,179 @@ export default function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      <div className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-all duration-300 ${isCollapsed ? 'lg:w-20' : 'lg:w-64'}`}>
         <div className="flex flex-grow flex-col overflow-y-auto bg-surface/95 backdrop-blur-md border-r border-border shadow-xl">
-          <div className="flex h-16 items-center px-4">
-            <div className="flex items-center gap-2">
-              <Image 
-                src="/logo.png" 
-                alt="Clicksehub Logo" 
-                width={32} 
-                height={32}
-                className="object-contain"
-              />
-              <h1 className="text-xl font-bold self-end">
-                <span className="text-primary">Clickse</span>
-                <span style={{ color: '#FF4001' }}>hub</span>
-              </h1>
-            </div>
+          <div className={`flex h-16 items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+            {!isCollapsed ? (
+              <div className="flex items-center gap-2 flex-1">
+                <Image 
+                  src="/logo.png" 
+                  alt="Clicksehub Logo" 
+                  width={32} 
+                  height={32}
+                  className="object-contain"
+                />
+                <h1 className="text-xl font-bold self-end">
+                  <span className="text-primary">Clickse</span>
+                  <span style={{ color: '#FF4001' }}>hub</span>
+                </h1>
+              </div>
+            ) : (
+              <div className="flex justify-center w-full">
+                <Image 
+                  src="/logo.png" 
+                  alt="Clicksehub Logo" 
+                  width={32} 
+                  height={32}
+                  className="object-contain"
+                />
+              </div>
+            )}
+            {!isCollapsed && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={toggleSidebar}
+                      className="p-1.5 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
+                      aria-label="Colapsar menu"
+                    >
+                      <ChevronLeftIcon className="h-5 w-5 text-text-secondary" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Colapsar menu
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
+          {isCollapsed && (
+            <div className="flex justify-center px-2 pb-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={toggleSidebar}
+                      className="p-1.5 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
+                      aria-label="Expandir menu"
+                    >
+                      <ChevronRightIcon className="h-5 w-5 text-text-secondary" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Expandir menu
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          )}
           <nav className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer"
-              >
-                <item.icon className="mr-3 h-5 w-5" />
-                {item.name}
-              </Link>
-            ))}
+            <TooltipProvider>
+              {navigation.map((item) => (
+                <Tooltip key={item.name} delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Link
+                      href={item.href}
+                      className={`group flex items-center text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer ${
+                        isCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
+                      }`}
+                    >
+                      <item.icon className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'}`} />
+                      {!isCollapsed && <span>{item.name}</span>}
+                    </Link>
+                  </TooltipTrigger>
+                  {isCollapsed && (
+                    <TooltipContent side="right">
+                      {item.name}
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              ))}
+            </TooltipProvider>
             
             {session?.user?.role === 'admin' && (
               <>
                 <div className="border-t border-border my-4"></div>
-                <div className="px-2">
-                  <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-                    Administração
-                  </h3>
+                {!isCollapsed && (
+                  <div className="px-2">
+                    <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
+                      Administração
+                    </h3>
+                  </div>
+                )}
+                <TooltipProvider>
                   {adminNavigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer"
-                    >
-                      <item.icon className="mr-3 h-5 w-5" />
-                      {item.name}
-                    </Link>
+                    <Tooltip key={item.name} delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Link
+                          href={item.href}
+                          className={`group flex items-center text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer ${
+                            isCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
+                          }`}
+                        >
+                          <item.icon className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'}`} />
+                          {!isCollapsed && <span>{item.name}</span>}
+                        </Link>
+                      </TooltipTrigger>
+                      {isCollapsed && (
+                        <TooltipContent side="right">
+                          {item.name}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
                   ))}
-                </div>
+                </TooltipProvider>
               </>
             )}
           </nav>
-          <div className="flex-shrink-0 border-t border-border p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <UserIcon className="h-8 w-8 rounded-full bg-surface" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-text-primary">{user?.name}</p>
-                <p className="text-xs text-text-muted">{user?.email}</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full mt-2"
-              onClick={handleLogout}
-            >
-              <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
+          <div className={`flex-shrink-0 border-t border-border ${isCollapsed ? 'p-2' : 'p-4'}`}>
+            {!isCollapsed ? (
+              <>
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <UserIcon className="h-8 w-8 rounded-full bg-surface" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-text-primary">{user?.name}</p>
+                    <p className="text-xs text-text-muted">{user?.email}</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full mt-2"
+                  onClick={handleLogout}
+                >
+                  <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
+                  Sair
+                </Button>
+              </>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full"
+                      onClick={handleLogout}
+                    >
+                      <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    Sair
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={`transition-all duration-300 ${isCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
         {/* Banner de Oferta de Plano */}
         {!loadingPlano && !temPlanoAtivo && showPlanoBanner && (
           <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/10 to-accent/10 border-b border-primary/20 px-4 py-3 sm:px-6 lg:px-8">

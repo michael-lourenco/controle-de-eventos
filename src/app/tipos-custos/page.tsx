@@ -15,7 +15,7 @@ import {
   PlusIcon,
   PencilIcon,
   TrashIcon,
-  CurrencyDollarIcon,
+  CalculatorIcon,
   CheckIcon,
   XMarkIcon,
   ArrowPathIcon,
@@ -212,7 +212,7 @@ export default function TiposCustosPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-              <CurrencyDollarIcon className="h-6 w-6" />
+              <CalculatorIcon className="h-6 w-6" />
               Tipos de Custo
             </h1>
             <p className="text-text-secondary">
@@ -481,7 +481,7 @@ export default function TiposCustosPage() {
         {tiposFiltrados.length === 0 && (
           <Card>
             <CardContent className="text-center py-12">
-              <CurrencyDollarIcon className="mx-auto h-12 w-12 text-text-muted" />
+              <CalculatorIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">
                 {searchTerm 
                   ? 'Nenhum tipo encontrado' 
