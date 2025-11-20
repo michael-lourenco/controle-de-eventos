@@ -22,7 +22,8 @@ import {
   BriefcaseIcon,
   ClipboardDocumentIcon,
   CheckIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
@@ -35,22 +36,24 @@ import CustosEvento from '@/components/CustosEvento';
 import ServicosEvento from '@/components/ServicosEvento';
 import AnexosEvento from '@/components/AnexosEvento';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
-import PlanoBloqueio from '@/components/PlanoBloqueio';
 import { useToast } from '@/components/ui/toast';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useEffect } from 'react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Lock } from 'lucide-react';
 
 export default function EventoViewPage() {
   const params = useParams();
   const router = useRouter();
   const { userId } = useCurrentUser();
   const { showToast } = useToast();
-  const { temPermissao } = usePlano();
+  const { temPermissao, statusPlano } = usePlano();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [copied, setCopied] = useState(false);
   const [temAcessoCopiar, setTemAcessoCopiar] = useState<boolean | null>(null);
+  const [temAcessoContrato, setTemAcessoContrato] = useState<boolean | null>(null);
   
   const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
@@ -67,6 +70,15 @@ export default function EventoViewPage() {
       setTemAcessoCopiar(acesso);
     };
     verificarAcesso();
+  }, [temPermissao]);
+
+  // Verificar acesso ao contrato automatizado - chamado antes dos early returns
+  useEffect(() => {
+    const verificarAcessoContrato = async () => {
+      const acesso = await temPermissao('CONTRATO_AUTOMATIZADO');
+      setTemAcessoContrato(acesso);
+    };
+    verificarAcessoContrato();
   }, [temPermissao]);
 
   if (loading) {
@@ -345,10 +357,7 @@ export default function EventoViewPage() {
               Voltar
             </Button>
             <div className="flex items-center gap-2">
-              <PlanoBloqueio 
-                funcionalidade="CONTRATO_AUTOMATIZADO"
-                mensagem="Preenchimento automatizado de contrato está disponível apenas no plano Premium"
-              >
+              {temAcessoContrato === true ? (
                 <Button
                   variant="outline"
                   onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
@@ -356,7 +365,61 @@ export default function EventoViewPage() {
                   <DocumentTextIcon className="h-4 w-4 mr-2" />
                   Gerar Contrato
                 </Button>
-              </PlanoBloqueio>
+              ) : (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <Button
+                          variant="outline"
+                          disabled
+                          className="cursor-not-allowed"
+                        >
+                          <LockClosedIcon className="h-4 w-4 mr-2" />
+                          Gerar Contrato
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent 
+                      side="top" 
+                      sideOffset={8}
+                      className="max-w-sm border border-warning bg-warning-bg shadow-lg p-0 z-50 rounded-md"
+                      style={{
+                        backgroundColor: 'var(--warning-bg)',
+                        borderColor: 'var(--warning)',
+                        color: 'var(--warning-text)'
+                      }}
+                    >
+                      <div className="p-4 space-y-4" style={{ color: 'var(--warning-text)' }}>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Lock className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--warning-text)' }} />
+                            <div className="font-semibold" style={{ color: 'var(--warning-text)' }}>
+                              Acesso Bloqueado
+                            </div>
+                          </div>
+                          <div className="text-sm" style={{ color: 'var(--warning-text)', opacity: 0.8 }}>
+                            Preenchimento automatizado de contrato está disponível apenas no plano Premium
+                          </div>
+                        </div>
+                        {statusPlano?.plano && (
+                          <div className="text-sm" style={{ color: 'var(--warning-text)', opacity: 0.8 }}>
+                            Plano atual: <span className="font-semibold" style={{ color: 'var(--warning-text)' }}>{statusPlano.plano.nome}</span>
+                          </div>
+                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => router.push('/assinatura')}
+                          className="w-full"
+                          variant="default"
+                        >
+                          Ver Planos Disponíveis
+                        </Button>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {temAcessoCopiar && (
                 <Button 
                   variant="outline" 

@@ -98,7 +98,7 @@ export default function Layout({ children }: LayoutProps) {
                 height={32}
                 className="object-contain"
               />
-              <h1 className="text-xl font-bold">
+              <h1 className="text-xl font-bold self-end">
                 <span className="text-primary">Clickse</span>
                 <span style={{ color: '#FF4001' }}>hub</span>
               </h1>
@@ -161,7 +161,7 @@ export default function Layout({ children }: LayoutProps) {
                 height={32}
                 className="object-contain"
               />
-              <h1 className="text-xl font-bold">
+              <h1 className="text-xl font-bold self-end">
                 <span className="text-primary">Clickse</span>
                 <span style={{ color: '#FF4001' }}>hub</span>
               </h1>

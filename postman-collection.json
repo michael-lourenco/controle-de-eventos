@@ -1005,6 +1005,60 @@
           }
         },
         {
+          "name": "Migrar ENTERPRISE_MENSAL → PREMIUM_MENSAL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dryRun\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-enterprise-to-premium",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-enterprise-to-premium"]
+            },
+            "description": "Migra usuários de ENTERPRISE_MENSAL para PREMIUM_MENSAL.\n\n🔄 O que faz:\n1. Busca todas as assinaturas com plano ENTERPRISE_MENSAL\n2. Busca o novo plano PREMIUM_MENSAL\n3. Atualiza as assinaturas para o novo plano\n4. Atualiza os usuários (cache)\n5. Registra histórico de migração\n\n📋 Parâmetros:\n- dryRun (boolean): true = apenas simula sem aplicar mudanças (padrão: false)\n\n💡 Use dryRun=true primeiro para testar sem aplicar mudanças.\n\n⚠️ IMPORTANTE: Execute o seed primeiro para garantir que o plano PREMIUM_MENSAL existe!"
+          }
+        },
+        {
+          "name": "Migrar ENTERPRISE → PREMIUM - Dry Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dryRun\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-enterprise-to-premium",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-enterprise-to-premium"]
+            },
+            "description": "Simula migração de ENTERPRISE_MENSAL para PREMIUM_MENSAL sem aplicar mudanças (dryRun=true)"
+          }
+        },
+        {
           "name": "Gerar Eventos Aleatórios (Teste de Estresse)",
           "request": {
             "method": "POST",
