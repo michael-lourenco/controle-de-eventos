@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -59,6 +59,7 @@ export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showPlanoBanner, setShowPlanoBanner] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const { statusPlano, loading: loadingPlano } = usePlano();
   const { isCollapsed, toggleSidebar } = useSidebar();
@@ -94,6 +95,14 @@ export default function Layout({ children }: LayoutProps) {
     signOut({ callbackUrl: '/login' });
   };
 
+  // Verificar se um item do menu está ativo
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard';
+    }
+    return pathname.startsWith(href);
+  };
+
   return (
     <div className="min-h-screen">
       {/* Mobile sidebar */}
@@ -123,16 +132,28 @@ export default function Layout({ children }: LayoutProps) {
             </button>
           </div>
           <nav className="flex-1 space-y-1 px-2 py-4">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer"
-              >
-                <item.icon className="mr-3 h-5 w-5" />
-                {item.name}
-              </Link>
-            ))}
+            {navigation.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group relative flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer ${
+                    active
+                      ? 'bg-primary/10 text-primary shadow-sm scale-105'
+                      : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:shadow-sm hover:scale-[1.02]'
+                  }`}
+                >
+                  {active && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                  )}
+                  <item.icon className={`mr-3 h-5 w-5 transition-transform duration-200 ${
+                    active ? 'scale-110' : 'group-hover:scale-110'
+                  }`} />
+                  <span className="font-medium">{item.name}</span>
+                </Link>
+              );
+            })}
             
             {/*
             {user && (
@@ -230,26 +251,38 @@ export default function Layout({ children }: LayoutProps) {
           )}
           <nav className="flex-1 space-y-1 px-2 py-4">
             <TooltipProvider>
-              {navigation.map((item) => (
-                <Tooltip key={item.name} delayDuration={0}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={item.href}
-                      className={`group flex items-center text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer ${
-                        isCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
-                      }`}
-                    >
-                      <item.icon className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'}`} />
-                      {!isCollapsed && <span>{item.name}</span>}
-                    </Link>
-                  </TooltipTrigger>
-                  {isCollapsed && (
-                    <TooltipContent side="right">
-                      {item.name}
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              ))}
+              {navigation.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Tooltip key={item.name} delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        className={`group relative flex items-center text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer ${
+                          isCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
+                        } ${
+                          active
+                            ? 'bg-primary/10 text-primary shadow-sm scale-105'
+                            : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:shadow-sm hover:scale-[1.02]'
+                        }`}
+                      >
+                        {active && !isCollapsed && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                        )}
+                        <item.icon className={`transition-transform duration-200 ${
+                          isCollapsed ? 'h-5 w-5' : 'h-5 w-5 mr-3'
+                        } ${active ? 'scale-110' : 'group-hover:scale-110'}`} />
+                        {!isCollapsed && <span className="font-medium">{item.name}</span>}
+                      </Link>
+                    </TooltipTrigger>
+                    {isCollapsed && (
+                      <TooltipContent side="right">
+                        {item.name}
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              })}
             </TooltipProvider>
             
             {session?.user?.role === 'admin' && (
@@ -263,26 +296,38 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                 )}
                 <TooltipProvider>
-                  {adminNavigation.map((item) => (
-                    <Tooltip key={item.name} delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <Link
-                          href={item.href}
-                          className={`group flex items-center text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer ${
-                            isCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
-                          }`}
-                        >
-                          <item.icon className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'}`} />
-                          {!isCollapsed && <span>{item.name}</span>}
-                        </Link>
-                      </TooltipTrigger>
-                      {isCollapsed && (
-                        <TooltipContent side="right">
-                          {item.name}
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  ))}
+                  {adminNavigation.map((item) => {
+                    const active = isActive(item.href);
+                    return (
+                      <Tooltip key={item.name} delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Link
+                            href={item.href}
+                            className={`group relative flex items-center text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer ${
+                              isCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
+                            } ${
+                              active
+                                ? 'bg-primary/10 text-primary shadow-sm scale-105'
+                                : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:shadow-sm hover:scale-[1.02]'
+                            }`}
+                          >
+                            {active && !isCollapsed && (
+                              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                            )}
+                            <item.icon className={`transition-transform duration-200 ${
+                              isCollapsed ? 'h-5 w-5' : 'h-5 w-5 mr-3'
+                            } ${active ? 'scale-110' : 'group-hover:scale-110'}`} />
+                            {!isCollapsed && <span className="font-medium">{item.name}</span>}
+                          </Link>
+                        </TooltipTrigger>
+                        {isCollapsed && (
+                          <TooltipContent side="right">
+                            {item.name}
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    );
+                  })}
                 </TooltipProvider>
               </>
             )}
