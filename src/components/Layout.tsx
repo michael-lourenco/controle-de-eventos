@@ -155,29 +155,59 @@ export default function Layout({ children }: LayoutProps) {
               );
             })}
             
-            {/*
-            {user && (
+            {session?.user?.role === 'admin' && (
               <>
                 <div className="border-t border-border my-4"></div>
                 <div className="px-2">
                   <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
                     Administração
                   </h3>
-                  {adminNavigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className="group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-all duration-200 hover:shadow-sm cursor-pointer"
-                    >
-                      <item.icon className="mr-3 h-5 w-5" />
-                      {item.name}
-                    </Link>
-                  ))}
+                  {adminNavigation.map((item) => {
+                    const active = isActive(item.href);
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={`group relative flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer ${
+                          active
+                            ? 'bg-primary/10 text-primary shadow-sm scale-105'
+                            : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary hover:shadow-sm hover:scale-[1.02]'
+                        }`}
+                      >
+                        {active && (
+                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                        )}
+                        <item.icon className={`mr-3 h-5 w-5 transition-transform duration-200 ${
+                          active ? 'scale-110' : 'group-hover:scale-110'
+                        }`} />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </>
             )}
-            */}
           </nav>
+          <div className="flex-shrink-0 border-t border-border p-4">
+            <div className="flex items-center mb-3">
+              <div className="flex-shrink-0">
+                <UserIcon className="h-8 w-8 rounded-full bg-surface" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-text-primary">{user?.name}</p>
+                <p className="text-xs text-text-muted">{user?.email}</p>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              onClick={handleLogout}
+            >
+              <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
+          </div>
         </div>
       </div>
 
