@@ -82,7 +82,7 @@ export default function LoginPage() {
             </h1>
           </div>
           <h2 className="text-2xl font-semibold text-text-primary">
-            Gestão para Empresas de Totens Fotográficos
+            Gestão para Empresas de Cabine de Fotos
           </h2>
           <p className="mt-2 text-sm text-text-secondary">
             Faça login para acessar o sistema

@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Clicksehub - Gestão para Empresas de Totens Fotográficos",
+  title: "Clicksehub - Gestão para Empresas de Cabine de Fotos",
   description: "Sistema completo para gerenciar seu negócio de totens fotográficos. Controle eventos, clientes, pagamentos e serviços de forma simples e organizada.",
 };
 
