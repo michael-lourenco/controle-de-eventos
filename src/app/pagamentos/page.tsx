@@ -33,6 +33,7 @@ import {
   MagnifyingGlassIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function PagamentosPage() {
   const router = useRouter();
@@ -241,26 +242,29 @@ export default function PagamentosPage() {
                     key={pagamento.id}
                     className="border border-border rounded-lg p-4"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
+                    {/* Layout Desktop */}
+                    <div className="hidden md:flex items-center justify-between">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
                         {getStatusIcon(pagamento.status)}
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-medium text-text-primary">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 flex-wrap">
+                            <span className="font-medium text-text-primary whitespace-nowrap">
                               R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             </span>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pagamento.status)}`}>
                               {pagamento.status}
                             </span>
                           </div>
-                          <div className="flex items-center space-x-4 text-sm text-text-secondary">
+                          <div className="flex items-center space-x-4 text-sm text-text-secondary flex-wrap gap-2 mt-1">
                             <div className="flex items-center">
-                              <CalendarIcon className="h-4 w-4 mr-1" />
-                              {pagamento.dataPagamento ? format(new Date(pagamento.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
+                              <CalendarIcon className="h-4 w-4 mr-1 flex-shrink-0" />
+                              <span className="whitespace-nowrap">
+                                {pagamento.dataPagamento ? format(new Date(pagamento.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
+                              </span>
                             </div>
                             <div className="flex items-center">
                               <span className="mr-1">Forma:</span>
-                              {pagamento.formaPagamento}
+                              <span className="truncate">{pagamento.formaPagamento}</span>
                             </div>
                           </div>
                           {pagamento.observacoes && (
@@ -271,7 +275,7 @@ export default function PagamentosPage() {
                         </div>
                       </div>
                       
-                      <div className="text-right">
+                      <div className="text-right ml-4 flex-shrink-0">
                         <div className="text-sm text-gray-600">
                           <div className="font-medium">{pagamento.evento?.nome}</div>
                           <div>{pagamento.evento?.cliente?.nome}</div>
@@ -280,14 +284,77 @@ export default function PagamentosPage() {
                           </div>
                         </div>
                         <div className="mt-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => router.push(`/eventos/${pagamento.evento?.id}`)}
-                          >
-                            <EyeIcon className="h-4 w-4 mr-1" />
-                            Ver Evento
-                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => router.push(`/eventos/${pagamento.evento?.id}`)}
+                                  className="p-2"
+                                >
+                                  <EyeIcon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p>Ver Evento</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Layout Mobile */}
+                    <div className="md:hidden space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start space-x-2 flex-1 min-w-0">
+                          {getStatusIcon(pagamento.status)}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-2">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pagamento.status)}`}>
+                                {pagamento.status}
+                              </span>
+                            </div>
+                            <div className="text-lg font-bold text-text-primary mb-2">
+                              R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </div>
+                            <div className="text-sm font-medium text-text-primary mb-1">
+                              {pagamento.evento?.cliente?.nome}
+                            </div>
+                            <div className="text-xs text-text-secondary">
+                              {pagamento.evento?.nome}
+                            </div>
+                          </div>
+                        </div>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => router.push(`/eventos/${pagamento.evento?.id}`)}
+                                className="p-2 flex-shrink-0"
+                              >
+                                <EyeIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Ver Evento</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <div className="space-y-1 text-sm text-text-secondary">
+                        <div className="flex items-center">
+                          <CalendarIcon className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                          <span>
+                            {pagamento.dataPagamento ? format(new Date(pagamento.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
+                          </span>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="mr-1.5">Forma:</span>
+                          <span className="truncate">{pagamento.formaPagamento}</span>
                         </div>
                       </div>
                     </div>

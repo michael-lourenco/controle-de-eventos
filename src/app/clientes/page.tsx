@@ -564,18 +564,146 @@ export default function ClientesPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold text-text-primary">{cliente.nome}</h3>
-                        <span className="text-sm text-text-secondary">
-                          Cadastrado em {formatarData(cliente.dataCadastro)}
-                        </span>
+                  <>
+                    {/* Layout Desktop */}
+                    <div className="hidden md:flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-lg font-semibold text-text-primary">{cliente.nome}</h3>
+                          <span className="text-sm text-text-secondary">
+                            Cadastrado em {formatarData(cliente.dataCadastro)}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="font-medium text-text-secondary">Email:</span>
+                            <span className="ml-2 text-text-primary">{cliente.email}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-text-secondary">Telefone:</span>
+                            <span className="ml-2 text-text-primary">{cliente.telefone}</span>
+                          </div>
+                          {cliente.cpf && (
+                            <div>
+                              <span className="font-medium text-text-secondary">CPF:</span>
+                              <span className="ml-2 text-text-primary">{cliente.cpf}</span>
+                            </div>
+                          )}
+                          {cliente.endereco && (
+                            <div>
+                              <span className="font-medium text-text-secondary">Endereço:</span>
+                              <span className="ml-2 text-text-primary">{cliente.endereco}</span>
+                            </div>
+                          )}
+                          {cliente.instagram && (
+                            <div>
+                              <span className="font-medium text-text-secondary">Instagram:</span>
+                              <span className="ml-2 text-text-primary">{cliente.instagram}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-medium text-text-secondary">Canal de Entrada:</span>
+                            <span className="ml-2 text-text-primary">{getCanalEntradaNome(cliente.canalEntradaId)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                      <div className="flex gap-1 flex-shrink-0 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => router.push(`/clientes/${cliente.id}`)}
+                          title="Visualizar"
+                          className="hover:bg-primary/10 hover:text-primary"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => iniciarEdicao(cliente)}
+                          title="Editar"
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </Button>
+                        {abaAtiva === 'ativos' ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleExcluirCliente(cliente)}
+                            title="Arquivar"
+                            className="text-error hover:text-error hover:bg-error/10"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDesarquivar(cliente)}
+                            title="Desarquivar"
+                            className="text-success hover:text-success hover:bg-success/10"
+                          >
+                            <ArrowPathIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Layout Mobile */}
+                    <div className="md:hidden space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-text-primary break-words">{cliente.nome}</h3>
+                          <span className="text-sm text-text-secondary block mt-1">
+                            Cadastrado em {formatarData(cliente.dataCadastro)}
+                          </span>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => router.push(`/clientes/${cliente.id}`)}
+                            title="Visualizar"
+                            className="p-2 hover:bg-primary/10 hover:text-primary"
+                          >
+                            <EyeIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => iniciarEdicao(cliente)}
+                            title="Editar"
+                            className="p-2"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                          {abaAtiva === 'ativos' ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleExcluirCliente(cliente)}
+                              title="Arquivar"
+                              className="p-2 text-error hover:text-error hover:bg-error/10"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDesarquivar(cliente)}
+                              title="Desarquivar"
+                              className="p-2 text-success hover:text-success hover:bg-success/10"
+                            >
+                              <ArrowPathIcon className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 text-sm">
                         <div>
                           <span className="font-medium text-text-secondary">Email:</span>
-                          <span className="ml-2 text-text-primary">{cliente.email}</span>
+                          <span className="ml-2 text-text-primary break-words">{cliente.email}</span>
                         </div>
                         <div>
                           <span className="font-medium text-text-secondary">Telefone:</span>
@@ -590,7 +718,7 @@ export default function ClientesPage() {
                         {cliente.endereco && (
                           <div>
                             <span className="font-medium text-text-secondary">Endereço:</span>
-                            <span className="ml-2 text-text-primary">{cliente.endereco}</span>
+                            <span className="ml-2 text-text-primary break-words">{cliente.endereco}</span>
                           </div>
                         )}
                         {cliente.instagram && (
@@ -605,47 +733,7 @@ export default function ClientesPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push(`/clientes/${cliente.id}`)}
-                        title="Visualizar"
-                        className="hover:bg-primary/10 hover:text-primary"
-                      >
-                        <EyeIcon className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => iniciarEdicao(cliente)}
-                        title="Editar"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
-                      {abaAtiva === 'ativos' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleExcluirCliente(cliente)}
-                          title="Arquivar"
-                          className="text-error hover:text-error hover:bg-error/10"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDesarquivar(cliente)}
-                          title="Desarquivar"
-                          className="text-success hover:text-success hover:bg-success/10"
-                        >
-                          <ArrowPathIcon className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                  </>
                 )}
               </CardContent>
             </Card>

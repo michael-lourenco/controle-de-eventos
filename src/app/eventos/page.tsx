@@ -31,6 +31,7 @@ import { StatusEvento, Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
 import DateRangeFilter, { DateFilter, isDateInFilter } from '@/components/filters/DateRangeFilter';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function EventosPage() {
   const router = useRouter();
@@ -522,7 +523,7 @@ export default function EventosPage() {
           {sortedEventos.map((evento) => (
             <Card 
               key={evento.id} 
-              className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+              className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
               onClick={() => handleView(evento)}
             >
               <CardHeader>
@@ -566,75 +567,115 @@ export default function EventosPage() {
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-text-primary">{evento.tipoEvento}</span>
-                    <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="flex space-x-2">
                       {temAcessoCopiar && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopyInfo(evento);
-                          }}
-                          title="Copiar informações"
-                          className={eventoCopiado === evento.id ? 'bg-success-bg text-success-text' : 'hover:bg-info/10 hover:text-info'}
-                        >
-                          {eventoCopiado === evento.id ? (
-                            <CheckIcon className="h-4 w-4" />
-                          ) : (
-                            <ClipboardDocumentIcon className="h-4 w-4" />
-                          )}
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyInfo(evento);
+                                }}
+                                className={eventoCopiado === evento.id ? 'bg-success-bg text-success-text' : 'hover:bg-info/10 hover:text-info'}
+                              >
+                                {eventoCopiado === evento.id ? (
+                                  <CheckIcon className="h-4 w-4" />
+                                ) : (
+                                  <ClipboardDocumentIcon className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>{eventoCopiado === evento.id ? 'Copiado!' : 'Copiar informações'}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleView(evento);
-                        }}
-                        title="Visualizar"
-                        className="hover:bg-primary/10 hover:text-primary"
-                      >
-                        <EyeIcon className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEdit(evento);
-                        }}
-                        title="Editar"
-                        className="hover:bg-accent/10 hover:text-accent"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleView(evento);
+                              }}
+                              className="hover:bg-primary/10 hover:text-primary"
+                            >
+                              <EyeIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Visualizar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(evento);
+                              }}
+                              className="hover:bg-accent/10 hover:text-accent"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Editar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       {abaAtiva === 'ativos' ? (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleExcluirEvento(evento);
-                          }}
-                          title="Arquivar"
-                          className="text-error hover:text-error hover:bg-error/10"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleExcluirEvento(evento);
+                                }}
+                                className="text-error hover:text-error hover:bg-error/10"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Arquivar</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       ) : (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDesarquivar(evento);
-                          }}
-                          title="Desarquivar"
-                          className="text-success hover:text-success hover:bg-success/10"
-                        >
-                          <ArrowPathIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDesarquivar(evento);
+                                }}
+                                className="text-success hover:text-success hover:bg-success/10"
+                              >
+                                <ArrowPathIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Desarquivar</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   </div>
