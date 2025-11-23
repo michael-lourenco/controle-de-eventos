@@ -795,11 +795,23 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
       
       if (!erroTratado) {
-        // Se não for erro de plano, mostrar erro genérico
-        setErrors({ 
-          general: error.message || 'Erro ao salvar evento. Tente novamente.' 
-        });
-        showToast(error.message || 'Erro ao salvar evento. Tente novamente.', 'error');
+        // Verificar se é erro de email duplicado (status 409)
+        if (error?.status === 409 || error?.message?.includes('Já existe um cliente')) {
+          const erroMensagem = error.message || 'Já existe um cliente cadastrado com este email. Por favor, selecione o cliente existente na lista.';
+          setErrors({ 
+            novoClienteEmail: erroMensagem,
+            general: erroMensagem
+          });
+          showToast(erroMensagem, 'error');
+          // Sugerir usar cliente existente
+          setIsNovoCliente(false);
+        } else {
+          // Se não for erro de plano, mostrar erro genérico
+          setErrors({ 
+            general: error.message || 'Erro ao salvar evento. Tente novamente.' 
+          });
+          showToast(error.message || 'Erro ao salvar evento. Tente novamente.', 'error');
+        }
       } else {
         // Mesmo tratando com toast, pode ser útil mostrar no formulário também
         setErrors({ 

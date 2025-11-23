@@ -155,6 +155,25 @@ export class DataService {
       throw erro;
     }
 
+    // Normalizar e validar email antes de criar
+    if (cliente.email) {
+      const emailNormalizado = cliente.email.toLowerCase().trim();
+      
+      // Verificar se já existe cliente com este email
+      const clienteExistente = await this.clienteRepo.findByEmail(emailNormalizado, userId);
+      if (clienteExistente) {
+        const erro = new Error(`Já existe um cliente cadastrado com o email ${cliente.email}`);
+        (erro as any).status = 409; // Conflict
+        throw erro;
+      }
+
+      // Normalizar email no objeto antes de salvar
+      cliente = {
+        ...cliente,
+        email: emailNormalizado
+      };
+    }
+
     return this.clienteRepo.createCliente(cliente, userId);
   }
 
@@ -539,10 +558,10 @@ export class DataService {
       throw new Error('userId é obrigatório para criar tipo de custo');
     }
 
-    // Validar permissão para gerenciar custos
-    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'CUSTOS_GERENCIAR');
+    // Validar permissão para criar tipos personalizados (disponível nos planos PROFISSIONAL e PREMIUM)
+    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'TIPOS_PERSONALIZADO');
     if (!temPermissao) {
-      const erro = new Error('Seu plano não permite gerenciar custos');
+      const erro = new Error('Seu plano não permite criar tipos personalizados. Esta funcionalidade está disponível apenas nos planos Profissional e Premium.');
       (erro as any).status = 403;
       throw erro;
     }
@@ -678,10 +697,10 @@ export class DataService {
   }
 
   async createTipoServico(tipoServico: Omit<TipoServico, 'id' | 'dataCadastro'>, userId: string): Promise<TipoServico> {
-    // Validar permissão para gerenciar serviços
-    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'SERVICOS_GERENCIAR');
+    // Validar permissão para criar tipos personalizados (disponível nos planos PROFISSIONAL e PREMIUM)
+    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'TIPOS_PERSONALIZADO');
     if (!temPermissao) {
-      const erro = new Error('Seu plano não permite gerenciar serviços');
+      const erro = new Error('Seu plano não permite criar tipos personalizados. Esta funcionalidade está disponível apenas nos planos Profissional e Premium.');
       (erro as any).status = 403;
       throw erro;
     }
@@ -720,14 +739,9 @@ export class DataService {
   }
 
   async createServicoEvento(userId: string, eventoId: string, servicoEvento: Omit<ServicoEvento, 'id'>): Promise<ServicoEvento> {
-    // Validar permissão para gerenciar serviços
-    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'SERVICOS_GERENCIAR');
-    if (!temPermissao) {
-      const erro = new Error('Seu plano não permite gerenciar serviços');
-      (erro as any).status = 403;
-      throw erro;
-    }
-
+    // Não valida permissão aqui, pois este método apenas associa serviços existentes a um evento
+    // A validação de permissão deve estar apenas em createTipoServico (criar novo tipo de serviço)
+    // Se o usuário pode criar o evento, pode associar serviços existentes a ele
     return this.servicoEventoRepo.createServicoEvento(userId, eventoId, servicoEvento);
   }
 

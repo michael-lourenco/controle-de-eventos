@@ -10,8 +10,31 @@ export class ClienteRepository extends SubcollectionRepository<Cliente> {
 
   // Métodos específicos para clientes (agora sem userId pois é parte do path)
   async findByEmail(email: string, userId: string): Promise<Cliente | null> {
-    const clientes = await this.findWhere('email', '==', email, userId);
-    return clientes.length > 0 ? clientes[0] : null;
+    if (!email || !email.trim()) {
+      return null;
+    }
+
+    // Normalizar email: lowercase e trim para garantir busca correta
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Primeira tentativa: busca exata com email normalizado
+    const clientes = await this.findWhere('email', '==', normalizedEmail, userId);
+    if (clientes.length > 0) {
+      return clientes[0];
+    }
+    
+    // Segunda tentativa: buscar todos e filtrar localmente (case-insensitive)
+    // Isso é necessário porque alguns emails podem estar salvos com maiúsculas no banco
+    try {
+      const allClientes = await this.findAll(userId);
+      const foundCliente = allClientes.find(c => 
+        c.email && c.email.toLowerCase().trim() === normalizedEmail
+      );
+      return foundCliente || null;
+    } catch (error) {
+      console.error('Erro ao buscar cliente por email (fallback):', error);
+      return null;
+    }
   }
 
   async findByCpf(cpf: string, userId: string): Promise<Cliente | null> {
