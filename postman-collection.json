@@ -1207,6 +1207,235 @@
           }
         }
       ]
+    },
+    {
+      "name": "Webhook Hotmart - Mock (Testes)",
+      "description": "Endpoints mock para simular webhooks da Hotmart sem usar sandbox ou produção",
+      "item": [
+        {
+          "name": "Mock - Documentação (GET)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"]
+            },
+            "description": "Retorna documentação do endpoint mock com exemplos e eventos disponíveis"
+          }
+        },
+        {
+          "name": "Mock - PURCHASE_APPROVED (Básico)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=PURCHASE_APPROVED&email={{email}}&plan_code=BASICO_MENSAL",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "PURCHASE_APPROVED" },
+                { "key": "email", "value": "{{email}}" },
+                { "key": "plan_code", "value": "BASICO_MENSAL" }
+              ]
+            },
+            "description": "Simula compra aprovada do plano Básico"
+          }
+        },
+        {
+          "name": "Mock - PURCHASE_APPROVED (Profissional)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=PURCHASE_APPROVED&email={{email}}&plan_code=PROFISSIONAL_MENSAL",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "PURCHASE_APPROVED" },
+                { "key": "email", "value": "{{email}}" },
+                { "key": "plan_code", "value": "PROFISSIONAL_MENSAL" }
+              ]
+            },
+            "description": "Simula compra aprovada do plano Profissional"
+          }
+        },
+        {
+          "name": "Mock - PURCHASE_APPROVED (Premium)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=PURCHASE_APPROVED&email={{email}}&plan_code=PREMIUM_MENSAL",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "PURCHASE_APPROVED" },
+                { "key": "email", "value": "{{email}}" },
+                { "key": "plan_code", "value": "PREMIUM_MENSAL" }
+              ]
+            },
+            "description": "Simula compra aprovada do plano Premium"
+          }
+        },
+        {
+          "name": "Mock - SWITCH_PLAN (Básico → Profissional)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=SWITCH_PLAN&email={{email}}&new_plan_code=PROFISSIONAL_MENSAL",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "SWITCH_PLAN" },
+                { "key": "email", "value": "{{email}}" },
+                { "key": "new_plan_code", "value": "PROFISSIONAL_MENSAL" }
+              ]
+            },
+            "description": "Simula troca de plano de Básico para Profissional"
+          }
+        },
+        {
+          "name": "Mock - SWITCH_PLAN (Profissional → Premium)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=SWITCH_PLAN&email={{email}}&new_plan_code=PREMIUM_MENSAL",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "SWITCH_PLAN" },
+                { "key": "email", "value": "{{email}}" },
+                { "key": "new_plan_code", "value": "PREMIUM_MENSAL" }
+              ]
+            },
+            "description": "Simula troca de plano de Profissional para Premium"
+          }
+        },
+        {
+          "name": "Mock - UPDATE_SUBSCRIPTION_CHARGE_DATE",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=UPDATE_SUBSCRIPTION_CHARGE_DATE&email={{email}}&new_charge_date=2025-02-15T00:00:00.000Z",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "UPDATE_SUBSCRIPTION_CHARGE_DATE" },
+                { "key": "email", "value": "{{email}}" },
+                { "key": "new_charge_date", "value": "2025-02-15T00:00:00.000Z" }
+              ]
+            },
+            "description": "Simula atualização de data de cobrança da assinatura"
+          }
+        },
+        {
+          "name": "Mock - SUBSCRIPTION_CANCELLATION",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=SUBSCRIPTION_CANCELLATION&email={{email}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "SUBSCRIPTION_CANCELLATION" },
+                { "key": "email", "value": "{{email}}" }
+              ]
+            },
+            "description": "Simula cancelamento de assinatura"
+          }
+        },
+        {
+          "name": "Mock - SUBSCRIPTION_EXPIRED",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=SUBSCRIPTION_EXPIRED&email={{email}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "SUBSCRIPTION_EXPIRED" },
+                { "key": "email", "value": "{{email}}" }
+              ]
+            },
+            "description": "Simula expiração de assinatura"
+          }
+        },
+        {
+          "name": "Mock - PURCHASE_CHARGEBACK",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=PURCHASE_CHARGEBACK&email={{email}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "PURCHASE_CHARGEBACK" },
+                { "key": "email", "value": "{{email}}" }
+              ]
+            },
+            "description": "Simula chargeback - suspende assinatura imediatamente"
+          }
+        },
+        {
+          "name": "Mock - PURCHASE_PROTEST",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=PURCHASE_PROTEST&email={{email}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "PURCHASE_PROTEST" },
+                { "key": "email", "value": "{{email}}" }
+              ]
+            },
+            "description": "Simula protesto de boleto - suspende assinatura"
+          }
+        },
+        {
+          "name": "Mock - PURCHASE_REFUNDED",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=PURCHASE_REFUNDED&email={{email}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "PURCHASE_REFUNDED" },
+                { "key": "email", "value": "{{email}}" }
+              ]
+            },
+            "description": "Simula reembolso - cancela assinatura imediatamente"
+          }
+        },
+        {
+          "name": "Mock - PURCHASE_DELAYED",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/webhooks/hotmart/mock?event=PURCHASE_DELAYED&email={{email}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "webhooks", "hotmart", "mock"],
+              "query": [
+                { "key": "event", "value": "PURCHASE_DELAYED" },
+                { "key": "email", "value": "{{email}}" }
+              ]
+            },
+            "description": "Simula pagamento atrasado - suspende temporariamente"
+          }
+        }
+      ]
     }
   ]
 }

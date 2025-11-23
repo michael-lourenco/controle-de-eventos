@@ -7,8 +7,28 @@ export class UserRepository extends FirestoreRepository<User> {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const users = await this.findWhere('email', '==', email);
-    return users.length > 0 ? users[0] : null;
+    // Normalizar email: lowercase e trim para garantir busca correta
+    const normalizedEmail = email.toLowerCase().trim();
+    
+    // Primeira tentativa: busca exata com email normalizado
+    const users = await this.findWhere('email', '==', normalizedEmail);
+    if (users.length > 0) {
+      return users[0];
+    }
+    
+    // Segunda tentativa: buscar todos e filtrar localmente (case-insensitive)
+    // Isso é necessário porque alguns emails podem estar salvos com maiúsculas no banco
+    // Nota: Esta abordagem pode ser custosa para muitos usuários, mas garante compatibilidade
+    try {
+      const allUsers = await this.findAll();
+      const foundUser = allUsers.find(u => 
+        u.email && u.email.toLowerCase().trim() === normalizedEmail
+      );
+      return foundUser || null;
+    } catch (error) {
+      console.error('Erro ao buscar usuário por email (fallback):', error);
+      return null;
+    }
   }
 
   async findByRole(role: string): Promise<User[]> {
