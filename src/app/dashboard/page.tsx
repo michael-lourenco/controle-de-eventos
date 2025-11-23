@@ -240,10 +240,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Eventos Próximos */}
-        <Card 
-          onClick={() => router.push('/eventos')}
-          className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.01] active:scale-[0.99]"
-        >
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
