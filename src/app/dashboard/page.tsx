@@ -267,69 +267,119 @@ export default function DashboardPage() {
             {dashboardData.eventosProximos.length === 0 ? (
               <p className="text-text-muted text-center py-4">Nenhum evento nos próximos 7 dias</p>
             ) : (
-              <div className="overflow-hidden">
-                <table className="min-w-full divide-y divide-border">
-                  <thead className="bg-surface">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                        Cliente
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                        Data
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                        Local
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                        Tipo
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                        Ações
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-background divide-y divide-border">
-                    {dashboardData.eventosProximos.map((evento) => (
-                      <tr key={evento.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
-                          {evento.cliente.nome}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                          {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                          {evento.local}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                          {evento.tipoEvento}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-bg text-success-text">
-                            {evento.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/eventos/${evento.id}`);
-                            }}
-                            title="Visualizar"
-                            className="hover:bg-primary/10 hover:text-primary"
-                          >
-                            <EyeIcon className="h-4 w-4" />
-                          </Button>
-                        </td>
+              <>
+                {/* Versão Desktop - Tabela */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="min-w-full divide-y divide-border">
+                    <thead className="bg-surface">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                          Cliente
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                          Data
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                          Local
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                          Tipo
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                          Ações
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-background divide-y divide-border">
+                      {dashboardData.eventosProximos.map((evento) => (
+                        <tr key={evento.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
+                            {evento.cliente.nome}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                            {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                            {evento.local}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                            {evento.tipoEvento}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-bg text-success-text">
+                              {evento.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/eventos/${evento.id}`);
+                              }}
+                              title="Visualizar"
+                              className="hover:bg-primary/10 hover:text-primary"
+                            >
+                              <EyeIcon className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Versão Mobile - Cards */}
+                <div className="md:hidden space-y-3">
+                  {dashboardData.eventosProximos.map((evento) => (
+                    <div
+                      key={evento.id}
+                      className="p-4 bg-surface rounded-lg border border-border"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-text-primary truncate">
+                            {evento.cliente.nome}
+                          </h3>
+                          <div className="mt-2 space-y-1.5">
+                            <div className="flex items-center gap-2 text-sm text-text-secondary">
+                              <CalendarIcon className="h-4 w-4 flex-shrink-0" />
+                              <span>{format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-text-secondary">
+                              <span className="truncate">{evento.local}</span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-accent/10 text-accent">
+                                {evento.tipoEvento}
+                              </span>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-success-bg text-success-text">
+                                {evento.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            router.push(`/eventos/${evento.id}`);
+                          }}
+                          title="Visualizar"
+                          className="hover:bg-primary/10 hover:text-primary flex-shrink-0"
+                        >
+                          <EyeIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

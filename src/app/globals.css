@@ -314,4 +314,14 @@ select:focus {
   .text-link:hover {
     color: var(--link-hover) !important;
   }
+
+  /* Scrollbar completamente oculta mas funcional */
+  .scrollbar-hidden {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE e Edge */
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 }

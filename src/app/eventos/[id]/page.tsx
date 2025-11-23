@@ -150,6 +150,12 @@ export default function EventoViewPage() {
     refetchAnexos();
   };
 
+  // Função auxiliar para formatar dia da semana
+  const getDiaSemanaFormatado = (data: Date) => {
+    const diaSemana = format(data, 'EEEE', { locale: ptBR });
+    return diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+  };
+
   const formatEventInfoForCopy = () => {
     if (!evento) return '';
 
@@ -343,28 +349,46 @@ export default function EventoViewPage() {
                 <span className="break-words">{evento.contratante}</span>
               </div>
               <p className="text-text-muted text-xs">
-                {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} • {evento.diaSemana}
+                {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} • {getDiaSemanaFormatado(evento.dataEvento)}
               </p>
             </div>
           </div>
 
           <div className="border-t border-border pt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/eventos')}
-            >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/eventos')}
+                    className="p-2"
+                  >
+                    <ArrowLeftIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Voltar</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div className="flex items-center gap-2">
               {temAcessoContrato === true ? (
-                <Button
-                  variant="outline"
-                  onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
-                >
-                  <DocumentTextIcon className="h-4 w-4 mr-2" />
-                  Gerar Contrato
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
+                        className="p-2"
+                      >
+                        <DocumentTextIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Gerar Contrato</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ) : (
                 <TooltipProvider>
                   <Tooltip>
@@ -373,10 +397,9 @@ export default function EventoViewPage() {
                         <Button
                           variant="outline"
                           disabled
-                          className="cursor-not-allowed"
+                          className="cursor-not-allowed p-2"
                         >
-                          <LockClosedIcon className="h-4 w-4 mr-2" />
-                          Gerar Contrato
+                          <LockClosedIcon className="h-4 w-4" />
                         </Button>
                       </span>
                     </TooltipTrigger>
@@ -421,43 +444,68 @@ export default function EventoViewPage() {
                 </TooltipProvider>
               )}
               {temAcessoCopiar && (
-                <Button 
-                  variant="outline" 
-                  onClick={handleCopyInfo}
-                  title="Copiar informações do evento"
-                  className={copied ? 'bg-success-bg text-success-text' : ''}
-                >
-                  {copied ? (
-                    <>
-                      <CheckIcon className="h-4 w-4 mr-2" />
-                      Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <ClipboardDocumentIcon className="h-4 w-4 mr-2" />
-                      Copiar
-                    </>
-                  )}
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleCopyInfo}
+                        className={`p-2 ${copied ? 'bg-success-bg text-success-text' : ''}`}
+                      >
+                        {copied ? (
+                          <CheckIcon className="h-4 w-4" />
+                        ) : (
+                          <ClipboardDocumentIcon className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>{copied ? 'Copiado!' : 'Copiar informações do evento'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
-              <Button variant="outline" onClick={handleEdit}>
-                <PencilIcon className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <TrashIcon className="h-4 w-4 mr-2" />
-                Arquivar
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" onClick={handleEdit} className="p-2">
+                      <PencilIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Editar</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="p-2"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p>Arquivar</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>
 
         {/* Submenu de Navegação Rápida */}
         <div className="sticky top-16 z-30 bg-surface/95 backdrop-blur-sm border border-border rounded-lg p-4 shadow-sm">
-          <div className="flex flex-wrap gap-2">
+          <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
+            {/* Gradientes indicadores de scroll - aparecem nas bordas */}
+            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-surface via-surface/80 to-transparent pointer-events-none z-10 md:hidden" />
+            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-surface via-surface/80 to-transparent pointer-events-none z-10 md:hidden" />
+            
+            {/* Container com scroll */}
+            <div className="flex flex-nowrap md:flex-wrap gap-2 overflow-x-auto md:overflow-x-visible scrollbar-hidden">
             <Button
               variant="outline"
               size="sm"
@@ -469,7 +517,7 @@ export default function EventoViewPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               BÁSICO
             </Button>
@@ -484,7 +532,7 @@ export default function EventoViewPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               PAGAMENTOS
             </Button>
@@ -499,7 +547,7 @@ export default function EventoViewPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               CUSTOS
             </Button>
@@ -514,7 +562,7 @@ export default function EventoViewPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               SERVIÇOS
             </Button>
@@ -529,10 +577,11 @@ export default function EventoViewPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               ANEXOS
             </Button>
+            </div>
           </div>
         </div>
 

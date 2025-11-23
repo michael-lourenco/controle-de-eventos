@@ -60,7 +60,13 @@ export default function RelatoriosPage() {
 
         {/* Submenu de Navegação Rápida */}
         <div className="sticky top-16 z-30 bg-surface/95 backdrop-blur-sm border border-border rounded-lg p-4 shadow-sm">
-          <div className="flex flex-wrap gap-2">
+          <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
+            {/* Gradientes indicadores de scroll - aparecem nas bordas */}
+            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-surface via-surface/80 to-transparent pointer-events-none z-10 md:hidden" />
+            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-surface via-surface/80 to-transparent pointer-events-none z-10 md:hidden" />
+            
+            {/* Container com scroll */}
+            <div className="flex flex-nowrap md:flex-wrap gap-2 overflow-x-auto md:overflow-x-visible scrollbar-hidden">
             <Button
               variant="outline"
               size="sm"
@@ -72,7 +78,7 @@ export default function RelatoriosPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               Total a Receber
             </Button>
@@ -87,7 +93,7 @@ export default function RelatoriosPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               Receita Mensal
             </Button>
@@ -102,7 +108,7 @@ export default function RelatoriosPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               Performance de Eventos
             </Button>
@@ -117,7 +123,7 @@ export default function RelatoriosPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               Fluxo de Caixa
             </Button>
@@ -132,7 +138,7 @@ export default function RelatoriosPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               Serviços por Tipo
             </Button>
@@ -147,7 +153,7 @@ export default function RelatoriosPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               Canais de Entrada
             </Button>
@@ -162,10 +168,11 @@ export default function RelatoriosPage() {
                   window.scrollTo({ top: elementPosition, behavior: 'smooth' });
                 }
               }}
-              className="text-text-primary hover:bg-surface-hover"
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
             >
               Impressões
             </Button>
+            </div>
           </div>
         </div>
         {/* Detalhamento do Valor a Receber */}
