@@ -231,7 +231,10 @@ export default function CustosEvento({
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Lista de Custos</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <CalculatorIcon className="h-5 w-5" />
+                Lista de Custos
+              </CardTitle>
               <CardDescription>
                 {custos.length} custo(s) registrado(s)
               </CardDescription>
@@ -282,33 +285,30 @@ export default function CustosEvento({
                 >
                   {/* Layout Desktop */}
                   <div className="hidden md:flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <TagIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTipoCustoColor(custo.tipoCusto.nome)}`}>
-                            {custo.tipoCusto.nome}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTipoCustoColor(custo.tipoCusto.nome)}`}>
+                          {custo.tipoCusto.nome}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm text-text-secondary flex-wrap gap-2">
+                        <div className="flex items-center">
+                          <CurrencyDollarIcon className="h-4 w-4 mr-1 flex-shrink-0" />
+                          <span className="whitespace-nowrap">
+                            R$ {custo.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-text-secondary flex-wrap gap-2">
+                        {custo.quantidade && custo.quantidade > 1 && (
                           <div className="flex items-center">
-                            <CurrencyDollarIcon className="h-4 w-4 mr-1 flex-shrink-0" />
-                            <span className="whitespace-nowrap">
-                              R$ {custo.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </span>
+                            <span className="mr-1">Qtd:</span>
+                            <span className="whitespace-nowrap">{custo.quantidade}</span>
                           </div>
-                          {custo.quantidade && custo.quantidade > 1 && (
-                            <div className="flex items-center">
-                              <span className="mr-1">Qtd:</span>
-                              <span className="whitespace-nowrap">{custo.quantidade}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center">
-                            <DocumentTextIcon className="h-4 w-4 mr-1 flex-shrink-0" />
-                            <span className="whitespace-nowrap">
-                              {format(custo.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
-                            </span>
-                          </div>
+                        )}
+                        <div className="flex items-center">
+                          <DocumentTextIcon className="h-4 w-4 mr-1 flex-shrink-0" />
+                          <span className="whitespace-nowrap">
+                            {format(custo.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -354,14 +354,11 @@ export default function CustosEvento({
                   {/* Layout Mobile */}
                   <div className="md:hidden space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-start space-x-2 flex-1 min-w-0">
-                        <TagIcon className="h-5 w-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTipoCustoColor(custo.tipoCusto.nome)}`}>
-                              {custo.tipoCusto.nome}
-                            </span>
-                          </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTipoCustoColor(custo.tipoCusto.nome)}`}>
+                            {custo.tipoCusto.nome}
+                          </span>
                         </div>
                       </div>
                       <div className="flex space-x-1 flex-shrink-0">

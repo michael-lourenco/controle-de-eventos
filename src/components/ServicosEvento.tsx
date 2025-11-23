@@ -22,7 +22,8 @@ import {
   CurrencyDollarIcon,
   DocumentTextIcon,
   TagIcon,
-  XMarkIcon
+  XMarkIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -282,7 +283,7 @@ export default function ServicosEvento({
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="flex items-center gap-2">
-                <TagIcon className="h-5 w-5" />
+                <WrenchScrewdriverIcon className="h-5 w-5" />
                 Serviços do Evento ({resumoServicos.quantidadeItens})
               </CardTitle>
               <CardDescription>
@@ -306,7 +307,7 @@ export default function ServicosEvento({
         <CardContent>
           {servicos.length === 0 ? (
             <div className="text-center py-8">
-              <TagIcon className="mx-auto h-12 w-12 text-text-muted" />
+              <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-text-muted" />
               <h3 className="mt-2 text-sm font-medium text-text-primary">Nenhum serviço cadastrado</h3>
               <p className="mt-1 text-sm text-text-secondary">
                 Comece adicionando um serviço para este evento.
@@ -405,7 +406,7 @@ export default function ServicosEvento({
               {!loadingTipos && (
                 <div className="mb-6 p-4 border border-border rounded-lg bg-surface">
                   <div className="flex items-center gap-2 mb-3">
-                    <TagIcon className="h-4 w-4 text-accent" />
+                    <WrenchScrewdriverIcon className="h-4 w-4 text-accent" />
                     <label className="text-sm font-medium text-text-primary">
                       Criar Novo Serviço
                     </label>
@@ -440,7 +441,7 @@ export default function ServicosEvento({
                 </div>
               ) : tiposDisponiveisParaAdicionar.length === 0 ? (
                 <div className="text-center py-8">
-                  <TagIcon className="mx-auto h-12 w-12 text-text-muted" />
+                  <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-text-muted" />
                   <h3 className="mt-2 text-sm font-medium text-text-primary">
                     Todos os serviços já foram adicionados
                   </h3>
