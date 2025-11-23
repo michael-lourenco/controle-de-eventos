@@ -21,6 +21,7 @@ import {
   DocumentTextIcon,
   TagIcon
 } from '@heroicons/react/24/outline';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CustosEventoProps {
   evento: Evento;
@@ -235,10 +236,18 @@ export default function CustosEvento({
                 {custos.length} custo(s) registrado(s)
               </CardDescription>
             </div>
-            <Button variant='outline' onClick={handleNovoCusto}>
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Novo Custo
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant='outline' onClick={handleNovoCusto} className="p-2">
+                    <PlusIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Novo Custo</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardHeader>
         <CardContent>
@@ -250,10 +259,18 @@ export default function CustosEvento({
                 Comece adicionando o primeiro custo para este evento.
               </p>
               <div className="mt-6">
-                <Button variant='outline' onClick={handleNovoCusto}>
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Novo Custo
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant='outline' onClick={handleNovoCusto} className="p-2">
+                        <PlusIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Novo Custo</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           ) : (

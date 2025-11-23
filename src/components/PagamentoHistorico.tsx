@@ -27,6 +27,7 @@ import {
   EyeIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface PagamentoHistoricoProps {
   eventoId: string;
@@ -379,10 +380,18 @@ export default function PagamentoHistorico({
                 {pagamentos.length} pagamento(s) registrado(s)
               </CardDescription>
             </div>
-            <Button variant='outline' onClick={handleNovoPagamento}>
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Novo Pagamento
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant='outline' onClick={handleNovoPagamento} className="p-2">
+                    <PlusIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Novo Pagamento</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardHeader>
         <CardContent>
@@ -394,10 +403,18 @@ export default function PagamentoHistorico({
                 Comece adicionando o primeiro pagamento para este evento.
               </p>
               <div className="mt-6">
-                <Button variant='outline' onClick={handleNovoPagamento}>
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Novo Pagamento
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant='outline' onClick={handleNovoPagamento} className="p-2">
+                        <PlusIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Novo Pagamento</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           ) : (
@@ -409,11 +426,12 @@ export default function PagamentoHistorico({
                   key={pagamento.id}
                   className="border border-border rounded-lg p-4"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
+                  {/* Layout Desktop */}
+                  <div className="hidden md:flex items-center justify-between">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
                       {getStatusIcon(pagamento.status)}
-                      <div>
-                        <div className="flex items-center space-x-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 flex-wrap">
                           <span className="font-medium text-text-primary">
                             R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
@@ -421,51 +439,167 @@ export default function PagamentoHistorico({
                             {pagamento.status}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-text-secondary">
+                        <div className="flex items-center space-x-4 text-sm text-text-secondary flex-wrap gap-2">
                           <div className="flex items-center">
-                            <CalendarIcon className="h-4 w-4 mr-1" />
-                            {pagamento.dataPagamento ? format(new Date(pagamento.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
+                            <CalendarIcon className="h-4 w-4 mr-1 flex-shrink-0" />
+                            <span className="whitespace-nowrap">
+                              {pagamento.dataPagamento ? format(new Date(pagamento.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
+                            </span>
                           </div>
                           <div className="flex items-center">
                             <span className="mr-1">Forma:</span>
-                            {pagamento.formaPagamento}
+                            <span className="truncate">{pagamento.formaPagamento}</span>
                           </div>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex space-x-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleAnexos(pagamento.id)}
-                        title="Ver comprovantes"
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        <DocumentIcon className="h-4 w-4" />
-                        {anexosExpandidos.has(pagamento.id) ? (
-                          <ChevronDownIcon className="h-3 w-3 ml-1" />
-                        ) : (
-                          <ChevronRightIcon className="h-3 w-3 ml-1" />
-                        )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditarPagamento(pagamento)}
-                        title="Editar pagamento"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExcluirPagamento(pagamento)}
-                        title="Excluir pagamento"
-                        className="text-red-600 hover:text-red-700 hover:border-red-300"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                    <div className="flex space-x-1 flex-shrink-0 ml-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => toggleAnexos(pagamento.id)}
+                              className="p-2 text-blue-600 hover:text-blue-700"
+                            >
+                              <DocumentIcon className="h-4 w-4" />
+                              {anexosExpandidos.has(pagamento.id) ? (
+                                <ChevronDownIcon className="h-3 w-3 ml-1" />
+                              ) : (
+                                <ChevronRightIcon className="h-3 w-3 ml-1" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Ver comprovantes</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditarPagamento(pagamento)}
+                              className="p-2"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Editar pagamento</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleExcluirPagamento(pagamento)}
+                              className="p-2 text-red-600 hover:text-red-700 hover:border-red-300"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p>Excluir pagamento</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+
+                  {/* Layout Mobile */}
+                  <div className="md:hidden space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start space-x-2 flex-1 min-w-0">
+                        {getStatusIcon(pagamento.status)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-text-primary">
+                              R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pagamento.status)}`}>
+                              {pagamento.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex space-x-1 flex-shrink-0">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleAnexos(pagamento.id)}
+                                className="p-2 text-blue-600 hover:text-blue-700"
+                              >
+                                <DocumentIcon className="h-4 w-4" />
+                                {anexosExpandidos.has(pagamento.id) ? (
+                                  <ChevronDownIcon className="h-3 w-3 ml-1" />
+                                ) : (
+                                  <ChevronRightIcon className="h-3 w-3 ml-1" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Ver comprovantes</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEditarPagamento(pagamento)}
+                                className="p-2"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Editar pagamento</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleExcluirPagamento(pagamento)}
+                                className="p-2 text-red-600 hover:text-red-700 hover:border-red-300"
+                              >
+                                <TrashIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Excluir pagamento</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 text-sm text-text-secondary">
+                      <div className="flex items-center">
+                        <CalendarIcon className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                        <span>
+                          {pagamento.dataPagamento ? format(new Date(pagamento.dataPagamento), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não informada'}
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-1.5">Forma:</span>
+                        <span className="truncate">{pagamento.formaPagamento}</span>
+                      </div>
                     </div>
                   </div>
                   

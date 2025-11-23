@@ -24,6 +24,7 @@ import {
   TagIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ServicosEventoProps {
   evento: Evento;
@@ -282,16 +283,24 @@ export default function ServicosEvento({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <TagIcon className="h-5 w-5" />
-                Serviços do Evento
+                Serviços do Evento ({resumoServicos.quantidadeItens})
               </CardTitle>
               <CardDescription>
                 Gerencie os serviços prestados neste evento
               </CardDescription>
             </div>
-            <Button variant='outline' onClick={handleNovoServico}>
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Novo Serviço
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant='outline' onClick={handleNovoServico} className="p-2">
+                    <PlusIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p>Novo Serviço</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </CardHeader>
         <CardContent>
@@ -303,34 +312,22 @@ export default function ServicosEvento({
                 Comece adicionando um serviço para este evento.
               </p>
               <div className="mt-6">
-                <Button variant='outline' onClick={handleNovoServico}>
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  Novo Serviço
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant='outline' onClick={handleNovoServico} className="p-2">
+                        <PlusIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p>Novo Serviço</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Resumo dos Serviços */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-surface rounded-lg border border-border">
-                <div className="flex items-center">
-                  <CalculatorIcon className="h-8 w-8 text-primary mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-text-secondary">Total de Serviços</p>
-                    <p className="text-2xl font-bold text-text-primary">{resumoServicos.quantidadeItens}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <DocumentTextIcon className="h-8 w-8 text-accent mr-3" />
-                  <div>
-                    <p className="text-sm font-medium text-text-secondary">Tipos Diferentes</p>
-                    <p className="text-2xl font-bold text-text-primary">
-                      {Object.keys(resumoServicos.porCategoria).length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {/* Lista de Serviços */}
               <div className="space-y-3">
                 {servicos.map((servico) => (
@@ -338,28 +335,20 @@ export default function ServicosEvento({
                     key={servico.id}
                     className="border border-border rounded-lg p-4"
                   >
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-center">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTipoServicoColor(servico.tipoServico.nome)}`}>
                             {servico.tipoServico.nome}
                           </span>
                         </div>
-                        <p className="text-sm text-text-secondary mb-1">
-                          Serviço adicionado em {format(new Date(servico.dataCadastro), 'dd/MM/yyyy', { locale: ptBR })}
-                        </p>
                         {servico.observacoes && (
-                          <p className="text-sm text-text-muted italic">
+                          <p className="text-sm text-text-muted italic mt-2">
                             {servico.observacoes}
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <div className="text-right">
-                          <p className="text-sm text-text-muted">
-                            {format(servico.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
-                          </p>
-                        </div>
+                      <div className="flex items-center gap-2 ml-4 flex-shrink-0">
                         <div className="flex gap-1">
                           <Button
                             variant="ghost"
@@ -384,23 +373,6 @@ export default function ServicosEvento({
                   </div>
                 ))}
               </div>
-
-              {/* Resumo por Tipo */}
-              {Object.keys(resumoServicos.porCategoria).length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-sm font-medium text-text-primary mb-3">Serviços por Tipo</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {Object.entries(resumoServicos.porCategoria).map(([tipo, quantidade]) => (
-                      <div key={tipo} className="flex justify-between items-center p-2 bg-surface rounded border border-border">
-                        <span className="text-sm text-text-primary">{tipo}</span>
-                        <span className="text-sm font-medium text-text-primary">
-                          {quantidade}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </CardContent>
