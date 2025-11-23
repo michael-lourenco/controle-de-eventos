@@ -606,22 +606,52 @@ export default function EventoViewPage() {
                 <UserIcon className="h-4 w-4 mr-2 text-text-muted" />
                 <span className="font-medium">{evento.cliente.nome}</span>
               </div>
-              <div className="flex items-center text-sm text-text-secondary">
-                <EnvelopeIcon className="h-4 w-4 mr-2 text-text-muted" />
-                {evento.cliente.email}
-              </div>
-              <div className="flex items-center text-sm text-text-secondary">
-                <PhoneIcon className="h-4 w-4 mr-2 text-text-muted" />
-                {evento.cliente.telefone}
-              </div>
-              <div className="flex items-center text-sm text-text-secondary">
-                <HomeIcon className="h-4 w-4 mr-2 text-text-muted" />
-                {evento.cliente.endereco}
-              </div>
+              {evento.cliente.email && (
+                <div className="flex items-center text-sm text-text-secondary">
+                  <EnvelopeIcon className="h-4 w-4 mr-2 text-text-muted" />
+                  <a 
+                    href={`mailto:${evento.cliente.email}`}
+                    className="text-link hover:text-link-hover hover:underline"
+                  >
+                    {evento.cliente.email}
+                  </a>
+                </div>
+              )}
+              {evento.cliente.telefone && (
+                <div className="flex items-center text-sm text-text-secondary">
+                  <PhoneIcon className="h-4 w-4 mr-2 text-text-muted" />
+                  <a 
+                    href={`tel:${evento.cliente.telefone.replace(/\D/g, '')}`}
+                    className="text-link hover:text-link-hover hover:underline"
+                  >
+                    {evento.cliente.telefone}
+                  </a>
+                </div>
+              )}
+              {evento.cliente.endereco && (
+                <div className="flex items-center text-sm text-text-secondary">
+                  <HomeIcon className="h-4 w-4 mr-2 text-text-muted" />
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(evento.cliente.endereco)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-link hover:text-link-hover hover:underline break-words"
+                  >
+                    {evento.cliente.endereco}
+                  </a>
+                </div>
+              )}
               {evento.cliente.instagram && (
                 <div className="flex items-center text-sm text-text-secondary">
                   <span className="mr-2">📷</span>
-                  {evento.cliente.instagram}
+                  <a 
+                    href={`https://instagram.com/${evento.cliente.instagram.replace('@', '').replace('https://instagram.com/', '').replace('https://www.instagram.com/', '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-link hover:text-link-hover hover:underline"
+                  >
+                    {evento.cliente.instagram}
+                  </a>
                 </div>
               )}
               {evento.cliente.canalEntrada && (
