@@ -432,7 +432,7 @@ export default function PagamentoHistorico({
                       {getStatusIcon(pagamento.status)}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 flex-wrap">
-                          <span className="font-medium text-text-primary">
+                          <span className="font-medium text-text-primary whitespace-nowrap">
                             R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pagamento.status)}`}>
@@ -520,13 +520,13 @@ export default function PagamentoHistorico({
                       <div className="flex items-start space-x-2 flex-1 min-w-0">
                         {getStatusIcon(pagamento.status)}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-text-primary">
-                              R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </span>
+                          <div className="flex items-center gap-2 flex-wrap mb-2">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(pagamento.status)}`}>
                               {pagamento.status}
                             </span>
+                          </div>
+                          <div className="text-lg font-bold text-text-primary">
+                            R$ {pagamento.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </div>
                         </div>
                       </div>
