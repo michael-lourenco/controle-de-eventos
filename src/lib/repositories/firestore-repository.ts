@@ -41,16 +41,48 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
   protected convertToFirestoreData(data: Partial<T>): any {
     const converted = { ...data } as any;
     
+    // Função recursiva para remover undefined e converter Dates
+    const cleanValue = (value: any): any => {
+      if (value === undefined) {
+        return undefined; // Será removido na iteração
+      }
+      
+      if (value === null) {
+        return null;
+      }
+      
+      if (value instanceof Date) {
+        return Timestamp.fromDate(value);
+      }
+      
+      if (Array.isArray(value)) {
+        return value.map(cleanValue).filter(item => item !== undefined);
+      }
+      
+      if (typeof value === 'object') {
+        const cleaned: any = {};
+        for (const key in value) {
+          const cleanedValue = cleanValue(value[key]);
+          if (cleanedValue !== undefined) {
+            cleaned[key] = cleanedValue;
+          }
+        }
+        return cleaned;
+      }
+      
+      return value;
+    };
+    
     // Remover campos undefined e converter Dates para Timestamps
+    const result: any = {};
     Object.keys(converted).forEach(key => {
-      if (converted[key] === undefined) {
-        delete converted[key];
-      } else if (converted[key] instanceof Date) {
-        converted[key] = Timestamp.fromDate(converted[key] as Date);
+      const cleanedValue = cleanValue(converted[key]);
+      if (cleanedValue !== undefined) {
+        result[key] = cleanedValue;
       }
     });
     
-    return converted;
+    return result;
   }
 
   async create(entity: Omit<T, 'id'>): Promise<T> {

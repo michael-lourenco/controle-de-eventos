@@ -1,5 +1,21 @@
 // Tipos baseados na análise das planilhas CLICK-SE
 
+/**
+ * Informações de assinatura consolidadas no documento do usuário
+ */
+export interface UserAssinatura {
+  id?: string; // ID da assinatura na coleção assinaturas
+  planoId?: string; // ID do plano atual
+  planoNome?: string; // Nome do plano (cache)
+  planoCodigoHotmart?: string; // Código do plano na Hotmart (cache)
+  funcionalidadesHabilitadas?: string[]; // IDs das funcionalidades (cache)
+  status?: 'ATIVA' | 'TRIAL' | 'CANCELADA' | 'EXPIRADA' | 'SUSPENSA';
+  pagamentoEmDia?: boolean;
+  dataExpira?: Date; // Data de expiração da assinatura
+  dataProximoPagamento?: Date; // Data do próximo pagamento
+  ultimaSincronizacao?: Date; // Quando foi sincronizado pela última vez
+}
+
 export interface User {
   id: string;
   email: string;
@@ -7,25 +23,12 @@ export interface User {
   role: 'admin' | 'user';
   ativo: boolean;
   
-  // Assinatura e Plano
-  assinaturaId?: string;
-  planoId?: string; // ID do plano atual
-  planoNome?: string; // Nome do plano (cache)
-  planoCodigoHotmart?: string; // Código do plano na Hotmart (cache)
-  
-  // Funcionalidades (cache para performance)
-  funcionalidadesHabilitadas?: string[]; // IDs das funcionalidades
-  
-  // Status e Validações
-  assinaturaStatus?: 'ATIVA' | 'TRIAL' | 'CANCELADA' | 'EXPIRADA' | 'SUSPENSA';
-  pagamentoEmDia?: boolean;
-  dataExpiraAssinatura?: Date;
-  dataProximoPagamento?: Date;
+  // Assinatura consolidada em um objeto
+  assinatura?: UserAssinatura;
   
   // Metadados
   dataCadastro: Date;
   dataAtualizacao: Date;
-  ultimaSincronizacaoPlano?: Date; // Quando o plano foi sincronizado pela última vez
 }
 
 export interface CanalEntrada {

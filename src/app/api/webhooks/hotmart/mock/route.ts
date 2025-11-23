@@ -85,10 +85,14 @@ export async function POST(request: NextRequest) {
           data: {
             subscription: {
               subscriber: {
-                code: subscriptionCode
+                code: subscriptionCode,
+                email: email
               },
               status: 'ACTIVE',
               date_next_charge: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            },
+            buyer: {
+              email: email
             }
           }
         };
@@ -103,10 +107,14 @@ export async function POST(request: NextRequest) {
           data: {
             subscription: {
               subscriber: {
-                code: subscriptionCode
+                code: subscriptionCode,
+                email: email
               },
               status: 'ACTIVE',
               date_next_charge: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            },
+            buyer: {
+              email: email
             }
           }
         };
@@ -114,40 +122,124 @@ export async function POST(request: NextRequest) {
 
       case 'SUBSCRIPTION_CANCELLATION':
       case 'PURCHASE_CANCELED':
-        payload = {
-          id: `mock-${Date.now()}`,
-          creation_date: Date.now(),
-          event: eventType.toUpperCase(),
-          version: '2.0.0',
-          data: {
-            subscription: {
-              subscriber: {
-                code: subscriptionCode
-              },
-              status: 'CANCELLED',
-              cancellation_date: Date.now()
-            }
+        // Buscar dados reais do banco
+        {
+          const userRepo = new UserRepository();
+          const assinaturaRepo = new AssinaturaRepository();
+          
+          // Buscar usuário
+          const normalizedEmail = email.toLowerCase().trim();
+          const user = await userRepo.findByEmail(normalizedEmail);
+          if (!user) {
+            return NextResponse.json(
+              { error: `Usuário não encontrado com o email: ${email}` },
+              { status: 404 }
+            );
           }
-        };
+          
+          // Buscar todas as assinaturas do usuário e pegar a mais recente
+          // (para cancelamento, precisamos encontrar mesmo que não esteja ativa)
+          const todasAssinaturas = await assinaturaRepo.findAllByUserId(user.id);
+          const assinatura = todasAssinaturas.length > 0 ? todasAssinaturas[0] : null;
+          if (!assinatura) {
+            return NextResponse.json(
+              { error: `Usuário não possui assinatura. Crie uma assinatura primeiro.` },
+              { status: 404 }
+            );
+          }
+          
+          if (!assinatura.hotmartSubscriptionId) {
+            return NextResponse.json(
+              { error: `Assinatura não possui hotmartSubscriptionId válido` },
+              { status: 400 }
+            );
+          }
+          
+          payload = {
+            id: `mock-${Date.now()}`,
+            creation_date: Date.now(),
+            event: eventType.toUpperCase(),
+            version: '2.0.0',
+            data: {
+              cancellation_date: Date.now(),
+              subscriber: {
+                code: assinatura.hotmartSubscriptionId,
+                name: user.nome || 'User name',
+                email: email,
+                phone: {
+                  dddPhone: '',
+                  phone: '',
+                  dddCell: '',
+                  cell: ''
+                }
+              },
+              subscription: {
+                id: 4148584
+              }
+            }
+          };
+        }
         break;
 
       case 'SUBSCRIPTION_EXPIRED':
       case 'PURCHASE_EXPIRED':
-        payload = {
-          id: `mock-${Date.now()}`,
-          creation_date: Date.now(),
-          event: eventType.toUpperCase(),
-          version: '2.0.0',
-          data: {
-            subscription: {
-              subscriber: {
-                code: subscriptionCode
-              },
-              status: 'EXPIRED',
-              expiration_date: new Date().toISOString()
-            }
+        // Buscar dados reais do banco
+        {
+          const userRepo = new UserRepository();
+          const assinaturaRepo = new AssinaturaRepository();
+          
+          // Buscar usuário
+          const normalizedEmail = email.toLowerCase().trim();
+          const user = await userRepo.findByEmail(normalizedEmail);
+          if (!user) {
+            return NextResponse.json(
+              { error: `Usuário não encontrado com o email: ${email}` },
+              { status: 404 }
+            );
           }
-        };
+          
+          // Buscar todas as assinaturas do usuário e pegar a mais recente
+          // (para expiração, precisamos encontrar mesmo que já esteja expirada)
+          const todasAssinaturas = await assinaturaRepo.findAllByUserId(user.id);
+          const assinatura = todasAssinaturas.length > 0 ? todasAssinaturas[0] : null;
+          if (!assinatura) {
+            return NextResponse.json(
+              { error: `Usuário não possui assinatura. Crie uma assinatura primeiro.` },
+              { status: 404 }
+            );
+          }
+          
+          if (!assinatura.hotmartSubscriptionId) {
+            return NextResponse.json(
+              { error: `Assinatura não possui hotmartSubscriptionId válido` },
+              { status: 400 }
+            );
+          }
+          
+          payload = {
+            id: `mock-${Date.now()}`,
+            creation_date: Date.now(),
+            event: eventType.toUpperCase(),
+            version: '2.0.0',
+            data: {
+              expiration_date: new Date().toISOString(),
+              subscriber: {
+                code: assinatura.hotmartSubscriptionId,
+                name: user.nome || 'User name',
+                email: email,
+                phone: {
+                  dddPhone: '',
+                  phone: '',
+                  dddCell: '',
+                  cell: ''
+                }
+              },
+              subscription: {
+                id: 4148584
+              }
+            }
+          };
+        }
         break;
 
       case 'SUBSCRIPTION_SUSPENDED':
@@ -159,9 +251,13 @@ export async function POST(request: NextRequest) {
           data: {
             subscription: {
               subscriber: {
-                code: subscriptionCode
+                code: subscriptionCode,
+                email: email
               },
               status: 'SUSPENDED'
+            },
+            buyer: {
+              email: email
             }
           }
         };
@@ -343,13 +439,17 @@ export async function POST(request: NextRequest) {
           data: {
             subscription: {
               subscriber: {
-                code: subscriptionCode
+                code: subscriptionCode,
+                email: email
               },
               status: 'SUSPENDED'
             },
             purchase: {
               status: 'CHARGEBACK',
               transaction: `HP${Date.now()}`
+            },
+            buyer: {
+              email: email
             }
           }
         };
@@ -364,13 +464,17 @@ export async function POST(request: NextRequest) {
           data: {
             subscription: {
               subscriber: {
-                code: subscriptionCode
+                code: subscriptionCode,
+                email: email
               },
               status: 'SUSPENDED'
             },
             purchase: {
               status: 'PROTEST',
               transaction: `HP${Date.now()}`
+            },
+            buyer: {
+              email: email
             }
           }
         };
@@ -385,13 +489,17 @@ export async function POST(request: NextRequest) {
           data: {
             subscription: {
               subscriber: {
-                code: subscriptionCode
+                code: subscriptionCode,
+                email: email
               },
               status: 'CANCELLED'
             },
             purchase: {
               status: 'REFUNDED',
               transaction: `HP${Date.now()}`
+            },
+            buyer: {
+              email: email
             }
           }
         };
@@ -406,13 +514,17 @@ export async function POST(request: NextRequest) {
           data: {
             subscription: {
               subscriber: {
-                code: subscriptionCode
+                code: subscriptionCode,
+                email: email
               },
               status: 'SUSPENDED'
             },
             purchase: {
               status: 'DELAYED',
               transaction: `HP${Date.now()}`
+            },
+            buyer: {
+              email: email
             }
           }
         };

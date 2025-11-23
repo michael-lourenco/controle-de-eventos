@@ -2,6 +2,7 @@ import { PlanoRepository } from '../repositories/plano-repository';
 import { FuncionalidadeRepository } from '../repositories/funcionalidade-repository';
 import { AssinaturaRepository } from '../repositories/assinatura-repository';
 import { UserRepository } from '../repositories/user-repository';
+import { AssinaturaService } from './assinatura-service';
 import { Plano, PlanoComFuncionalidades, StatusAssinatura } from '@/types/funcionalidades';
 
 export class PlanoService {
@@ -9,12 +10,14 @@ export class PlanoService {
   private funcionalidadeRepo: FuncionalidadeRepository;
   private assinaturaRepo: AssinaturaRepository;
   private userRepo: UserRepository;
+  private assinaturaService: AssinaturaService;
 
   constructor() {
     this.planoRepo = new PlanoRepository();
     this.funcionalidadeRepo = new FuncionalidadeRepository();
     this.assinaturaRepo = new AssinaturaRepository();
     this.userRepo = new UserRepository();
+    this.assinaturaService = new AssinaturaService();
   }
 
   async obterTodosPlanos(): Promise<Plano[]> {
@@ -77,19 +80,8 @@ export class PlanoService {
       assinatura = await this.assinaturaRepo.create(dadosAssinatura);
     }
 
-    // Atualizar usuário
-    const user = await this.userRepo.findById(userId);
-    if (user) {
-      await this.userRepo.update(userId, {
-        assinaturaId: assinatura.id,
-        planoId: plano.id,
-        planoNome: plano.nome,
-        planoCodigoHotmart: plano.codigoHotmart,
-        funcionalidadesHabilitadas: plano.funcionalidades,
-        dataExpiraAssinatura: status === 'trial' ? this.calcularDataFimTrial() : undefined,
-        dataAtualizacao: new Date()
-      });
-    }
+    // Sincronizar usando o serviço que já atualiza a estrutura consolidada
+    await this.assinaturaService.sincronizarPlanoUsuario(userId);
   }
 
   async obterPlanoAtual(userId: string): Promise<Plano | null> {

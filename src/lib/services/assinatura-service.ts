@@ -2,7 +2,7 @@ import { AssinaturaRepository } from '../repositories/assinatura-repository';
 import { PlanoRepository } from '../repositories/plano-repository';
 import { UserRepository } from '../repositories/user-repository';
 import { Assinatura, StatusAssinatura, Plano } from '@/types/funcionalidades';
-import { User } from '@/types';
+import { User, UserAssinatura } from '@/types';
 
 export interface PlanoStatus {
   plano: Plano | null;
@@ -170,21 +170,13 @@ export class AssinaturaService {
 
     const assinatura = await this.assinaturaRepo.findByUserId(userId);
     
+    // Se não houver assinatura, limpar o objeto assinatura
     if (!assinatura) {
-      // Limpar dados de plano se não houver assinatura
-      return this.userRepo.update(userId, {
-        assinaturaId: undefined,
-        planoId: undefined,
-        planoNome: undefined,
-        planoCodigoHotmart: undefined,
-        funcionalidadesHabilitadas: [],
-        assinaturaStatus: undefined,
-        pagamentoEmDia: false,
-        dataExpiraAssinatura: undefined,
-        dataProximoPagamento: undefined,
-        ultimaSincronizacaoPlano: new Date(),
+      const dadosAtualizacao: Partial<User> = {
+        assinatura: undefined,
         dataAtualizacao: new Date()
-      });
+      };
+      return await this.userRepo.update(userId, dadosAtualizacao);
     }
 
     // Buscar plano
@@ -205,22 +197,30 @@ export class AssinaturaService {
     else if (assinatura.status === 'expired') statusUser = 'EXPIRADA';
     else if (assinatura.status === 'suspended') statusUser = 'SUSPENSA';
 
-    // Preparar dados para atualização (remover campos undefined explicitamente)
-    const dadosAtualizacao: Partial<User> = {
-      dataAtualizacao: new Date(),
-      ultimaSincronizacaoPlano: new Date()
+    // Construir objeto assinatura consolidado
+    // IMPORTANTE: Não incluir campos undefined para evitar erros no Firestore
+    const assinaturaUser: any = {
+      ultimaSincronizacao: new Date()
     };
+    
+    // Adicionar campos apenas se tiverem valor válido (evitar undefined)
+    if (assinatura.id) assinaturaUser.id = assinatura.id;
+    if (plano?.id) assinaturaUser.planoId = plano.id;
+    if (plano?.nome) assinaturaUser.planoNome = plano.nome;
+    if (plano?.codigoHotmart) assinaturaUser.planoCodigoHotmart = plano.codigoHotmart;
+    if (assinatura.funcionalidadesHabilitadas && assinatura.funcionalidadesHabilitadas.length > 0) {
+      assinaturaUser.funcionalidadesHabilitadas = assinatura.funcionalidadesHabilitadas;
+    }
+    if (statusUser) assinaturaUser.status = statusUser;
+    if (pagamentoEmDia !== undefined) assinaturaUser.pagamentoEmDia = pagamentoEmDia;
+    if (assinatura.dataFim) assinaturaUser.dataExpira = assinatura.dataFim;
+    if (assinatura.dataRenovacao) assinaturaUser.dataProximoPagamento = assinatura.dataRenovacao;
 
-    // Adicionar apenas campos definidos
-    if (assinatura.id) dadosAtualizacao.assinaturaId = assinatura.id;
-    if (plano?.id) dadosAtualizacao.planoId = plano.id;
-    if (plano?.nome) dadosAtualizacao.planoNome = plano.nome;
-    if (plano?.codigoHotmart) dadosAtualizacao.planoCodigoHotmart = plano.codigoHotmart;
-    if (assinatura.funcionalidadesHabilitadas) dadosAtualizacao.funcionalidadesHabilitadas = assinatura.funcionalidadesHabilitadas;
-    if (statusUser) dadosAtualizacao.assinaturaStatus = statusUser;
-    dadosAtualizacao.pagamentoEmDia = pagamentoEmDia;
-    if (assinatura.dataFim) dadosAtualizacao.dataExpiraAssinatura = assinatura.dataFim;
-    if (assinatura.dataRenovacao) dadosAtualizacao.dataProximoPagamento = assinatura.dataRenovacao;
+    // Preparar dados para atualização
+    const dadosAtualizacao: Partial<User> = {
+      assinatura: assinaturaUser,
+      dataAtualizacao: new Date()
+    };
 
     console.log(`[AssinaturaService] Sincronizando plano do usuário ${userId}:`, dadosAtualizacao);
 
@@ -229,9 +229,9 @@ export class AssinaturaService {
     
     console.log(`[AssinaturaService] Usuário sincronizado:`, {
       userId: userAtualizado.id,
-      planoId: userAtualizado.planoId,
-      planoNome: userAtualizado.planoNome,
-      assinaturaId: userAtualizado.assinaturaId
+      planoId: userAtualizado.assinatura?.planoId,
+      planoNome: userAtualizado.assinatura?.planoNome,
+      assinaturaId: userAtualizado.assinatura?.id
     });
 
     return userAtualizado;

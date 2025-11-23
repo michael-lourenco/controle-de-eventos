@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       }
       
       // Usuários sem assinatura ou sem planoId
-      return !u.assinaturaId || !u.planoId;
+      return !u.assinatura?.id || !u.assinatura?.planoId;
     });
 
     if (usuariosSemPlano.length === 0) {
@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
           id: u.id,
           email: u.email,
           nome: u.nome,
-          temAssinatura: !!u.assinaturaId,
-          temPlanoId: !!u.planoId,
+          temAssinatura: !!u.assinatura?.id,
+          temPlanoId: !!u.assinatura?.planoId,
           planoAtribuido: plano.nome
         })),
         planoPadrao: plano.nome,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
           // Já tem assinatura ativa, apenas sincronizar
           console.log(`  ↳ Usuário já tem assinatura ativa, sincronizando...`);
           const userAtualizado = await assinaturaService.sincronizarPlanoUsuario(usuario.id);
-          console.log(`  ✅ Usuário sincronizado: planoId=${userAtualizado.planoId}, planoNome=${userAtualizado.planoNome}`);
+          console.log(`  ✅ Usuário sincronizado: planoId=${userAtualizado.assinatura?.planoId}, planoNome=${userAtualizado.assinatura?.planoNome}`);
           usuariosMigrados.push(usuario.id);
           continue;
         }
@@ -140,10 +140,10 @@ export async function POST(request: NextRequest) {
         // Verificar se o usuário foi atualizado
         const userAtualizado = await userRepo.findById(usuario.id);
         console.log(`  📋 Usuário após migração:`, {
-          planoId: userAtualizado?.planoId,
-          planoNome: userAtualizado?.planoNome,
-          assinaturaId: userAtualizado?.assinaturaId,
-          funcionalidadesHabilitadas: userAtualizado?.funcionalidadesHabilitadas?.length || 0
+          planoId: userAtualizado?.assinatura?.planoId,
+          planoNome: userAtualizado?.assinatura?.planoNome,
+          assinaturaId: userAtualizado?.assinatura?.id,
+          funcionalidadesHabilitadas: userAtualizado?.assinatura?.funcionalidadesHabilitadas?.length || 0
         });
 
         assinaturasCriadas.push(assinatura.id);

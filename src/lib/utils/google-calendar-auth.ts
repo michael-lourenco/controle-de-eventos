@@ -18,18 +18,18 @@ export async function verificarAcessoGoogleCalendar(userId: string): Promise<boo
     const userRepo = repositoryFactory.getUserRepository();
     const user = await userRepo.findById(userId);
     
-    if (!user?.planoCodigoHotmart) {
-      return false;
+    // Admin sempre tem acesso
+    if (user?.role === 'admin') {
+      return true;
     }
     
-    // Admin sempre tem acesso
-    if (user.role === 'admin') {
-      return true;
+    if (!user?.assinatura?.planoCodigoHotmart) {
+      return false;
     }
     
     // Planos permitidos
     const planosPermitidos = ['PROFISSIONAL_MENSAL', 'PREMIUM_MENSAL'];
-    return planosPermitidos.includes(user.planoCodigoHotmart);
+    return planosPermitidos.includes(user.assinatura.planoCodigoHotmart);
   } catch (error) {
     console.error('Erro ao verificar acesso Google Calendar:', error);
     // Em caso de erro, retornar false para ser seguro

@@ -1059,6 +1059,114 @@
           }
         },
         {
+          "name": "Migrar Estrutura de Assinatura dos Usuários",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dryRun\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-user-assinatura-structure",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-user-assinatura-structure"]
+            },
+            "description": "Migra estrutura de assinatura dos usuários para formato consolidado.\n\n🔄 O que faz:\n1. Busca todos os usuários\n2. Identifica usuários com campos antigos de assinatura na raiz (planoId, planoNome, etc.)\n3. Busca a assinatura real na coleção assinaturas\n4. Constrói objeto assinatura consolidado (user.assinatura)\n5. Remove campos antigos da raiz usando deleteField()\n\n📋 Migração de campos:\n- assinaturaId → assinatura.id\n- planoId → assinatura.planoId\n- planoNome → assinatura.planoNome\n- planoCodigoHotmart → assinatura.planoCodigoHotmart\n- funcionalidadesHabilitadas → assinatura.funcionalidadesHabilitadas\n- assinaturaStatus → assinatura.status\n- pagamentoEmDia → assinatura.pagamentoEmDia\n- dataExpiraAssinatura → assinatura.dataExpira\n- dataProximoPagamento → assinatura.dataProximoPagamento\n\n📋 Parâmetros:\n- dryRun (boolean): true = apenas simula sem aplicar mudanças (padrão: false)\n\n💡 Use dryRun=true primeiro para testar sem aplicar mudanças.\n\n⚠️ Este endpoint atualiza a estrutura de dados dos usuários. Execute após atualizar o código!"
+          }
+        },
+        {
+          "name": "Migrar Estrutura de Assinatura - Dry Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dryRun\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-user-assinatura-structure",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-user-assinatura-structure"]
+            },
+            "description": "Simula migração de estrutura de assinatura sem aplicar mudanças (dryRun=true)"
+          }
+        },
+        {
+          "name": "Adicionar Assinatura para Usuários sem Plano",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planoPadrao\": \"BASICO_MENSAL\",\n  \"statusPadrao\": \"active\",\n  \"dryRun\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/adicionar-assinatura-usuarios-sem-plano",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "adicionar-assinatura-usuarios-sem-plano"]
+            },
+            "description": "Adiciona assinatura padrão para usuários que não têm nenhuma assinatura.\n\n🔄 O que faz:\n1. Busca todos os usuários (exceto admin)\n2. Identifica usuários sem assinatura (nem na coleção assinaturas, nem no objeto user.assinatura)\n3. Cria uma assinatura padrão para esses usuários\n4. Sincroniza a assinatura no objeto user.assinatura\n\n📋 Parâmetros:\n- planoPadrao (string): Código do plano a ser atribuído (padrão: BASICO_MENSAL)\n- statusPadrao (string): Status da assinatura - 'active', 'trial', etc. (padrão: 'active')\n- dryRun (boolean): true = apenas simula sem aplicar mudanças (padrão: false)\n\n💡 Use dryRun=true primeiro para testar sem aplicar mudanças.\n\n⚠️ Este endpoint cria assinaturas reais na coleção assinaturas!"
+          }
+        },
+        {
+          "name": "Adicionar Assinatura - Dry Run",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planoPadrao\": \"BASICO_MENSAL\",\n  \"statusPadrao\": \"active\",\n  \"dryRun\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/adicionar-assinatura-usuarios-sem-plano",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "adicionar-assinatura-usuarios-sem-plano"]
+            },
+            "description": "Simula adição de assinaturas sem aplicar mudanças (dryRun=true)"
+          }
+        },
+        {
           "name": "Gerar Eventos Aleatórios (Teste de Estresse)",
           "request": {
             "method": "POST",

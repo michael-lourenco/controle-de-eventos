@@ -2,7 +2,9 @@ import { AssinaturaRepository } from '../repositories/assinatura-repository';
 import { PlanoRepository } from '../repositories/plano-repository';
 import { UserRepository } from '../repositories/user-repository';
 import { PlanoService } from './plano-service';
-import { StatusAssinatura } from '@/types/funcionalidades';
+import { AssinaturaService } from './assinatura-service';
+import { StatusAssinatura, Assinatura as AssinaturaType, Plano } from '@/types/funcionalidades';
+import { UserAssinatura } from '@/types';
 import crypto from 'crypto';
 
 export interface HotmartWebhookPayload {
@@ -68,12 +70,14 @@ export class HotmartWebhookService {
   private planoRepo: PlanoRepository;
   private userRepo: UserRepository;
   private planoService: PlanoService;
+  private assinaturaService: AssinaturaService;
 
   constructor() {
     this.assinaturaRepo = new AssinaturaRepository();
     this.planoRepo = new PlanoRepository();
     this.userRepo = new UserRepository();
     this.planoService = new PlanoService();
+    this.assinaturaService = new AssinaturaService();
   }
 
   async processarWebhook(payload: any, isSandbox: boolean = false): Promise<{ success: boolean; message: string }> {
@@ -125,6 +129,7 @@ export class HotmartWebhookService {
             return 'renewed';
           case 'SUBSCRIPTION_CANCELLED':
           case 'SUBSCRIPTION_CANCELED':
+          case 'SUBSCRIPTION_CANCELLATION':
             return 'cancelled';
           case 'SUBSCRIPTION_EXPIRED':
             return 'expired';
@@ -203,6 +208,7 @@ export class HotmartWebhookService {
         subscription.buyer?.email ||
         payload.data?.buyer?.email ||
         payload.data?.user?.email ||
+        payload.data?.subscriber?.email ||
         subscription.subscriber?.email ||
         subscription.user?.email ||
         payload.data?.subscription?.user?.email
@@ -264,6 +270,7 @@ export class HotmartWebhookService {
 
       // Determinar ação antes de validar plano (alguns eventos não precisam)
       const action = mapEventToAction(event);
+      console.log(`${isSandbox ? '🔍 [SANDBOX]' : '🔍'} Evento mapeado: "${event}" → action: "${action}"`);
       const eventosQueNaoPrecisamPlano = [
         'switch_plan', // SWITCH_PLAN busca o plano do array plans, não de subscription.plan
         'update_charge_date',
@@ -352,10 +359,10 @@ export class HotmartWebhookService {
           result = await this.processarRenovacao(hotmartSubscriptionId, subscription);
           break;
         case 'cancelled':
-          result = await this.processarCancelamento(hotmartSubscriptionId);
+          result = await this.processarCancelamento(hotmartSubscriptionId, email);
           break;
         case 'expired':
-          result = await this.processarExpiracao(hotmartSubscriptionId);
+          result = await this.processarExpiracao(hotmartSubscriptionId, email);
           break;
         case 'suspended':
           result = await this.processarSuspensao(hotmartSubscriptionId);
@@ -481,29 +488,31 @@ export class HotmartWebhookService {
       dataRenovacao: nextCharge ? new Date(nextCharge) : undefined
     });
 
-    // Atualizar usuário
-    const user = await this.userRepo.findById(assinatura.userId);
-    if (user && assinatura.planoId) {
-      const plano = await this.planoRepo.findById(assinatura.planoId);
-      if (plano) {
-        await this.userRepo.update(user.id, {
-          planoId: plano.id,
-          planoNome: plano.nome,
-          planoCodigoHotmart: plano.codigoHotmart,
-          funcionalidadesHabilitadas: plano.funcionalidades,
-          dataExpiraAssinatura: undefined,
-          dataAtualizacao: new Date()
-        });
-      }
-    }
+    // Sincronizar usando o serviço que já atualiza a estrutura consolidada
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
 
     return { success: true, message: 'Assinatura ativada com sucesso' };
   }
 
   private async processarCancelamento(
-    hotmartSubscriptionId: string
+    hotmartSubscriptionId: string,
+    email: string
   ): Promise<{ success: boolean; message: string }> {
-    const assinatura = await this.assinaturaRepo.findByHotmartId(hotmartSubscriptionId);
+    // Buscar assinatura primeiro pelo email do usuário
+    let assinatura = null;
+    
+    if (email) {
+      const user = await this.userRepo.findByEmail(email.toLowerCase().trim());
+      if (user) {
+        assinatura = await this.assinaturaRepo.findByUserId(user.id);
+      }
+    }
+    
+    // Se não encontrou pelo email, tentar pelo hotmartSubscriptionId como fallback
+    if (!assinatura && hotmartSubscriptionId) {
+      assinatura = await this.assinaturaRepo.findByHotmartId(hotmartSubscriptionId);
+    }
+    
     if (!assinatura) {
       return { success: false, message: 'Assinatura não encontrada' };
     }
@@ -515,9 +524,24 @@ export class HotmartWebhookService {
   }
 
   private async processarExpiracao(
-    hotmartSubscriptionId: string
+    hotmartSubscriptionId: string,
+    email: string
   ): Promise<{ success: boolean; message: string }> {
-    const assinatura = await this.assinaturaRepo.findByHotmartId(hotmartSubscriptionId);
+    // Buscar assinatura primeiro pelo email do usuário
+    let assinatura = null;
+    
+    if (email) {
+      const user = await this.userRepo.findByEmail(email.toLowerCase().trim());
+      if (user) {
+        assinatura = await this.assinaturaRepo.findByUserId(user.id);
+      }
+    }
+    
+    // Se não encontrou pelo email, tentar pelo hotmartSubscriptionId como fallback
+    if (!assinatura && hotmartSubscriptionId) {
+      assinatura = await this.assinaturaRepo.findByHotmartId(hotmartSubscriptionId);
+    }
+    
     if (!assinatura) {
       return { success: false, message: 'Assinatura não encontrada' };
     }
@@ -527,18 +551,8 @@ export class HotmartWebhookService {
       funcionalidadesHabilitadas: []
     });
 
-    // Remover funcionalidades do usuário
-    const user = await this.userRepo.findById(assinatura.userId);
-    if (user) {
-      await this.userRepo.update(user.id, {
-        planoId: undefined,
-        planoNome: undefined,
-        planoCodigoHotmart: undefined,
-        funcionalidadesHabilitadas: [],
-        dataExpiraAssinatura: undefined,
-        dataAtualizacao: new Date()
-      });
-    }
+    // Sincronizar usando o serviço que já atualiza a estrutura consolidada
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
 
     return { success: true, message: 'Assinatura expirada - Funcionalidades desabilitadas' };
   }
@@ -572,14 +586,8 @@ export class HotmartWebhookService {
       funcionalidadesHabilitadas: []
     });
 
-    // Remover funcionalidades do usuário
-    const user = await this.userRepo.findById(assinatura.userId);
-    if (user) {
-      await this.userRepo.update(user.id, {
-        funcionalidadesHabilitadas: [],
-        dataAtualizacao: new Date()
-      });
-    }
+    // Sincronizar usando o serviço que já atualiza a estrutura consolidada
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
 
     return { success: true, message: 'Assinatura suspensa - Funcionalidades desabilitadas' };
   }
@@ -629,25 +637,8 @@ export class HotmartWebhookService {
       funcionalidadesHabilitadas: novoPlano.funcionalidades || []
     });
 
-    // Atualizar usuário com novo plano
-    const user = await this.userRepo.findById(assinatura.userId);
-    if (!user) {
-      console.error(`❌ Usuário não encontrado com ID: ${assinatura.userId}`);
-      return { success: false, message: 'Usuário não encontrado' };
-    }
-
-    if (!user.id) {
-      console.error('❌ Usuário encontrado mas sem ID:', user);
-      return { success: false, message: 'Usuário inválido: sem ID' };
-    }
-
-    await this.userRepo.update(user.id, {
-      planoId: novoPlano.id,
-      planoNome: novoPlano.nome,
-      planoCodigoHotmart: novoPlano.codigoHotmart,
-      funcionalidadesHabilitadas: novoPlano.funcionalidades || [],
-      dataAtualizacao: new Date()
-    });
+    // Sincronizar usando o serviço que já atualiza a estrutura consolidada
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
 
     // Registrar no histórico
     await this.assinaturaRepo.addHistorico(assinatura.id, {
@@ -715,14 +706,8 @@ export class HotmartWebhookService {
       funcionalidadesHabilitadas: []
     });
 
-    // Remover funcionalidades do usuário
-    const user = await this.userRepo.findById(assinatura.userId);
-    if (user) {
-      await this.userRepo.update(user.id, {
-        funcionalidadesHabilitadas: [],
-        dataAtualizacao: new Date()
-      });
-    }
+    // Sincronizar usando o serviço que já atualiza a estrutura consolidada
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
 
     // Registrar no histórico
     await this.assinaturaRepo.addHistorico(assinatura.id, {
@@ -750,14 +735,8 @@ export class HotmartWebhookService {
       funcionalidadesHabilitadas: []
     });
 
-    // Remover funcionalidades do usuário
-    const user = await this.userRepo.findById(assinatura.userId);
-    if (user) {
-      await this.userRepo.update(user.id, {
-        funcionalidadesHabilitadas: [],
-        dataAtualizacao: new Date()
-      });
-    }
+    // Sincronizar usando o serviço que já atualiza a estrutura consolidada
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
 
     // Registrar no histórico
     await this.assinaturaRepo.addHistorico(assinatura.id, {
@@ -786,18 +765,8 @@ export class HotmartWebhookService {
       funcionalidadesHabilitadas: []
     });
 
-    // Remover funcionalidades e plano do usuário
-    const user = await this.userRepo.findById(assinatura.userId);
-    if (user) {
-      await this.userRepo.update(user.id, {
-        planoId: undefined,
-        planoNome: undefined,
-        planoCodigoHotmart: undefined,
-        funcionalidadesHabilitadas: [],
-        dataExpiraAssinatura: undefined,
-        dataAtualizacao: new Date()
-      });
-    }
+    // Sincronizar usando o serviço que já atualiza a estrutura consolidada
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
 
     // Registrar no histórico
     await this.assinaturaRepo.addHistorico(assinatura.id, {

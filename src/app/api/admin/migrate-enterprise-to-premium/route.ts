@@ -66,11 +66,11 @@ export async function POST(request: NextRequest) {
       // Se não encontrar plano antigo, buscar por códigoHotmart no usuário
       const todosUsuarios = await userRepo.findAll();
       const usuariosComEnterprise = todosUsuarios.filter(
-        u => u.planoCodigoHotmart === 'ENTERPRISE_MENSAL' && u.assinaturaId
+        u => u.assinatura?.planoCodigoHotmart === 'ENTERPRISE_MENSAL' && u.assinatura?.id
       );
       
       const assinaturasIds = usuariosComEnterprise
-        .map(u => u.assinaturaId)
+        .map(u => u.assinatura?.id)
         .filter(Boolean) as string[];
       
       if (assinaturasIds.length === 0) {
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
           // Sincronizar plano no usuário
           const userAtualizado = await assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
           
-          console.log(`  ✅ Usuário migrado: planoId=${userAtualizado.planoId}, planoCodigoHotmart=${userAtualizado.planoCodigoHotmart}`);
+          console.log(`  ✅ Usuário migrado: planoId=${userAtualizado.assinatura?.planoId}, planoCodigoHotmart=${userAtualizado.assinatura?.planoCodigoHotmart}`);
           
           resultados.migradas++;
           resultados.detalhes.push({

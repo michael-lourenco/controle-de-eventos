@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
         if (!dryRun) {
           const userAtualizado = await assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
           
-          console.log(`  ✅ Usuário sincronizado: planoId=${userAtualizado.planoId}, planoNome=${userAtualizado.planoNome}`);
+          console.log(`  ✅ Usuário sincronizado: planoId=${userAtualizado.assinatura?.planoId}, planoNome=${userAtualizado.assinatura?.planoNome}`);
           
           resultados.atualizadas++;
           resultados.detalhes.push({
