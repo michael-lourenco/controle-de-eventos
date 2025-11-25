@@ -59,7 +59,6 @@ export async function POST(request: NextRequest) {
 
     // Buscar todos os usuários
     const todosUsuarios = await userRepo.findAll();
-    console.log(`📋 Total de usuários encontrados: ${todosUsuarios.length}`);
 
     // Filtrar usuários sem assinatura
     const usuariosSemAssinatura: typeof todosUsuarios = [];
@@ -83,7 +82,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`🔄 Usuários sem assinatura: ${usuariosSemAssinatura.length}`);
 
     if (usuariosSemAssinatura.length === 0) {
       return NextResponse.json({
@@ -129,16 +127,12 @@ export async function POST(request: NextRequest) {
     for (const usuario of usuariosSemAssinatura) {
       try {
         resultados.usuariosProcessados++;
-        console.log(`🔄 Processando usuário: ${usuario.email} (${usuario.id})`);
-
         // Criar assinatura para o usuário
         const assinatura = await assinaturaService.criarAssinaturaUsuario(
           usuario.id,
           plano.id,
           statusPadrao
         );
-
-        console.log(`  ✅ Assinatura criada: ${assinatura.id}`);
 
         // Verificar se foi sincronizado no usuário
         const userAtualizado = await userRepo.findById(usuario.id);
@@ -152,7 +146,6 @@ export async function POST(request: NextRequest) {
             status: 'sucesso',
             mensagem: `Assinatura criada e sincronizada. Plano: ${plano.nome}`
           });
-          console.log(`  ✅ Usuário sincronizado: ${usuario.email}`);
         } else {
           resultados.erros++;
           resultados.detalhes.push({
@@ -161,11 +154,9 @@ export async function POST(request: NextRequest) {
             status: 'erro',
             mensagem: 'Assinatura criada mas não foi sincronizada no usuário'
           });
-          console.log(`  ⚠️  Assinatura criada mas não sincronizada: ${usuario.email}`);
         }
 
       } catch (error: any) {
-        console.error(`  ❌ Erro ao criar assinatura para ${usuario.email}:`, error);
         resultados.erros++;
         resultados.detalhes.push({
           userId: usuario.id,
@@ -192,7 +183,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Erro ao adicionar assinaturas para usuários sem plano:', error);
     return NextResponse.json(
       { error: error.message || 'Erro ao adicionar assinaturas para usuários sem plano' },
       { status: 500 }

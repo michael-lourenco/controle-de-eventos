@@ -24,7 +24,7 @@ import { useEventos, useEventosArquivados, useTiposEvento } from '@/hooks/useDat
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { usePlano } from '@/lib/hooks/usePlano';
-import LimiteUso from '@/components/LimiteUso';
+import LimiteUsoCompacto from '@/components/LimiteUsoCompacto';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { StatusEvento, Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
@@ -97,17 +97,6 @@ export default function EventosPage() {
       const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
       const matchesTipo = filterTipo === 'todos' || evento.tipoEvento === filterTipo;
       const matchesDate = isDateInFilter(evento.dataEvento, dateFilter);
-      
-      // Debug para verificar filtro de data
-      if (dateFilter && dateFilter.range.startDate && dateFilter.range.endDate) {
-        console.log('Filtro de data ativo:', {
-          eventDate: evento.dataEvento,
-          eventDateFormatted: format(evento.dataEvento, 'dd/MM/yyyy'),
-          filterStart: dateFilter.range.startDate,
-          filterEnd: dateFilter.range.endDate,
-          matchesDate
-        });
-      }
       
       return matchesSearch && matchesStatus && matchesTipo && matchesDate;
     });
@@ -189,7 +178,6 @@ export default function EventosPage() {
       setEventoParaArquivar(null);
       setShowDeleteDialog(false);
     } catch (error) {
-      console.error('Erro ao arquivar evento:', error);
       showToast('Erro ao arquivar evento', 'error');
     }
   };
@@ -202,7 +190,6 @@ export default function EventosPage() {
       showToast('Evento desarquivado com sucesso!', 'success');
       await recarregarEventos();
     } catch (error) {
-      console.error('Erro ao desarquivar evento:', error);
       showToast('Erro ao desarquivar evento', 'error');
     }
   };
@@ -286,7 +273,7 @@ export default function EventosPage() {
         servicosNomes = (servicos || []).map((s: any) => s?.tipoServico?.nome || s?.nome || s?.descricao).filter(Boolean);
       }
     } catch (e) {
-      console.warn('Não foi possível carregar serviços do evento para cópia:', e);
+      // Não foi possível carregar serviços do evento para cópia
     }
 
     const text = formatEventInfoForCopy(evento, servicosNomes);
@@ -301,7 +288,7 @@ export default function EventosPage() {
         }, 2000);
         return;
       } catch (error) {
-        console.error('Erro ao copiar texto:', error);
+        // Erro ao copiar texto
       }
     }
     
@@ -331,11 +318,9 @@ export default function EventosPage() {
         setTimeout(() => {
           setEventoCopiado(null);
         }, 2000);
-      } else {
-        console.error('Falha ao copiar texto');
       }
     } catch (err) {
-      console.error('Erro ao copiar texto:', err);
+      // Erro ao copiar texto
     }
   };
 
@@ -361,43 +346,69 @@ export default function EventosPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-              <CalendarIcon className="h-6 w-6" />
-              Eventos
-            </h1>
-            <p className="text-text-secondary">
-              Gerencie todos os eventos agendados
-            </p>
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+                <CalendarIcon className="h-6 w-6" />
+                Eventos
+              </h1>
+              {/* Descrição visível apenas em telas grandes */}
+              <p className="hidden sm:block text-text-secondary mt-1">
+                Gerencie todos os eventos agendados
+              </p>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              {/* Limite de Eventos Compacto */}
+              {limites && limites.eventosLimiteMes !== undefined && (
+                <LimiteUsoCompacto
+                  usado={limites.eventosMesAtual}
+                  limite={limites.eventosLimiteMes}
+                  tipo="eventos"
+                  periodo="mes"
+                />
+              )}
+              <div className="flex space-x-2 flex-shrink-0">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => recarregarEventos()}
+                        disabled={loading}
+                        className="p-2"
+                      >
+                        <ArrowPathIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Atualizar</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={() => router.push('/eventos/novo')} 
+                        className="bg-primary hover:bg-accent hover:text-white cursor-pointer p-2"
+                      >
+                        <PlusIcon className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p>Novo Evento</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </div>
           </div>
-          <div className="flex space-x-2">
-            <Button 
-              variant="outline" 
-              onClick={() => recarregarEventos()}
-              disabled={loading}
-            >
-              <ArrowPathIcon className="h-4 w-4 mr-2" />
-              Atualizar
-            </Button>
-            <Button onClick={() => router.push('/eventos/novo')} className="bg-primary hover:bg-accent hover:text-white cursor-pointer">
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Novo Evento
-            </Button>
-          </div>
+          {/* Descrição visível apenas em telas pequenas, abaixo dos botões */}
+          <p className="block sm:hidden text-text-secondary text-sm">
+            Gerencie todos os eventos agendados
+          </p>
         </div>
-
-        {/* Limite de Eventos */}
-        {limites && limites.eventosLimiteMes !== undefined && (
-          <div className="max-w-md">
-            <LimiteUso
-              tipo="eventos"
-              usado={limites.eventosMesAtual}
-              limite={limites.eventosLimiteMes}
-              periodo="mes"
-            />
-          </div>
-        )}
 
         {/* Abas */}
         <Card>

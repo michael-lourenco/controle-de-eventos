@@ -194,7 +194,6 @@ export async function GET(request: NextRequest) {
         // Usar o método getCalendarInfo que já usa OAuth2Client internamente
         const calendarInfo = await googleService.getCalendarInfo(session.user.id);
         
-        console.log('[Debug] Teste com OAuth2Client bem-sucedido:', calendarInfo.email);
         
         tokenTestDetails = {
           ...tokenTestDetails,
@@ -272,7 +271,6 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error: any) {
-    console.error('Erro ao obter informações de debug:', error);
     return NextResponse.json(
       { 
         error: 'Erro ao obter informações de debug',

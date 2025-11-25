@@ -45,12 +45,10 @@ export const authOptions: NextAuthOptions = {
               role: userData?.role || 'user'
             };
           } catch (error) {
-            console.error('Erro na autenticação Firebase:', error);
             return null;
           }
         } else {
           // Fallback para usuários de desenvolvimento (quando Firebase não estiver configurado)
-          console.warn('Firebase não configurado, usando modo de desenvolvimento');
           
           if (credentials?.email === 'admin@clickse.com' && credentials?.password.length >= 3) {
             return {

@@ -46,7 +46,6 @@ export async function GET(request: NextRequest) {
         const calendarInfo = await googleService.getCalendarInfo(session.user.id);
         status.email = calendarInfo.email;
       } catch (error) {
-        console.error('Erro ao obter email do calendário:', error);
         // Não falhar se não conseguir obter email
       }
     }

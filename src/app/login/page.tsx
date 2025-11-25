@@ -34,23 +34,17 @@ export default function LoginPage() {
         redirect: false
       });
       
-      console.log('Resultado do signIn:', result);
-      
       if (result?.error) {
-        console.error('Erro no login:', result.error);
         setError('Email ou senha inválidos');
         setLoading(false);
       } else if (result?.ok) {
-        console.log('Login bem-sucedido, redirecionando...');
         router.push('/dashboard');
         router.refresh();
       } else {
-        console.error('Resultado inesperado:', result);
         setError('Erro inesperado. Tente novamente.');
         setLoading(false);
       }
     } catch (error) {
-      console.error('Erro no catch:', error);
       setError('Erro inesperado. Tente novamente.');
       setLoading(false);
     }

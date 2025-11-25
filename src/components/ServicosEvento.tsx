@@ -57,17 +57,14 @@ export default function ServicosEvento({
   useEffect(() => {
     const carregarResumoServicos = async () => {
       if (!userId) {
-        console.log('ServicosEvento: userId não disponível ainda');
         return;
       }
 
       try {
-        console.log('ServicosEvento: Carregando resumo de serviços para evento:', evento.id);
         const resumo = await dataService.getResumoServicosPorEvento(userId, evento.id);
-        console.log('ServicosEvento: Resumo carregado:', resumo);
         setResumoServicos(resumo);
       } catch (error) {
-        console.error('Erro ao carregar resumo de serviços:', error);
+        // Erro ao carregar resumo de serviços
       }
     };
 
@@ -88,7 +85,7 @@ export default function ServicosEvento({
         );
         setTiposServicoDisponiveis(tiposOrdenados);
       } catch (error) {
-        console.error('Erro ao carregar tipos de serviço:', error);
+        // Erro ao carregar tipos de serviço
       } finally {
         setLoadingTipos(false);
       }
@@ -133,7 +130,7 @@ export default function ServicosEvento({
       // Limpar o campo
       setNovoServicoNome('');
     } catch (error) {
-      console.error('Erro ao criar novo serviço:', error);
+      // Erro ao criar novo serviço
     } finally {
       setCriandoServico(false);
     }
@@ -190,7 +187,7 @@ export default function ServicosEvento({
       onServicosChange();
       handleFecharModalSelecao();
     } catch (error) {
-      console.error('Erro ao salvar serviços:', error);
+      // Erro ao salvar serviços
     }
   };
 
@@ -210,7 +207,7 @@ export default function ServicosEvento({
         onServicosChange();
         setServicoParaExcluir(null);
       } catch (error) {
-        console.error('Erro ao excluir serviço:', error);
+        // Erro ao excluir serviço
       }
     }
   };
@@ -229,7 +226,7 @@ export default function ServicosEvento({
       setShowForm(false);
       setServicoEditando(null);
     } catch (error) {
-      console.error('Erro ao salvar serviço:', error);
+      // Erro ao salvar serviço
     }
   };
 

@@ -62,7 +62,6 @@ export default function PagamentoHistorico({
   useEffect(() => {
     const carregarResumoFinanceiro = async () => {
       if (!userId) {
-        console.log('PagamentoHistorico: userId não disponível ainda');
         return;
       }
       

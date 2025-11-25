@@ -84,12 +84,6 @@ export class HotmartWebhookService {
     const rawEvent = payload.event;
     // Normalizar nome do evento (evitar diferenças de caixa/variações do sandbox)
     const event = typeof rawEvent === 'string' ? rawEvent.trim().toUpperCase() : '';
-    const receivedPrefix = isSandbox ? '🧪 [SANDBOX]' : '📥';
-    console.log(`${receivedPrefix} Webhook recebido: ${event}`, {
-      timestamp: new Date().toISOString(),
-      payloadKeys: Object.keys(payload),
-      environment: isSandbox ? 'sandbox' : 'production'
-    });
 
     try {
       // Mapeamento para alinhar nomenclatura do Hotmart aos nossos handlers
@@ -168,19 +162,16 @@ export class HotmartWebhookService {
         // Apenas use se houver pelo menos subscription_code e email
         if (synthesized.subscription_code && synthesized.buyer.email) {
           subscription = synthesized as any;
-          console.log(`${isSandbox ? 'ℹ️ [SANDBOX]' : 'ℹ️'} Subscription sintetizada a partir do payload alternativo`);
         }
       }
       
       if (!subscription) {
         const errorMsg = 'Payload inválido: subscription não encontrado';
-        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, payload);
         return { success: false, message: errorMsg };
       }
 
       if (!event) {
         const errorMsg = 'Payload inválido: event não encontrado';
-        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, payload);
         return { success: false, message: errorMsg };
       }
 
@@ -216,23 +207,8 @@ export class HotmartWebhookService {
       
       const email = emailRaw?.toLowerCase().trim();
 
-      // Log detalhado para debug
-      if (!email) {
-        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} Email não encontrado no payload. Estrutura disponível:`, {
-          'subscription.buyer?.email': subscription.buyer?.email,
-          'payload.data?.buyer?.email': payload.data?.buyer?.email,
-          'payload.data?.user?.email': payload.data?.user?.email,
-          'subscription.subscriber?.email': subscription.subscriber?.email,
-          'subscription.user?.email': subscription.user?.email,
-          'payload.data?.subscription?.user?.email': payload.data?.subscription?.user?.email,
-          'subscription': JSON.stringify(subscription, null, 2),
-          'payload.data': JSON.stringify(payload.data, null, 2)
-        });
-      }
-
       // Regra de sandbox: se o código do plano for "123", aplicar o plano BASICO_MENSAL
       if (codigoPlano === '123') {
-        console.log(`${isSandbox ? 'ℹ️ [SANDBOX]' : 'ℹ️'} Mapeando codigoPlano=123 para BASICO_MENSAL`);
         codigoPlano = 'BASICO_MENSAL';
       }
       // Fallbacks para shape do Sandbox v2: subscription.subscriber.code e plan.id/name
@@ -249,28 +225,16 @@ export class HotmartWebhookService {
 
       if (!hotmartSubscriptionId) {
         const errorMsg = 'Dados incompletos: subscription_id não encontrado';
-        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, subscription);
         return { success: false, message: errorMsg };
       }
 
       if (!email) {
         const errorMsg = 'Dados incompletos: email não encontrado';
-        console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, subscription);
         return { success: false, message: errorMsg };
       }
 
-      const logPrefix = isSandbox ? '🔍 [SANDBOX]' : '🔍';
-      console.log(`${logPrefix} Processando webhook:`, {
-        event,
-        hotmartSubscriptionId,
-        codigoPlano: codigoPlano || 'N/A',
-        email,
-        environment: isSandbox ? 'sandbox' : 'production'
-      });
-
       // Determinar ação antes de validar plano (alguns eventos não precisam)
       const action = mapEventToAction(event);
-      console.log(`${isSandbox ? '🔍 [SANDBOX]' : '🔍'} Evento mapeado: "${event}" → action: "${action}"`);
       const eventosQueNaoPrecisamPlano = [
         'switch_plan', // SWITCH_PLAN busca o plano do array plans, não de subscription.plan
         'update_charge_date',
@@ -286,24 +250,9 @@ export class HotmartWebhookService {
       ];
 
       // Buscar usuário por email (necessário para todos os eventos)
-      console.log(`${isSandbox ? '🔍 [SANDBOX]' : '🔍'} Buscando usuário com email normalizado: "${email}"`);
       const user = await this.userRepo.findByEmail(email);
       if (!user) {
-        const errorMsg = `Usuário não encontrado: ${email}. Verifique se o email está cadastrado no sistema e se está em lowercase.`;
-        if (isSandbox) {
-          console.warn(`⚠️ [SANDBOX] ${errorMsg}`);
-          console.warn(`⚠️ [SANDBOX] Tentando buscar todos os usuários para debug...`);
-          // Debug: listar alguns usuários para verificar formato
-          try {
-            const allUsers = await this.userRepo.findAll();
-            const sampleEmails = allUsers.slice(0, 5).map(u => u.email).filter(Boolean);
-            console.warn(`⚠️ [SANDBOX] Exemplo de emails no banco (primeiros 5):`, sampleEmails);
-          } catch (debugError) {
-            console.warn(`⚠️ [SANDBOX] Erro ao buscar usuários para debug:`, debugError);
-          }
-        } else {
-          console.warn(`⚠️ ${errorMsg}`);
-        }
+        const errorMsg = 'Usuário não encontrado. Verifique se o email está cadastrado no sistema e se está em lowercase.';
         return { 
           success: false, 
           message: errorMsg
@@ -315,35 +264,17 @@ export class HotmartWebhookService {
       if (!eventosQueNaoPrecisamPlano.includes(action)) {
         if (!codigoPlano) {
           const errorMsg = 'Dados incompletos: código do plano não encontrado';
-          console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, subscription);
           return { success: false, message: errorMsg };
         }
 
         plano = await this.planoRepo.findByCodigoHotmart(codigoPlano);
         if (!plano) {
-          const errorMsg = `Plano não encontrado: ${codigoPlano}. Verifique se o código do plano está correto no banco de dados.`;
-          console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`);
+          const errorMsg = 'Plano não encontrado. Verifique se o código do plano está correto no banco de dados.';
           return { 
             success: false, 
             message: errorMsg
           };
         }
-
-        const successPrefix = isSandbox ? '✅ [SANDBOX]' : '✅';
-        console.log(`${successPrefix} Dados validados:`, {
-          userId: user.id,
-          userName: user.nome,
-          planoId: plano.id,
-          planoNome: plano.nome,
-          environment: isSandbox ? 'sandbox' : 'production'
-        });
-      } else {
-        const successPrefix = isSandbox ? '✅ [SANDBOX]' : '✅';
-        console.log(`${successPrefix} Dados validados:`, {
-          userId: user.id,
-          userName: user.nome,
-          environment: isSandbox ? 'sandbox' : 'production'
-        });
       }
 
       // Processar evento
@@ -373,40 +304,24 @@ export class HotmartWebhookService {
             const novoPlanoCodigo = this.extrairNovoPlanoDoSwitchPlan(payload);
             if (!novoPlanoCodigo) {
               const errorMsg = 'SWITCH_PLAN: Código do novo plano não encontrado no payload';
-              console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`);
               return { success: false, message: errorMsg };
             }
             
-            console.log(`${isSandbox ? '🔍 [SANDBOX]' : '🔍'} Buscando plano com código: ${novoPlanoCodigo}`);
             const novoPlano = await this.planoRepo.findByCodigoHotmart(novoPlanoCodigo);
             
             if (!novoPlano) {
-              const errorMsg = `SWITCH_PLAN: Novo plano não encontrado: ${novoPlanoCodigo}. Verifique se o código do plano está correto no banco de dados.`;
-              console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`);
+              const errorMsg = 'SWITCH_PLAN: Novo plano não encontrado. Verifique se o código do plano está correto no banco de dados.';
               return { success: false, message: errorMsg };
             }
-            
-            console.log(`${isSandbox ? '✅ [SANDBOX]' : '✅'} Plano encontrado:`, {
-              id: novoPlano.id,
-              nome: novoPlano.nome,
-              codigoHotmart: novoPlano.codigoHotmart
-            });
             
             if (!novoPlano.id) {
-              const errorMsg = `SWITCH_PLAN: Plano encontrado mas sem ID válido: ${novoPlanoCodigo}`;
-              console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, JSON.stringify(novoPlano, null, 2));
+              const errorMsg = 'SWITCH_PLAN: Plano encontrado mas sem ID válido';
               return { success: false, message: errorMsg };
             }
-            
-            console.log(`${isSandbox ? '🔍 [SANDBOX]' : '🔍'} Chamando processarTrocaPlano com:`, {
-              hotmartSubscriptionId,
-              novoPlanoId: novoPlano.id
-            });
             
             result = await this.processarTrocaPlano(hotmartSubscriptionId, novoPlano.id, payload);
           } catch (error: any) {
-            const errorMsg = `SWITCH_PLAN: Erro ao processar troca de plano: ${error?.message || 'Erro desconhecido'}`;
-            console.error(`${isSandbox ? '❌ [SANDBOX]' : '❌'} ${errorMsg}`, error);
+            const errorMsg = 'SWITCH_PLAN: Erro ao processar troca de plano';
             return { success: false, message: errorMsg };
           }
           break;
@@ -427,33 +342,12 @@ export class HotmartWebhookService {
           break;
         case 'unknown':
         default:
-          const errorMsg = `Evento não reconhecido ou não suportado: ${event}`;
-          console.warn(`${isSandbox ? '⚠️ [SANDBOX]' : '⚠️'} ${errorMsg}`);
+          const errorMsg = 'Evento não reconhecido ou não suportado';
           return { success: false, message: errorMsg };
-      }
-
-      if (result.success) {
-        const finalPrefix = isSandbox ? '✅ [SANDBOX]' : '✅';
-        const logData: any = {
-          userId: user.id,
-          email: email,
-          hotmartSubscriptionId,
-          environment: isSandbox ? 'sandbox' : 'production'
-        };
-        
-        // Adicionar planoId apenas se o plano foi validado
-        if (plano && plano.id) {
-          logData.planoId = plano.id;
-          logData.planoNome = plano.nome;
-        }
-        
-        console.log(`${finalPrefix} Webhook processado com sucesso: ${event}`, logData);
       }
 
       return result;
     } catch (error: any) {
-      const errorPrefix = isSandbox ? '❌ [SANDBOX]' : '❌';
-      console.error(`${errorPrefix} Erro ao processar webhook ${event}:`, error);
       return { success: false, message: error.message || 'Erro ao processar webhook' };
     }
   }
@@ -603,28 +497,23 @@ export class HotmartWebhookService {
     }
 
     if (!assinatura.id) {
-      console.error('❌ Assinatura encontrada mas sem ID:', assinatura);
       return { success: false, message: 'Assinatura inválida: sem ID' };
     }
 
     const novoPlano = await this.planoRepo.findById(novoPlanoId);
     if (!novoPlano) {
-      console.error(`❌ Plano não encontrado com ID: ${novoPlanoId}`);
       return { success: false, message: 'Novo plano não encontrado' };
     }
 
     if (!novoPlano.id) {
-      console.error('❌ Plano encontrado mas sem ID:', novoPlano);
       return { success: false, message: 'Novo plano inválido: sem ID' };
     }
 
     if (!novoPlano.nome) {
-      console.error('❌ Plano encontrado mas sem nome:', novoPlano);
       return { success: false, message: 'Novo plano inválido: sem nome' };
     }
 
     if (!novoPlano.codigoHotmart) {
-      console.error('❌ Plano encontrado mas sem codigoHotmart:', novoPlano);
       return { success: false, message: 'Novo plano inválido: sem codigoHotmart' };
     }
 
@@ -847,7 +736,6 @@ export class HotmartWebhookService {
   validarAssinatura(payloadBody: string, signature: string, secret: string): boolean {
     try {
       if (!signature || !secret) {
-        console.warn('⚠️ Validação HMAC: signature ou secret não fornecidos');
         return false;
       }
 
@@ -869,27 +757,11 @@ export class HotmartWebhookService {
       
       // Verificar se os tamanhos são iguais antes de comparar
       if (signatureBuffer.length !== expectedBuffer.length) {
-        console.error('❌ HMAC: Tamanhos diferentes', {
-          received: signatureBuffer.length,
-          expected: expectedBuffer.length
-        });
         return false;
       }
       
-      const isValid = crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
-      
-      if (!isValid) {
-        console.error('❌ HMAC: Assinatura inválida', {
-          received: signature.substring(0, 20) + '...',
-          expected: expectedSignature.substring(0, 20) + '...'
-        });
-      } else {
-        console.log('✅ HMAC: Assinatura válida');
-      }
-      
-      return isValid;
+      return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
     } catch (error: any) {
-      console.error('❌ Erro ao validar assinatura HMAC:', error);
       return false;
     }
   }

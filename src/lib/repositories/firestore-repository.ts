@@ -96,7 +96,6 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
       
       return this.convertFirestoreData(docSnap.data(), docRef.id);
     } catch (error) {
-      console.error(`Error creating document in ${this.collectionName}:`, error);
       throw error;
     }
   }
@@ -112,7 +111,6 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
       
       return this.convertFirestoreData(docSnap.data(), id);
     } catch (error) {
-      console.error(`Error finding document in ${this.collectionName}:`, error);
       throw error;
     }
   }
@@ -122,7 +120,6 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
       const querySnapshot = await getDocs(collection(db, this.collectionName));
       return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
     } catch (error) {
-      console.error(`Error finding all documents in ${this.collectionName}:`, error);
       throw error;
     }
   }
@@ -131,9 +128,6 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
     try {
       const docRef = doc(db, this.collectionName, id);
       const firestoreData = this.convertToFirestoreData(entity);
-      
-      console.log(`[FirestoreRepository] Atualizando documento ${id} na collection ${this.collectionName}`);
-      console.log(`[FirestoreRepository] Dados a serem atualizados:`, JSON.stringify(firestoreData, null, 2));
       
       await updateDoc(docRef, firestoreData);
       
@@ -146,11 +140,9 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
       }
       
       const converted = this.convertFirestoreData(updatedDoc.data(), id);
-      console.log(`[FirestoreRepository] Documento atualizado com sucesso`);
       
       return converted;
     } catch (error) {
-      console.error(`[FirestoreRepository] Error updating document in ${this.collectionName}:`, error);
       throw error;
     }
   }
@@ -160,7 +152,6 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
       const docRef = doc(db, this.collectionName, id);
       await deleteDoc(docRef);
     } catch (error) {
-      console.error(`Error deleting document in ${this.collectionName}:`, error);
       throw error;
     }
   }
@@ -171,7 +162,6 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
     } catch (error) {
-      console.error(`Error finding documents in ${this.collectionName}:`, error);
       throw error;
     }
   }
@@ -182,7 +172,6 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
     } catch (error) {
-      console.error(`Error querying documents in ${this.collectionName}:`, error);
       throw error;
     }
   }

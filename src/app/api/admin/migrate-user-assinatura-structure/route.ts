@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
 
     // Buscar todos os usuários
     const todosUsuarios = await userRepo.findAll();
-    console.log(`📋 Total de usuários encontrados: ${todosUsuarios.length}`);
 
     // Filtrar usuários que precisam de migração
     // Usuários que têm campos antigos na raiz OU não têm objeto assinatura
@@ -85,7 +84,6 @@ export async function POST(request: NextRequest) {
       return temCamposAntigos || naoTemObjetoAssinatura;
     });
 
-    console.log(`🔄 Usuários que precisam de migração: ${usuariosParaMigrar.length}`);
 
     if (usuariosParaMigrar.length === 0) {
       return NextResponse.json({
@@ -114,7 +112,6 @@ export async function POST(request: NextRequest) {
     for (const user of usuariosParaMigrar) {
       try {
         resultados.usuariosProcessados++;
-        console.log(`🔄 Processando usuário ${user.email} (${user.id})`);
 
         // Buscar assinatura real na coleção assinaturas
         // Usar 'any' porque user pode ter campos antigos que não estão no tipo
@@ -192,7 +189,6 @@ export async function POST(request: NextRequest) {
         
         // Se não tem objeto assinatura mas tem campos antigos, criar objeto a partir dos campos antigos
         if (!temObjetoAssinatura && (userAny.planoId || userAny.assinaturaId || userAny.planoCodigoHotmart)) {
-          console.log(`  🔄 Criando objeto assinatura a partir de campos antigos para ${user.email}`);
           
           // Buscar plano se tiver planoId ou planoCodigoHotmart
           const planoRepo = new PlanoRepository();
@@ -338,7 +334,6 @@ export async function POST(request: NextRequest) {
             status: 'sucesso',
             mensagem: `Migrado com sucesso. Plano: ${userVerificado.assinatura?.planoNome || 'N/A'}`
           });
-          console.log(`  ✅ Usuário migrado: ${user.email}`);
         } else if (userVerificado?.assinatura && aindaTemCamposAntigos) {
           resultados.usuariosMigrados++;
           resultados.detalhes.push({
@@ -347,7 +342,6 @@ export async function POST(request: NextRequest) {
             status: 'sucesso',
             mensagem: `Objeto assinatura criado, mas alguns campos antigos ainda existem (pode ser necessário executar novamente)`
           });
-          console.log(`  ⚠️  Objeto assinatura criado mas ainda tem campos antigos: ${user.email}`);
         } else {
           resultados.usuariosComErro++;
           resultados.detalhes.push({
@@ -356,11 +350,9 @@ export async function POST(request: NextRequest) {
             status: 'erro',
             mensagem: 'Não foi possível criar objeto assinatura e não há assinatura ativa na coleção assinaturas'
           });
-          console.log(`  ❌ Não foi possível criar objeto assinatura: ${user.email}`);
         }
 
       } catch (error: any) {
-        console.error(`  ❌ Erro ao migrar usuário ${user.email}:`, error);
         resultados.usuariosComErro++;
         resultados.detalhes.push({
           userId: user.id,
@@ -388,7 +380,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Erro ao migrar estrutura de assinatura dos usuários:', error);
     return NextResponse.json(
       { error: error.message || 'Erro ao migrar estrutura de assinatura dos usuários' },
       { status: 500 }

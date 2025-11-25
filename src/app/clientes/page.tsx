@@ -12,7 +12,7 @@ import { Cliente, CanalEntrada } from '@/types';
 import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import PlanoBloqueio from '@/components/PlanoBloqueio';
 import { usePlano } from '@/lib/hooks/usePlano';
-import LimiteUso from '@/components/LimiteUso';
+import LimiteUsoCompacto from '@/components/LimiteUsoCompacto';
 import {
   PlusIcon,
   PencilIcon,
@@ -23,6 +23,7 @@ import {
   EyeIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
@@ -68,23 +69,20 @@ export default function ClientesPage() {
   useEffect(() => {
     const carregarDados = async () => {
       if (!userId) {
-        console.log('ClientesPage: userId não disponível ainda');
         return;
       }
 
       try {
-        console.log('ClientesPage: Carregando clientes e canais de entrada');
         const [clientesData, arquivadosData, canaisData] = await Promise.all([
           dataService.getClientes(userId),
           dataService.getClientesArquivados(userId),
           dataService.getCanaisEntradaAtivos(userId)
         ]);
-        console.log('ClientesPage: Dados carregados:', { clientesData, arquivadosData, canaisData });
         setClientes(clientesData);
         setClientesArquivados(arquivadosData);
         setCanaisEntrada(canaisData);
       } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        // Erro ao carregar dados
       } finally {
         setLoading(false);
       }
@@ -103,7 +101,7 @@ export default function ClientesPage() {
       setClientes(clientesData);
       setClientesArquivados(arquivadosData);
     } catch (error) {
-      console.error('Erro ao recarregar clientes:', error);
+      // Erro ao recarregar clientes
     }
   };
 
@@ -146,8 +144,6 @@ export default function ClientesPage() {
       setMostrarFormNovo(false);
       setErroCliente(null);
     } catch (error: any) {
-      console.error('Erro ao criar cliente:', error);
-      
       // Tratar erros específicos de plano/limite
       const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
       
@@ -178,7 +174,7 @@ export default function ClientesPage() {
       await recarregarClientes();
       setEditandoId(null);
     } catch (error) {
-      console.error('Erro ao atualizar cliente:', error);
+      // Erro ao atualizar cliente
     }
   };
 
@@ -209,7 +205,6 @@ export default function ClientesPage() {
       await recarregarClientes();
       setClienteParaArquivar(null);
     } catch (error) {
-      console.error('Erro ao arquivar cliente:', error);
       showToast('Erro ao arquivar cliente', 'error');
     }
   };
@@ -222,7 +217,6 @@ export default function ClientesPage() {
       showToast('Cliente desarquivado com sucesso!', 'success');
       await recarregarClientes();
     } catch (error) {
-      console.error('Erro ao desarquivar cliente:', error);
       showToast('Erro ao desarquivar cliente', 'error');
     }
   };
@@ -279,7 +273,7 @@ export default function ClientesPage() {
       // Retornar o ID do novo canal para atualizar automaticamente o campo
       return novoCanal.id;
     } catch (error) {
-      console.error('Erro ao criar canal de entrada:', error);
+      // Erro ao criar canal de entrada
     }
   };
 
@@ -315,36 +309,50 @@ export default function ClientesPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-              <UserIcon className="h-6 w-6" />
-              Clientes
-            </h1>
-            <p className="text-text-secondary">
-              Gerencie os clientes cadastrados
-            </p>
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+                <UserIcon className="h-6 w-6" />
+                Clientes
+              </h1>
+              {/* Descrição visível apenas em telas grandes */}
+              <p className="hidden sm:block text-text-secondary mt-1">
+                Gerencie os clientes cadastrados
+              </p>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              {/* Limite de Clientes Compacto */}
+              {limites && limites.clientesLimite !== undefined && (
+                <LimiteUsoCompacto
+                  usado={limites.clientesTotal}
+                  limite={limites.clientesLimite}
+                  tipo="clientes"
+                  periodo="total"
+                />
+              )}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setMostrarFormNovo(true)}
+                      className="bg-primary hover:bg-accent hover:text-white cursor-pointer p-2"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Novo Cliente</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
-          <Button
-            onClick={() => setMostrarFormNovo(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
-          >
-            <PlusIcon className="h-4 w-4" />
-            Novo Cliente
-          </Button>
+          {/* Descrição visível apenas em telas pequenas, abaixo dos botões */}
+          <p className="block sm:hidden text-text-secondary text-sm">
+            Gerencie os clientes cadastrados
+          </p>
         </div>
-
-        {/* Limite de Clientes */}
-        {limites && limites.clientesLimite !== undefined && (
-          <div className="max-w-md">
-            <LimiteUso
-              tipo="clientes"
-              usado={limites.clientesTotal}
-              limite={limites.clientesLimite}
-              periodo="total"
-            />
-          </div>
-        )}
 
         {/* Abas */}
         <Card>

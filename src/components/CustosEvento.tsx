@@ -48,17 +48,14 @@ export default function CustosEvento({
   useEffect(() => {
     const carregarResumoCustos = async () => {
       if (!userId) {
-        console.log('CustosEvento: userId não disponível ainda');
         return;
       }
       
       try {
-        console.log('CustosEvento: Carregando resumo de custos para evento:', evento.id);
         const resumo = await dataService.getResumoCustosPorEvento(userId, evento.id);
         setResumoCustos(resumo);
-        console.log('CustosEvento - Resumo do Firestore:', resumo);
       } catch (error) {
-        console.error('Erro ao carregar resumo de custos:', error);
+        // Erro ao carregar resumo de custos
       }
     };
 
@@ -100,7 +97,6 @@ export default function CustosEvento({
 
   const handleSalvarCusto = async (custoData: CustoEvento) => {
     if (!userId) {
-      console.error('CustosEvento: userId não disponível para salvar custo');
       return;
     }
     
@@ -119,13 +115,12 @@ export default function CustosEvento({
       setShowForm(false);
       setCustoEditando(null);
     } catch (error) {
-      console.error('Erro ao salvar custo:', error);
+      // Erro ao salvar custo
     }
   };
 
   const handleConfirmarExclusao = async () => {
     if (!userId) {
-      console.error('CustosEvento: userId não disponível para excluir custo');
       return;
     }
     
@@ -140,7 +135,7 @@ export default function CustosEvento({
         onCustosChange();
         setCustoParaExcluir(null);
       } catch (error) {
-        console.error('Erro ao excluir custo:', error);
+        // Erro ao excluir custo
       }
     }
   };

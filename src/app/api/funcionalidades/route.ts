@@ -15,15 +15,11 @@ export async function GET(request: NextRequest) {
     
     try {
       funcionalidades = await repo.findAllOrdered();
-      console.log(`[Funcionalidades API] Total encontrado: ${funcionalidades.length}`);
     } catch (error: any) {
-      console.error('[Funcionalidades API] Erro ao buscar:', error);
       // Tentar buscar sem ordenação
       try {
         funcionalidades = await repo.findAll();
-        console.log(`[Funcionalidades API] Busca simples: ${funcionalidades.length}`);
       } catch (fallbackError: any) {
-        console.error('[Funcionalidades API] Erro na busca simples:', fallbackError);
         throw fallbackError;
       }
     }
@@ -33,7 +29,6 @@ export async function GET(request: NextRequest) {
       count: funcionalidades.length 
     });
   } catch (error: any) {
-    console.error('Erro ao buscar funcionalidades:', error);
     return NextResponse.json(
       { 
         error: error.message || 'Erro ao buscar funcionalidades',
@@ -61,7 +56,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ funcionalidade }, { status: 201 });
   } catch (error: any) {
-    console.error('Erro ao criar funcionalidade:', error);
     return NextResponse.json(
       { error: error.message || 'Erro ao criar funcionalidade' },
       { status: 500 }

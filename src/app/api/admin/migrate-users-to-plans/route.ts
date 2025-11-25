@@ -105,16 +105,12 @@ export async function POST(request: NextRequest) {
 
     for (const usuario of usuariosSemPlano) {
       try {
-        console.log(`🔄 Processando usuário: ${usuario.email} (${usuario.id})`);
-        
         // Verificar se já tem assinatura ativa
         const assinaturaExistente = await assinaturaService['assinaturaRepo'].findByUserId(usuario.id);
         
         if (assinaturaExistente && (assinaturaExistente.status === 'active' || assinaturaExistente.status === 'trial')) {
           // Já tem assinatura ativa, apenas sincronizar
-          console.log(`  ↳ Usuário já tem assinatura ativa, sincronizando...`);
-          const userAtualizado = await assinaturaService.sincronizarPlanoUsuario(usuario.id);
-          console.log(`  ✅ Usuário sincronizado: planoId=${userAtualizado.assinatura?.planoId}, planoNome=${userAtualizado.assinatura?.planoNome}`);
+          await assinaturaService.sincronizarPlanoUsuario(usuario.id);
           usuariosMigrados.push(usuario.id);
           continue;
         }
@@ -129,30 +125,15 @@ export async function POST(request: NextRequest) {
           dataFim.setDate(dataFim.getDate() + 7);
         }
 
-        console.log(`  ↳ Criando assinatura para usuário...`);
         const assinatura = await assinaturaService.criarAssinaturaUsuario(
           usuario.id,
           plano.id,
           statusPadrao
         );
-        console.log(`  ✅ Assinatura criada: ${assinatura.id}`);
-
-        // Verificar se o usuário foi atualizado
-        const userAtualizado = await userRepo.findById(usuario.id);
-        console.log(`  📋 Usuário após migração:`, {
-          planoId: userAtualizado?.assinatura?.planoId,
-          planoNome: userAtualizado?.assinatura?.planoNome,
-          assinaturaId: userAtualizado?.assinatura?.id,
-          funcionalidadesHabilitadas: userAtualizado?.assinatura?.funcionalidadesHabilitadas?.length || 0
-        });
 
         assinaturasCriadas.push(assinatura.id);
         usuariosMigrados.push(usuario.id);
-
-        console.log(`✅ Usuário ${usuario.email} migrado para plano ${plano.nome}`);
       } catch (error: any) {
-        console.error(`❌ Erro ao migrar usuário ${usuario.email}:`, error);
-        console.error(`  Stack:`, error.stack);
         erros.push({
           usuarioId: usuario.id,
           email: usuario.email,
@@ -174,7 +155,6 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error: any) {
-    console.error('Erro ao executar migração:', error);
     return NextResponse.json(
       { error: error.message || 'Erro ao executar migração' },
       { status: 500 }

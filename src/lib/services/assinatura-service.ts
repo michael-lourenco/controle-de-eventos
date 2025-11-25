@@ -222,16 +222,8 @@ export class AssinaturaService {
       dataAtualizacao: new Date()
     };
 
-    console.log(`[AssinaturaService] Sincronizando plano do usuário ${userId}:`, dadosAtualizacao);
-
     // Atualizar usuário com dados da assinatura
     const userAtualizado = await this.userRepo.update(userId, dadosAtualizacao);
-    
-    console.log(`[AssinaturaService] Usuário sincronizado:`, {
-      userId: userAtualizado.id,
-      planoId: userAtualizado.assinatura?.planoId,
-      planoNome: userAtualizado.assinatura?.planoNome,
-      assinaturaId: userAtualizado.assinatura?.id
     });
 
     return userAtualizado;
