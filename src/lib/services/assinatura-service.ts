@@ -224,7 +224,6 @@ export class AssinaturaService {
 
     // Atualizar usuário com dados da assinatura
     const userAtualizado = await this.userRepo.update(userId, dadosAtualizacao);
-    });
 
     return userAtualizado;
   }
