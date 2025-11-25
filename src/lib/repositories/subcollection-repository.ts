@@ -77,7 +77,6 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
       
       return this.convertFirestoreData(docSnap.data(), docRef.id);
     } catch (error) {
-      console.error(`Error creating document in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }
   }
@@ -96,7 +95,6 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
       
       return this.convertFirestoreData(docSnap.data(), id);
     } catch (error) {
-      console.error(`Error finding document in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }
   }
@@ -114,7 +112,6 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
       if (error?.code === 'not-found' || error?.message?.includes('not found')) {
         return [];
       }
-      console.error(`Error finding all documents in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }
   }
@@ -134,7 +131,6 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
       
       return this.convertFirestoreData(updatedDoc.data(), id);
     } catch (error) {
-      console.error(`Error updating document in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }
   }
@@ -147,7 +143,6 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
       const docRef = this.getSubcollectionDocRef(parentId, id);
       await deleteDoc(docRef);
     } catch (error) {
-      console.error(`Error deleting document in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }
   }
@@ -161,7 +156,6 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
     } catch (error) {
-      console.error(`Error finding documents in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }
   }
@@ -172,7 +166,6 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
     } catch (error) {
-      console.error(`Error querying documents in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }
   }
@@ -213,7 +206,6 @@ export class SubcollectionRepository<T extends { id: string }> implements BaseRe
         return results.sort((a, b) => (a as any).nome.localeCompare((b as any).nome));
       }
     } catch (error) {
-      console.error(`Error getting active documents in ${this.parentCollection}/${parentId}/${this.subcollectionName}:`, error);
       throw error;
     }
   }

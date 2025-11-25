@@ -44,13 +44,6 @@ export async function POST(request: NextRequest) {
     const validateHmac = process.env.HOTMART_VALIDATE_HMAC_SANDBOX === 'true';
     const isDevelopment = process.env.NODE_ENV === 'development';
 
-    console.log('🔐 [SANDBOX] Validação HMAC:', {
-      hasSignature: !!signature,
-      hasSecret: !!secret,
-      validateHmac,
-      isDevelopment,
-      signatureHeader: request.headers.get('x-hotmart-hmac-sha256') ? 'presente' : 'ausente'
-    });
 
     // Validar HMAC apenas se explicitamente habilitado para sandbox
     // Por padrão, desabilitado para facilitar testes locais

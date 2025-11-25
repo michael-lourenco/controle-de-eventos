@@ -5,6 +5,7 @@ import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { ToastProvider } from "@/components/ui/toast";
+import { SecureErrorHandler } from "@/components/SecureErrorHandler";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,6 +28,7 @@ export default function RootLayout({
         className={`${inter.variable} antialiased`}
         suppressHydrationWarning
       >
+        <SecureErrorHandler />
         <ThemeProvider>
           <SidebarProvider>
             <SessionProvider>

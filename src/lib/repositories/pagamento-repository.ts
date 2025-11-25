@@ -56,7 +56,6 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
         pagamento
       );
     } catch (error) {
-      console.error('Erro ao sincronizar pagamento com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
       // O pagamento já foi criado na collection principal
     }
@@ -89,7 +88,6 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
         pagamento
       );
     } catch (error) {
-      console.error('Erro ao sincronizar atualização de pagamento com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
     }
     
@@ -113,7 +111,6 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
         pagamentoId
       );
     } catch (error) {
-      console.error('Erro ao sincronizar cancelamento de pagamento com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
     }
   }
@@ -123,12 +120,8 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
     const q = query(pagamentosCollection, orderBy('dataPagamento', 'desc'));
     const querySnapshot = await getDocs(q);
     
-    console.log('PagamentoRepository: Buscando pagamentos para evento:', eventoId);
-    console.log('PagamentoRepository: Documentos encontrados:', querySnapshot.docs.length);
-    
     return querySnapshot.docs.map(doc => {
       const data = doc.data();
-      console.log('PagamentoRepository: Dados do documento:', data);
       
       // Converter Timestamps do Firestore para Date
       const pagamento = {
@@ -139,7 +132,6 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
         dataAtualizacao: data.dataAtualizacao?.toDate ? data.dataAtualizacao.toDate() : new Date(data.dataAtualizacao)
       };
       
-      console.log('PagamentoRepository: Pagamento convertido:', pagamento);
       return pagamento;
     }) as Pagamento[];
   }

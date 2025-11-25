@@ -9,9 +9,7 @@ export async function initializeCollectionIfNotExists(collectionName: string): P
     const collectionRef = collection(db, collectionName);
     
     // Se chegou até aqui, a collection existe (mesmo que vazia)
-    console.log(`Collection ${collectionName} está acessível`);
   } catch (error) {
-    console.error(`Erro ao acessar collection ${collectionName}:`, error);
     throw error;
   }
 }
@@ -24,11 +22,9 @@ export async function initializeAllCollections(): Promise<void> {
     try {
       await initializeCollectionIfNotExists(collectionName);
     } catch (error) {
-      console.error(`Erro ao inicializar collection ${collectionName}:`, error);
+      // Erro ao inicializar collection
     }
   }
-  
-  console.log('Todas as collections foram verificadas/inicializadas');
 }
 
 // Função para criar um documento de teste em uma collection vazia
@@ -40,9 +36,8 @@ export async function createTestDocument(collectionName: string, testData: any):
       _isTestDocument: true,
       _createdAt: new Date()
     });
-    console.log(`Documento de teste criado em ${collectionName}`);
   } catch (error) {
-    console.error(`Erro ao criar documento de teste em ${collectionName}:`, error);
+    // Erro ao criar documento de teste
   }
 }
 
@@ -54,7 +49,6 @@ export async function isCollectionEmpty(collectionName: string): Promise<boolean
     // Se não houver documentos, o Firestore retornará um array vazio
     return true; // Por enquanto, assumimos que está vazia se não há erro
   } catch (error) {
-    console.error(`Erro ao verificar se collection ${collectionName} está vazia:`, error);
     return true;
   }
 }
@@ -62,7 +56,6 @@ export async function isCollectionEmpty(collectionName: string): Promise<boolean
 // Função para inicializar tipos de custo se não existirem
 export async function initializeTiposCusto(userId?: string): Promise<void> {
   if (!userId) {
-    console.log('initializeTiposCusto: userId não fornecido, pulando inicialização');
     return;
   }
   
@@ -73,7 +66,6 @@ export async function initializeTiposCusto(userId?: string): Promise<void> {
     // Verificar se já existem tipos de custo para este usuário
     const existingTipos = await tipoCustoRepo.findAll(userId);
     if (existingTipos.length > 0) {
-      console.log('Tipos de custo já existem no Firestore para o usuário');
       return;
     }
     
@@ -85,14 +77,11 @@ export async function initializeTiposCusto(userId?: string): Promise<void> {
       { nome: 'outros', descricao: 'Outros custos', ativo: true, dataCadastro: new Date() }
     ];
     
-    console.log('Inserindo tipos de custo no Firestore...');
     for (const tipoCusto of tiposCustoData) {
       await tipoCustoRepo.create(tipoCusto, userId);
     }
-    
-    console.log('Tipos de custo inicializados com sucesso!');
   } catch (error) {
-    console.error('Erro ao inicializar tipos de custo:', error);
+    // Erro ao inicializar tipos de custo
   }
 }
 
@@ -161,9 +150,7 @@ export async function initializeCollectionsWithTestData(): Promise<void> {
     await createTestDocument(COLLECTIONS.CLIENTES, testData.clientes);
     await createTestDocument(COLLECTIONS.EVENTOS, testData.eventos);
     await createTestDocument(COLLECTIONS.PAGAMENTOS, testData.pagamentos);
-    
-    console.log('Collections inicializadas com dados de teste');
   } catch (error) {
-    console.error('Erro ao inicializar collections com dados de teste:', error);
+    // Erro ao inicializar collections com dados de teste
   }
 }

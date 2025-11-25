@@ -29,13 +29,6 @@ export async function POST(request: NextRequest) {
     const isDevelopment = process.env.NODE_ENV === 'development';
     const validateHmac = process.env.HOTMART_VALIDATE_HMAC !== 'false';
 
-    console.log('🔐 Validação HMAC:', {
-      hasSignature: !!signature,
-      hasSecret: !!secret,
-      validateHmac,
-      isDevelopment,
-      signatureHeader: request.headers.get('x-hotmart-hmac-sha256') ? 'presente' : 'ausente'
-    });
 
     // Validar HMAC se estiver habilitado e em produção
     if (validateHmac && secret && !isDevelopment) {

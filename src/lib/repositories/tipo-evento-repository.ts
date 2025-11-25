@@ -24,7 +24,6 @@ export class TipoEventoRepository extends SubcollectionRepository<TipoEvento> {
         const docRef = await addDoc(this.getSubcollectionRef(userId), tempDoc);
         await deleteDoc(docRef);
       } catch (createError) {
-        console.error('Erro ao inicializar subcollection tipo_eventos:', createError);
         throw createError;
       }
     }

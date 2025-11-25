@@ -59,7 +59,6 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
         }
       );
     } catch (error) {
-      console.error('Erro ao sincronizar serviço com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
     }
     
@@ -87,7 +86,6 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
         servicoData
       );
     } catch (error) {
-      console.error('Erro ao sincronizar atualização de serviço com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
     }
     
@@ -113,7 +111,6 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
     try {
       await this.servicoGlobalRepo.deleteServico(userId, eventoId, servicoId);
     } catch (error) {
-      console.error('Erro ao sincronizar remoção de serviço com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
     }
   }
@@ -124,9 +121,6 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
       const q = query(servicosCollection, orderBy('dataCadastro', 'desc'));
       const querySnapshot = await getDocs(q);
       
-      console.log('ServicoEventoRepository: Buscando serviços para evento:', eventoId);
-      console.log('ServicoEventoRepository: Documentos encontrados:', querySnapshot.docs.length);
-      
       // Carregar tipos de serviço para popular os objetos
       const tipoServicoRepo = new TipoServicoRepository();
       const tiposServico = await tipoServicoRepo.findAll(userId);
@@ -134,7 +128,6 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
       
       return querySnapshot.docs.map(doc => {
         const data = doc.data();
-        console.log('ServicoEventoRepository: Dados do documento:', data);
         
         // Buscar o tipo de serviço correspondente
         const tipoServico = tiposMap.get(data.tipoServicoId) || {
@@ -154,11 +147,9 @@ export class ServicoEventoRepository extends SubcollectionRepository<ServicoEven
           dataCadastro: data.dataCadastro?.toDate ? data.dataCadastro.toDate() : new Date(data.dataCadastro)
         };
         
-        console.log('ServicoEventoRepository: Serviço convertido:', servico);
         return servico;
       });
     } catch (error) {
-      console.log('ServicoEventoRepository: Subcollection não existe ainda, retornando array vazio:', error);
       return [];
     }
   }
@@ -200,7 +191,6 @@ export class TipoServicoRepository extends SubcollectionRepository<TipoServico> 
       const testQuery = query(this.getSubcollectionRef(userId), limit(1));
       await getDocs(testQuery);
     } catch (error) {
-      console.log('Subcollection tipo_servicos não existe, criando...');
       // Se a subcollection não existe, criar um documento temporário para inicializá-la
       const tempDoc = {
         nome: '_temp_init',
@@ -213,9 +203,7 @@ export class TipoServicoRepository extends SubcollectionRepository<TipoServico> 
         const docRef = await addDoc(this.getSubcollectionRef(userId), tempDoc);
         // Deletar o documento temporário imediatamente
         await deleteDoc(docRef);
-        console.log('Subcollection tipo_servicos inicializada com sucesso');
       } catch (createError) {
-        console.error('Erro ao inicializar subcollection tipo_servicos:', createError);
         throw createError;
       }
     }

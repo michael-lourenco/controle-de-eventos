@@ -25,7 +25,6 @@ export class ModeloContratoRepository extends FirestoreRepository<ModeloContrato
         if (indexError?.code === 'failed-precondition' || 
             indexError?.message?.includes('index') || 
             indexError?.message?.includes('requires an index')) {
-          console.warn(`Índice não encontrado para query com orderBy em ${this.collectionName}, buscando sem orderBy e ordenando manualmente`);
           const q = query(
             collection(db, this.collectionName),
             where('ativo', '==', true)
@@ -39,7 +38,6 @@ export class ModeloContratoRepository extends FirestoreRepository<ModeloContrato
         throw indexError;
       }
     } catch (error: any) {
-      console.error(`Error finding active modelos in ${this.collectionName}:`, error);
       console.error('Error details:', {
         code: error?.code,
         message: error?.message,

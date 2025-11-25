@@ -26,15 +26,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(modelosSerializados);
   } catch (error: any) {
-    console.error('Erro ao listar modelos:', error);
-    console.error('Detalhes do erro:', {
-      code: error?.code,
-      message: error?.message,
-      stack: error?.stack
-    });
     return NextResponse.json({ 
-      error: error.message || 'Erro ao listar modelos',
-      details: error?.code || 'unknown'
+      error: 'Erro ao listar modelos'
     }, { status: 500 });
   }
 }

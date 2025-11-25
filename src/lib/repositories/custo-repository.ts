@@ -63,7 +63,6 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
         }
       );
     } catch (error) {
-      console.error('Erro ao sincronizar custo com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
     }
     
@@ -94,7 +93,6 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
         custoData
       );
     } catch (error) {
-      console.error('Erro ao sincronizar atualização de custo com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
     }
     
@@ -117,7 +115,6 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
         custoId
       );
     } catch (error) {
-      console.error('Erro ao sincronizar remoção de custo com collection global:', error);
       // Não lançar erro para não quebrar o fluxo principal
     }
   }
@@ -127,12 +124,8 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
     const q = query(custosCollection, orderBy('dataCadastro', 'desc'));
     const querySnapshot = await getDocs(q);
     
-    console.log('CustoEventoRepository: Buscando custos para evento:', eventoId);
-    console.log('CustoEventoRepository: Documentos encontrados:', querySnapshot.docs.length);
-    
     return querySnapshot.docs.map(doc => {
       const data = doc.data();
-      console.log('CustoEventoRepository: Dados do documento:', data);
       
       // Converter Timestamps do Firestore para Date
       const custo = {
@@ -141,7 +134,6 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
         dataCadastro: data.dataCadastro?.toDate ? data.dataCadastro.toDate() : new Date(data.dataCadastro)
       };
       
-      console.log('CustoEventoRepository: Custo convertido:', custo);
       return custo;
     }) as CustoEvento[];
   }
@@ -196,7 +188,6 @@ export class TipoCustoRepository extends SubcollectionRepository<TipoCusto> {
       const testQuery = query(this.getSubcollectionRef(userId), limit(1));
       await getDocs(testQuery);
     } catch (error) {
-      console.log('Subcollection tipo_custos não existe, criando...');
       // Se a subcollection não existe, criar um documento temporário para inicializá-la
       const tempDoc = {
         nome: '_temp_init',
@@ -209,9 +200,7 @@ export class TipoCustoRepository extends SubcollectionRepository<TipoCusto> {
         const docRef = await addDoc(this.getSubcollectionRef(userId), tempDoc);
         // Deletar o documento temporário imediatamente
         await deleteDoc(docRef);
-        console.log('Subcollection tipo_custos inicializada com sucesso');
       } catch (createError) {
-        console.error('Erro ao inicializar subcollection tipo_custos:', createError);
         throw createError;
       }
     }

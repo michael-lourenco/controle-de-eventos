@@ -39,7 +39,6 @@ export class RelatorioCacheRepository extends SubcollectionRepository<RelatorioS
 
       return this.convertFirestoreData(data, docSnapshot.id);
     } catch (error) {
-      console.error('Erro ao buscar snapshot mais recente:', error);
       throw error;
     }
   }
@@ -76,7 +75,6 @@ export class RelatorioCacheRepository extends SubcollectionRepository<RelatorioS
         id: snapshotId
       };
     } catch (error) {
-      console.error('Erro ao criar/atualizar snapshot:', error);
       throw error;
     }
   }
@@ -100,7 +98,6 @@ export class RelatorioCacheRepository extends SubcollectionRepository<RelatorioS
       const data = docSnapshot.data();
       return this.convertFirestoreData(data, docSnapshot.id);
     } catch (error) {
-      console.error('Erro ao buscar snapshot por ID:', error);
       throw error;
     }
   }
@@ -128,7 +125,6 @@ export class RelatorioCacheRepository extends SubcollectionRepository<RelatorioS
         return this.convertFirestoreData(data, doc.id);
       });
     } catch (error) {
-      console.error('Erro ao listar snapshots:', error);
       throw error;
     }
   }
@@ -160,9 +156,7 @@ export class RelatorioCacheRepository extends SubcollectionRepository<RelatorioS
 
       await Promise.all(deletePromises);
 
-      console.log(`Removidos ${snapshotsToDelete.length} snapshots antigos para usuário ${userId}`);
     } catch (error) {
-      console.error('Erro ao limpar snapshots antigos:', error);
       // Não lançar erro para não bloquear o processo principal
     }
   }
