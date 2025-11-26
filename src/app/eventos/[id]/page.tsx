@@ -790,13 +790,13 @@ export default function EventoViewPage() {
                 </div>
                 <div className="text-center p-4 bg-surface/50 rounded-lg">
                   <div className="text-2xl font-bold text-error">
-                    R$ {custos?.reduce((total, custo) => total + custo.valor, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                    R$ {custos?.filter(custo => !custo.removido).reduce((total, custo) => total + (custo.valor * (custo.quantidade || 1)), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
                   </div>
                   <div className="text-sm text-text-secondary">Total de Custos</div>
                 </div>
                 <div className="text-center p-4 bg-surface/50 rounded-lg">
-                  <div className={`text-2xl font-bold ${(evento.valorTotal || 0) - (custos?.reduce((total, custo) => total + custo.valor, 0) || 0) >= 0 ? 'text-success' : 'text-error'}`}>
-                    R$ {((evento.valorTotal || 0) - (custos?.reduce((total, custo) => total + custo.valor, 0) || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  <div className={`text-2xl font-bold ${(evento.valorTotal || 0) - (custos?.filter(custo => !custo.removido).reduce((total, custo) => total + (custo.valor * (custo.quantidade || 1)), 0) || 0) >= 0 ? 'text-success' : 'text-error'}`}>
+                    R$ {((evento.valorTotal || 0) - (custos?.filter(custo => !custo.removido).reduce((total, custo) => total + (custo.valor * (custo.quantidade || 1)), 0) || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </div>
                   <div className="text-sm text-text-secondary">Estimativa de Lucro</div>
                 </div>

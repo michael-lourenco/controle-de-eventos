@@ -416,8 +416,8 @@ export default function CustosEvento({
                   </div>
                   
                   {custo.observacoes && (
-                    <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                      <strong>Observações:</strong> {custo.observacoes}
+                    <div className="mt-2 text-sm text-text-secondary bg-surface/50 p-2 rounded border border-border">
+                      <strong className="text-text-primary">Observações:</strong> {custo.observacoes}
                     </div>
                   )}
                 </div>
