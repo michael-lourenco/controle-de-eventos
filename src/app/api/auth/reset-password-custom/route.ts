@@ -1,42 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authService } from '@/lib/auth-service';
 import { adminAuth } from '@/lib/firebase-admin';
 import { PasswordResetTokenRepository } from '@/lib/repositories/password-reset-token-repository';
 import { generateShortToken, generatePasswordResetEmailTemplate } from '@/lib/services/email-service';
 import { sendEmail } from '@/lib/services/resend-email-service';
 import { UserRepository } from '@/lib/repositories/user-repository';
 
-// Rate limiting simples em memória (para produção, usar Redis ou similar)
+// Rate limiting
 const resetAttempts = new Map<string, { count: number; lastAttempt: number }>();
-
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 60 * 60 * 1000; // 1 hora
 
 function checkRateLimit(email: string): boolean {
   const now = Date.now();
   const attempt = resetAttempts.get(email);
-
+  
   if (!attempt) {
     resetAttempts.set(email, { count: 1, lastAttempt: now });
     return true;
   }
-
-  // Reset se passou a janela de tempo
+  
   if (now - attempt.lastAttempt > WINDOW_MS) {
     resetAttempts.set(email, { count: 1, lastAttempt: now });
     return true;
   }
-
-  // Verificar se excedeu o limite
+  
   if (attempt.count >= MAX_ATTEMPTS) {
     return false;
   }
-
-  // Incrementar contador
+  
   attempt.count++;
   attempt.lastAttempt = now;
   return true;
 }
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,8 +46,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Verificar rate limiting
-    if (!checkRateLimit(email.toLowerCase())) {
+    if (!checkRateLimit(normalizedEmail)) {
       return NextResponse.json(
         { 
           success: false, 
@@ -61,11 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Tentar usar sistema personalizado primeiro
-    let result;
     try {
-      const normalizedEmail = email.toLowerCase().trim();
-      
       // Verificar se o usuário existe usando Firebase Admin
       const user = await adminAuth.getUserByEmail(normalizedEmail);
       
@@ -74,7 +68,7 @@ export async function POST(request: NextRequest) {
       const userData = await userRepo.findById(user.uid);
       const nome = userData?.nome || '';
 
-      // Gerar código de reset usando Firebase Admin
+      // Gerar código de reset usando Firebase Admin (sem enviar email padrão)
       const resetLink = await adminAuth.generatePasswordResetLink(normalizedEmail, {
         url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha`,
         handleCodeInApp: false,
@@ -84,69 +78,64 @@ export async function POST(request: NextRequest) {
       const urlObj = new URL(resetLink);
       const oobCode = urlObj.searchParams.get('oobCode');
       
-      if (oobCode) {
-        // Gerar token curto
-        const shortToken = generateShortToken();
-        
-        // Calcular expiração (1 hora)
-        const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 1);
-
-        // Armazenar token no banco
-        const tokenRepo = new PasswordResetTokenRepository();
-        await tokenRepo.createToken({
-          token: shortToken,
-          email: normalizedEmail,
-          firebaseCode: oobCode,
-          expiresAt
-        });
-
-        // Criar URL curta e limpa
-        const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha?token=${shortToken}`;
-
-        // Gerar template de email
-        const emailHtml = generatePasswordResetEmailTemplate(nome, resetUrl);
-        const emailSubject = 'Redefinir sua senha - Clicksehub';
-
-        // Enviar email usando Resend
-        const emailResult = await sendEmail({
-          to: normalizedEmail,
-          subject: emailSubject,
-          html: emailHtml,
-          from: 'Clicksehub <noreply@clicksehub.com>'
-        });
-
-        if (!emailResult.success) {
-          // Se falhar o envio customizado, usar fallback do Firebase
-          throw new Error(emailResult.error || 'Erro ao enviar email');
-        }
-        
-        result = { success: true };
-      } else {
-        throw new Error('Código não gerado');
+      if (!oobCode) {
+        throw new Error('Código de reset não gerado');
       }
-    } catch (customError) {
-      // Fallback para o sistema padrão do Firebase se o customizado falhar
-      result = await authService.sendPasswordReset(email);
-    }
 
-    if (result.success) {
+      // Gerar token curto
+      const shortToken = generateShortToken();
+      
+      // Calcular expiração (1 hora)
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1);
+
+      // Armazenar token no banco
+      const tokenRepo = new PasswordResetTokenRepository();
+      await tokenRepo.createToken({
+        token: shortToken,
+        email: normalizedEmail,
+        firebaseCode: oobCode,
+        expiresAt
+      });
+
+      // Criar URL curta e limpa
+      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha?token=${shortToken}`;
+
+      // Gerar template de email
+      const emailHtml = generatePasswordResetEmailTemplate(nome, resetUrl);
+      const emailSubject = 'Redefinir sua senha - Clicksehub';
+
+      // Enviar email personalizado usando Resend
+      const emailResult = await sendEmail({
+        to: normalizedEmail,
+        subject: emailSubject,
+        html: emailHtml,
+        from: 'Clicksehub <noreply@clicksehub.com>'
+      });
+
+      if (!emailResult.success) {
+        throw new Error(emailResult.error || 'Erro ao enviar email');
+      }
+
       return NextResponse.json({
         success: true,
         message: 'Email de redefinição enviado com sucesso'
       });
-    } else {
-      // Por segurança, sempre retornar sucesso mesmo se o email não existir
-      // Isso evita que atacantes descubram quais emails estão cadastrados
+
+    } catch (error: any) {
+      // Não expor se o email existe ou não por segurança
+      // Sempre retornar sucesso para evitar enumeração de emails
       return NextResponse.json({
         success: true,
         message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
       });
     }
+
   } catch (error: any) {
+    // Sempre retornar sucesso por segurança
     return NextResponse.json(
       { 
-        success: true, // Sempre retornar sucesso por segurança
+        success: true,
         message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
       },
       { status: 200 }

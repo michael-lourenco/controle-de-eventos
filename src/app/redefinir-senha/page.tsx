@@ -23,18 +23,49 @@ function RedefinirSenhaForm() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    // Verificar se é token curto ou código do Firebase
+    const token = searchParams.get('token');
     const oobCode = searchParams.get('oobCode');
     const mode = searchParams.get('mode');
 
-    if (!oobCode || mode !== 'resetPassword') {
+    if (token) {
+      // Token curto personalizado
+      resolveToken(token);
+    } else if (oobCode && mode === 'resetPassword') {
+      // Código direto do Firebase
+      setCode(oobCode);
+      verifyCode(oobCode);
+    } else {
       setError('Link de redefinição inválido ou expirado');
       setVerifying(false);
-      return;
     }
-
-    setCode(oobCode);
-    verifyCode(oobCode);
   }, [searchParams]);
+
+  const resolveToken = async (token: string) => {
+    try {
+      const response = await fetch('/api/auth/resolve-reset-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setCode(data.code);
+        setEmail(data.email);
+        verifyCode(data.code);
+      } else {
+        setError(data.error || 'Token inválido ou expirado');
+        setVerifying(false);
+      }
+    } catch (err) {
+      setError('Erro ao verificar token. Tente novamente.');
+      setVerifying(false);
+    }
+  };
 
   const verifyCode = async (resetCode: string) => {
     try {

@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Resolver warning sobre lockfiles múltiplos
+  outputFileTracingRoot: path.join(__dirname),
+  
   // Permitir que a build passe mesmo com warnings do ESLint
   eslint: {
     // Durante a build, ignorar warnings do ESLint (não falhar a build)
@@ -18,8 +22,21 @@ const nextConfig: NextConfig = {
     'gcp-metadata',
     'gtoken',
     'googleapis-common',
+    'puppeteer',
+    'puppeteer-core',
+    '@puppeteer/browsers',
+    'firebase-admin',
+    '@aws-sdk/client-s3',
+    '@aws-sdk/s3-request-presigner',
   ],
   webpack: (config, { isServer }) => {
+    // Otimizações para reduzir uso de memória durante o build
+    config.optimization = {
+      ...config.optimization,
+      moduleIds: 'deterministic',
+      chunkIds: 'deterministic',
+    };
+
     // Configurar para não fazer bundle de módulos Node.js no cliente
     if (!isServer) {
       config.resolve.fallback = {
@@ -41,47 +58,49 @@ const nextConfig: NextConfig = {
         zlib: false,
       };
       
-      // Garantir que googleapis e dependências sejam externos no cliente
+      // Garantir que pacotes pesados sejam externos no cliente
+      const clientExternals = [
+        'googleapis',
+        'google-auth-library',
+        'gcp-metadata',
+        'gtoken',
+        'googleapis-common',
+        'puppeteer',
+        'puppeteer-core',
+        '@puppeteer/browsers',
+        'firebase-admin',
+        '@aws-sdk/client-s3',
+        '@aws-sdk/s3-request-presigner',
+      ];
+
       config.externals = config.externals || [];
       if (Array.isArray(config.externals)) {
-        config.externals.push(
-          'googleapis',
-          'google-auth-library',
-          'gcp-metadata',
-          'gtoken',
-          'googleapis-common'
-        );
+        config.externals.push(...clientExternals);
       } else if (typeof config.externals === 'function') {
         const originalExternals = config.externals;
-        config.externals = [
-          originalExternals,
-          'googleapis',
-          'google-auth-library',
-          'gcp-metadata',
-          'gtoken',
-          'googleapis-common'
-        ];
+        config.externals = [originalExternals, ...clientExternals];
       } else {
         config.externals = [
           ...(Array.isArray(config.externals) ? config.externals : [config.externals]),
-          'googleapis',
-          'google-auth-library',
-          'gcp-metadata',
-          'gtoken',
-          'googleapis-common'
+          ...clientExternals,
         ];
       }
     } else {
       // No servidor, também marcar como externos para evitar problemas
+      const serverExternals = [
+        'googleapis',
+        'google-auth-library',
+        'gcp-metadata',
+        'gtoken',
+        'googleapis-common',
+        'puppeteer',
+        'puppeteer-core',
+        '@puppeteer/browsers',
+      ];
+
       config.externals = config.externals || [];
       if (Array.isArray(config.externals)) {
-        config.externals.push(
-          'googleapis',
-          'google-auth-library',
-          'gcp-metadata',
-          'gtoken',
-          'googleapis-common'
-        );
+        config.externals.push(...serverExternals);
       }
     }
     return config;
