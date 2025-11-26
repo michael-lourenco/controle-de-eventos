@@ -32,6 +32,10 @@ export async function sendEmail({
   }
 
   try {
+    console.log('[resend-email-service] Tentando enviar email para:', to);
+    console.log('[resend-email-service] Assunto:', subject);
+    console.log('[resend-email-service] From:', from);
+    
     const { data, error } = await resend.emails.send({
       from,
       to,
@@ -40,16 +44,20 @@ export async function sendEmail({
     });
 
     if (error) {
+      console.error('[resend-email-service] Erro do Resend:', error);
       return {
         success: false,
         error: error.message || 'Erro ao enviar email'
       };
     }
 
+    console.log('[resend-email-service] Email enviado com sucesso. ID:', data?.id);
     return {
       success: true
     };
   } catch (error: any) {
+    console.error('[resend-email-service] Exceção ao enviar email:', error);
+    console.error('[resend-email-service] Stack:', error?.stack);
     return {
       success: false,
       error: error.message || 'Erro inesperado ao enviar email'

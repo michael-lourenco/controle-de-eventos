@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase-admin';
+import { adminAuth, isFirebaseAdminInitialized, getFirebaseAdminInitializationError } from '@/lib/firebase-admin';
 import { PasswordResetTokenRepository } from '@/lib/repositories/password-reset-token-repository';
 import { generateShortToken, generatePasswordResetEmailTemplate } from '@/lib/services/email-service';
 import { sendEmail } from '@/lib/services/resend-email-service';
@@ -59,9 +59,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verificar se o Firebase Admin está inicializado
+    if (!isFirebaseAdminInitialized()) {
+      const initError = getFirebaseAdminInitializationError();
+      console.error('[reset-password-custom] ❌ Firebase Admin não está inicializado');
+      if (initError) {
+        console.error('[reset-password-custom] Erro de inicialização:', initError.message);
+      }
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Firebase Admin não está configurado. Configure GOOGLE_CREDENTIALS_*, FIREBASE_ADMIN_SDK_KEY ou FIREBASE_SERVICE_ACCOUNT_KEY nas variáveis de ambiente.'
+        },
+        { status: 500 }
+      );
+    }
+
     try {
       // Verificar se o usuário existe usando Firebase Admin
-      const user = await adminAuth.getUserByEmail(normalizedEmail);
+      const user = await adminAuth!.getUserByEmail(normalizedEmail);
       
       // Buscar nome do usuário no Firestore
       const userRepo = new UserRepository();
@@ -69,7 +85,7 @@ export async function POST(request: NextRequest) {
       const nome = userData?.nome || '';
 
       // Gerar código de reset usando Firebase Admin (sem enviar email padrão)
-      const resetLink = await adminAuth.generatePasswordResetLink(normalizedEmail, {
+      const resetLink = await adminAuth!.generatePasswordResetLink(normalizedEmail, {
         url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha`,
         handleCodeInApp: false,
       });

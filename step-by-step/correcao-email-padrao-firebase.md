@@ -84,16 +84,32 @@ if (!emailResult.success) {
 
 **Função:** Força o uso do email personalizado e não permite fallback silencioso para o Firebase.
 
-### 3. Logs de Debug
+### 3. Logs de Debug Detalhados
 
 **Alteração:**
-- Adicionados logs detalhados para facilitar debug:
-  - Log quando RESEND_API_KEY não está configurada
-  - Log quando o envio de email falha
-  - Log quando o email é enviado com sucesso
-  - Log de erros no processo
+- Adicionados logs muito detalhados em todas as etapas do processo para facilitar debug:
+  - Log quando RESEND_API_KEY não está configurada (com verificação se existe)
+  - Log em cada etapa do processo de reset (verificação de usuário, geração de token, etc.)
+  - Log detalhado no serviço de email Resend (tentativa de envio, sucesso, erros)
+  - Log quando o envio de email falha (com detalhes completos do erro)
+  - Log quando o email é enviado com sucesso (com ID do email)
+  - Log de erros no processo (com tipo, mensagem, código e stack trace)
 
-**Função:** Facilita identificar problemas durante desenvolvimento e produção.
+**Arquivos Modificados:**
+- `src/app/api/auth/reset-password/route.ts` - Logs em cada etapa do processo
+- `src/lib/services/resend-email-service.ts` - Logs detalhados do envio de email
+
+**Função:** Facilita identificar exatamente onde o processo está falhando durante desenvolvimento e produção. Os logs incluem:
+- ✅ Verificação de configuração do serviço
+- ✅ Processamento do email normalizado
+- ✅ Verificação de existência do usuário
+- ✅ Geração do link de reset
+- ✅ Extração do código oobCode
+- ✅ Geração e armazenamento do token
+- ✅ Criação da URL de reset
+- ✅ Geração do template de email
+- ✅ Tentativa de envio via Resend
+- ✅ Resultado do envio (sucesso ou erro com detalhes)
 
 ### 4. Remoção de Import Não Utilizado
 
@@ -105,8 +121,14 @@ if (!emailResult.success) {
 1. **src/app/api/auth/reset-password/route.ts**
    - Adicionada verificação de configuração do Resend
    - Removido fallback para Firebase
-   - Adicionados logs de debug
+   - Adicionados logs detalhados em cada etapa do processo
+   - Melhorado tratamento de erros com logs completos (tipo, mensagem, código, stack)
    - Removido import não utilizado
+
+2. **src/lib/services/resend-email-service.ts**
+   - Adicionados logs detalhados antes e depois do envio
+   - Log do ID do email quando enviado com sucesso
+   - Log completo de erros com stack trace
 
 ## Resultado Esperado
 
@@ -141,15 +163,27 @@ Para que o sistema funcione corretamente, é necessário:
 2. Reinicie o servidor de desenvolvimento
 3. Acesse `/esqueci-senha`
 4. Digite um email cadastrado
-5. Verifique se recebe o email personalizado em português
-6. Verifique os logs do servidor para confirmar o envio
+5. Verifique os logs do servidor - você verá logs detalhados de cada etapa:
+   - `[reset-password] Verificando configuração do serviço de email...`
+   - `[reset-password] Processando reset para email: ...`
+   - `[reset-password] Usuário encontrado: ...`
+   - `[resend-email-service] Tentando enviar email para: ...`
+   - `[resend-email-service] Email enviado com sucesso. ID: ...`
+6. Verifique se recebe o email personalizado em português
+7. Se houver erro, os logs mostrarão exatamente onde falhou com detalhes completos
 
 ## Observações
 
 - O sistema agora é mais rigoroso: não permite fallback silencioso
 - Isso força a configuração correta do serviço de email
 - Em produção, certifique-se de que `RESEND_API_KEY` está configurada
-- Os logs ajudam a identificar problemas rapidamente
+- Os logs detalhados ajudam a identificar problemas rapidamente
+- **IMPORTANTE:** Se o email não estiver chegando, verifique os logs do servidor. Eles mostrarão exatamente onde o processo está falhando:
+  - Se `RESEND_API_KEY` não está configurada
+  - Se o usuário não existe no Firebase
+  - Se houve erro ao gerar o token
+  - Se houve erro ao enviar o email (com detalhes do Resend)
+  - Qualquer outro erro no processo (com stack trace completo)
 
 ## Próximos Passos (Opcional)
 

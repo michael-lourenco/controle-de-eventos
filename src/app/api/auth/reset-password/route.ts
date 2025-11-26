@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebase-admin';
+import { adminAuth, isFirebaseAdminInitialized, getFirebaseAdminInitializationError } from '@/lib/firebase-admin';
 import { PasswordResetTokenRepository } from '@/lib/repositories/password-reset-token-repository';
 import { generateShortToken, generatePasswordResetEmailTemplate } from '@/lib/services/email-service';
 import { sendEmail, isEmailServiceConfigured } from '@/lib/services/resend-email-service';
@@ -60,9 +60,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verificar se o Firebase Admin está inicializado
+    console.log('[reset-password] Verificando se Firebase Admin está inicializado...');
+    if (!isFirebaseAdminInitialized()) {
+      const initError = getFirebaseAdminInitializationError();
+      console.error('[reset-password] ❌ Firebase Admin não está inicializado');
+      if (initError) {
+        console.error('[reset-password] Erro de inicialização:', initError.message);
+      }
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Firebase Admin não está configurado. Configure GOOGLE_CREDENTIALS_*, FIREBASE_ADMIN_SDK_KEY ou FIREBASE_SERVICE_ACCOUNT_KEY nas variáveis de ambiente.'
+        },
+        { status: 500 }
+      );
+    }
+    console.log('[reset-password] ✅ Firebase Admin está inicializado');
+
     // Verificar se o serviço de email está configurado
+    console.log('[reset-password] Verificando configuração do serviço de email...');
     if (!isEmailServiceConfigured()) {
       console.error('[reset-password] RESEND_API_KEY não configurada. Configure a variável de ambiente RESEND_API_KEY.');
+      console.error('[reset-password] RESEND_API_KEY existe?', !!process.env.RESEND_API_KEY);
       // Não fazer fallback para Firebase - retornar erro claro
       return NextResponse.json(
         { 
@@ -72,41 +92,60 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    console.log('[reset-password] Serviço de email configurado corretamente.');
 
     // Tentar usar sistema personalizado
     try {
       const normalizedEmail = email.toLowerCase().trim();
+      console.log('[reset-password] Processando reset para email:', normalizedEmail);
+      
+      // Verificar se adminAuth está disponível (já verificamos antes, mas TypeScript precisa disso)
+      if (!adminAuth) {
+        throw new Error('Firebase Admin Auth não está disponível');
+      }
+      
+      // Criar referência local para garantir ao TypeScript que não é null
+      const auth = adminAuth;
       
       // Verificar se o usuário existe usando Firebase Admin
-      const user = await adminAuth.getUserByEmail(normalizedEmail);
+      console.log('[reset-password] Verificando se usuário existe no Firebase...');
+      const user = await auth.getUserByEmail(normalizedEmail);
+      console.log('[reset-password] Usuário encontrado:', user.uid);
       
       // Buscar nome do usuário no Firestore
       const userRepo = new UserRepository();
       const userData = await userRepo.findById(user.uid);
       const nome = userData?.nome || '';
+      console.log('[reset-password] Nome do usuário:', nome || '(não encontrado)');
 
       // Gerar código de reset usando Firebase Admin
-      const resetLink = await adminAuth.generatePasswordResetLink(normalizedEmail, {
+      console.log('[reset-password] Gerando link de reset do Firebase...');
+      const resetLink = await auth.generatePasswordResetLink(normalizedEmail, {
         url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha`,
         handleCodeInApp: false,
       });
+      console.log('[reset-password] Link de reset gerado com sucesso');
 
       // Extrair o código do link gerado
       const urlObj = new URL(resetLink);
       const oobCode = urlObj.searchParams.get('oobCode');
       
       if (!oobCode) {
+        console.error('[reset-password] ERRO: Código de reset não gerado pelo Firebase');
         throw new Error('Código de reset não gerado pelo Firebase');
       }
+      console.log('[reset-password] Código oobCode extraído com sucesso');
 
       // Gerar token curto
       const shortToken = generateShortToken();
+      console.log('[reset-password] Token curto gerado:', shortToken);
       
       // Calcular expiração (1 hora)
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
 
       // Armazenar token no banco
+      console.log('[reset-password] Armazenando token no banco...');
       const tokenRepo = new PasswordResetTokenRepository();
       await tokenRepo.createToken({
         token: shortToken,
@@ -114,15 +153,20 @@ export async function POST(request: NextRequest) {
         firebaseCode: oobCode,
         expiresAt
       });
+      console.log('[reset-password] Token armazenado no banco com sucesso');
 
       // Criar URL curta e limpa
       const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha?token=${shortToken}`;
+      console.log('[reset-password] URL de reset criada:', resetUrl);
 
       // Gerar template de email
+      console.log('[reset-password] Gerando template de email...');
       const emailHtml = generatePasswordResetEmailTemplate(nome, resetUrl);
       const emailSubject = 'Redefinir sua senha - Clicksehub';
+      console.log('[reset-password] Template de email gerado. Tamanho HTML:', emailHtml.length, 'bytes');
 
       // Enviar email usando Resend
+      console.log('[reset-password] Enviando email via Resend...');
       const emailResult = await sendEmail({
         to: normalizedEmail,
         subject: emailSubject,
@@ -131,7 +175,8 @@ export async function POST(request: NextRequest) {
       });
 
       if (!emailResult.success) {
-        console.error('[reset-password] Erro ao enviar email personalizado:', emailResult.error);
+        console.error('[reset-password] ERRO ao enviar email personalizado:', emailResult.error);
+        console.error('[reset-password] Detalhes do erro:', JSON.stringify(emailResult, null, 2));
         // Não fazer fallback para Firebase - retornar erro
         return NextResponse.json(
           { 
@@ -142,7 +187,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log('[reset-password] Email personalizado enviado com sucesso para:', normalizedEmail);
+      console.log('[reset-password] ✅ Email personalizado enviado com sucesso para:', normalizedEmail);
       
       return NextResponse.json({
         success: true,
@@ -150,17 +195,23 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (error: any) {
-      console.error('[reset-password] Erro no processo de reset:', error);
+      console.error('[reset-password] ❌ ERRO no processo de reset:');
+      console.error('[reset-password] Tipo do erro:', error?.constructor?.name);
+      console.error('[reset-password] Mensagem:', error?.message);
+      console.error('[reset-password] Código:', error?.code);
+      console.error('[reset-password] Stack:', error?.stack);
       
       // Se o erro for que o usuário não existe, não expor isso por segurança
       if (error.code === 'auth/user-not-found') {
+        console.log('[reset-password] Usuário não encontrado (retornando mensagem genérica por segurança)');
         return NextResponse.json({
           success: true,
           message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
         });
       }
 
-      // Para outros erros, retornar mensagem genérica por segurança
+      // Para outros erros, logar mas retornar mensagem genérica por segurança
+      console.error('[reset-password] Erro desconhecido, retornando mensagem genérica por segurança');
       return NextResponse.json({
         success: true,
         message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
@@ -168,7 +219,10 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error: any) {
-    console.error('[reset-password] Erro geral:', error);
+    console.error('[reset-password] ❌ ERRO GERAL no endpoint:');
+    console.error('[reset-password] Tipo do erro:', error?.constructor?.name);
+    console.error('[reset-password] Mensagem:', error?.message);
+    console.error('[reset-password] Stack:', error?.stack);
     // Por segurança, sempre retornar sucesso mesmo em caso de erro
     return NextResponse.json(
       { 
