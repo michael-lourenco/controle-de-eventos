@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Cliente, CanalEntrada, Evento } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, UserPlusIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, UserPlusIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { AreaChart, Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { 
@@ -26,6 +27,7 @@ interface CanaisEntradaReportProps {
 }
 
 export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }: CanaisEntradaReportProps) {
+  const router = useRouter();
   const [dataInicio, setDataInicio] = useState(
     format(subMonths(new Date(), 11), 'yyyy-MM-dd')
   );
@@ -49,7 +51,8 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
     // Resumo geral
     const totalClientes = clientesPeriodo.length;
     const clientesComCanal = clientesPeriodo.filter(c => c.canalEntradaId).length;
-    const clientesSemCanal = totalClientes - clientesComCanal;
+    const clientesSemCanalList = clientesPeriodo.filter(c => !c.canalEntradaId);
+    const clientesSemCanal = clientesSemCanalList.length;
     const taxaPreenchimento = totalClientes > 0 ? (clientesComCanal / totalClientes) * 100 : 0;
     const canaisAtivos = new Set(clientesPeriodo.map(c => c.canalEntradaId).filter(Boolean)).size;
 
@@ -150,7 +153,14 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
       alertas.push({
         tipo: 'clientes_sem_canal' as const,
         mensagem: `${clientesSemCanal} clientes sem canal de entrada cadastrado`,
-        severidade: 'media' as const
+        severidade: 'media' as const,
+        clientesSemCanal: clientesSemCanalList.map(cliente => ({
+          id: cliente.id,
+          nome: cliente.nome,
+          email: cliente.email || 'Sem email',
+          telefone: cliente.telefone || 'Sem telefone',
+          dataCadastro: cliente.dataCadastro
+        }))
       });
     }
     
@@ -379,10 +389,51 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-4">
               {dadosCanaisEntrada.alertas.map((alerta, index) => (
                 <div key={index} className={`p-3 rounded-lg ${getSeveridadeColor(alerta.severidade)}`}>
-                  <div className="font-medium">{alerta.mensagem}</div>
+                  <div className="font-medium mb-2">{alerta.mensagem}</div>
+                  {alerta.tipo === 'clientes_sem_canal' && alerta.clientesSemCanal && alerta.clientesSemCanal.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <div className="text-sm font-semibold text-text-secondary mb-2">Clientes sem canal de entrada:</div>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-border">
+                          <thead className="bg-surface/50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Nome</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Email</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Telefone</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Data Cadastro</th>
+                              <th className="px-4 py-2 text-center text-xs font-medium text-text-secondary uppercase">Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-background/50 divide-y divide-border">
+                            {alerta.clientesSemCanal.map((cliente, idx) => (
+                              <tr key={cliente.id || idx}>
+                                <td className="px-4 py-2 text-sm text-text-primary">{cliente.nome}</td>
+                                <td className="px-4 py-2 text-sm text-text-primary">{cliente.email}</td>
+                                <td className="px-4 py-2 text-sm text-text-primary">{cliente.telefone}</td>
+                                <td className="px-4 py-2 text-sm text-text-primary">
+                                  {format(new Date(cliente.dataCadastro), 'dd/MM/yyyy', { locale: ptBR })}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => router.push(`/clientes/${cliente.id}`)}
+                                    className="hover:bg-primary/10 hover:text-primary"
+                                    title="Visualizar cliente"
+                                  >
+                                    <EyeIcon className="h-4 w-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

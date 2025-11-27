@@ -640,6 +640,13 @@ export interface RelatorioCanaisEntrada {
     tipo: 'canal_inativo' | 'baixa_conversao' | 'clientes_sem_canal';
     mensagem: string;
     severidade: 'baixa' | 'media' | 'alta';
+    clientesSemCanal?: Array<{
+      id: string;
+      nome: string;
+      email: string;
+      telefone: string;
+      dataCadastro: Date;
+    }>;
   }>;
 }
 
@@ -695,5 +702,12 @@ export interface RelatorioImpressoes {
     tipo: 'evento_sem_impressoes' | 'alto_custo_impressoes' | 'baixa_utilizacao';
     mensagem: string;
     severidade: 'baixa' | 'media' | 'alta';
+    eventosSemImpressoes?: Array<{
+      id: string;
+      clienteNome: string;
+      dataEvento: Date;
+      tipoEvento: string;
+      nomeEvento: string;
+    }>;
   }>;
 }

@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Evento } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowDownTrayIcon, PrinterIcon, ExclamationTriangleIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon, PrinterIcon, ExclamationTriangleIcon, ChartBarIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { 
@@ -24,6 +25,7 @@ interface ImpressoesReportProps {
 }
 
 export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
+  const router = useRouter();
   const [dataInicio, setDataInicio] = useState(
     format(subMonths(new Date(), 11), 'yyyy-MM-dd')
   );
@@ -32,19 +34,30 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
   );
 
   const dadosImpressoes = useMemo(() => {
-    const inicio = new Date(dataInicio);
-    const fim = new Date(dataFim);
+    // Normalizar datas para comparar apenas dia/mês/ano (sem hora)
+    const normalizarData = (data: Date): Date => {
+      const dataNormalizada = new Date(data);
+      dataNormalizada.setHours(0, 0, 0, 0);
+      return dataNormalizada;
+    };
+
+    const inicio = normalizarData(new Date(dataInicio));
+    const fim = normalizarData(new Date(dataFim));
+    // Adicionar 1 dia ao fim para incluir eventos do último dia (comparar com <)
+    const fimInclusivo = new Date(fim);
+    fimInclusivo.setDate(fimInclusivo.getDate() + 1);
     
     // Filtrar eventos do período
     const eventosPeriodo = eventos.filter(evento => {
-      const dataEvento = new Date(evento.dataEvento);
-      return dataEvento >= inicio && dataEvento <= fim;
+      const dataEvento = normalizarData(new Date(evento.dataEvento));
+      return dataEvento >= inicio && dataEvento < fimInclusivo;
     });
 
     // Resumo geral
     const totalImpressoes = eventosPeriodo.reduce((sum, evento) => sum + (evento.numeroImpressoes || 0), 0);
     const eventosComImpressoes = eventosPeriodo.filter(e => (e.numeroImpressoes || 0) > 0).length;
-    const eventosSemImpressoes = eventosPeriodo.length - eventosComImpressoes;
+    const eventosSemImpressoesList = eventosPeriodo.filter(e => (e.numeroImpressoes || 0) === 0);
+    const eventosSemImpressoes = eventosSemImpressoesList.length;
     const taxaUtilizacaoImpressoes = eventosPeriodo.length > 0 ? (eventosComImpressoes / eventosPeriodo.length) * 100 : 0;
     
     // Custo médio por impressão (assumindo R$ 0,50 por impressão)
@@ -150,7 +163,14 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
       alertas.push({
         tipo: 'evento_sem_impressoes' as const,
         mensagem: `${eventosSemImpressoes} eventos sem impressões cadastradas`,
-        severidade: 'media' as const
+        severidade: 'media' as const,
+        eventosSemImpressoes: eventosSemImpressoesList.map(evento => ({
+          id: evento.id,
+          clienteNome: evento.cliente.nome,
+          dataEvento: evento.dataEvento,
+          tipoEvento: evento.tipoEvento,
+          nomeEvento: evento.nomeEvento || 'Sem nome'
+        }))
       });
     }
     
@@ -376,10 +396,39 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-4">
               {dadosImpressoes.alertas.map((alerta, index) => (
                 <div key={index} className={`p-3 rounded-lg ${getSeveridadeColor(alerta.severidade)}`}>
-                  <div className="font-medium">{alerta.mensagem}</div>
+                  <div className="font-medium mb-2">{alerta.mensagem}</div>
+                  {alerta.tipo === 'evento_sem_impressoes' && alerta.eventosSemImpressoes && alerta.eventosSemImpressoes.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <div className="text-sm font-semibold text-text-secondary mb-2">Eventos sem impressões:</div>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-border">
+                          <thead className="bg-surface/50">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Cliente</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Data do Evento</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Tipo</th>
+                              <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Nome do Evento</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-background/50 divide-y divide-border">
+                            {alerta.eventosSemImpressoes.map((evento, idx) => (
+                              <tr key={evento.id || idx}>
+                                <td className="px-4 py-2 text-sm text-text-primary">{evento.clienteNome}</td>
+                                <td className="px-4 py-2 text-sm text-text-primary">
+                                  {format(new Date(evento.dataEvento), 'dd/MM/yyyy', { locale: ptBR })}
+                                </td>
+                                <td className="px-4 py-2 text-sm text-text-primary">{evento.tipoEvento}</td>
+                                <td className="px-4 py-2 text-sm text-text-primary">{evento.nomeEvento}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -710,7 +759,22 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
             Eventos que mais utilizaram impressões no período
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Filtros de Período */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4 border-b border-border">
+            <Input
+              label="Data Início"
+              type="date"
+              value={dataInicio}
+              onChange={(e) => setDataInicio(e.target.value)}
+            />
+            <Input
+              label="Data Fim"
+              type="date"
+              value={dataFim}
+              onChange={(e) => setDataFim(e.target.value)}
+            />
+          </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-surface">
@@ -721,6 +785,7 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Impressões</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Valor Evento</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Custo Impressões</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-text-secondary uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
               <tbody className="bg-background divide-y divide-border">
@@ -737,6 +802,17 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary">
                       R$ {item.custoImpressaoPorEvento.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push(`/eventos/${item.eventoId}`)}
+                        className="hover:bg-primary/10 hover:text-primary"
+                        title="Visualizar evento"
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -775,7 +851,15 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
             </div>
             <div className="p-4 border rounded-lg bg-accent-dark/10 border-border">
               <h4 className="font-medium text-accent-dark mb-2">Tipos Mais Impressos</h4>
-              <p className="text-accent-dark font-bold">{dadosImpressoes.tendencias.tiposEventoMaisImpressos.length}</p>
+              {dadosImpressoes.tendencias.tiposEventoMaisImpressos.length > 0 ? (
+                <div className="space-y-1">
+                  {dadosImpressoes.tendencias.tiposEventoMaisImpressos.map((tipo, index) => (
+                    <p key={index} className="text-accent-dark font-bold text-sm">{tipo}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-accent-dark font-bold">N/A</p>
+              )}
             </div>
           </div>
         </CardContent>
