@@ -41,7 +41,9 @@ export default function ConfiguracaoContratoPage() {
       conta: '',
       tipo: 'corrente',
       pix: ''
-    }
+    },
+    foro: '',
+    cidade: ''
   });
 
   useEffect(() => {
@@ -293,6 +295,32 @@ export default function ConfiguracaoContratoPage() {
                   value={formData.dadosBancarios?.pix || ''}
                   onChange={(e) => handleInputChange('dadosBancarios.pix', e.target.value)}
                   placeholder="Chave PIX"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dados do Contrato */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Dados do Contrato</CardTitle>
+              <CardDescription>Informações fixas para os contratos (Foro e Cidade)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Input
+                  label="Foro *"
+                  value={formData.foro || ''}
+                  onChange={(e) => handleInputChange('foro', e.target.value)}
+                  placeholder="Ex: Nova Iguaçu-RJ"
+                  required
+                />
+                <Input
+                  label="Cidade *"
+                  value={formData.cidade || ''}
+                  onChange={(e) => handleInputChange('cidade', e.target.value)}
+                  placeholder="Ex: Rio de Janeiro"
+                  required
                 />
               </div>
             </CardContent>

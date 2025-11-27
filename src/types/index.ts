@@ -195,6 +195,8 @@ export interface ConfiguracaoContrato {
     tipo: 'corrente' | 'poupanca';
     pix?: string;
   };
+  foro?: string;
+  cidade?: string;
   dataCadastro: Date;
   dataAtualizacao: Date;
 }

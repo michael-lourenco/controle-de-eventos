@@ -57,7 +57,7 @@ export class ConfiguracaoContratoRepository extends SubcollectionRepository<Conf
       inscricao_estadual: config.inscricaoEstadual || '',
       endereco_empresa: `${config.endereco.logradouro}, ${config.endereco.numero}${config.endereco.complemento ? ' - ' + config.endereco.complemento : ''}`,
       bairro_empresa: config.endereco.bairro,
-      cidade_empresa: config.endereco.cidade,
+      cidade_empresa: config.cidade || config.endereco.cidade,
       estado_empresa: config.endereco.estado,
       cep_empresa: config.endereco.cep,
       telefone_empresa: config.contato.telefone,
@@ -67,7 +67,8 @@ export class ConfiguracaoContratoRepository extends SubcollectionRepository<Conf
       agencia: config.dadosBancarios?.agencia || '',
       conta: config.dadosBancarios?.conta || '',
       tipo_conta: config.dadosBancarios?.tipo || '',
-      pix: config.dadosBancarios?.pix || ''
+      pix: config.dadosBancarios?.pix || '',
+      foro_eleito: config.foro || ''
     };
   }
 }

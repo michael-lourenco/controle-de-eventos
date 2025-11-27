@@ -6,6 +6,7 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
+import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { Contrato } from '@/types';
 import { PlusIcon, DocumentTextIcon, ArrowDownTrayIcon, PencilIcon, TrashIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 
@@ -15,6 +16,8 @@ export default function ContratosPage() {
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>('');
+  const [contratoParaExcluir, setContratoParaExcluir] = useState<Contrato | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     loadContratos();
@@ -36,14 +39,23 @@ export default function ContratosPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza que deseja excluir este contrato?')) return;
+  const handleExcluirContrato = (contrato: Contrato) => {
+    setContratoParaExcluir(contrato);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmarExclusao = async () => {
+    if (!contratoParaExcluir) return;
 
     try {
-      const response = await fetch(`/api/contratos/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/contratos/${contratoParaExcluir.id}`, { method: 'DELETE' });
       if (response.ok) {
         showToast('Contrato excluído com sucesso', 'success');
         loadContratos();
+        setContratoParaExcluir(null);
+        setShowDeleteDialog(false);
+      } else {
+        showToast('Erro ao excluir contrato', 'error');
       }
     } catch (error) {
       showToast('Erro ao excluir contrato', 'error');
@@ -166,8 +178,8 @@ export default function ContratosPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleDelete(contrato.id)}
-                        className="text-red-600"
+                        onClick={() => handleExcluirContrato(contrato)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <TrashIcon className="h-4 w-4" />
                       </Button>
@@ -178,6 +190,22 @@ export default function ContratosPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Modal de Confirmação de Exclusão */}
+        <ConfirmationDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          title="Excluir Contrato"
+          description={
+            contratoParaExcluir
+              ? `Tem certeza que deseja excluir o contrato "${contratoParaExcluir.numeroContrato || 'Sem número'}"? Esta ação não pode ser desfeita.`
+              : 'Tem certeza que deseja excluir este contrato?'
+          }
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
+          onConfirm={handleConfirmarExclusao}
+        />
       </div>
     </Layout>
   );

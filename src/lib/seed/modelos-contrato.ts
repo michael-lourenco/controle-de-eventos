@@ -187,6 +187,15 @@ export async function seedModelosContrato() {
   {{observacoes}}
 </p>
 
+<h2>CLÁUSULA SÉTIMA – DO FORO DE ELEIÇÃO</h2>
+<p>
+  As partes elegem o foro de {{foro_eleito}}, para qualquer demanda judicial relativa ao presente contrato, com exclusão de qualquer outro.
+</p>
+
+<p>
+  E por estarem justas e contratadas, na melhor forma de direito, as partes assinam o presente instrumento em 02 (duas) vias originais e de igual teor e forma, na presença das testemunhas que também o assinam, dando tudo por bom, firme e valioso.
+</p>
+
 <div style="margin-top: 60px; display: flex; justify-content: space-between;">
   <div style="text-align: center;">
     <p>_________________________________</p>

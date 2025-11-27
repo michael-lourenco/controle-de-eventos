@@ -282,10 +282,10 @@ function NovoContratoPageContent() {
                     {modelos.map((modelo) => (
                     <div
                       key={modelo.id}
-                      className="border rounded-lg p-4 cursor-pointer hover:bg-gray-50"
+                      className="border border-border rounded-lg p-4 cursor-pointer bg-surface hover:bg-surface-hover hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                       onClick={() => handleSelecionarModelo(modelo)}
                     >
-                      <h3 className="font-semibold">{modelo.nome}</h3>
+                      <h3 className="font-semibold text-text-primary">{modelo.nome}</h3>
                       {modelo.descricao && <p className="text-sm text-text-secondary">{modelo.descricao}</p>}
                     </div>
                   ))}
