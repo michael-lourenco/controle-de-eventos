@@ -20,7 +20,7 @@ import {
   ClipboardDocumentIcon,
   CheckIcon
 } from '@heroicons/react/24/outline';
-import { useEventos, useEventosArquivados, useTiposEvento } from '@/hooks/useData';
+import { useEventos, useEventosArquivados, useTiposEvento, useAllServicos } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { usePlano } from '@/lib/hooks/usePlano';
@@ -39,6 +39,7 @@ export default function EventosPage() {
   const { data: eventos, loading: loadingAtivos, error: errorAtivos, refetch: refetchAtivos } = useEventos();
   const { data: eventosArquivados, loading: loadingArquivados, error: errorArquivados, refetch: refetchArquivados } = useEventosArquivados();
   const { data: tiposEventoData } = useTiposEvento();
+  const { data: todosServicos } = useAllServicos();
   const { limites, temPermissao } = usePlano();
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,6 +79,30 @@ export default function EventosPage() {
   const recarregarEventos = async () => {
     await Promise.all([refetchAtivos(), refetchArquivados()]);
   };
+
+  // Mapear tipos de serviços por evento
+  const tiposServicosPorEvento = useMemo(() => {
+    if (!todosServicos) return new Map<string, string[]>();
+    
+    const mapa = new Map<string, Set<string>>();
+    
+    todosServicos.forEach(servico => {
+      if (servico.eventoId && servico.tipoServico?.nome) {
+        if (!mapa.has(servico.eventoId)) {
+          mapa.set(servico.eventoId, new Set());
+        }
+        mapa.get(servico.eventoId)!.add(servico.tipoServico.nome);
+      }
+    });
+    
+    // Converter Sets para Arrays
+    const resultado = new Map<string, string[]>();
+    mapa.forEach((tipos, eventoId) => {
+      resultado.set(eventoId, Array.from(tipos).sort());
+    });
+    
+    return resultado;
+  }, [todosServicos]);
 
   const tiposEventoFilterOptions = React.useMemo(() => {
     const nomes = new Set<string>();
@@ -634,18 +659,38 @@ export default function EventosPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex items-center text-sm text-text-secondary">
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} - {evento.diaSemana}
+                  {/* Em telas pequenas: cada informação em uma linha */}
+                  {/* Em telas grandes: data, início e desmontagem na mesma linha */}
+                  <div className="flex flex-col md:flex-row md:items-center md:gap-4 space-y-2 md:space-y-0">
+                    <div className="flex items-center text-sm text-text-secondary">
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })} - {evento.diaSemana}
+                    </div>
+                    {evento.horarioInicio && (
+                      <div className="flex items-center text-sm text-text-secondary">
+                        <ClockIcon className="h-4 w-4 mr-2" />
+                        Início: {evento.horarioInicio}
+                      </div>
+                    )}
+                    {evento.horarioDesmontagem && (
+                      <div className="flex items-center text-sm text-text-secondary">
+                        <ClockIcon className="h-4 w-4 mr-2" />
+                        Desmontagem: {evento.horarioDesmontagem}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center text-sm text-text-secondary">
                     <MapPinIcon className="h-4 w-4 mr-2" />
                     {evento.local}
                   </div>
-                  <div className="flex items-center text-sm text-text-secondary">
-                    <UserGroupIcon className="h-4 w-4 mr-2" />
-                    {evento.numeroConvidados} convidados
-                  </div>
+                  {tiposServicosPorEvento.has(evento.id) && tiposServicosPorEvento.get(evento.id)!.length > 0 && (
+                    <div className="flex items-start text-sm text-text-secondary">
+                      <span className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0">📋</span>
+                      <span className="flex-1">
+                        {tiposServicosPorEvento.get(evento.id)!.join(', ')}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t">
