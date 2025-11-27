@@ -53,7 +53,27 @@ export default function EventosPage() {
   
   const loading = loadingAtivos || loadingArquivados;
   const error = errorAtivos || errorArquivados;
-  const eventosLista = abaAtiva === 'ativos' ? (eventos ?? []) : (eventosArquivados ?? []);
+  
+  // Estado local para atualização otimista
+  const [eventosLocais, setEventosLocais] = useState<Evento[] | null>(null);
+  const [eventosArquivadosLocais, setEventosArquivadosLocais] = useState<Evento[] | null>(null);
+  
+  // Sincronizar estado local com dados dos hooks
+  useEffect(() => {
+    if (eventos !== null) {
+      setEventosLocais(eventos);
+    }
+  }, [eventos]);
+  
+  useEffect(() => {
+    if (eventosArquivados !== null) {
+      setEventosArquivadosLocais(eventosArquivados);
+    }
+  }, [eventosArquivados]);
+  
+  const eventosLista = abaAtiva === 'ativos' 
+    ? (eventosLocais ?? eventos ?? []) 
+    : (eventosArquivadosLocais ?? eventosArquivados ?? []);
 
   const recarregarEventos = async () => {
     await Promise.all([refetchAtivos(), refetchArquivados()]);
@@ -193,6 +213,55 @@ export default function EventosPage() {
       showToast('Erro ao desarquivar evento', 'error');
     }
   };
+
+  const handleStatusChange = async (evento: Evento, novoStatus: string) => {
+    if (!userId) return;
+
+    const statusAnterior = evento.status;
+    const novoStatusTyped = novoStatus as Evento['status'];
+
+    // Atualização otimista - atualizar UI imediatamente
+    const atualizarEventoLocal = (eventos: Evento[] | null) => {
+      if (!eventos) return eventos;
+      return eventos.map(e => 
+        e.id === evento.id ? { ...e, status: novoStatusTyped } : e
+      );
+    };
+
+    if (abaAtiva === 'ativos') {
+      setEventosLocais(prev => atualizarEventoLocal(prev));
+    } else {
+      setEventosArquivadosLocais(prev => atualizarEventoLocal(prev));
+    }
+
+    // Atualizar no backend de forma assíncrona (sem feedback visual)
+    dataService.updateEvento(evento.id, { status: novoStatusTyped }, userId)
+      .catch((error) => {
+        // Erro - reverter a atualização otimista
+        const reverterEvento = (eventos: Evento[] | null) => {
+          if (!eventos) return eventos;
+          return eventos.map(e => 
+            e.id === evento.id ? { ...e, status: statusAnterior } : e
+          );
+        };
+
+        if (abaAtiva === 'ativos') {
+          setEventosLocais(prev => reverterEvento(prev));
+        } else {
+          setEventosArquivadosLocais(prev => reverterEvento(prev));
+        }
+
+        showToast('Erro ao atualizar status do evento', 'error');
+      });
+  };
+
+  const statusOptions = [
+    { value: StatusEvento.AGENDADO, label: 'Agendado' },
+    { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
+    { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' },
+    { value: StatusEvento.CONCLUIDO, label: 'Concluído' },
+    { value: StatusEvento.CANCELADO, label: 'Cancelado' }
+  ];
 
   const formatEventInfoForCopy = (evento: Evento, servicosNomes: string[]) => {
     let text = '';
@@ -534,8 +603,7 @@ export default function EventosPage() {
           {sortedEventos.map((evento) => (
             <Card 
               key={evento.id} 
-              className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
-              onClick={() => handleView(evento)}
+              className="hover:shadow-lg transition-all duration-300"
             >
               <CardHeader>
                 <div className="flex flex-col gap-2">
@@ -553,9 +621,14 @@ export default function EventosPage() {
                         </span>
                       </CardDescription>
                     </div>
-                    <span className={`mt-2 lg:mt-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(evento.status)} shrink-0`}>
-                      {evento.status}
-                    </span>
+                    <div className="mt-2 lg:mt-0 shrink-0">
+                      <Select
+                        value={evento.status}
+                        onValueChange={(value) => handleStatusChange(evento, value)}
+                        options={statusOptions}
+                        className={`w-[140px] [&>div>button]:h-7 [&>div>button]:px-2.5 [&>div>button]:py-0.5 [&>div>button]:text-xs [&>div>button]:rounded-full [&>div>button]:border-0 [&>div>button]:shadow-none ${getStatusColor(evento.status)}`}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardHeader>
