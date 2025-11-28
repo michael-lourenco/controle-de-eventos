@@ -51,14 +51,22 @@ export class AssinaturaRepository extends FirestoreRepository<Assinatura> {
       throw new Error('Assinatura não encontrada');
     }
 
+    // Adicionar evento ao histórico
     await this.addHistorico(id, {
       data: new Date(),
       acao: `Status alterado para ${status}`,
       detalhes: { statusAnterior: assinatura.status, statusNovo: status }
     });
 
+    // Buscar assinatura atualizada (com histórico atualizado) para preservar o histórico
+    const assinaturaAtualizada = await this.findById(id);
+    if (!assinaturaAtualizada) {
+      throw new Error('Assinatura não encontrada após atualização do histórico');
+    }
+
+    // Atualizar status e outros campos, preservando o histórico atualizado
     return this.update(id, {
-      ...assinatura,
+      ...assinaturaAtualizada,
       status,
       ...dadosAdicionais,
       dataAtualizacao: new Date()

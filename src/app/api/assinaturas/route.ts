@@ -26,9 +26,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ assinaturas });
     }
 
-    // Usuário comum vê apenas sua assinatura
+    // Usuário comum: retornar assinatura ativa e todas as assinaturas (para histórico)
     const assinatura = await repo.findByUserId(session.user.id);
-    return NextResponse.json({ assinatura });
+    const todasAssinaturas = await repo.findAllByUserId(session.user.id);
+    
+    return NextResponse.json({ 
+      assinatura, // Assinatura ativa (ou null se não houver)
+      todasAssinaturas // Todas as assinaturas do usuário (para histórico)
+    });
   } catch (error: any) {
     console.error('Erro ao buscar assinaturas:', error);
     return NextResponse.json(

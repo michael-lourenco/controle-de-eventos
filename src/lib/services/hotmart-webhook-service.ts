@@ -411,6 +411,23 @@ export class HotmartWebhookService {
       return { success: false, message: 'Assinatura não encontrada' };
     }
 
+    const statusAnterior = assinatura.status;
+    const dataCancelamento = new Date();
+
+    // Adicionar registro específico de cancelamento no histórico ANTES de atualizar o status
+    // Isso garante que o histórico seja preservado mesmo após a atualização
+    await this.assinaturaRepo.addHistorico(assinatura.id, {
+      data: dataCancelamento,
+      acao: 'Assinatura cancelada',
+      detalhes: {
+        statusAnterior,
+        statusNovo: 'cancelled',
+        motivo: 'Webhook SUBSCRIPTION_CANCELLATION recebido',
+        observacao: 'Assinatura mantida ativa até o fim do período pago',
+        dataCancelamento: dataCancelamento.toISOString()
+      }
+    });
+
     // Cancelar mas manter ativa até o fim do período
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'cancelled');
 
@@ -440,8 +457,25 @@ export class HotmartWebhookService {
       return { success: false, message: 'Assinatura não encontrada' };
     }
 
+    const statusAnterior = assinatura.status;
+    const dataExpiracao = new Date();
+
+    // Adicionar registro específico de expiração no histórico ANTES de atualizar o status
+    // Isso garante que o histórico seja preservado mesmo após a atualização
+    await this.assinaturaRepo.addHistorico(assinatura.id, {
+      data: dataExpiracao,
+      acao: 'Assinatura expirada',
+      detalhes: {
+        statusAnterior,
+        statusNovo: 'expired',
+        motivo: 'Webhook SUBSCRIPTION_EXPIRED recebido',
+        dataExpiracao: dataExpiracao.toISOString()
+      }
+    });
+
+    // Atualizar status da assinatura (isso também adiciona um registro no histórico via atualizarStatus)
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'expired', {
-      dataFim: new Date(),
+      dataFim: dataExpiracao,
       funcionalidadesHabilitadas: []
     });
 
@@ -590,6 +624,22 @@ export class HotmartWebhookService {
       return { success: false, message: 'Assinatura não encontrada' };
     }
 
+    const statusAnterior = assinatura.status;
+    const dataChargeback = new Date();
+
+    // Adicionar registro específico de chargeback no histórico ANTES de atualizar o status
+    // Isso garante que o histórico seja preservado mesmo após a atualização
+    await this.assinaturaRepo.addHistorico(assinatura.id, {
+      data: dataChargeback,
+      acao: 'Chargeback - Assinatura suspensa',
+      detalhes: {
+        statusAnterior,
+        statusNovo: 'suspended',
+        motivo: 'Webhook PURCHASE_CHARGEBACK recebido - Chargeback detectado no pagamento',
+        dataChargeback: dataChargeback.toISOString()
+      }
+    });
+
     // Suspender imediatamente devido a chargeback
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'suspended', {
       funcionalidadesHabilitadas: []
@@ -597,16 +647,6 @@ export class HotmartWebhookService {
 
     // Sincronizar usando o serviço que já atualiza a estrutura consolidada
     await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
-
-    // Registrar no histórico
-    await this.assinaturaRepo.addHistorico(assinatura.id, {
-      data: new Date(),
-      acao: 'Chargeback - Assinatura suspensa',
-      detalhes: {
-        motivo: 'Chargeback detectado no pagamento',
-        statusAnterior: assinatura.status
-      }
-    });
 
     return { success: true, message: 'Chargeback processado - Assinatura suspensa' };
   }
@@ -619,6 +659,22 @@ export class HotmartWebhookService {
       return { success: false, message: 'Assinatura não encontrada' };
     }
 
+    const statusAnterior = assinatura.status;
+    const dataProtesto = new Date();
+
+    // Adicionar registro específico de protesto no histórico ANTES de atualizar o status
+    // Isso garante que o histórico seja preservado mesmo após a atualização
+    await this.assinaturaRepo.addHistorico(assinatura.id, {
+      data: dataProtesto,
+      acao: 'Protesto - Assinatura suspensa',
+      detalhes: {
+        statusAnterior,
+        statusNovo: 'suspended',
+        motivo: 'Webhook PURCHASE_PROTEST recebido - Boleto protestado',
+        dataProtesto: dataProtesto.toISOString()
+      }
+    });
+
     // Suspender devido a protesto
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'suspended', {
       funcionalidadesHabilitadas: []
@@ -626,16 +682,6 @@ export class HotmartWebhookService {
 
     // Sincronizar usando o serviço que já atualiza a estrutura consolidada
     await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
-
-    // Registrar no histórico
-    await this.assinaturaRepo.addHistorico(assinatura.id, {
-      data: new Date(),
-      acao: 'Protesto - Assinatura suspensa',
-      detalhes: {
-        motivo: 'Boleto protestado',
-        statusAnterior: assinatura.status
-      }
-    });
 
     return { success: true, message: 'Protesto processado - Assinatura suspensa' };
   }
@@ -648,24 +694,30 @@ export class HotmartWebhookService {
       return { success: false, message: 'Assinatura não encontrada' };
     }
 
+    const statusAnterior = assinatura.status;
+    const dataReembolso = new Date();
+
+    // Adicionar registro específico de reembolso no histórico ANTES de atualizar o status
+    // Isso garante que o histórico seja preservado mesmo após a atualização
+    await this.assinaturaRepo.addHistorico(assinatura.id, {
+      data: dataReembolso,
+      acao: 'Reembolso - Assinatura cancelada',
+      detalhes: {
+        statusAnterior,
+        statusNovo: 'cancelled',
+        motivo: 'Webhook PURCHASE_REFUNDED recebido - Pagamento reembolsado',
+        dataReembolso: dataReembolso.toISOString()
+      }
+    });
+
     // Cancelar imediatamente devido a reembolso
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'cancelled', {
-      dataFim: new Date(),
+      dataFim: dataReembolso,
       funcionalidadesHabilitadas: []
     });
 
     // Sincronizar usando o serviço que já atualiza a estrutura consolidada
     await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
-
-    // Registrar no histórico
-    await this.assinaturaRepo.addHistorico(assinatura.id, {
-      data: new Date(),
-      acao: 'Reembolso - Assinatura cancelada',
-      detalhes: {
-        motivo: 'Pagamento reembolsado',
-        statusAnterior: assinatura.status
-      }
-    });
 
     return { success: true, message: 'Reembolso processado - Assinatura cancelada' };
   }

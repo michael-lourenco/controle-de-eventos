@@ -13,6 +13,8 @@ import { useToast } from '@/components/ui/toast';
 
 export default function AssinaturaPage() {
   const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
+  const [todasAssinaturas, setTodasAssinaturas] = useState<Assinatura[]>([]);
+  const [historicoConsolidado, setHistoricoConsolidado] = useState<any[]>([]);
   const [plano, setPlano] = useState<Plano | null>(null);
   const [funcionalidades, setFuncionalidades] = useState<Funcionalidade[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,43 @@ export default function AssinaturaPage() {
     try {
       const res = await fetch('/api/assinaturas');
       const data = await res.json();
+      
+      // Armazenar todas as assinaturas
+      if (data.todasAssinaturas && Array.isArray(data.todasAssinaturas)) {
+        setTodasAssinaturas(data.todasAssinaturas);
+        
+        // Consolidar histórico de todas as assinaturas
+        const historico: any[] = [];
+        data.todasAssinaturas.forEach((ass: Assinatura) => {
+          if (ass.historico && Array.isArray(ass.historico)) {
+            ass.historico.forEach((evento) => {
+              historico.push({
+                ...evento,
+                assinaturaId: ass.id,
+                assinaturaStatus: ass.status
+              });
+            });
+          }
+        });
+        
+        // Ordenar por data (mais recente primeiro)
+        historico.sort((a, b) => {
+          const getDate = (date: any): Date => {
+            if (date && typeof date === 'object' && 'seconds' in date) {
+              const seconds = (date as any).seconds;
+              const nanoseconds = (date as any).nanoseconds || 0;
+              return new Date(seconds * 1000 + nanoseconds / 1000000);
+            }
+            return new Date(date);
+          };
+          
+          const dataA = getDate(a.data);
+          const dataB = getDate(b.data);
+          return dataB.getTime() - dataA.getTime();
+        });
+        
+        setHistoricoConsolidado(historico);
+      }
       
       if (data.assinatura) {
         setAssinatura(data.assinatura);
@@ -275,7 +314,11 @@ export default function AssinaturaPage() {
     );
   }
 
-  if (!assinatura) {
+  // Se não há assinatura ativa, mas há histórico, mostrar histórico
+  const temHistorico = historicoConsolidado.length > 0;
+  const nuncaTevePlano = !assinatura && !temHistorico;
+
+  if (!assinatura && nuncaTevePlano) {
     return (
       <Layout>
         <div className="space-y-6">
@@ -307,162 +350,164 @@ export default function AssinaturaPage() {
           <p className="text-text-secondary">Gerencie sua assinatura e funcionalidades</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Informações da Assinatura */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Assinatura Atual</CardTitle>
-              <CardDescription>Informações sobre sua assinatura</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-text-primary">Status</label>
-                <div className="mt-1">
-                  {getStatusBadge(assinatura.status)}
-                </div>
-              </div>
-
-              {plano && (
-                <>
-                  <div>
-                    <label className="text-sm font-medium text-text-primary">Plano</label>
-                    <p className="mt-1 text-lg font-semibold text-text-primary">{plano.nome}</p>
-                    <p className="text-sm text-text-secondary">{plano.descricao}</p>
+        {assinatura && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Informações da Assinatura */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Assinatura Atual</CardTitle>
+                <CardDescription>Informações sobre sua assinatura</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-text-primary">Status</label>
+                  <div className="mt-1">
+                    {getStatusBadge(assinatura.status)}
                   </div>
+                </div>
 
+                {plano && (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium text-text-primary">Plano</label>
+                      <p className="mt-1 text-lg font-semibold text-text-primary">{plano.nome}</p>
+                      <p className="text-sm text-text-secondary">{plano.descricao}</p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-text-primary">Valor</label>
+                      <p className="mt-1 text-2xl font-bold text-primary">
+                        R$ {plano.preco.toFixed(2)} / {plano.intervalo}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="text-sm font-medium text-text-primary">Data de Início</label>
+                  <p className="mt-1 text-text-secondary">{formatDate(assinatura.dataInicio)}</p>
+                </div>
+
+                {assinatura.dataFim && (
                   <div>
-                    <label className="text-sm font-medium text-text-primary">Valor</label>
-                    <p className="mt-1 text-2xl font-bold text-primary">
-                      R$ {plano.preco.toFixed(2)} / {plano.intervalo}
+                    <label className="text-sm font-medium text-text-primary">Data de Fim</label>
+                    <p className="mt-1 text-text-secondary">{formatDate(assinatura.dataFim)}</p>
+                  </div>
+                )}
+
+                {assinatura.dataRenovacao && (
+                  <div>
+                    <label className="text-sm font-medium text-text-primary">Próxima Renovação</label>
+                    <p className="mt-1 text-text-secondary">{formatDate(assinatura.dataRenovacao)}</p>
+                  </div>
+                )}
+
+                {assinatura.status === 'trial' && assinatura.dataFim && (
+                  <div className="p-4 bg-info-bg rounded-md">
+                    <p className="text-sm text-info-text">
+                      <strong>Período Trial:</strong> Sua assinatura expira em {formatDate(assinatura.dataFim)}.
+                      Após esta data, o valor será cobrado automaticamente.
                     </p>
                   </div>
-                </>
-              )}
+                )}
 
-              <div>
-                <label className="text-sm font-medium text-text-primary">Data de Início</label>
-                <p className="mt-1 text-text-secondary">{formatDate(assinatura.dataInicio)}</p>
-              </div>
-
-              {assinatura.dataFim && (
                 <div>
-                  <label className="text-sm font-medium text-text-primary">Data de Fim</label>
-                  <p className="mt-1 text-text-secondary">{formatDate(assinatura.dataFim)}</p>
+                  <label className="text-sm font-medium text-text-primary">ID Hotmart</label>
+                  <p className="mt-1 text-sm font-mono text-text-muted">{assinatura.hotmartSubscriptionId}</p>
                 </div>
-              )}
+              </CardContent>
+            </Card>
 
-              {assinatura.dataRenovacao && (
-                <div>
-                  <label className="text-sm font-medium text-text-primary">Próxima Renovação</label>
-                  <p className="mt-1 text-text-secondary">{formatDate(assinatura.dataRenovacao)}</p>
-                </div>
-              )}
+            {/* Funcionalidades Habilitadas */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Funcionalidades Disponíveis</CardTitle>
+                <CardDescription>Funcionalidades habilitadas no seu plano</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {funcionalidades.length === 0 ? (
+                  <div className="space-y-4">
+                    <p className="text-text-muted text-center py-4">
+                      {assinatura.funcionalidadesHabilitadas.length === 0 
+                        ? 'Nenhuma funcionalidade habilitada'
+                        : 'Carregando funcionalidades...'}
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => window.location.href = '/planos'}
+                    >
+                      Ver Detalhes do Plano
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-text-secondary">
+                      {funcionalidades.length} funcionalidade(s) ativa(s)
+                    </p>
+                    
+                    {/* Agrupar por categoria */}
+                    {(() => {
+                      const categorias: Record<CategoriaFuncionalidade, Funcionalidade[]> = {
+                        'EVENTOS': [],
+                        'FINANCEIRO': [],
+                        'RELATORIOS': [],
+                        'INTEGRACAO': [],
+                        'ADMIN': []
+                      };
 
-              {assinatura.status === 'trial' && assinatura.dataFim && (
-                <div className="p-4 bg-info-bg rounded-md">
-                  <p className="text-sm text-info-text">
-                    <strong>Período Trial:</strong> Sua assinatura expira em {formatDate(assinatura.dataFim)}.
-                    Após esta data, o valor será cobrado automaticamente.
-                  </p>
-                </div>
-              )}
+                      funcionalidades.forEach(func => {
+                        if (categorias[func.categoria]) {
+                          categorias[func.categoria].push(func);
+                        }
+                      });
 
-              <div>
-                <label className="text-sm font-medium text-text-primary">ID Hotmart</label>
-                <p className="mt-1 text-sm font-mono text-text-muted">{assinatura.hotmartSubscriptionId}</p>
-              </div>
-            </CardContent>
-          </Card>
+                      const categoriasComFunc = Object.entries(categorias).filter(([_, funcs]) => funcs.length > 0);
 
-          {/* Funcionalidades Habilitadas */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Funcionalidades Disponíveis</CardTitle>
-              <CardDescription>Funcionalidades habilitadas no seu plano</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {funcionalidades.length === 0 ? (
-                <div className="space-y-4">
-                  <p className="text-text-muted text-center py-4">
-                    {assinatura.funcionalidadesHabilitadas.length === 0 
-                      ? 'Nenhuma funcionalidade habilitada'
-                      : 'Carregando funcionalidades...'}
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => window.location.href = '/planos'}
-                  >
-                    Ver Detalhes do Plano
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-sm text-text-secondary">
-                    {funcionalidades.length} funcionalidade(s) ativa(s)
-                  </p>
-                  
-                  {/* Agrupar por categoria */}
-                  {(() => {
-                    const categorias: Record<CategoriaFuncionalidade, Funcionalidade[]> = {
-                      'EVENTOS': [],
-                      'FINANCEIRO': [],
-                      'RELATORIOS': [],
-                      'INTEGRACAO': [],
-                      'ADMIN': []
-                    };
-
-                    funcionalidades.forEach(func => {
-                      if (categorias[func.categoria]) {
-                        categorias[func.categoria].push(func);
-                      }
-                    });
-
-                    const categoriasComFunc = Object.entries(categorias).filter(([_, funcs]) => funcs.length > 0);
-
-                    return (
-                      <div className="space-y-4">
-                        {categoriasComFunc.map(([categoria, funcs]) => (
-                          <div key={categoria} className="space-y-2">
-                            <h4 className="text-sm font-semibold text-text-primary uppercase">
-                              {categoria === 'EVENTOS' && '📅 '}
-                              {categoria === 'FINANCEIRO' && '💰 '}
-                              {categoria === 'RELATORIOS' && '📊 '}
-                              {categoria === 'INTEGRACAO' && '🔗 '}
-                              {categoria === 'ADMIN' && '⚙️ '}
-                              {categoria}
-                            </h4>
-                            <div className="space-y-1 pl-4">
-                              {funcs.map(func => (
-                                <div key={func.id} className="flex items-start gap-2 py-1">
-                                  <CheckIcon className="h-4 w-4 text-success-text mt-0.5 flex-shrink-0" />
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-text-primary">{func.nome}</p>
-                                    {func.descricao && (
-                                      <p className="text-xs text-text-secondary mt-0.5">{func.descricao}</p>
-                                    )}
+                      return (
+                        <div className="space-y-4">
+                          {categoriasComFunc.map(([categoria, funcs]) => (
+                            <div key={categoria} className="space-y-2">
+                              <h4 className="text-sm font-semibold text-text-primary uppercase">
+                                {categoria === 'EVENTOS' && '📅 '}
+                                {categoria === 'FINANCEIRO' && '💰 '}
+                                {categoria === 'RELATORIOS' && '📊 '}
+                                {categoria === 'INTEGRACAO' && '🔗 '}
+                                {categoria === 'ADMIN' && '⚙️ '}
+                                {categoria}
+                              </h4>
+                              <div className="space-y-1 pl-4">
+                                {funcs.map(func => (
+                                  <div key={func.id} className="flex items-start gap-2 py-1">
+                                    <CheckIcon className="h-4 w-4 text-success-text mt-0.5 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-text-primary">{func.nome}</p>
+                                      {func.descricao && (
+                                        <p className="text-xs text-text-secondary mt-0.5">{func.descricao}</p>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                          ))}
+                        </div>
+                      );
+                    })()}
 
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-4"
-                    onClick={() => window.location.href = '/planos'}
-                  >
-                    Ver Todos os Planos
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    <Button 
+                      variant="outline" 
+                      className="w-full mt-4"
+                      onClick={() => window.location.href = '/planos'}
+                    >
+                      Ver Todos os Planos
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Limites de Uso */}
         {limites && (limites.eventosLimiteMes || limites.clientesLimite || limites.usuariosLimite || limites.armazenamentoLimite) && (
@@ -511,30 +556,28 @@ export default function AssinaturaPage() {
           </Card>
         )}
 
-        {/* Histórico */}
-        {assinatura.historico && assinatura.historico.length > 0 && (
+        {/* Histórico - Exibir se houver histórico na assinatura ativa ou histórico consolidado */}
+        {((assinatura?.historico && assinatura.historico.length > 0) || historicoConsolidado.length > 0) && (
           <Card>
             <CardHeader>
-              <CardTitle>Histórico</CardTitle>
-              <CardDescription>Eventos relacionados à sua assinatura</CardDescription>
+              <CardTitle>Histórico de Assinaturas</CardTitle>
+              <CardDescription>
+                {!assinatura && temHistorico 
+                  ? 'Histórico completo das suas assinaturas anteriores' 
+                  : 'Eventos relacionados à sua assinatura'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
+              {!assinatura && temHistorico && (
+                <div className="mb-4 p-4 bg-warning-bg border border-warning-border rounded-lg">
+                  <p className="text-sm text-warning-text">
+                    <strong>Você não possui uma assinatura ativa no momento.</strong> Abaixo está o histórico completo das suas assinaturas anteriores para fins de auditoria.
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-3">
-                {assinatura.historico
-                  .sort((a, b) => {
-                    const getDate = (date: any): Date => {
-                      if (date && typeof date === 'object' && 'seconds' in date) {
-                        const seconds = (date as any).seconds;
-                        const nanoseconds = (date as any).nanoseconds || 0;
-                        return new Date(seconds * 1000 + nanoseconds / 1000000);
-                      }
-                      return new Date(date);
-                    };
-                    
-                    const dataA = getDate(a.data);
-                    const dataB = getDate(b.data);
-                    return dataB.getTime() - dataA.getTime();
-                  })
+                {(historicoConsolidado.length > 0 ? historicoConsolidado : (assinatura?.historico || []))
                   .map((evento, index) => {
                     const detalhesFormatados = formatarDetalhes(evento.acao, evento.detalhes);
                     const bgColor = getAcaoColor(evento.acao);
@@ -596,7 +639,7 @@ export default function AssinaturaPage() {
             >
               Ver Planos Disponíveis
             </Button>
-            {assinatura.status === 'active' || assinatura.status === 'trial' ? (
+            {assinatura && (assinatura.status === 'active' || assinatura.status === 'trial') && (
               <>
                 <Button 
                   variant="outline" 
@@ -618,7 +661,7 @@ export default function AssinaturaPage() {
                   }}
                 />
               </>
-            ) : null}
+            )}
           </CardContent>
         </Card>
       </div>
