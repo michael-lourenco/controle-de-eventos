@@ -290,7 +290,7 @@ export default function ServicosEvento({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant='outline' onClick={handleNovoServico} className="p-2">
+                  <Button onClick={handleNovoServico} className="btn-add p-2">
                     <PlusIcon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -313,7 +313,7 @@ export default function ServicosEvento({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant='outline' onClick={handleNovoServico} className="p-2">
+                      <Button onClick={handleNovoServico} className="btn-add p-2">
                         <PlusIcon className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>

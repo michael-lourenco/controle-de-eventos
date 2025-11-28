@@ -382,7 +382,7 @@ export default function PagamentoHistorico({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant='outline' onClick={handleNovoPagamento} className="p-2">
+                  <Button onClick={handleNovoPagamento} className="btn-add p-2">
                     <PlusIcon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -405,7 +405,7 @@ export default function PagamentoHistorico({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant='outline' onClick={handleNovoPagamento} className="p-2">
+                      <Button onClick={handleNovoPagamento} className="btn-add p-2">
                         <PlusIcon className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>

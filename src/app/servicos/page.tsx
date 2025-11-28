@@ -215,7 +215,7 @@ export default function ServicosPage() {
           </div>
           <Button
             onClick={() => setMostrarFormNovo(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
+            className="btn-add flex items-center gap-2"
           >
             <PlusIcon className="h-4 w-4" />
             Novo Tipo
@@ -429,7 +429,7 @@ export default function ServicosPage() {
               </p>
               {!searchTerm && abaAtiva === 'ativos' && (
                 <div className="mt-6">
-                  <Button onClick={() => setMostrarFormNovo(true)}>
+                  <Button onClick={() => setMostrarFormNovo(true)} className="btn-add">
                     <PlusIcon className="h-4 w-4 mr-2" />
                     Novo Tipo
                   </Button>

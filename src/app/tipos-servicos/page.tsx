@@ -221,10 +221,10 @@ export default function TiposServicosPage() {
             funcionalidade="TIPOS_PERSONALIZADO"
             mensagem="Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão."
           >
-            <Button onClick={handleNovoTipo} className="bg-primary hover:bg-accent hover:text-white cursor-pointer">
-              <PlusIcon className="h-4 w-4 mr-2" />
-              Novo Tipo
-            </Button>
+          <Button onClick={handleNovoTipo} className="btn-add">
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Novo Tipo
+          </Button>
           </PlanoBloqueio>
         </div>
 
@@ -427,7 +427,7 @@ export default function TiposServicosPage() {
               </p>
               {!searchTerm && abaAtiva === 'ativos' && (
                 <div className="mt-6">
-                  <Button onClick={handleNovoTipo}>
+                  <Button onClick={handleNovoTipo} className="btn-add">
                     <PlusIcon className="h-4 w-4 mr-2" />
                     Novo Tipo
                   </Button>

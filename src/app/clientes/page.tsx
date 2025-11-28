@@ -336,7 +336,7 @@ export default function ClientesPage() {
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => setMostrarFormNovo(true)}
-                      className="bg-primary hover:bg-accent hover:text-white cursor-pointer p-2"
+                      className="btn-add p-2"
                     >
                       <PlusIcon className="h-4 w-4" />
                     </Button>

@@ -485,7 +485,7 @@ export default function EventosPage() {
                     <TooltipTrigger asChild>
                       <Button 
                         onClick={() => router.push('/eventos/novo')} 
-                        className="bg-primary hover:bg-accent hover:text-white cursor-pointer p-2"
+                        className="btn-add p-2"
                       >
                         <PlusIcon className="h-4 w-4" />
                       </Button>
@@ -834,7 +834,7 @@ export default function EventosPage() {
               </p>
               {abaAtiva === 'ativos' && (
                 <div className="mt-6">
-                  <Button onClick={() => router.push('/eventos/novo')}>
+                  <Button onClick={() => router.push('/eventos/novo')} className="btn-add">
                     <PlusIcon className="h-4 w-4 mr-2" />
                     Novo Evento
                   </Button>

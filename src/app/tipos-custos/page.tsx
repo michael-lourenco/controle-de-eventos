@@ -222,7 +222,7 @@ export default function TiposCustosPage() {
           {temAcessoPersonalizado === true ? (
             <Button
               onClick={() => setMostrarFormNovo(true)}
-              className="flex items-center gap-2 bg-primary hover:bg-accent hover:text-white cursor-pointer"
+              className="btn-add flex items-center gap-2"
             >
               <PlusIcon className="h-4 w-4" />
               Novo Tipo

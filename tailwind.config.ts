@@ -39,6 +39,10 @@ const config: Config = {
         info: "var(--info)",
         "info-bg": "var(--info-bg)",
         "info-text": "var(--info-text)",
+        "add-button": "var(--add-button-bg)",
+        "add-button-hover": "var(--add-button-bg-hover)",
+        "add-button-text": "var(--add-button-text)",
+        "add-button-shadow": "var(--add-button-shadow)",
       },
       boxShadow: {
         'sm': '0 1px 2px 0 rgb(27 33 38 / 0.05)',
@@ -46,6 +50,16 @@ const config: Config = {
         'lg': '0 10px 15px -3px rgb(27 33 38 / 0.1), 0 4px 6px -4px rgb(27 33 38 / 0.1)',
         'xl': '0 20px 25px -5px rgb(27 33 38 / 0.1), 0 8px 10px -6px rgb(27 33 38 / 0.1)',
         '3xl': '0 35px 60px -12px rgb(27 33 38 / 0.25), 0 20px 25px -5px rgb(27 33 38 / 0.1)',
+        'error': '0 0 0 3px rgba(239, 68, 68, 0.1), 0 0 0 1px rgba(239, 68, 68, 0.3)',
+      },
+      animation: {
+        'error-pulse': 'error-pulse 0.3s ease-in-out',
+      },
+      keyframes: {
+        'error-pulse': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.01)' },
+        },
       },
     },
   },

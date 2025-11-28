@@ -97,7 +97,7 @@ export default function ContratosPage() {
               <Cog6ToothIcon className="h-5 w-5 mr-2" />
               Configurar Dados
             </Button>
-            <Button onClick={() => router.push('/contratos/novo')} className="bg-primary">
+            <Button onClick={() => router.push('/contratos/novo')} className="btn-add">
               <PlusIcon className="h-5 w-5 mr-2" />
               Novo Contrato
             </Button>

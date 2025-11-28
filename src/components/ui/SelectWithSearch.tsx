@@ -144,11 +144,11 @@ export default function SelectWithSearch({
           onKeyDown={handleKeyDown}
           className={`
             w-full flex items-center justify-between px-3 py-2 border rounded-md shadow-sm bg-surface text-left cursor-pointer
-            ${error ? 'border-error focus:ring-error focus:border-error' : 'border-border focus:ring-primary focus:border-primary'}
-            focus:outline-none focus:ring-1
+            ${error ? 'form-error' : 'border-border focus:ring-primary focus:border-primary'}
+            focus:outline-none focus:ring-1 transition-colors
           `}
         >
-          <span className={`block truncate ${selectedOption ? 'text-text-primary' : 'text-text-muted'}`}>
+          <span className={`block truncate ${selectedOption ? 'text-text-primary' : error ? 'text-[var(--form-error-text)]' : 'text-text-muted'}`}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDownIcon className={`h-5 w-5 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -222,7 +222,7 @@ export default function SelectWithSearch({
       </div>
 
       {error && (
-        <p className="mt-1 text-sm text-error">{error}</p>
+        <p className="form-error-text text-sm">{error}</p>
       )}
     </div>
   );

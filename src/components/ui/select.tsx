@@ -40,7 +40,7 @@ const SelectWithLabel = React.forwardRef<
           id={selectId}
           className={cn(
             "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-            error && "border-destructive focus:ring-destructive",
+            error && "form-error",
             className
           )}
         >
@@ -78,7 +78,7 @@ const SelectWithLabel = React.forwardRef<
         </SelectPrimitive.Portal>
       </SelectPrimitive.Root>
       {error && (
-        <p className="mt-1 text-sm text-destructive">{error}</p>
+        <p className="form-error-text text-sm">{error}</p>
       )}
       {helperText && !error && (
         <p className="mt-1 text-sm text-muted-foreground">{helperText}</p>

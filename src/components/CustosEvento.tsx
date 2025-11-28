@@ -237,7 +237,7 @@ export default function CustosEvento({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant='outline' onClick={handleNovoCusto} className="p-2">
+                  <Button onClick={handleNovoCusto} className="btn-add p-2">
                     <PlusIcon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
@@ -260,7 +260,7 @@ export default function CustosEvento({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant='outline' onClick={handleNovoCusto} className="p-2">
+                      <Button onClick={handleNovoCusto} className="btn-add p-2">
                         <PlusIcon className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
