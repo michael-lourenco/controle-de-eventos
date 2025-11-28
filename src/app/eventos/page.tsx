@@ -628,7 +628,8 @@ export default function EventosPage() {
           {sortedEventos.map((evento) => (
             <Card 
               key={evento.id} 
-              className="hover:shadow-lg transition-all duration-300"
+              className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+              onClick={() => handleView(evento)}
             >
               <CardHeader>
                 <div className="flex flex-col gap-2">
