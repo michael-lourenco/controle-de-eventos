@@ -12,6 +12,7 @@ import { ModeloContrato, CampoContrato, Evento } from '@/types';
 import { ContratoService } from '@/lib/services/contrato-service';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
+import LoadingHotmart from '@/components/LoadingHotmart';
 
 function NovoContratoPageContent() {
   const router = useRouter();
@@ -362,9 +363,9 @@ export default function NovoContratoPage() {
     <Suspense fallback={
       <Layout>
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-text-secondary">Carregando...</p>
+          <div className="flex flex-col items-center justify-center py-8">
+            <LoadingHotmart size="md" />
+            <p className="mt-4 text-text-secondary">Carregando...</p>
           </div>
         </div>
       </Layout>

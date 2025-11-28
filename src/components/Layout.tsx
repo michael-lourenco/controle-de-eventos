@@ -10,6 +10,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { usePlano } from '@/lib/hooks/usePlano';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import LoadingHotmart from '@/components/LoadingHotmart';
 import {
   HomeIcon,
   CalendarIcon,
@@ -82,7 +83,7 @@ export default function Layout({ children }: LayoutProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <LoadingHotmart size="md" />
       </div>
     );
   }

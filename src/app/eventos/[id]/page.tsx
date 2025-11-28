@@ -42,6 +42,7 @@ import { ptBR } from 'date-fns/locale';
 import { useEffect } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Lock } from 'lucide-react';
+import LoadingHotmart from '@/components/LoadingHotmart';
 
 export default function EventoViewPage() {
   const params = useParams();
@@ -300,11 +301,9 @@ export default function EventoViewPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-text-secondary">Carregando evento...</p>
-          </div>
+        <div className="flex flex-col items-center justify-center h-64">
+          <LoadingHotmart size="sm" />
+          <p className="mt-4 text-text-secondary">Carregando evento...</p>
         </div>
       </Layout>
     );

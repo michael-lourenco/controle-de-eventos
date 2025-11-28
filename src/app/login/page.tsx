@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { signIn } from 'next-auth/react';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import LoadingHotmart from '@/components/LoadingHotmart';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -53,7 +54,7 @@ export default function LoginPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <LoadingHotmart size="md" />
       </div>
     );
   }

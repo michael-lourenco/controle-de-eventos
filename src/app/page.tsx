@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import LoadingHotmart from '@/components/LoadingHotmart';
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
@@ -26,7 +27,7 @@ export default function HomePage() {
   if (!mounted || status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <LoadingHotmart size="md" />
       </div>
     );
   }

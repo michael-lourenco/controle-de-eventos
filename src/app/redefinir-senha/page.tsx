@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import LoadingHotmart from '@/components/LoadingHotmart';
 
 function RedefinirSenhaForm() {
   const [code, setCode] = useState<string>('');
@@ -172,11 +173,9 @@ function RedefinirSenhaForm() {
 
   if (verifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">Verificando código de redefinição...</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <LoadingHotmart size="md" />
+        <p className="mt-4 text-text-secondary">Verificando código de redefinição...</p>
       </div>
     );
   }
@@ -370,11 +369,9 @@ function RedefinirSenhaForm() {
 export default function RedefinirSenhaPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">Carregando...</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <LoadingHotmart size="md" />
+        <p className="mt-4 text-text-secondary">Carregando...</p>
       </div>
     }>
       <RedefinirSenhaForm />

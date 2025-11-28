@@ -10,6 +10,7 @@ import { usePlano } from '@/lib/hooks/usePlano';
 import LimiteUso from '@/components/LimiteUso';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
+import LoadingHotmart from '@/components/LoadingHotmart';
 
 export default function AssinaturaPage() {
   const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
@@ -308,7 +309,7 @@ export default function AssinaturaPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <LoadingHotmart size="sm" />
         </div>
       </Layout>
     );
