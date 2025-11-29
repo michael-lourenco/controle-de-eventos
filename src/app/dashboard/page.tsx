@@ -15,6 +15,7 @@ import {
 import { useDashboardData } from '@/hooks/useData';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -134,9 +135,47 @@ export default function DashboardPage() {
                   
                   {/* Conteúdo */}
                   <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                    <p className="text-xs font-medium text-text-secondary leading-tight mb-1">
-                      {stat.name}
-                    </p>
+                    <div className="flex items-center gap-1 justify-end mb-1">
+                      <p className="text-xs font-medium text-text-secondary leading-tight">
+                        {stat.name}
+                      </p>
+                      {stat.name === 'Receita Total' && (
+                        <InfoTooltip
+                          title="Receita Total"
+                          description="Soma de todos os pagamentos recebidos (com status 'Pago') desde o início. Representa a receita total acumulada da empresa."
+                          calculation="Receita Total = Soma de todos os pagamentos com status 'Pago' registrados no sistema. Considera todos os pagamentos liquidados, independentemente da data."
+                          className="flex-shrink-0"
+                          iconClassName="h-5 w-5"
+                        />
+                      )}
+                      {stat.name === 'Total a Receber' && (
+                        <InfoTooltip
+                          title="Total a Receber"
+                          description="Soma de todos os valores ainda não liquidados (pendentes + em atraso) de todos os eventos. Representa o montante total que a empresa ainda deve receber."
+                          calculation="Total a Receber = Valor Pendente + Valor em Atraso. Considera apenas eventos com valor previsto maior que zero e que ainda possuem valores não pagos."
+                          className="flex-shrink-0"
+                          iconClassName="h-5 w-5"
+                        />
+                      )}
+                      {stat.name === 'Total de Eventos' && (
+                        <InfoTooltip
+                          title="Total de Eventos"
+                          description="Quantidade total de eventos cadastrados no sistema, independentemente do status ou data."
+                          calculation="Total de Eventos = Contagem de todos os eventos cadastrados no sistema, incluindo concluídos, cancelados, pendentes, etc."
+                          className="flex-shrink-0"
+                          iconClassName="h-5 w-5"
+                        />
+                      )}
+                      {stat.name === 'Eventos Concluídos' && (
+                        <InfoTooltip
+                          title="Eventos Concluídos"
+                          description="Quantidade de eventos com status 'Concluído' no sistema. Representa eventos finalizados com sucesso."
+                          calculation="Eventos Concluídos = Contagem de eventos com status = 'Concluído' no sistema."
+                          className="flex-shrink-0"
+                          iconClassName="h-5 w-5"
+                        />
+                      )}
+                    </div>
                     <p 
                       className="font-bold text-text-primary leading-none whitespace-nowrap"
                       style={{ 
@@ -160,9 +199,16 @@ export default function DashboardPage() {
           >
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
                   <CalendarIcon className="h-5 w-5 mr-2 text-info" />
                   Eventos de Hoje
+                  <InfoTooltip
+                    title="Eventos de Hoje"
+                    description="Lista de eventos agendados para o dia atual. Mostra todos os eventos cuja dataEvento corresponde à data de hoje."
+                    calculation="Eventos de Hoje = Eventos cuja dataEvento é igual à data atual (dia/mês/ano). Considera apenas a data, não a hora."
+                    className="flex-shrink-0"
+                    iconClassName="h-5 w-5"
+                  />
                 </div>
                 <span className="text-2xl font-bold text-primary">
                   {dashboardData.eventosHoje}
@@ -214,10 +260,19 @@ export default function DashboardPage() {
             className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
           >
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-error" />
-                Valores Atrasados
-              </CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="flex items-center">
+                  <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-error" />
+                  Valores Atrasados
+                </CardTitle>
+                <InfoTooltip
+                  title="Valores Atrasados"
+                  description="Quantidade de pagamentos pendentes cuja data de vencimento já passou. Representa valores vencidos que precisam de atenção para cobrança."
+                  calculation="Valores Atrasados = Contagem de pagamentos com status 'Pendente' cuja data de vencimento (diaFinalPagamento do evento) já passou."
+                  className="flex-shrink-0"
+                  iconClassName="h-5 w-5"
+                />
+              </div>
               <CardDescription>
                 Eventos com valores em atraso
               </CardDescription>
@@ -243,9 +298,16 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 <ClockIcon className="h-5 w-5 mr-2 text-success" />
                 Próximos Eventos (7 dias)
+                <InfoTooltip
+                  title="Próximos Eventos (7 dias)"
+                  description="Lista de eventos agendados para os próximos 7 dias a partir de hoje. Ajuda no planejamento e preparação dos eventos."
+                  calculation="Próximos Eventos = Eventos cuja dataEvento está entre hoje e os próximos 7 dias (inclusive). Ordenados por data mais próxima primeiro."
+                  className="flex-shrink-0"
+                  iconClassName="h-5 w-5"
+                />
               </div>
               <Button
                 variant="ghost"
@@ -401,7 +463,16 @@ export default function DashboardPage() {
             className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
           >
             <CardHeader>
-              <CardTitle className="text-lg">Receita do Mês</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">Receita do Mês</CardTitle>
+                <InfoTooltip
+                  title="Receita do Mês"
+                  description="Soma de todos os pagamentos recebidos (com status 'Pago') no mês atual. Representa a receita efetivamente recebida no mês corrente."
+                  calculation="Receita do Mês = Soma de todos os pagamentos com status 'Pago' e dataPagamento dentro do mês atual (1º ao último dia do mês)."
+                  className="flex-shrink-0"
+                  iconClassName="h-5 w-5"
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-success">
@@ -428,7 +499,16 @@ export default function DashboardPage() {
             className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
           >
             <CardHeader>
-              <CardTitle className="text-lg">Receita do Ano</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">Receita do Ano</CardTitle>
+                <InfoTooltip
+                  title="Receita do Ano"
+                  description="Soma de todos os pagamentos recebidos (com status 'Pago') no ano atual. Representa a receita acumulada desde o início do ano."
+                  calculation="Receita do Ano = Soma de todos os pagamentos com status 'Pago' e dataPagamento dentro do ano atual (1º de janeiro até hoje)."
+                  className="flex-shrink-0"
+                  iconClassName="h-5 w-5"
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-info">
@@ -445,7 +525,16 @@ export default function DashboardPage() {
             className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
           >
             <CardHeader>
-              <CardTitle className="text-lg">Total de Pagamentos</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">Total de Pagamentos</CardTitle>
+                <InfoTooltip
+                  title="Total de Pagamentos"
+                  description="Quantidade total de pagamentos pendentes registrados no sistema. Representa pagamentos que ainda não foram liquidados."
+                  calculation="Total de Pagamentos = Contagem de pagamentos com status 'Pendente' no sistema. Inclui pagamentos dentro do prazo e em atraso."
+                  className="flex-shrink-0"
+                  iconClassName="h-5 w-5"
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-text-primary">
