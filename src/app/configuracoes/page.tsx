@@ -9,7 +9,9 @@ import {
   Cog6ToothIcon, 
   DocumentTextIcon, 
   CalendarIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  ShieldCheckIcon,
+  ScaleIcon
 } from '@heroicons/react/24/outline';
 
 export default function ConfiguracoesPage() {
@@ -119,6 +121,60 @@ export default function ConfiguracoesPage() {
               </Button>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Seção de Documentos Legais */}
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold text-text-primary mb-4">Documentos Legais</h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Política de Privacidade */}
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" 
+                  onClick={() => router.push('/politica-privacidade')}>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-accent/10 rounded-lg">
+                    <ShieldCheckIcon className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <CardTitle>Política de Privacidade</CardTitle>
+                    <CardDescription>Como tratamos seus dados</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-text-secondary mb-4">
+                  Conheça como coletamos, utilizamos e protegemos suas informações pessoais de acordo com a LGPD
+                </p>
+                <Button variant="outline" className="w-full">
+                  Ler Política
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Termos de Uso */}
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" 
+                  onClick={() => router.push('/termos-uso')}>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-primary/10 rounded-lg">
+                    <ScaleIcon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Termos de Uso</CardTitle>
+                    <CardDescription>Condições de uso da plataforma</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-text-secondary mb-4">
+                  Leia os termos e condições que regem o uso da plataforma Clicksehub
+                </p>
+                <Button variant="outline" className="w-full">
+                  Ler Termos
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </Layout>

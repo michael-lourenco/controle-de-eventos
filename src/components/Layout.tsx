@@ -11,6 +11,7 @@ import { usePlano } from '@/lib/hooks/usePlano';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import LoadingHotmart from '@/components/LoadingHotmart';
+import CookieConsent from '@/components/CookieConsent';
 import {
   HomeIcon,
   CalendarIcon,
@@ -474,6 +475,9 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </main>
       </div>
+      
+      {/* Cookie Consent Banner */}
+      <CookieConsent />
     </div>
   );
 }

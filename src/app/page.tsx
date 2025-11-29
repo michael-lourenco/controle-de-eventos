@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -554,8 +555,25 @@ export default function LandingPage() {
               </button>
             </div>
           </div>
-          <div className="mt-8 text-center text-sm text-text-muted">
-            <p>© {new Date().getFullYear()} Clicksehub. Todos os direitos reservados.</p>
+          <div className="mt-8 space-y-4">
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-text-secondary">
+              <Link 
+                href="/politica-privacidade"
+                className="hover:text-primary transition-colors underline"
+              >
+                Política de Privacidade
+              </Link>
+              <span className="text-text-muted">•</span>
+              <Link 
+                href="/termos-uso"
+                className="hover:text-primary transition-colors underline"
+              >
+                Termos de Uso
+              </Link>
+            </div>
+            <div className="text-center text-sm text-text-muted">
+              <p>© {new Date().getFullYear()} Clicksehub. Todos os direitos reservados.</p>
+            </div>
           </div>
         </div>
       </footer>
