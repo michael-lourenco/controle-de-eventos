@@ -36,14 +36,22 @@ export function InfoTooltip({
           <button
             type="button"
             className={cn(
-              "inline-flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+              "inline-flex items-center justify-center rounded-full",
+              "w-7 h-7",
+              "bg-surface/80 hover:bg-surface border border-border hover:border-accent/50",
+              "text-accent/70 hover:text-accent",
+              "shadow-sm hover:shadow-md",
+              "transition-all duration-200",
+              "focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1",
+              "cursor-help",
+              "hover:scale-110",
               className
             )}
             aria-label="Informações sobre esta métrica"
           >
             <InformationCircleIcon 
               className={cn(
-                "h-4 w-4 text-text-secondary hover:text-accent transition-colors cursor-help",
+                "h-6 w-6 flex-shrink-0 stroke-[1.5]",
                 iconClassName
               )} 
             />

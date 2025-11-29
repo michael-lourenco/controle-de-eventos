@@ -668,7 +668,7 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                   description="Indica a variação percentual na quantidade de serviços contratados entre o primeiro e o último mês do período analisado. Valores positivos indicam crescimento, valores negativos indicam redução."
                   calculation="Cálculo: ((quantidade do último mês - quantidade do primeiro mês) / quantidade do primeiro mês) × 100. Requer pelo menos 2 meses de dados para ser calculado."
                   className="flex-shrink-0"
-                  iconClassName="h-4 w-4"
+                  iconClassName="h-6 w-6"
                 />
               </div>
               <p className={`font-bold ${dadosServicos.tendencias.crescimentoUtilizacao >= 0 ? 'text-accent' : 'text-[#d97757]'}`}>
@@ -688,7 +688,7 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
                   description="Tipos de serviços que representam mais de 15% do total de serviços contratados no período analisado. Isso indica serviços com alta demanda e relevância no negócio."
                   calculation="Para cada tipo de serviço, calculamos: (quantidade do tipo / total de serviços) × 100. Tipos com percentual maior que 15% são considerados 'em alta'."
                   className="flex-shrink-0"
-                  iconClassName="h-4 w-4"
+                  iconClassName="h-6 w-6"
                 />
               </div>
               {dadosServicos.tendencias.tiposEmAlta.length > 0 ? (
