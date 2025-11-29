@@ -339,7 +339,7 @@ function NovoContratoPageContent() {
                 <CardTitle>Preview do Contrato</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="border rounded p-4 bg-white" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                <div className="border rounded p-4 bg-white text-gray-900 [&_*]:text-gray-900 [&_*]:dark:text-gray-900" dangerouslySetInnerHTML={{ __html: previewHtml }} />
               </CardContent>
             </Card>
 

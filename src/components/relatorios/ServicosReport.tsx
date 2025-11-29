@@ -10,12 +10,12 @@ import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
   StatCard, 
   StatGrid, 
   TabbedChart, 
   PieChart, 
-  BarChart,
   ChartDataPoint 
 } from '@/components/charts';
 
@@ -158,7 +158,7 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
        Math.max(servicosPorMes[0].quantidadeServicos, 1)) * 100 : 0;
 
     const tiposEmAlta = servicosPorTipo
-      .filter(tipo => tipo.percentual > 10)
+      .filter(tipo => tipo.percentual > 15)
       .map(tipo => tipo.tipoServico);
 
     // Alertas
@@ -222,50 +222,51 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
     percentage: 0
   }));
 
-  // Dados formatados para gráficos melhorados
-  const servicosPorMesChartData = dadosServicos.servicosPorMes.map(item => ({
-    mes: item.mes,
-    quantidadeServicos: item.quantidadeServicos,
-    tiposUnicos: item.tiposUnicos
-  }));
-
+  // Preparar dados do gráfico com nomes dos serviços
   const servicosPorTipoEventoChartData = dadosServicos.servicosPorTipoEvento.map(item => ({
     tipoEvento: item.tipoEvento,
     quantidadeServicos: item.quantidadeServicos,
     topServico1: item.tiposMaisUtilizados[0]?.quantidade || 0,
+    topServico1Nome: item.tiposMaisUtilizados[0]?.tipoServico || '',
     topServico2: item.tiposMaisUtilizados[1]?.quantidade || 0,
-    topServico3: item.tiposMaisUtilizados[2]?.quantidade || 0
+    topServico2Nome: item.tiposMaisUtilizados[1]?.tipoServico || '',
+    topServico3: item.tiposMaisUtilizados[2]?.quantidade || 0,
+    topServico3Nome: item.tiposMaisUtilizados[2]?.tipoServico || ''
   }));
 
-  const chartConfigServicos = {
-    quantidadeServicos: {
-      label: "Quantidade de Serviços",
-      color: "#313c43"
-    },
-    tiposUnicos: {
-      label: "Tipos Únicos",
-      color: "#21b6bf"
-    }
-  };
+  // Coletar todos os serviços únicos usados no gráfico para a legenda
+  const servicosUnicosNoGrafico = new Set<string>();
+  dadosServicos.servicosPorTipoEvento.forEach(item => {
+    item.tiposMaisUtilizados.forEach(servico => {
+      if (servico.tipoServico) {
+        servicosUnicosNoGrafico.add(servico.tipoServico);
+      }
+    });
+  });
 
-  const chartConfigTipoEvento = {
+  // Criar mapeamento de cores para serviços
+  const coresServicos: Record<string, string> = {};
+  const coresDisponiveis = ['#21b6bf', '#5d6b74', '#1a9ba3', '#313c43', '#d97757', '#a4b3ba'];
+  Array.from(servicosUnicosNoGrafico).forEach((servico, index) => {
+    coresServicos[servico] = coresDisponiveis[index % coresDisponiveis.length];
+  });
+
+  // Criar config dinâmico baseado nos nomes dos serviços
+  const chartConfigTipoEvento: Record<string, { label: string; color: string }> = {
     quantidadeServicos: {
       label: "Total de Serviços",
       color: "#313c43"
-    },
-    topServico1: {
-      label: "Serviço Mais Utilizado",
-      color: "#21b6bf"
-    },
-    topServico2: {
-      label: "2º Mais Utilizado",
-      color: "#5d6b74"
-    },
-    topServico3: {
-      label: "3º Mais Utilizado",
-      color: "#1a9ba3"
     }
   };
+
+  // Adicionar configurações dinâmicas para cada serviço único
+  Array.from(servicosUnicosNoGrafico).forEach((servico, index) => {
+    const chave = `servico_${index}`;
+    chartConfigTipoEvento[chave] = {
+      label: servico,
+      color: coresServicos[servico]
+    };
+  });
 
   const exportarCSV = () => {
     const csvData = [
@@ -441,19 +442,6 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
             )
           },
           {
-            id: 'barras',
-            label: '📊 Barras',
-            content: (
-              <BarChart 
-                data={servicosPorTipoData}
-                config={{ 
-                  showValues: true, 
-                  showPercentages: false 
-                }}
-              />
-            )
-          },
-          {
             id: 'tabela',
             label: '📋 Tabela',
             content: (
@@ -485,184 +473,171 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
         defaultTab="pizza"
       />
 
-      {/* Análise Temporal e por Tipo de Evento */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Serviços por Mês</CardTitle>
-            <CardDescription>
-              Evolução da utilização de serviços e tipos únicos ao longo do tempo
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <div className="min-w-[500px]">
-              <ChartContainer config={chartConfigServicos} className="h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={servicosPorMesChartData}
-                    margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
-                  <XAxis 
-                    dataKey="mes" 
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis 
-                    yAxisId="left"
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
-                    width={50}
-                  />
-                  <YAxis 
-                    yAxisId="right" 
-                    orientation="right"
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
-                    width={50}
-                  />
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      return (
-                        <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
-                          <div className="mb-2 text-sm font-semibold text-text-primary">
-                            {payload[0]?.payload?.mes}
+      {/* Serviços por Tipo de Evento */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Serviços por Tipo de Evento</CardTitle>
+          <CardDescription>
+            Distribuição de serviços e tipos mais utilizados por tipo de evento
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
+            <div className="overflow-x-auto">
+              <div className="min-w-[500px]">
+                <ChartContainer config={chartConfigTipoEvento} className="h-[350px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart
+                      data={servicosPorTipoEventoChartData}
+                      margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
+                    <XAxis 
+                      dataKey="tipoEvento" 
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis 
+                      tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                      width={50}
+                    />
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const payloadData = payload[0]?.payload as any;
+                        return (
+                          <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
+                            <div className="mb-2 text-sm font-semibold text-text-primary">
+                              {payloadData?.tipoEvento}
+                            </div>
+                            <div className="space-y-1">
+                              {payload.map((entry: any, index: number) => {
+                                let nomeServico = entry.name;
+                                if (entry.dataKey === 'topServico1' && payloadData?.topServico1Nome) {
+                                  nomeServico = payloadData.topServico1Nome;
+                                } else if (entry.dataKey === 'topServico2' && payloadData?.topServico2Nome) {
+                                  nomeServico = payloadData.topServico2Nome;
+                                } else if (entry.dataKey === 'topServico3' && payloadData?.topServico3Nome) {
+                                  nomeServico = payloadData.topServico3Nome;
+                                }
+                                return (
+                                  <div key={index} className="flex items-center justify-between gap-4 text-xs">
+                                    <div className="flex items-center gap-2">
+                                      <div 
+                                        className="h-2.5 w-2.5 rounded-full"
+                                        style={{ backgroundColor: entry.color }}
+                                      />
+                                      <span className="text-text-secondary">{nomeServico}:</span>
+                                    </div>
+                                    <span className="font-semibold text-text-primary">
+                                      {typeof entry.value === 'number' ? entry.value : entry.value}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            {payload.map((entry: any, index: number) => (
-                              <div key={index} className="flex items-center justify-between gap-4 text-xs">
-                                <div className="flex items-center gap-2">
-                                  <div 
-                                    className="h-2.5 w-2.5 rounded-full"
-                                    style={{ backgroundColor: entry.color }}
-                                  />
-                                  <span className="text-text-secondary">{entry.name}:</span>
-                                </div>
-                                <span className="font-semibold text-text-primary">
-                                  {typeof entry.value === 'number' ? entry.value : entry.value}
-                                </span>
-                              </div>
-                            ))}
+                        );
+                      }}
+                    />
+                    <Bar 
+                      dataKey="quantidadeServicos" 
+                      fill="#313c43" 
+                      name="Total de Serviços"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      dataKey="topServico1" 
+                      fill="#21b6bf" 
+                      name="Top 1"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      dataKey="topServico2" 
+                      fill="#5d6b74" 
+                      name="Top 2"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      dataKey="topServico3" 
+                      fill="#1a9ba3" 
+                      name="Top 3"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </ComposedChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            </div>
+            <div className="border-l border-border pl-6">
+              <h3 className="text-sm font-semibold text-text-primary mb-4">Legenda de Serviços</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-4 w-4 rounded" style={{ backgroundColor: '#313c43' }}></div>
+                    <span className="text-sm font-medium text-text-primary">Total de Serviços</span>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-text-secondary mb-2">Serviços por Posição:</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded" style={{ backgroundColor: '#21b6bf' }}></div>
+                      <span className="text-xs text-text-primary">1º Mais Utilizado</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded" style={{ backgroundColor: '#5d6b74' }}></div>
+                      <span className="text-xs text-text-primary">2º Mais Utilizado</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded" style={{ backgroundColor: '#1a9ba3' }}></div>
+                      <span className="text-xs text-text-primary">3º Mais Utilizado</span>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-text-secondary mb-2">Serviços Utilizados:</p>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {Array.from(servicosUnicosNoGrafico).map((servico) => {
+                      // Encontrar em quais tipos de evento este serviço aparece e em qual posição
+                      const ocorrencias = dadosServicos.servicosPorTipoEvento
+                        .filter(item => item.tiposMaisUtilizados.some(s => s.tipoServico === servico))
+                        .map(item => {
+                          const posicao = item.tiposMaisUtilizados.findIndex(s => s.tipoServico === servico);
+                          return { tipoEvento: item.tipoEvento, posicao: posicao + 1 };
+                        });
+                      
+                      const coresPorPosicao = ['#21b6bf', '#5d6b74', '#1a9ba3'];
+                      const cor = ocorrencias.length > 0 
+                        ? coresPorPosicao[ocorrencias[0].posicao - 1] || '#21b6bf'
+                        : coresServicos[servico] || '#21b6bf';
+                      
+                      return (
+                        <div key={servico} className="flex items-start gap-2">
+                          <div 
+                            className="h-3 w-3 rounded mt-1 flex-shrink-0" 
+                            style={{ backgroundColor: cor }}
+                          ></div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-xs text-text-primary block truncate">{servico}</span>
+                            {ocorrencias.length > 0 && (
+                              <span className="text-xs text-text-secondary">
+                                {ocorrencias.map(o => `${o.tipoEvento} (${o.posicao}º)`).join(', ')}
+                              </span>
+                            )}
                           </div>
                         </div>
                       );
-                    }}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                  <Area 
-                    yAxisId="left"
-                    type="monotone" 
-                    dataKey="quantidadeServicos" 
-                    fill="#313c43" 
-                    fillOpacity={0.6}
-                    stroke="#313c43"
-                    name="Quantidade de Serviços"
-                  />
-                  <Line 
-                    yAxisId="right"
-                    type="monotone" 
-                    dataKey="tiposUnicos" 
-                    stroke="#21b6bf" 
-                    strokeWidth={3}
-                    name="Tipos Únicos"
-                    dot={{ fill: '#21b6bf', r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </ComposedChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Serviços por Tipo de Evento</CardTitle>
-            <CardDescription>
-              Distribuição de serviços e tipos mais utilizados por tipo de evento
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <div className="min-w-[500px]">
-              <ChartContainer config={chartConfigTipoEvento} className="h-[350px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={servicosPorTipoEventoChartData}
-                    margin={{ top: 10, right: 10, left: -10, bottom: 50 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(164, 179, 186, 0.3)" />
-                  <XAxis 
-                    dataKey="tipoEvento" 
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis 
-                    tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
-                    width={50}
-                  />
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      return (
-                        <div className="rounded-lg border bg-surface border-border p-3 shadow-lg">
-                          <div className="mb-2 text-sm font-semibold text-text-primary">
-                            {payload[0]?.payload?.tipoEvento}
-                          </div>
-                          <div className="space-y-1">
-                            {payload.map((entry: any, index: number) => (
-                              <div key={index} className="flex items-center justify-between gap-4 text-xs">
-                                <div className="flex items-center gap-2">
-                                  <div 
-                                    className="h-2.5 w-2.5 rounded-full"
-                                    style={{ backgroundColor: entry.color }}
-                                  />
-                                  <span className="text-text-secondary">{entry.name}:</span>
-                                </div>
-                                <span className="font-semibold text-text-primary">
-                                  {typeof entry.value === 'number' ? entry.value : entry.value}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                  <Bar 
-                    dataKey="quantidadeServicos" 
-                    fill="#313c43" 
-                    name="Total de Serviços"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="topServico1" 
-                    fill="#21b6bf" 
-                    name="Serviço Mais Utilizado"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="topServico2" 
-                    fill="#5d6b74" 
-                    name="2º Mais Utilizado"
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Bar 
-                    dataKey="topServico3" 
-                    fill="#1a9ba3" 
-                    name="3º Mais Utilizado"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </ComposedChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tendências */}
       <Card>
@@ -686,14 +661,55 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
               <p className="text-[#d97757] font-bold">{dadosServicos.tendencias.servicoMenosUtilizado}</p>
             </div>
             <div className="p-4 border rounded-lg bg-secondary/10 border-border">
-              <h4 className="font-medium text-secondary mb-2">Crescimento</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-secondary">Crescimento</h4>
+                <InfoTooltip
+                  title="Crescimento"
+                  description="Indica a variação percentual na quantidade de serviços contratados entre o primeiro e o último mês do período analisado. Valores positivos indicam crescimento, valores negativos indicam redução."
+                  calculation="Cálculo: ((quantidade do último mês - quantidade do primeiro mês) / quantidade do primeiro mês) × 100. Requer pelo menos 2 meses de dados para ser calculado."
+                  className="flex-shrink-0"
+                  iconClassName="h-4 w-4"
+                />
+              </div>
               <p className={`font-bold ${dadosServicos.tendencias.crescimentoUtilizacao >= 0 ? 'text-accent' : 'text-[#d97757]'}`}>
                 {dadosServicos.tendencias.crescimentoUtilizacao.toFixed(1)}%
               </p>
             </div>
             <div className="p-4 border rounded-lg bg-accent-dark/10 border-border">
-              <h4 className="font-medium text-accent-dark mb-2">Tipos em Alta</h4>
-              <p className="text-accent-dark font-bold">{dadosServicos.tendencias.tiposEmAlta.length}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-accent-dark">
+                  Tipos em Alta
+                  {dadosServicos.tendencias.tiposEmAlta.length > 0 && (
+                    <span className="ml-2 text-xs font-normal">({dadosServicos.tendencias.tiposEmAlta.length})</span>
+                  )}
+                </h4>
+                <InfoTooltip
+                  title="Tipos em Alta"
+                  description="Tipos de serviços que representam mais de 15% do total de serviços contratados no período analisado. Isso indica serviços com alta demanda e relevância no negócio."
+                  calculation="Para cada tipo de serviço, calculamos: (quantidade do tipo / total de serviços) × 100. Tipos com percentual maior que 15% são considerados 'em alta'."
+                  className="flex-shrink-0"
+                  iconClassName="h-4 w-4"
+                />
+              </div>
+              {dadosServicos.tendencias.tiposEmAlta.length > 0 ? (
+                <div className="space-y-1.5">
+                  {dadosServicos.tendencias.tiposEmAlta.map((tipo, index) => {
+                    const tipoInfo = dadosServicos.servicosPorTipo.find(t => t.tipoServico === tipo);
+                    return (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <span className="text-accent-dark font-medium truncate pr-2">{tipo}</span>
+                        {tipoInfo && (
+                          <span className="text-accent-dark/70 text-xs flex-shrink-0">
+                            {tipoInfo.percentual.toFixed(1)}%
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-accent-dark/70 text-sm">Nenhum tipo acima de 15%</p>
+              )}
             </div>
           </div>
         </CardContent>
