@@ -8,6 +8,7 @@ import { Evento, StatusEvento } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
   StatCard, 
   StatGrid, 
@@ -162,28 +163,57 @@ export default function PerformanceEventosReport({ eventos }: PerformanceEventos
           title="Total de Eventos"
           value={resumoGeral.totalEventos}
           color="primary"
+          tooltip={{
+            title: "Total de Eventos",
+            description: "Quantidade total de eventos cadastrados no período selecionado, independentemente do status.",
+            calculation: "Total de Eventos = Contagem de todos os eventos cuja dataEvento está dentro do período selecionado."
+          }}
         />
         <StatCard
           title="Concluídos"
           value={resumoGeral.eventosConcluidos}
           color="success"
+          tooltip={{
+            title: "Concluídos",
+            description: "Quantidade de eventos com status 'Concluído' no período selecionado. Representa eventos finalizados com sucesso.",
+            calculation: "Concluídos = Contagem de eventos com status = 'CONCLUIDO' e dataEvento dentro do período."
+          }}
         />
         <StatCard
           title="Cancelados"
           value={resumoGeral.eventosCancelados}
           color="error"
+          tooltip={{
+            title: "Cancelados",
+            description: "Quantidade de eventos com status 'Cancelado' no período selecionado. Representa eventos que foram cancelados.",
+            calculation: "Cancelados = Contagem de eventos com status = 'CANCELADO' e dataEvento dentro do período."
+          }}
         />
         <StatCard
           title="Taxa de Conclusão"
           value={`${resumoGeral.taxaConclusao.toFixed(1)}%`}
           color="info"
+          tooltip={{
+            title: "Taxa de Conclusão",
+            description: "Percentual de eventos que foram concluídos em relação ao total de eventos. Indica a eficiência na finalização de eventos.",
+            calculation: "Taxa de Conclusão = (Eventos Concluídos / Total de Eventos) × 100. Valores altos indicam boa taxa de finalização."
+          }}
         />
       </StatGrid>
 
       {/* Eventos por Status */}
       <Card>
         <CardHeader>
-          <CardTitle>Eventos por Status</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>Eventos por Status</CardTitle>
+            <InfoTooltip
+              title="Eventos por Status"
+              description="Distribuição visual dos eventos agrupados por status (Concluído, Cancelado, Pendente, etc.) no período selecionado."
+              calculation="Cada evento é contabilizado uma vez de acordo com seu status atual. O gráfico mostra a proporção de cada status em relação ao total."
+              className="flex-shrink-0"
+              iconClassName="h-6 w-6"
+            />
+          </div>
           <CardDescription>
             Distribuição dos eventos por status no período selecionado
           </CardDescription>
@@ -204,6 +234,11 @@ export default function PerformanceEventosReport({ eventos }: PerformanceEventos
       <TabbedChart
         title="Eventos por Tipo"
         subtitle="Visualize a distribuição dos eventos por tipo em diferentes formatos"
+        titleTooltip={{
+          title: "Eventos por Tipo",
+          description: "Distribuição dos eventos agrupados por tipo (Casamento, Aniversário, etc.) no período selecionado.",
+          calculation: "Cada evento é contabilizado uma vez de acordo com seu tipoEvento. O gráfico mostra a quantidade e percentual de cada tipo."
+        }}
         tabs={[
           {
             id: 'pizza',

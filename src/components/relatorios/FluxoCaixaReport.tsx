@@ -8,6 +8,7 @@ import { Evento, Pagamento, CustoEvento } from '@/types';
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { 
@@ -382,7 +383,16 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                 <span className="text-success text-lg">💰</span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Receita Total</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Receita Total</p>
+                  <InfoTooltip
+                    title="Receita Total"
+                    description="Soma de todos os pagamentos recebidos (status 'Pago') no período selecionado. Representa o dinheiro que entrou no caixa."
+                    calculation="Receita Total = Soma de todos os pagamentos com status 'Pago' e dataPagamento dentro do período selecionado."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
@@ -401,7 +411,16 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                 <span className="text-error text-lg">💸</span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Despesa Total</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Despesa Total</p>
+                  <InfoTooltip
+                    title="Despesa Total"
+                    description="Soma de todos os custos cadastrados no período selecionado. Representa o dinheiro que saiu do caixa em despesas."
+                    calculation="Despesa Total = Soma de (valor × quantidade) de todos os custos com dataCadastro dentro do período. Custos removidos são excluídos."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
@@ -420,7 +439,16 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                 <span className={`${dadosFluxoCaixa.resumoGeral.saldoAtual >= 0 ? 'text-success' : 'text-error'} text-lg`}>💵</span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Saldo Atual</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Saldo Atual</p>
+                  <InfoTooltip
+                    title="Saldo Atual"
+                    description="Diferença entre receitas e despesas no período. Valores positivos indicam lucro, valores negativos indicam prejuízo."
+                    calculation="Saldo Atual = Receita Total - Despesa Total. Representa o resultado financeiro líquido do período."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
@@ -443,7 +471,16 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                 )}
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Variação do Saldo</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Variação do Saldo</p>
+                  <InfoTooltip
+                    title="Variação do Saldo"
+                    description="Percentual de variação do saldo acumulado em relação ao mês anterior. Indica se o saldo está crescendo ou diminuindo."
+                    calculation="Variação do Saldo = ((Saldo Atual - Saldo do Mês Anterior) / |Saldo do Mês Anterior|) × 100. Valores positivos indicam crescimento, negativos indicam declínio."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
@@ -460,6 +497,11 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
       <TabbedChart
         title="Fluxo de Caixa Mensal"
         subtitle="Evolução das receitas, despesas e saldo ao longo do tempo"
+        titleTooltip={{
+          title: "Fluxo de Caixa Mensal",
+          description: "Evolução temporal das receitas, despesas, saldo mensal e saldo acumulado ao longo do período selecionado.",
+          calculation: "Receitas = Pagamentos com status 'Pago' no mês. Despesas = Custos cadastrados no mês. Saldo = Receitas - Despesas. Saldo Acumulado = Soma dos saldos mensais até o mês atual."
+        }}
         tabs={[
           {
             id: 'grafico',
@@ -609,7 +651,16 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Receitas por Forma de Pagamento</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Receitas por Forma de Pagamento</CardTitle>
+              <InfoTooltip
+                title="Receitas por Forma de Pagamento"
+                description="Distribuição visual das receitas agrupadas por forma de pagamento (PIX, Cartão, Boleto, etc.) no período selecionado."
+                calculation="Cada pagamento é contabilizado de acordo com sua formaPagamento. O gráfico mostra o valor total e percentual de cada forma de pagamento."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <CardDescription>
               Distribuição das receitas por método de pagamento
             </CardDescription>
@@ -628,7 +679,16 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
 
         <Card>
           <CardHeader>
-            <CardTitle>Despesas por Categoria</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Despesas por Categoria</CardTitle>
+              <InfoTooltip
+                title="Despesas por Categoria"
+                description="Distribuição visual das despesas agrupadas por categoria de custo (Insumos, Transporte, Equipamento, etc.) no período selecionado."
+                calculation="Cada custo é contabilizado de acordo com seu tipoCusto. O valor total considera (valor × quantidade) de cada custo. O gráfico mostra o valor total e percentual de cada categoria."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <CardDescription>
               Distribuição dos custos por categoria
             </CardDescription>
@@ -649,16 +709,25 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
       {/* Projeções */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {dadosFluxoCaixa.projecao.tendencia === 'crescimento' ? (
-              <ArrowTrendingUpIcon className="h-5 w-5 text-accent" />
-            ) : dadosFluxoCaixa.projecao.tendencia === 'declinio' ? (
-              <ArrowTrendingDownIcon className="h-5 w-5 text-[#d97757]" />
-            ) : (
-              <ChartBarIcon className="h-5 w-5 text-text-secondary" />
-            )}
-            Projeções para os Próximos 3 Meses
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
+              {dadosFluxoCaixa.projecao.tendencia === 'crescimento' ? (
+                <ArrowTrendingUpIcon className="h-5 w-5 text-accent" />
+              ) : dadosFluxoCaixa.projecao.tendencia === 'declinio' ? (
+                <ArrowTrendingDownIcon className="h-5 w-5 text-[#d97757]" />
+              ) : (
+                <ChartBarIcon className="h-5 w-5 text-text-secondary" />
+              )}
+              Projeções para os Próximos 3 Meses
+            </CardTitle>
+            <InfoTooltip
+              title="Projeções para os Próximos 3 Meses"
+              description="Estimativa de receitas, despesas e saldo para os próximos 3 meses baseada na média dos últimos 3 meses do período analisado."
+              calculation="Receita Projetada = Média de receitas dos últimos 3 meses. Despesa Projetada = Média de despesas dos últimos 3 meses. Saldo Projetado = Receita Projetada - Despesa Projetada. Confiabilidade = 75% (baseada na estabilidade dos dados)."
+              className="flex-shrink-0"
+              iconClassName="h-6 w-6"
+            />
+          </div>
           <CardDescription>
             Tendência: {dadosFluxoCaixa.projecao.tendencia} | 
             Confiabilidade: {dadosFluxoCaixa.projecao.confiabilidade}%

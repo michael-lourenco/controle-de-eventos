@@ -10,6 +10,7 @@ import { Evento, Pagamento } from '@/types';
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 interface DetalhamentoReceberReportProps {
   eventos: Evento[];
@@ -294,7 +295,16 @@ export default function DetalhamentoReceberReport({
         )}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-lg border border-border bg-surface p-4">
-            <p className="text-sm font-medium text-text-secondary">Total a Receber</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-text-secondary">Total a Receber</p>
+              <InfoTooltip
+                title="Total a Receber"
+                description="Soma de todos os valores ainda não liquidados (pendentes + em atraso) de todos os eventos no período. Representa o montante total que a empresa ainda deve receber dos clientes."
+                calculation="Total a Receber = Valor Pendente + Valor em Atraso. Considera apenas eventos com valor previsto maior que zero e que ainda possuem valores não pagos."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <p className="mt-1 text-2xl font-semibold text-text-primary">
               {formatCurrency(resumo.totalReceber)}
             </p>
@@ -305,7 +315,16 @@ export default function DetalhamentoReceberReport({
             )}
           </div>
           <div className="rounded-lg border border-border bg-surface p-4">
-            <p className="text-sm font-medium text-text-secondary">Valor Pendente</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-text-secondary">Valor Pendente</p>
+              <InfoTooltip
+                title="Valor Pendente"
+                description="Valores que ainda não foram pagos mas que ainda não estão em atraso. São valores dentro do prazo de vencimento ou sem data de vencimento definida."
+                calculation="Valor Pendente = Valor Previsto - Valor Pago, considerando apenas eventos cuja data de vencimento ainda não passou (ou não possui data de vencimento)."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <p className="mt-1 text-xl font-semibold text-text-primary">
               {formatCurrency(resumo.totalPendente)}
             </p>
@@ -321,7 +340,16 @@ export default function DetalhamentoReceberReport({
             )}
           </div>
           <div className="rounded-lg border border-border bg-surface p-4">
-            <p className="text-sm font-medium text-text-secondary">Valor em Atraso</p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-text-secondary">Valor em Atraso</p>
+              <InfoTooltip
+                title="Valor em Atraso"
+                description="Valores que não foram pagos e cuja data de vencimento já passou. Representa valores vencidos que precisam de atenção para cobrança."
+                calculation="Valor em Atraso = Valor Previsto - Valor Pago, considerando apenas eventos cuja data de vencimento (diaFinalPagamento) já passou e ainda possuem valores não pagos."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <p className="mt-1 text-xl font-semibold text-text-primary">
               {formatCurrency(resumo.totalAtrasado)}
             </p>

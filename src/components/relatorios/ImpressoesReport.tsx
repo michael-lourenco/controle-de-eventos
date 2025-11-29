@@ -9,6 +9,7 @@ import { Evento } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, PrinterIcon, ExclamationTriangleIcon, ChartBarIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { 
@@ -442,21 +443,41 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
           title="Total de Impressões"
           value={dadosImpressoes.resumoGeral.totalImpressoes.toLocaleString('pt-BR')}
           color="primary"
+          tooltip={{
+            title: "Total de Impressões",
+            description: "Soma total de todas as impressões realizadas nos eventos do período selecionado. Representa o volume total de impressões.",
+            calculation: "Total de Impressões = Soma do campo numeroImpressoes de todos os eventos cuja dataEvento está dentro do período selecionado."
+          }}
         />
         <StatCard
           title="Eventos com Impressões"
           value={dadosImpressoes.resumoGeral.eventosComImpressoes}
           color="info"
+          tooltip={{
+            title: "Eventos com Impressões",
+            description: "Quantidade de eventos que possuem impressões cadastradas (numeroImpressoes > 0). Indica quantos eventos utilizaram impressões.",
+            calculation: "Eventos com Impressões = Contagem de eventos únicos com numeroImpressoes maior que zero no período."
+          }}
         />
         <StatCard
           title="Taxa de Utilização"
           value={`${dadosImpressoes.resumoGeral.taxaUtilizacaoImpressoes.toFixed(1)}%`}
           color={dadosImpressoes.resumoGeral.taxaUtilizacaoImpressoes >= 70 ? "success" : "warning"}
+          tooltip={{
+            title: "Taxa de Utilização",
+            description: "Percentual de eventos que possuem impressões cadastradas. Indica o quanto as impressões estão sendo utilizadas.",
+            calculation: "Taxa de Utilização = (Eventos com Impressões / Total de Eventos no Período) × 100. Valores acima de 70% indicam boa utilização."
+          }}
         />
         <StatCard
           title="Custo Médio por Impressão"
           value={`R$ ${dadosImpressoes.resumoGeral.custoMedioPorImpressao.toFixed(2)}`}
           color="info"
+          tooltip={{
+            title: "Custo Médio por Impressão",
+            description: "Custo médio estimado por impressão. Atualmente fixo em R$ 0,50 por impressão. Útil para calcular custos totais.",
+            calculation: "Custo Médio por Impressão = R$ 0,50 (valor fixo). Custo Total = Total de Impressões × R$ 0,50."
+          }}
         />
       </StatGrid>
 
@@ -464,6 +485,11 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
       <TabbedChart
         title="Impressões por Tipo de Evento"
         subtitle="Distribuição das impressões por categoria de evento"
+        titleTooltip={{
+          title: "Impressões por Tipo de Evento",
+          description: "Distribuição visual das impressões agrupadas por tipo de evento (Casamento, Aniversário, etc.) no período selecionado.",
+          calculation: "As impressões são somadas por tipo de evento. Cada evento contribui com seu numeroImpressoes para o total do seu tipoEvento."
+        }}
         tabs={[
           {
             id: 'pizza',
@@ -530,7 +556,16 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Impressões por Mês</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Impressões por Mês</CardTitle>
+              <InfoTooltip
+                title="Impressões por Mês"
+                description="Evolução temporal do uso de impressões ao longo do período, mostrando quantidade de impressões, eventos com impressões e custos mensais."
+                calculation="Impressões são agrupadas por mês da dataEvento. Mostra total de impressões, eventos que utilizaram impressões e custo total (impressões × R$ 0,50) por mês."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <CardDescription>
               Evolução do uso de impressões, eventos e custos ao longo do tempo
             </CardDescription>
@@ -636,7 +671,16 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Custo de Impressões por Tipo</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Custo de Impressões por Tipo</CardTitle>
+              <InfoTooltip
+                title="Custo de Impressões por Tipo"
+                description="Análise de custo-benefício das impressões por tipo de evento, mostrando percentual de custo em relação ao valor do evento e ROI (Retorno sobre Investimento)."
+                calculation="Percentual de Custo = (Custo Médio de Impressões / Valor Médio do Evento) × 100. ROI = ((Valor Médio - Custo Médio) / Custo Médio) × 100. Custo por impressão = R$ 0,50."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <CardDescription>
               Análise completa: percentual de custo, valores e ROI por tipo de evento
             </CardDescription>
@@ -754,7 +798,16 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
       {/* Top Eventos com Mais Impressões */}
       <Card>
         <CardHeader>
-          <CardTitle>Top Eventos com Mais Impressões</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>Top Eventos com Mais Impressões</CardTitle>
+            <InfoTooltip
+              title="Top Eventos com Mais Impressões"
+              description="Lista dos eventos que mais utilizaram impressões no período selecionado, ordenados por quantidade de impressões."
+              calculation="Eventos são ordenados por numeroImpressoes em ordem decrescente. Mostra os eventos com maior volume de impressões e seus custos associados."
+              className="flex-shrink-0"
+              iconClassName="h-6 w-6"
+            />
+          </div>
           <CardDescription>
             Eventos que mais utilizaram impressões no período
           </CardDescription>
@@ -836,29 +889,70 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 border rounded-lg bg-accent/10 border-border">
-              <h4 className="font-medium text-accent-dark mb-2">Evento com Mais Impressões</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-accent-dark">Evento com Mais Impressões</h4>
+                <InfoTooltip
+                  title="Evento com Mais Impressões"
+                  description="Cliente/evento que utilizou a maior quantidade de impressões no período. Indica eventos com maior volume de impressões."
+                  calculation="Evento com Mais Impressões = Evento com maior valor de numeroImpressoes no período selecionado."
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              </div>
               <p className="text-accent font-bold">{dadosImpressoes.tendencias.eventoComMaisImpressoes}</p>
             </div>
             <div className="p-4 border rounded-lg bg-[#d97757]/10 border-border">
-              <h4 className="font-medium text-[#d97757] mb-2">Evento com Menos Impressões</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-[#d97757]">Evento com Menos Impressões</h4>
+                <InfoTooltip
+                  title="Evento com Menos Impressões"
+                  description="Cliente/evento que utilizou a menor quantidade de impressões no período (entre os eventos que utilizaram impressões)."
+                  calculation="Evento com Menos Impressões = Evento com menor valor de numeroImpressoes (maior que zero) no período selecionado."
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              </div>
               <p className="text-[#d97757] font-bold">{dadosImpressoes.tendencias.eventoComMenosImpressoes}</p>
             </div>
             <div className="p-4 border rounded-lg bg-secondary/10 border-border">
-              <h4 className="font-medium text-secondary mb-2">Crescimento de Impressões</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-secondary">Crescimento de Impressões</h4>
+                <InfoTooltip
+                  title="Crescimento de Impressões"
+                  description="Variação percentual na quantidade de impressões entre o primeiro e o último mês do período analisado."
+                  calculation="Crescimento de Impressões = ((Impressões do Último Mês - Impressões do Primeiro Mês) / Impressões do Primeiro Mês) × 100. Requer pelo menos 2 meses de dados."
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              </div>
               <p className={`font-bold ${dadosImpressoes.tendencias.crescimentoImpressoes >= 0 ? 'text-accent' : 'text-[#d97757]'}`}>
                 {dadosImpressoes.tendencias.crescimentoImpressoes.toFixed(1)}%
               </p>
             </div>
             <div className="p-4 border rounded-lg bg-accent-dark/10 border-border">
-              <h4 className="font-medium text-accent-dark mb-2">Tipos Mais Impressos</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-accent-dark">
+                  Tipos Mais Impressos
+                  {dadosImpressoes.tendencias.tiposEventoMaisImpressos.length > 0 && (
+                    <span className="ml-2 text-xs font-normal">({dadosImpressoes.tendencias.tiposEventoMaisImpressos.length})</span>
+                  )}
+                </h4>
+                <InfoTooltip
+                  title="Tipos Mais Impressos"
+                  description="Tipos de eventos que representam mais de 20% do total de impressões no período. Indica tipos de eventos com alta utilização de impressões."
+                  calculation="Para cada tipo de evento, calculamos: (impressões do tipo / total de impressões) × 100. Tipos com percentual maior que 20% são considerados 'em alta'."
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              </div>
               {dadosImpressoes.tendencias.tiposEventoMaisImpressos.length > 0 ? (
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {dadosImpressoes.tendencias.tiposEventoMaisImpressos.map((tipo, index) => (
-                    <p key={index} className="text-accent-dark font-bold text-sm">{tipo}</p>
+                    <div key={index} className="text-accent-dark font-medium text-sm">{tipo}</div>
                   ))}
                 </div>
               ) : (
-                <p className="text-accent-dark font-bold">N/A</p>
+                <p className="text-accent-dark/70 text-sm">Nenhum tipo acima de 20%</p>
               )}
             </div>
           </div>

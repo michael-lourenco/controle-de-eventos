@@ -9,6 +9,7 @@ import { Cliente, CanalEntrada, Evento } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, UserPlusIcon, EyeIcon } from '@heroicons/react/24/outline';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { AreaChart, Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { 
@@ -447,21 +448,41 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
           title="Total de Clientes"
           value={dadosCanaisEntrada.resumoGeral.totalClientes}
           color="primary"
+          tooltip={{
+            title: "Total de Clientes",
+            description: "Quantidade total de clientes cadastrados no período selecionado. Inclui todos os clientes, independentemente de terem canal de entrada cadastrado.",
+            calculation: "Total de Clientes = Contagem de clientes cuja dataCadastro está dentro do período selecionado."
+          }}
         />
         <StatCard
           title="Canais Ativos"
           value={dadosCanaisEntrada.resumoGeral.canaisAtivos}
           color="info"
+          tooltip={{
+            title: "Canais Ativos",
+            description: "Quantidade de canais de entrada diferentes utilizados pelos clientes no período. Indica a diversidade de origens dos leads.",
+            calculation: "Canais Ativos = Contagem de canais de entrada únicos (canalEntradaId) associados aos clientes do período."
+          }}
         />
         <StatCard
           title="Taxa de Preenchimento"
           value={`${dadosCanaisEntrada.resumoGeral.taxaPreenchimento.toFixed(1)}%`}
           color={dadosCanaisEntrada.resumoGeral.taxaPreenchimento >= 80 ? "success" : "warning"}
+          tooltip={{
+            title: "Taxa de Preenchimento",
+            description: "Percentual de clientes que possuem canal de entrada cadastrado. Indica a qualidade do cadastro de clientes.",
+            calculation: "Taxa de Preenchimento = (Clientes com Canal / Total de Clientes) × 100. Valores acima de 80% indicam bom preenchimento."
+          }}
         />
         <StatCard
           title="Clientes sem Canal"
           value={dadosCanaisEntrada.resumoGeral.clientesSemCanal}
           color={dadosCanaisEntrada.resumoGeral.clientesSemCanal === 0 ? "success" : "warning"}
+          tooltip={{
+            title: "Clientes sem Canal",
+            description: "Quantidade de clientes que não possuem canal de entrada cadastrado. Esses clientes precisam ter o canal preenchido para melhor análise de origem dos leads.",
+            calculation: "Clientes sem Canal = Contagem de clientes do período que não possuem canalEntradaId cadastrado (canalEntradaId é null ou vazio)."
+          }}
         />
       </StatGrid>
 
@@ -469,6 +490,11 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
       <TabbedChart
         title="Clientes por Canal de Entrada"
         subtitle="Distribuição dos clientes por origem"
+        titleTooltip={{
+          title: "Clientes por Canal de Entrada",
+          description: "Distribuição visual dos clientes agrupados por canal de entrada (Instagram, Facebook, Indicação, etc.) no período selecionado.",
+          calculation: "Cada cliente é contabilizado uma vez de acordo com seu canalEntradaId. O gráfico mostra a quantidade e percentual de clientes por canal."
+        }}
         tabs={[
           {
             id: 'pizza',
@@ -539,7 +565,16 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Clientes por Mês</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Clientes por Mês</CardTitle>
+              <InfoTooltip
+                title="Clientes por Mês"
+                description="Evolução temporal do número de clientes cadastrados ao longo do período, mostrando a distribuição por canal de entrada."
+                calculation="Clientes são agrupados por mês de cadastro (dataCadastro) e por canal de entrada. Mostra a evolução mensal de cada canal."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <CardDescription>
               Evolução do número de clientes ao longo do tempo por canal de entrada
             </CardDescription>
@@ -640,7 +675,16 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
 
         <Card>
           <CardHeader>
-            <CardTitle>Taxa de Conversão por Canal</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Taxa de Conversão por Canal</CardTitle>
+              <InfoTooltip
+                title="Taxa de Conversão por Canal"
+                description="Percentual de leads de cada canal que se converteram em eventos. Indica a efetividade de cada canal em gerar negócios."
+                calculation="Taxa de Conversão = (Eventos Gerados pelo Canal / Total de Leads do Canal) × 100. Valores altos indicam canais mais efetivos em converter leads em eventos."
+                className="flex-shrink-0"
+                iconClassName="h-6 w-6"
+              />
+            </div>
             <CardDescription>
               Efetividade de cada canal: leads, conversão e receita gerada
             </CardDescription>
@@ -755,22 +799,71 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-4 border rounded-lg bg-accent/10 border-border">
-              <h4 className="font-medium text-accent-dark mb-2">Canal Mais Efetivo</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-accent-dark">Canal Mais Efetivo</h4>
+                <InfoTooltip
+                  title="Canal Mais Efetivo"
+                  description="Canal de entrada com maior taxa de conversão de leads em eventos. Indica qual canal está gerando mais negócios."
+                  calculation="Canal Mais Efetivo = Canal com maior Taxa de Conversão. Taxa de Conversão = (Eventos Gerados / Total de Leads) × 100."
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              </div>
               <p className="text-accent font-bold">{dadosCanaisEntrada.tendencias.canalMaisEfetivo}</p>
             </div>
             <div className="p-4 border rounded-lg bg-[#d97757]/10 border-border">
-              <h4 className="font-medium text-[#d97757] mb-2">Canal Menos Efetivo</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-[#d97757]">Canal Menos Efetivo</h4>
+                <InfoTooltip
+                  title="Canal Menos Efetivo"
+                  description="Canal de entrada com menor taxa de conversão de leads em eventos. Pode indicar necessidade de melhorias ou ajustes."
+                  calculation="Canal Menos Efetivo = Canal com menor Taxa de Conversão. Taxa de Conversão = (Eventos Gerados / Total de Leads) × 100."
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              </div>
               <p className="text-[#d97757] font-bold">{dadosCanaisEntrada.tendencias.canalMenosEfetivo}</p>
             </div>
             <div className="p-4 border rounded-lg bg-secondary/10 border-border">
-              <h4 className="font-medium text-secondary mb-2">Crescimento de Leads</h4>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-secondary">Crescimento de Leads</h4>
+                <InfoTooltip
+                  title="Crescimento de Leads"
+                  description="Variação percentual na quantidade de leads (clientes) entre o primeiro e o último mês do período analisado."
+                  calculation="Crescimento de Leads = ((Leads do Último Mês - Leads do Primeiro Mês) / Leads do Primeiro Mês) × 100. Requer pelo menos 2 meses de dados."
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              </div>
               <p className={`font-bold ${dadosCanaisEntrada.tendencias.crescimentoLeads >= 0 ? 'text-accent' : 'text-[#d97757]'}`}>
                 {dadosCanaisEntrada.tendencias.crescimentoLeads.toFixed(1)}%
               </p>
             </div>
             <div className="p-4 border rounded-lg bg-accent-dark/10 border-border">
-              <h4 className="font-medium text-accent-dark mb-2">Canais em Alta</h4>
-              <p className="text-accent-dark font-bold">{dadosCanaisEntrada.tendencias.canaisEmAlta.length}</p>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="font-medium text-accent-dark">
+                  Canais em Alta
+                  {dadosCanaisEntrada.tendencias.canaisEmAlta.length > 0 && (
+                    <span className="ml-2 text-xs font-normal">({dadosCanaisEntrada.tendencias.canaisEmAlta.length})</span>
+                  )}
+                </h4>
+                <InfoTooltip
+                  title="Canais em Alta"
+                  description="Canais de entrada que representam mais de 15% do total de clientes no período. Indica canais com alta representatividade."
+                  calculation="Para cada canal, calculamos: (quantidade de clientes do canal / total de clientes) × 100. Canais com percentual maior que 15% são considerados 'em alta'."
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              </div>
+              {dadosCanaisEntrada.tendencias.canaisEmAlta.length > 0 ? (
+                <div className="space-y-1.5">
+                  {dadosCanaisEntrada.tendencias.canaisEmAlta.map((canal, index) => (
+                    <div key={index} className="text-accent-dark font-medium text-sm">{canal}</div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-accent-dark/70 text-sm">Nenhum canal acima de 15%</p>
+              )}
             </div>
           </div>
         </CardContent>

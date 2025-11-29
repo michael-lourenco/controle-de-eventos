@@ -404,21 +404,41 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
           title="Total de Serviços"
           value={dadosServicos.resumoGeral.totalServicos}
           color="primary"
+          tooltip={{
+            title: "Total de Serviços",
+            description: "Quantidade total de serviços contratados no período analisado. Inclui todos os serviços de todos os eventos.",
+            calculation: "Total de Serviços = Soma de todos os serviços cadastrados em eventos cuja dataEvento está dentro do período selecionado."
+          }}
         />
         <StatCard
           title="Tipos Únicos"
           value={dadosServicos.resumoGeral.tiposServicosUnicos}
           color="info"
+          tooltip={{
+            title: "Tipos Únicos",
+            description: "Quantidade de tipos diferentes de serviços utilizados no período. Indica a diversidade de serviços oferecidos.",
+            calculation: "Tipos Únicos = Contagem de tipos de serviços distintos (tipoServicoId) utilizados nos eventos do período."
+          }}
         />
         <StatCard
           title="Eventos com Serviços"
           value={dadosServicos.resumoGeral.eventosComServicos}
           color="success"
+          tooltip={{
+            title: "Eventos com Serviços",
+            description: "Quantidade de eventos que possuem pelo menos um serviço cadastrado. Indica quantos eventos estão utilizando serviços.",
+            calculation: "Eventos com Serviços = Contagem de eventos únicos que possuem pelo menos um serviço cadastrado no período."
+          }}
         />
         <StatCard
           title="Taxa de Utilização"
           value={`${dadosServicos.resumoGeral.taxaUtilizacaoServicos.toFixed(1)}%`}
           color={dadosServicos.resumoGeral.taxaUtilizacaoServicos >= 80 ? "success" : "warning"}
+          tooltip={{
+            title: "Taxa de Utilização",
+            description: "Percentual de eventos que possuem serviços cadastrados. Indica o quanto os serviços estão sendo utilizados nos eventos.",
+            calculation: "Taxa de Utilização = (Eventos com Serviços / Total de Eventos no Período) × 100. Valores acima de 80% indicam boa utilização."
+          }}
         />
       </StatGrid>
 
@@ -426,6 +446,11 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
       <TabbedChart
         title="Serviços por Tipo"
         subtitle="Distribuição dos serviços contratados por tipo"
+        titleTooltip={{
+          title: "Serviços por Tipo",
+          description: "Distribuição visual dos serviços agrupados por tipo (Totem Fotográfico, Álbum de Assinaturas, etc.) no período selecionado.",
+          calculation: "Cada serviço é contabilizado uma vez de acordo com seu tipoServicoId. O gráfico mostra a quantidade e percentual de cada tipo de serviço."
+        }}
         tabs={[
           {
             id: 'pizza',

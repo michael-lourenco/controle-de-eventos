@@ -61,6 +61,11 @@ export interface StatCardProps {
     isPositive: boolean;
   };
   color?: 'primary' | 'success' | 'warning' | 'error' | 'info';
+  tooltip?: {
+    title: string;
+    description: string;
+    calculation?: string;
+  };
 }
 
 export interface ProgressBarProps {
@@ -82,6 +87,11 @@ export interface TabbedChartProps {
     content: React.ReactNode;
   }>;
   defaultTab?: string;
+  titleTooltip?: {
+    title: string;
+    description: string;
+    calculation?: string;
+  };
 }
 
 // Tipos para configurações de tema

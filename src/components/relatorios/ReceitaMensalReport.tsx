@@ -8,6 +8,7 @@ import { Evento, Pagamento } from '@/types';
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 interface ReceitaMensalReportProps {
   eventos: Evento[];
@@ -227,7 +228,16 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
                 <span className="text-success text-lg">💰</span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Receita Total</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Receita Total</p>
+                  <InfoTooltip
+                    title="Receita Total"
+                    description="Soma de todos os pagamentos recebidos (com status 'Pago') no período selecionado. Representa a receita efetivamente recebida pela empresa."
+                    calculation="Receita Total = Soma de todos os pagamentos com status 'Pago' e dataPagamento dentro do período selecionado. Considera apenas pagamentos liquidados."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
@@ -246,7 +256,16 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
                 <span className="text-primary text-lg">📊</span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Média Mensal</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Média Mensal</p>
+                  <InfoTooltip
+                    title="Média Mensal"
+                    description="Valor médio de receita por mês no período selecionado. Útil para entender a receita média esperada e fazer projeções."
+                    calculation="Média Mensal = Receita Total / Total de Meses no Período. Inclui todos os meses do período, mesmo aqueles sem receita (considerados como zero)."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
@@ -265,7 +284,16 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
                 <span className="text-accent text-lg">📈</span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Maior Receita</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Maior Receita</p>
+                  <InfoTooltip
+                    title="Maior Receita"
+                    description="O maior valor de receita mensal registrado no período selecionado. Identifica o melhor mês em termos de receita."
+                    calculation="Maior Receita = Máximo valor entre todos os meses do período. Considera todos os meses, incluindo aqueles com receita zero."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
@@ -284,7 +312,16 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
                 <span className="text-warning text-lg">📉</span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Menor Receita</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Menor Receita</p>
+                  <InfoTooltip
+                    title="Menor Receita"
+                    description="O menor valor de receita mensal registrado no período selecionado (considerando apenas meses com receita maior que zero). Identifica o pior mês em termos de receita."
+                    calculation="Menor Receita = Mínimo valor entre todos os meses com receita maior que zero. Meses sem receita (zero) são excluídos do cálculo."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.75rem, 2.5vw, 1.25rem)' }}
@@ -303,7 +340,16 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
                 <span className="text-primary text-lg">📅</span>
               </div>
               <div className="flex-1 min-w-0 flex flex-col items-end text-right">
-                <p className="text-xs font-medium text-text-secondary leading-tight mb-1">Meses c/ Receita</p>
+                <div className="flex items-center gap-1 justify-end mb-1">
+                  <p className="text-xs font-medium text-text-secondary leading-tight">Meses c/ Receita</p>
+                  <InfoTooltip
+                    title="Meses com Receita"
+                    description="Quantidade de meses que tiveram receita registrada versus o total de meses no período. Indica a frequência de recebimentos."
+                    calculation="Meses com Receita = Quantidade de meses com receita maior que zero. Total de Meses = Todos os meses do período selecionado (incluindo meses sem receita)."
+                    className="flex-shrink-0"
+                    iconClassName="h-6 w-6"
+                  />
+                </div>
                 <p 
                   className="font-bold text-text-primary leading-none whitespace-nowrap"
                   style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1.25rem)' }}
@@ -319,7 +365,16 @@ export default function ReceitaMensalReport({ eventos, pagamentos }: ReceitaMens
       {/* Receita Mensal */}
       <Card>
         <CardHeader>
-          <CardTitle>Receita Mensal</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle>Receita Mensal</CardTitle>
+            <InfoTooltip
+              title="Receita Mensal"
+              description="Evolução temporal da receita mês a mês no período selecionado. Mostra a receita de cada mês e sua proporção em relação ao total."
+              calculation="Receita Mensal = Soma de todos os pagamentos com status 'Pago' e dataPagamento dentro do mês. Percentual = (Receita do Mês / Receita Total) × 100."
+              className="flex-shrink-0"
+              iconClassName="h-6 w-6"
+            />
+          </div>
           <CardDescription>
             Evolução da receita ao longo do período selecionado
           </CardDescription>

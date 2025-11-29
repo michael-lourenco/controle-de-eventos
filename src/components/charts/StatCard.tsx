@@ -3,6 +3,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatCardProps } from '@/types/charts';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
   ArrowUpIcon, 
   ArrowDownIcon
@@ -22,7 +23,8 @@ export function StatCard({
   subtitle, 
   icon: Icon, 
   trend, 
-  color = 'primary' 
+  color = 'primary',
+  tooltip
 }: StatCardProps) {
   const formatValue = (val: string | number) => {
     if (typeof val === 'number') {
@@ -41,7 +43,18 @@ export function StatCard({
             </div>
           )}
           <div className={`${Icon ? 'ml-4' : ''} flex-1`}>
-            <p className="text-sm font-medium text-text-secondary">{title}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-medium text-text-secondary">{title}</p>
+              {tooltip && (
+                <InfoTooltip
+                  title={tooltip.title}
+                  description={tooltip.description}
+                  calculation={tooltip.calculation}
+                  className="flex-shrink-0"
+                  iconClassName="h-6 w-6"
+                />
+              )}
+            </div>
             <p className="text-2xl font-semibold text-text-primary">
               {formatValue(value)}
             </p>
