@@ -43,6 +43,7 @@ const config: Config = {
         "add-button-hover": "var(--add-button-bg-hover)",
         "add-button-text": "var(--add-button-text)",
         "add-button-shadow": "var(--add-button-shadow)",
+        "brand-orange": "var(--brand-orange)",
       },
       boxShadow: {
         'sm': '0 1px 2px 0 rgb(27 33 38 / 0.05)',

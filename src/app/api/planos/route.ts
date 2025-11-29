@@ -6,16 +6,12 @@ import { PlanoRepository } from '@/lib/repositories/plano-repository';
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
-    // Planos podem ser vistos por todos usuários autenticados
-    if (!session) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
     const repo = new PlanoRepository();
     const { searchParams } = new URL(request.url);
     const apenasAtivos = searchParams.get('ativos') === 'true';
 
+    // Planos podem ser vistos por todos (público para landing page)
+    // Apenas criação/edição requer autenticação admin
     const planos = apenasAtivos ? await repo.findAtivos() : await repo.findAll();
 
     return NextResponse.json({ planos });

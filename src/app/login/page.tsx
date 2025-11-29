@@ -39,7 +39,7 @@ export default function LoginPage() {
         setError('Email ou senha inválidos');
         setLoading(false);
       } else if (result?.ok) {
-        router.push('/dashboard');
+        router.push('/painel');
         router.refresh();
       } else {
         setError('Erro inesperado. Tente novamente.');

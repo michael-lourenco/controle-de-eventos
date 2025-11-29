@@ -9,11 +9,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
+    // Permitir acesso público para landing page
+    // Apenas criação/edição requer autenticação admin
     const { id } = await params;
     const service = new PlanoService();
     const plano = await service.obterPlanoComFuncionalidades(id);

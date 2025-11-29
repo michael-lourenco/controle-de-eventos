@@ -66,7 +66,7 @@ export default function RegisterPage() {
       );
 
       if (result.success) {
-        router.push('/dashboard');
+        router.push('/painel');
       } else {
         setError(result.error || 'Erro ao criar conta');
       }
@@ -259,7 +259,7 @@ export default function RegisterPage() {
                   Já tem uma conta?{' '}
                   <button
                     type="button"
-                    onClick={() => router.push('/login')}
+                    onClick={() => router.push('/painel')}
                     className="font-semibold text-link cursor-pointer transition-colors"
                   >
                     Faça login

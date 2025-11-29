@@ -26,7 +26,7 @@ export default function AdminSetupPage() {
           setMessage(`✅ ${data.message}\n\nCredenciais:\nEmail: ${data.credentials.email}\nSenha: ${data.credentials.password}`);
         }
         setTimeout(() => {
-          window.location.href = '/login';
+          window.location.href = '/painel';
         }, 2000);
       } else {
         setMessage(`❌ Erro: ${data.error}`);

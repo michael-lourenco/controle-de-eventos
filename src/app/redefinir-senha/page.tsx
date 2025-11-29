@@ -141,7 +141,7 @@ function RedefinirSenhaForm() {
       if (response.ok && data.success) {
         setSuccess(true);
         setTimeout(() => {
-          router.push('/login');
+          router.push('/painel');
         }, 3000);
       } else {
         setError(data.error || 'Erro ao redefinir senha');

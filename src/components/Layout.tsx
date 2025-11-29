@@ -37,7 +37,7 @@ interface LayoutProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+  { name: 'Dashboard', href: '/painel', icon: HomeIcon },
   { name: 'Eventos', href: '/eventos', icon: CalendarIcon },
   { name: 'Clientes', href: '/clientes', icon: UserIcon },
   { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
@@ -76,7 +76,7 @@ export default function Layout({ children }: LayoutProps) {
 
   React.useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login');
+      router.push('/painel');
     }
   }, [status, router]);
 
@@ -93,13 +93,13 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   const handleLogout = () => {
-    signOut({ callbackUrl: '/login' });
+    signOut({ callbackUrl: '/painel' });
   };
 
   // Verificar se um item do menu está ativo
   const isActive = (href: string) => {
-    if (href === '/dashboard') {
-      return pathname === '/dashboard';
+    if (href === '/painel') {
+      return pathname === '/painel' || pathname === '/dashboard';
     }
     return pathname.startsWith(href);
   };

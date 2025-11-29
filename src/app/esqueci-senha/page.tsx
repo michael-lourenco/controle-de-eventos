@@ -106,7 +106,7 @@ export default function EsqueciSenhaPage() {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => router.push('/login')}
+                  onClick={() => router.push('/painel')}
                 >
                   Voltar para o login
                 </Button>
@@ -153,7 +153,7 @@ export default function EsqueciSenhaPage() {
             <div className="mt-6 text-center">
               <button
                 type="button"
-                onClick={() => router.push('/login')}
+                onClick={() => router.push('/painel')}
                 className="text-sm text-link flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <ArrowLeftIcon className="h-4 w-4" />
