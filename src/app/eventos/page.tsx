@@ -18,7 +18,8 @@ import {
   TrashIcon,
   ArrowPathIcon,
   ClipboardDocumentIcon,
-  CheckIcon
+  CheckIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
 import { useEventos, useEventosArquivados, useTiposEvento, useAllServicos } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -686,7 +687,7 @@ export default function EventosPage() {
                   </div>
                   {tiposServicosPorEvento.has(evento.id) && tiposServicosPorEvento.get(evento.id)!.length > 0 && (
                     <div className="flex items-start text-sm text-text-secondary">
-                      <span className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0">📋</span>
+                      <WrenchScrewdriverIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
                       <span className="flex-1">
                         {tiposServicosPorEvento.get(evento.id)!.join(', ')}
                       </span>
