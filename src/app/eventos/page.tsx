@@ -19,9 +19,8 @@ import {
   ArrowPathIcon,
   ClipboardDocumentIcon,
   CheckIcon,
-  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
-import { useEventos, useEventosArquivados, useTiposEvento, useAllServicos } from '@/hooks/useData';
+import { useEventos, useEventosArquivados, useTiposEvento } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { usePlano } from '@/lib/hooks/usePlano';
@@ -40,7 +39,7 @@ export default function EventosPage() {
   const { data: eventos, loading: loadingAtivos, error: errorAtivos, refetch: refetchAtivos } = useEventos();
   const { data: eventosArquivados, loading: loadingArquivados, error: errorArquivados, refetch: refetchArquivados } = useEventosArquivados();
   const { data: tiposEventoData } = useTiposEvento();
-  const { data: todosServicos } = useAllServicos();
+  // Removido useAllServicos() - muito pesado! Buscaremos serviços sob demanda apenas quando necessário
   const { limites, temPermissao } = usePlano();
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
@@ -81,29 +80,7 @@ export default function EventosPage() {
     await Promise.all([refetchAtivos(), refetchArquivados()]);
   };
 
-  // Mapear tipos de serviços por evento
-  const tiposServicosPorEvento = useMemo(() => {
-    if (!todosServicos) return new Map<string, string[]>();
-    
-    const mapa = new Map<string, Set<string>>();
-    
-    todosServicos.forEach(servico => {
-      if (servico.eventoId && servico.tipoServico?.nome) {
-        if (!mapa.has(servico.eventoId)) {
-          mapa.set(servico.eventoId, new Set());
-        }
-        mapa.get(servico.eventoId)!.add(servico.tipoServico.nome);
-      }
-    });
-    
-    // Converter Sets para Arrays
-    const resultado = new Map<string, string[]>();
-    mapa.forEach((tipos, eventoId) => {
-      resultado.set(eventoId, Array.from(tipos).sort());
-    });
-    
-    return resultado;
-  }, [todosServicos]);
+  // Removido: tipos de serviços não são mais exibidos na lista para reduzir leituras do Firebase
 
   const tiposEventoFilterOptions = React.useMemo(() => {
     const nomes = new Set<string>();
@@ -160,6 +137,8 @@ export default function EventosPage() {
       return dataA - dataB;
     });
   }, [filteredEventos]);
+
+  // Removido: carregamento de serviços - não são mais exibidos na lista para reduzir leituras do Firebase
 
   // Verificar acesso ao botão copiar - chamado antes dos early returns
   useEffect(() => {
@@ -685,14 +664,7 @@ export default function EventosPage() {
                     <MapPinIcon className="h-4 w-4 mr-2" />
                     {evento.local}
                   </div>
-                  {tiposServicosPorEvento.has(evento.id) && tiposServicosPorEvento.get(evento.id)!.length > 0 && (
-                    <div className="flex items-start text-sm text-text-secondary">
-                      <WrenchScrewdriverIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                      <span className="flex-1">
-                        {tiposServicosPorEvento.get(evento.id)!.join(', ')}
-                      </span>
-                    </div>
-                  )}
+                  {/* Removido: exibição de tipos de serviços para reduzir leituras do Firebase */}
                 </div>
 
                 <div className="pt-4 border-t">

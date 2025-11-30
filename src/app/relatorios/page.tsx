@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
@@ -15,17 +15,34 @@ import DetalhamentoReceberReport from '@/components/relatorios/DetalhamentoReceb
 import PlanoBloqueio from '@/components/PlanoBloqueio';
 
 export default function RelatoriosPage() {
-  // Usar hooks que incluem arquivados para relatórios completos
+  // Carregar dados essenciais primeiro (sempre necessários)
   const { data: eventos, loading: loadingEventos } = useAllEventos();
   const { data: dashboardData, loading: loadingDashboard } = useDashboardData();
   const { data: pagamentos, loading: loadingPagamentos } = useAllPagamentos();
+  
+  // Carregar dados adicionais apenas quando necessário (lazy loading)
+  const [loadAdditionalData, setLoadAdditionalData] = useState(false);
+  
   const { data: servicos, loading: loadingServicos } = useAllServicos();
   const { data: tiposServicos, loading: loadingTiposServicos } = useTiposServicos();
   const { data: clientes, loading: loadingClientes } = useAllClientes();
   const { data: canaisEntrada, loading: loadingCanaisEntrada } = useCanaisEntrada();
   const { data: custos, loading: loadingCustos } = useAllCustos();
   
-  const loading = loadingEventos || loadingDashboard || loadingPagamentos || loadingServicos || loadingTiposServicos || loadingClientes || loadingCanaisEntrada || loadingCustos;
+  // Carregar dados adicionais após um pequeno delay (permitir que dados essenciais carreguem primeiro)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadAdditionalData(true);
+    }, 500); // Delay de 500ms para não sobrecarregar o Firebase
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Loading apenas dos dados essenciais inicialmente
+  const loading = loadingEventos || loadingDashboard || loadingPagamentos;
+  
+  // Loading completo apenas quando dados adicionais estão sendo carregados
+  const loadingAdditional = loadAdditionalData && (loadingServicos || loadingTiposServicos || loadingClientes || loadingCanaisEntrada || loadingCustos);
   
   if (loading) {
     return (
