@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,8 @@ import {
   CurrencyDollarIcon,
   ExclamationTriangleIcon,
   ClockIcon,
-  EyeIcon
+  EyeIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { useDashboardData } from '@/hooks/useData';
 import { format } from 'date-fns';
@@ -19,7 +20,18 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { data: dashboardData, loading, error } = useDashboardData();
+  const { data: dashboardData, loading, error, refetch } = useDashboardData();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
   
   if (loading) {
     return (
@@ -111,11 +123,33 @@ export default function DashboardPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
-          <p className="text-text-secondary">
-            Visão geral do sistema Clicksehub
-          </p>
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+            <p className="text-text-secondary">
+              Visão geral do sistema Clicksehub
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {dashboardData.lastUpdatedAt && (
+              <span className="text-sm text-text-secondary">
+                Atualizado em{' '}
+                {format(dashboardData.lastUpdatedAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing || loading}
+              className="inline-flex items-center gap-2"
+            >
+              <ArrowPathIcon
+                className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
+              />
+              Atualizar relatórios
+            </Button>
+          </div>
         </div>
 
         {/* Stats Grid */}
@@ -226,7 +260,7 @@ export default function DashboardPage() {
                   {dashboardData.eventosHojeLista?.map((evento) => (
                     <div key={evento.id} className="flex items-center justify-between p-3 bg-surface rounded-lg border border-border">
                       <div className="flex-1">
-                        <p className="font-medium text-text-primary">{evento.cliente.nome}</p>
+                        <p className="font-medium text-text-primary">{evento.clienteNome}</p>
                         <p className="text-sm text-text-secondary">{evento.local}</p>
                         <p className="text-sm text-text-muted">{evento.chegadaNoLocal}</p>
                       </div>
@@ -359,7 +393,7 @@ export default function DashboardPage() {
                       {dashboardData.eventosProximos.map((evento) => (
                         <tr key={evento.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-primary">
-                            {evento.cliente.nome}
+                            {evento.clienteNome}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                             {format(evento.dataEvento, 'dd/MM/yyyy', { locale: ptBR })}
@@ -405,7 +439,7 @@ export default function DashboardPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-text-primary truncate">
-                            {evento.cliente.nome}
+                            {evento.clienteNome}
                           </h3>
                           <div className="mt-2 space-y-1.5">
                             <div className="flex items-center gap-2 text-sm text-text-secondary">

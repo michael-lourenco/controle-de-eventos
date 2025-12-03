@@ -316,16 +316,40 @@ export interface RelatorioFinanceiro {
   margem: number;
 }
 
+export interface DashboardEventoResumo {
+  id: string;
+  clienteNome: string;
+  local: string;
+  tipoEvento: string;
+  status: string;
+  dataEvento: Date;
+  chegadaNoLocal?: string;
+}
+
+export interface DashboardPeriodoResumo {
+  id: string;
+  label: string;
+  meses: number;
+  inicio: Date;
+  fim: Date;
+  eventos: number;
+  receitaRecebida: number;
+  pagamentosRecebidos: number;
+  valorPendente: number;
+  valorAtrasado: number;
+  ticketMedio: number;
+}
+
 export interface DashboardData {
   eventosHoje: number;
-  eventosHojeLista: Evento[];
+  eventosHojeLista: DashboardEventoResumo[];
   eventosMes: number;
   receitaMes: number;
   receitaAno: number;
   pagamentosPendentes: number;
   valorPendente: number;
   valorAtrasado: number;
-  eventosProximos: Evento[];
+  eventosProximos: DashboardEventoResumo[];
   pagamentosVencendo: Pagamento[];
   resumoFinanceiro: {
     receitaTotal: number;
@@ -340,6 +364,8 @@ export interface DashboardData {
     eventosPorTipo: Array<{ tipo: string; quantidade: number }>;
     statusPagamentos: Array<{ status: string; quantidade: number }>;
   };
+  periodosResumo?: DashboardPeriodoResumo[];
+  lastUpdatedAt?: Date;
 }
 
 // Enums para facilitar o uso

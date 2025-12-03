@@ -12,6 +12,7 @@ export const COLLECTIONS = {
   TIPO_SERVICOS: 'tipo_servicos',
   CANAIS_ENTRADA: 'canais_entrada',
   RELATORIOS_CACHE: 'relatorios_cache',
+  RELATORIOS_DIARIOS: 'relatorios',
   
   // Subcollections de eventos
   PAGAMENTOS: 'pagamentos',
@@ -162,5 +163,12 @@ export const COLLECTION_SCHEMAS = {
     url: 'string',
     tamanho: 'number',
     dataUpload: 'timestamp'
+  },
+  
+  [COLLECTIONS.RELATORIOS_DIARIOS]: {
+    id: 'string',
+    dateKey: 'string',
+    dataGeracao: 'timestamp',
+    dashboard: 'object'
   }
 } as const;

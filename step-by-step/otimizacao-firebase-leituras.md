@@ -167,3 +167,71 @@ As otimizações implementadas devem reduzir significativamente o número de lei
 3. ✅ Monitorar métricas reais após deploy
 4. ✅ Ajustar conforme necessário
 
+---
+
+## 2025-12-01 — Cache Diário de Relatórios (Planejamento)
+
+- **Objetivo:** reduzir leituras/cálculos contínuos do dashboard criando uma collection `relatorios/{YYYYMMDD}` por usuário armazenando os dados já agregados do dia anterior (últimos 3/6/12/24 meses incluídos).
+- **Escopo inicial:** Dashboard (`getDashboardData`). Após validação estenderemos para os demais relatórios.
+- **Estratégia:**
+  - Criar repositório `RelatoriosDiariosRepository` apontando para `controle_users/{userId}/relatorios/{dataKey}` (dataKey no formato `YYYYMMDD`).
+  - Implementar `DashboardReportService` responsável por gerar/verificar cache e calcular múltiplos períodos.
+  - Ajustar `dataService.getDashboardData` para consumir o serviço (cache-first) e permitir `forceRefresh`.
+  - Atualizar `useDashboardData` para expor `refetch` que força regeneração + botão "Atualizar Relatórios" no `/dashboard`.
+  - Serializar dados necessários (eventos hoje/próximos, resumo financeiro, períodos) para evitar calcular novamente no front.
+- **Próxima ação:** implementar infraestrutura + serviço + consumo no dashboard e relatorios page.
+
+## 2025-12-01 — Implementação do Cache Diário do Dashboard
+
+- **Infraestrutura:** adicionei a collection `relatorios` nas constantes do Firestore e criei o `RelatoriosDiariosRepository` para ler/gravar documentos com chave `YYYYMMDD`.
+- **Serviço:** implementei `DashboardReportService`, responsável por:
+  - Buscar dados crus (eventos/pagamentos) uma única vez.
+  - Calcular o dashboard (incluindo períodos 3/6/12/24 meses) e serializar os resultados.
+  - Salvar e recuperar cache diário via `RelatoriosDiariosRepository`.
+- **Data layer:** `dataService.getDashboardData` agora delega ao serviço (cache-first com opção `forceRefresh`), e `useDashboardData` ganhou suporte a `refetch` forçando a regeneração sem bloquear o layout.
+- **UI:** o `/dashboard` exibe o carimbo “Atualizado em …” e trouxe o botão “Atualizar relatórios”, que consome o `refetch` para gerar o snapshot sob demanda. Os componentes foram ajustados para usar o novo tipo `DashboardEventoResumo`.
+- **Validação:** `yarn tsc --noEmit`.
+
+## 2025-12-01 — Implementação do Cache Diário para Todos os Relatórios
+
+- **Objetivo:** estender a estratégia de cache diário para todos os relatórios presentes em `/relatorios`, reduzindo drasticamente as leituras do Firebase ao calcular os dados apenas uma vez por dia.
+- **Relatórios implementados:**
+  1. **DetalhamentoReceberReport** - Resumo de valores a receber por cliente e evento
+  2. **ReceitaMensalReport** - Receita mensal com resumo geral (últimos 24 meses)
+  3. **PerformanceEventosReport** - Performance de eventos por status e tipo
+  4. **FluxoCaixaReport** - Fluxo de caixa mensal com receitas, despesas e projeções
+  5. **ServicosReport** - Análise de serviços por tipo e tipo de evento
+  6. **CanaisEntradaReport** - Análise de canais de entrada e conversão
+  7. **ImpressoesReport** - Análise de impressões por tipo de evento e mês
+
+- **Infraestrutura:**
+  - Estendido `RelatoriosDiariosRepository` para suportar múltiplos tipos de relatórios na mesma collection `relatorios/{YYYYMMDD}`
+  - Criado `RelatoriosReportService` que gera todos os relatórios em paralelo após buscar dados uma única vez
+  - Cada relatório é serializado e armazenado como `RelatorioPersistido` com dados calculados e metadados
+
+- **Serviço:**
+  - `RelatoriosReportService.gerarTodosRelatorios()` busca todos os dados necessários (eventos, pagamentos, custos, serviços, clientes, canais) uma única vez
+  - Gera todos os 7 relatórios em paralelo usando os dados já carregados
+  - Salva todos os relatórios de uma vez usando `salvarMultiplosRelatorios()`
+  - Verifica se todos os relatórios já estão em cache antes de regenerar
+
+- **Data layer:**
+  - `dataService.gerarTodosRelatorios()` expõe o método para gerar todos os relatórios
+  - `dataService.getRelatorioCacheado()` permite recuperar um relatório específico do cache
+
+- **UI:**
+  - Adicionado botão "Atualizar relatórios" na página `/relatorios` que força a regeneração de todos os relatórios
+  - Botão com indicador de loading durante a geração
+  - Após gerar, recarrega a página para exibir os dados atualizados
+
+- **Impacto esperado:**
+  - **Redução estimada: ~90% das leituras** na página de relatórios
+  - De ~8000 leituras por carregamento para ~800 leituras (apenas na primeira geração do dia)
+  - Relatórios subsequentes no mesmo dia: **0 leituras** (servidos do cache)
+  - Com 100 usuários gerando relatórios uma vez por dia: ~80.000 leituras/dia (dentro do limite de 50.000/dia por usuário, mas distribuído)
+
+- **Próximos passos:**
+  - Adaptar componentes de relatórios para usar cache quando disponível (fallback para cálculo em tempo real se cache não existir)
+  - Implementar invalidação automática de cache quando dados são modificados
+  - Considerar geração automática noturna via Cloud Function para usuários ativos
+

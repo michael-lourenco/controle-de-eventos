@@ -13,12 +13,44 @@ import ImpressoesReport from '@/components/relatorios/ImpressoesReport';
 import ReceitaMensalReport from '@/components/relatorios/ReceitaMensalReport';
 import DetalhamentoReceberReport from '@/components/relatorios/DetalhamentoReceberReport';
 import PlanoBloqueio from '@/components/PlanoBloqueio';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { useCurrentUser } from '@/hooks/useAuth';
+import { dataService } from '@/lib/data-service';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { RelatoriosDiariosRepository } from '@/lib/repositories/relatorios-diarios-repository';
 
 export default function RelatoriosPage() {
+  const { userId } = useCurrentUser();
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  
   // Carregar dados essenciais primeiro (sempre necessários)
   const { data: eventos, loading: loadingEventos } = useAllEventos();
   const { data: dashboardData, loading: loadingDashboard } = useDashboardData();
   const { data: pagamentos, loading: loadingPagamentos } = useAllPagamentos();
+  
+  // Buscar data de atualização dos relatórios
+  useEffect(() => {
+    const buscarDataAtualizacao = async () => {
+      if (!userId) return;
+      
+      try {
+        const hoje = new Date();
+        const dateKey = format(hoje, 'yyyyMMdd');
+        const relatoriosRepo = new RelatoriosDiariosRepository();
+        const cached = await relatoriosRepo.getRelatorioDiario(userId, dateKey);
+        
+        if (cached?.dataGeracao) {
+          setLastUpdatedAt(cached.dataGeracao);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar data de atualização:', error);
+      }
+    };
+    
+    buscarDataAtualizacao();
+  }, [userId]);
   
   // Carregar dados adicionais apenas quando necessário (lazy loading)
   const [loadAdditionalData, setLoadAdditionalData] = useState(false);
@@ -43,6 +75,36 @@ export default function RelatoriosPage() {
   
   // Loading completo apenas quando dados adicionais estão sendo carregados
   const loadingAdditional = loadAdditionalData && (loadingServicos || loadingTiposServicos || loadingClientes || loadingCanaisEntrada || loadingCustos);
+
+  const handleRefresh = async () => {
+    if (refreshing || !userId) return;
+    setRefreshing(true);
+    try {
+      // Não força refresh - só gera se não existir cache para o dia
+      await dataService.gerarTodosRelatorios(userId);
+      
+      // Buscar data de atualização atualizada
+      const hoje = new Date();
+      const dateKey = format(hoje, 'yyyyMMdd');
+      const relatoriosRepo = new RelatoriosDiariosRepository();
+      const cached = await relatoriosRepo.getRelatorioDiario(userId, dateKey);
+      
+      if (cached?.dataGeracao) {
+        setLastUpdatedAt(cached.dataGeracao);
+      } else {
+        // Se foi gerado agora, usar data atual
+        setLastUpdatedAt(new Date());
+      }
+      
+      // Recarregar dados após gerar relatórios (se necessário)
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao atualizar relatórios:', error);
+      alert('Erro ao atualizar relatórios. Tente novamente.');
+    } finally {
+      setRefreshing(false);
+    }
+  };
   
   if (loading) {
     return (
@@ -68,11 +130,33 @@ export default function RelatoriosPage() {
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-text-primary">Relatórios</h1>
-          <p className="text-text-secondary">
-            Análise financeira e estatísticas do negócio
-          </p>
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary">Relatórios</h1>
+            <p className="text-text-secondary">
+              Análise financeira e estatísticas do negócio
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {lastUpdatedAt && (
+              <span className="text-sm text-text-secondary">
+                Atualizado em{' '}
+                {format(lastUpdatedAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={refreshing || loading}
+              className="inline-flex items-center gap-2"
+            >
+              <ArrowPathIcon
+                className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`}
+              />
+              Atualizar relatórios
+            </Button>
+          </div>
         </div>
 
         {/* Submenu de Navegação Rápida */}

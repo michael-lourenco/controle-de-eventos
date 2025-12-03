@@ -542,7 +542,7 @@ export function useDashboardData(): UseDataResult<DashboardData> {
   const [error, setError] = useState<string | null>(null);
   const { userId } = useCurrentUser();
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (options?: { forceRefresh?: boolean; skipLoadingState?: boolean }) => {
     if (!userId) {
       setError('Usuário não autenticado');
       setLoading(false);
@@ -550,14 +550,20 @@ export function useDashboardData(): UseDataResult<DashboardData> {
     }
 
     try {
-      setLoading(true);
+      if (!options?.skipLoadingState) {
+        setLoading(true);
+      }
       setError(null);
-      const result = await dataService.getDashboardData(userId);
+      const result = await dataService.getDashboardData(userId, {
+        forceRefresh: options?.forceRefresh
+      });
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar dados do dashboard');
     } finally {
-      setLoading(false);
+      if (!options?.skipLoadingState) {
+        setLoading(false);
+      }
     }
   }, [userId]);
 
@@ -565,5 +571,7 @@ export function useDashboardData(): UseDataResult<DashboardData> {
     fetchData();
   }, [fetchData]);
 
-  return { data, loading, error, refetch: fetchData };
+  const refetch = useCallback(() => fetchData({ forceRefresh: true, skipLoadingState: true }), [fetchData]);
+
+  return { data, loading, error, refetch };
 }

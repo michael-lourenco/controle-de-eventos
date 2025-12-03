@@ -1,10 +1,10 @@
 import { repositoryFactory } from './repositories/repository-factory';
-import { 
-  Cliente, 
-  Evento, 
-  Pagamento, 
-  TipoCusto, 
-  CustoEvento, 
+import {
+  Cliente,
+  Evento,
+  Pagamento,
+  TipoCusto,
+  CustoEvento,
   TipoServico,
   ServicoEvento,
   CanalEntrada,
@@ -17,6 +17,8 @@ import {
 } from '@/types';
 import { initializeAllCollections, initializeTiposCusto } from './collections-init';
 import { FuncionalidadeService } from './services/funcionalidade-service';
+import { DashboardReportService } from './services/dashboard-report-service';
+import { RelatoriosReportService } from './services/relatorios-report-service';
 
 export class DataService {
   private clienteRepo = repositoryFactory.getClienteRepository();
@@ -32,6 +34,8 @@ export class DataService {
   private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
   private tipoEventoRepo = repositoryFactory.getTipoEventoRepository();
   private funcionalidadeService = new FuncionalidadeService();
+  private dashboardReportService = DashboardReportService.getInstance();
+  private relatoriosReportService = RelatoriosReportService.getInstance();
 
   // Método para inicializar collections automaticamente
   private async ensureCollectionsInitialized(): Promise<void> {
@@ -762,271 +766,20 @@ export class DataService {
   }
 
   // Métodos para Dashboard
-  async getDashboardData(userId: string): Promise<DashboardData> {
-    if (!userId) {
-      throw new Error('userId é obrigatório para buscar dados do dashboard');
-    }
-    try {
-      // Garantir que as collections estejam inicializadas
-      await this.ensureCollectionsInitialized();
-      const hoje = new Date();
-      const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-      const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-      const inicioAno = new Date(hoje.getFullYear(), 0, 1);
-      const fimAno = new Date(hoje.getFullYear(), 11, 31);
+  async getDashboardData(userId: string, options?: { forceRefresh?: boolean }): Promise<DashboardData> {
+    return this.dashboardReportService.getDashboardData(userId, options);
+  }
 
-      // Buscar todos os eventos (incluindo arquivados) para cálculo correto
-      // Usar getAllEventos para garantir consistência com relatórios
-      const eventos = await this.getAllEventos(userId).catch(() => []);
-      
-      // ========== CÁLCULOS COMPLEXOS COMENTADOS (lento com muitos eventos) ==========
-      // 
-      // // Para pagamentos, precisamos buscar de todos os eventos
-      // // COMENTADO: Isso faz N queries ao banco (uma para cada evento) - MUITO LENTO
-      // const todosEventos = await this.getEventos(userId).catch(() => []);
-      // const pagamentos = [];
-      // 
-      // // Buscar pagamentos de todos os eventos
-      // // COMENTADO: Loop que faz N queries ao banco
-      // for (const evento of todosEventos) {
-      //   try {
-      //     const pagamentosEvento = await this.getPagamentosPorEvento(userId, evento.id);
-      //     pagamentos.push(...pagamentosEvento);
-      //   } catch (error) {
-      //     console.error(`Erro ao buscar pagamentos do evento ${evento.id}:`, error);
-      //   }
-      // }
+  // Métodos para Relatórios
+  async gerarTodosRelatorios(userId: string, options?: { forceRefresh?: boolean }): Promise<void> {
+    return this.relatoriosReportService.gerarTodosRelatorios(userId, options);
+  }
 
-      // Calcular eventos de hoje (filtro simples - RÁPIDO)
-      const eventosHoje = eventos.filter(evento => {
-        const dataEvento = new Date(evento.dataEvento);
-        return dataEvento.toDateString() === hoje.toDateString();
-      });
-
-      // Calcular eventos do mês (filtro simples - RÁPIDO)
-      const eventosMes = eventos.filter(evento => {
-        const dataEvento = new Date(evento.dataEvento);
-        return dataEvento >= inicioMes && dataEvento <= fimMes;
-      });
-
-      // Calcular eventos próximos (próximos 7 dias incluindo hoje) - RÁPIDO
-      const proximos7Dias = new Date();
-      proximos7Dias.setDate(hoje.getDate() + 7);
-      proximos7Dias.setHours(23, 59, 59, 999);
-      
-      // Ajustar hoje para início do dia para incluir eventos de hoje
-      const hojeInicio = new Date(hoje);
-      hojeInicio.setHours(0, 0, 0, 0);
-      
-      const eventosProximos = eventos.filter(evento => {
-        const dataEvento = new Date(evento.dataEvento);
-        return dataEvento >= hojeInicio && dataEvento <= proximos7Dias;
-      });
-
-      // ========== CÁLCULOS DE PAGAMENTOS COMENTADOS (requer buscar pagamentos) ==========
-      // 
-      // // Calcular pagamentos do mês
-      // // COMENTADO: Requer buscar todos os pagamentos primeiro
-      // const pagamentosMes = pagamentos.filter(pagamento => {
-      //   if (pagamento.dataPagamento) {
-      //     const dataPagamento = new Date(pagamento.dataPagamento);
-      //     return dataPagamento >= inicioMes && dataPagamento <= fimMes;
-      //   }
-      //   return false;
-      // });
-      // 
-      // // Calcular pagamentos do ano
-      // // COMENTADO: Requer buscar todos os pagamentos primeiro
-      // const pagamentosAno = pagamentos.filter(pagamento => {
-      //   if (pagamento.dataPagamento) {
-      //     const dataPagamento = new Date(pagamento.dataPagamento);
-      //     return dataPagamento >= inicioAno && dataPagamento <= fimAno;
-      //   }
-      //   return false;
-      // });
-      // 
-      // const receitaMes = pagamentosMes
-      //   .filter(p => p.status === 'Pago')
-      //   .reduce((total, p) => total + p.valor, 0);
-      // 
-      // const receitaAno = pagamentosAno
-      //   .filter(p => p.status === 'Pago')
-      //   .reduce((total, p) => total + p.valor, 0);
-
-      // Calcular receita e valores pendentes usando collection global de pagamentos (CORRETO)
-      // Buscar todos os pagamentos de uma vez (1 query)
-      const todosPagamentos = await this.getAllPagamentos(userId).catch(() => []);
-      
-      // Calcular pagamentos do mês
-      const pagamentosMes = todosPagamentos.filter(pagamento => {
-        if (pagamento.dataPagamento) {
-          const dataPagamento = new Date(pagamento.dataPagamento);
-          return dataPagamento >= inicioMes && dataPagamento <= fimMes && pagamento.status === 'Pago' && !pagamento.cancelado;
-        }
-        return false;
-      });
-      
-      // Calcular pagamentos do ano
-      const pagamentosAno = todosPagamentos.filter(pagamento => {
-        if (pagamento.dataPagamento) {
-          const dataPagamento = new Date(pagamento.dataPagamento);
-          return dataPagamento >= inicioAno && dataPagamento <= fimAno && pagamento.status === 'Pago' && !pagamento.cancelado;
-        }
-        return false;
-      });
-      
-      const receitaMes = pagamentosMes.reduce((total, p) => total + p.valor, 0);
-      const receitaAno = pagamentosAno.reduce((total, p) => total + p.valor, 0);
-      const receitaTotal = receitaAno;
-      
-      let valorPendente = 0;
-      let valorAtrasado = 0;
-      let pagamentosPendentes = 0;
-
-      // Para cada evento, calcular o resumo financeiro usando pagamentos já carregados
-      // Usar a mesma lógica do relatório para garantir consistência
-      for (const evento of eventos) {
-        // Filtrar eventos sem valor (mesma lógica do relatório)
-        const valorPrevisto = evento.valorTotal || 0;
-        if (valorPrevisto <= 0) {
-          continue;
-        }
-
-        try {
-          const resumoEvento = this.calcularResumoFinanceiroPorEvento(
-            evento.id,
-            valorPrevisto,
-            todosPagamentos,
-            evento.diaFinalPagamento ? new Date(evento.diaFinalPagamento) : undefined
-          );
-          
-          // Só somar se houver valor restante (mesma lógica do relatório)
-          const valorRestante = resumoEvento.valorPendente + resumoEvento.valorAtrasado;
-          if (valorRestante > 0) {
-            valorPendente += resumoEvento.valorPendente;
-            valorAtrasado += resumoEvento.valorAtrasado;
-            
-            if (resumoEvento.valorPendente > 0 || resumoEvento.valorAtrasado > 0) {
-              pagamentosPendentes++;
-            }
-          }
-        } catch (error) {
-          console.error(`Erro ao calcular resumo financeiro do evento ${evento.id}:`, error);
-        }
-      }
-
-      // ========== CÁLCULOS DE GRÁFICOS COMENTADOS (requer buscar pagamentos) ==========
-      // 
-      // // Calcular gráficos
-      // // COMENTADO: Requer buscar todos os pagamentos primeiro
-      // const receitaMensal = [];
-      // const eventosPorTipo: Record<string, number> = {};
-      // const statusPagamentos: Record<string, number> = {};
-      // 
-      // // Receita mensal dos últimos 12 meses
-      // // COMENTADO: Loop complexo que processa pagamentos de 12 meses
-      // for (let i = 11; i >= 0; i--) {
-      //   const mes = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-      //   const inicioMes = new Date(mes.getFullYear(), mes.getMonth(), 1);
-      //   const fimMes = new Date(mes.getFullYear(), mes.getMonth() + 1, 0);
-      //   
-      //   const pagamentosDoMes = pagamentos.filter(pagamento => {
-      //     if (pagamento.dataPagamento) {
-      //       const dataPagamento = new Date(pagamento.dataPagamento);
-      //       return dataPagamento >= inicioMes && dataPagamento <= fimMes;
-      //     }
-      //     return false;
-      //   });
-      //   
-      //   const receita = pagamentosDoMes
-      //     .filter(p => p.status === 'Pago')
-      //     .reduce((total, p) => total + p.valor, 0);
-      //   
-      //   receitaMensal.push({
-      //     mes: mes.toLocaleDateString('pt-BR', { month: 'short' }),
-      //     valor: receita
-      //   });
-      // }
-      // 
-      // // Eventos por tipo
-      // // COMENTADO: Pode ser calculado simplesmente, mas mantido comentado por enquanto
-      // todosEventos.forEach(evento => {
-      //   eventosPorTipo[evento.tipoEvento] = (eventosPorTipo[evento.tipoEvento] || 0) + 1;
-      // });
-      // 
-      // // Status dos pagamentos
-      // // COMENTADO: Requer buscar todos os pagamentos primeiro
-      // pagamentos.forEach(pagamento => {
-      //   statusPagamentos[pagamento.status] = (statusPagamentos[pagamento.status] || 0) + 1;
-      // });
-
-      // Gráficos simplificados (apenas eventos por tipo - RÁPIDO)
-      const eventosPorTipo: Record<string, number> = {};
-      eventos.forEach(evento => {
-        eventosPorTipo[evento.tipoEvento] = (eventosPorTipo[evento.tipoEvento] || 0) + 1;
-      });
-
-      // Calcular resumo financeiro geral (valores simplificados)
-      const resumoFinanceiro = {
-        receitaTotal,
-        receitaMes,
-        valorPendente,
-        valorAtrasado,
-        totalEventos: eventos.length,
-        eventosConcluidos: eventos.filter(e => e.status === 'Concluído').length
-      };
-
-      return {
-        eventosHoje: eventosHoje.length,
-        eventosHojeLista: eventosHoje,
-        eventosMes: eventosMes.length,
-        receitaMes,
-        receitaAno,
-        pagamentosPendentes,
-        valorPendente,
-        valorAtrasado,
-        eventosProximos,
-        pagamentosVencendo: [], // COMENTADO: Requer buscar pagamentos
-        resumoFinanceiro,
-        graficos: {
-          receitaMensal: [], // COMENTADO: Requer buscar pagamentos de 12 meses
-          eventosPorTipo: Object.entries(eventosPorTipo).map(([tipo, quantidade]) => ({
-            tipo,
-            quantidade
-          })),
-          statusPagamentos: [] // COMENTADO: Requer buscar todos os pagamentos
-        }
-      };
-    } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
-      
-      // Retornar dados vazios em caso de erro
-      return {
-        eventosHoje: 0,
-        eventosHojeLista: [],
-        eventosMes: 0,
-        receitaMes: 0,
-        receitaAno: 0,
-        pagamentosPendentes: 0,
-        valorPendente: 0,
-        valorAtrasado: 0,
-        eventosProximos: [],
-        pagamentosVencendo: [],
-        resumoFinanceiro: {
-          receitaTotal: 0,
-          receitaMes: 0,
-          valorPendente: 0,
-          valorAtrasado: 0,
-          totalEventos: 0,
-          eventosConcluidos: 0
-        },
-        graficos: {
-          receitaMensal: [],
-          eventosPorTipo: [],
-          statusPagamentos: []
-        }
-      };
-    }
+  async getRelatorioCacheado(
+    userId: string,
+    tipoRelatorio: 'detalhamentoReceber' | 'receitaMensal' | 'performanceEventos' | 'fluxoCaixa' | 'servicos' | 'canaisEntrada' | 'impressoes'
+  ) {
+    return this.relatoriosReportService.getRelatorioCacheado(userId, tipoRelatorio);
   }
 
   // Métodos para Canais de Entrada
