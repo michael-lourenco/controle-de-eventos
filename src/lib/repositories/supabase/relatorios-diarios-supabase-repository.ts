@@ -67,18 +67,21 @@ export class RelatoriosDiariosSupabaseRepository {
       return null;
     }
 
+    // Type assertion para resolver problema de inferência de tipos do Supabase
+    const rowData = data as any;
+
     return {
-      id: data.id,
-      dateKey: data.date_key,
-      dataGeracao: new Date(data.data_geracao),
-      dashboard: data.dashboard || undefined,
-      detalhamentoReceber: (data as any).detalhamento_receber || undefined,
-      receitaMensal: (data as any).receita_mensal || undefined,
-      performanceEventos: (data as any).performance_eventos || undefined,
-      fluxoCaixa: (data as any).fluxo_caixa || undefined,
-      servicos: (data as any).servicos || undefined,
-      canaisEntrada: (data as any).canais_entrada || undefined,
-      impressoes: (data as any).impressoes || undefined
+      id: rowData.id,
+      dateKey: rowData.date_key,
+      dataGeracao: new Date(rowData.data_geracao),
+      dashboard: rowData.dashboard || undefined,
+      detalhamentoReceber: rowData.detalhamento_receber || undefined,
+      receitaMensal: rowData.receita_mensal || undefined,
+      performanceEventos: rowData.performance_eventos || undefined,
+      fluxoCaixa: rowData.fluxo_caixa || undefined,
+      servicos: rowData.servicos || undefined,
+      canaisEntrada: rowData.canais_entrada || undefined,
+      impressoes: rowData.impressoes || undefined
     };
   }
 
@@ -159,8 +162,10 @@ export class RelatoriosDiariosSupabaseRepository {
     };
 
     // Se já existe, fazer merge dos dados
+    // Type assertion para resolver problema de inferência de tipos do Supabase
     if (existing) {
-      updateData.dashboard = existing.dashboard;
+      const existingData = existing as any;
+      updateData.dashboard = existingData.dashboard;
     }
 
     const { error } = await this.supabase
@@ -215,8 +220,10 @@ export class RelatoriosDiariosSupabaseRepository {
     };
 
     // Adicionar campos existentes
+    // Type assertion para resolver problema de inferência de tipos do Supabase
     if (existing) {
-      updateData.dashboard = existing.dashboard;
+      const existingData = existing as any;
+      updateData.dashboard = existingData.dashboard;
     }
 
     // Adicionar novos relatórios

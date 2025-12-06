@@ -221,3 +221,4 @@ As políticas RLS devem permitir leitura e escrita baseadas em `user_id`.
 ✅ Segurança mantida: Service role key apenas no servidor, autenticação obrigatória, isolamento por usuário.
 
 
+

@@ -1,19 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client';
-
-export interface RelatorioSnapshot {
-  id?: string;
-  dataGeracao: Date;
-  periodoInicio: Date;
-  periodoFim: Date;
-  resumoGeral?: Record<string, any>;
-  receitaMensal?: Record<string, any>;
-  eventosResumo?: Record<string, any>;
-  fluxoCaixa?: Record<string, any>;
-  servicosResumo?: Record<string, any>;
-  canaisEntradaResumo?: Record<string, any>;
-  impressoesResumo?: Record<string, any>;
-  performanceEventos?: Record<string, any>;
-}
+import { RelatorioSnapshot } from '@/types/relatorios';
 
 export class RelatorioCacheSupabaseRepository {
   private tableName = 'relatorios_cache';
@@ -158,9 +144,12 @@ export class RelatorioCacheSupabaseRepository {
   private convertFromSupabase(row: any): RelatorioSnapshot {
     return {
       id: row.id,
+      userId: row.user_id,
       dataGeracao: new Date(row.data_geracao),
-      periodoInicio: new Date(row.periodo_inicio),
-      periodoFim: new Date(row.periodo_fim),
+      periodo: {
+        inicio: new Date(row.periodo_inicio),
+        fim: new Date(row.periodo_fim)
+      },
       resumoGeral: row.resumo_geral || undefined,
       receitaMensal: row.receita_mensal || undefined,
       eventosResumo: row.eventos_resumo || undefined,
@@ -180,8 +169,8 @@ export class RelatorioCacheSupabaseRepository {
       id,
       user_id: userId,
       data_geracao: snapshot.dataGeracao.toISOString(),
-      periodo_inicio: snapshot.periodoInicio.toISOString(),
-      periodo_fim: snapshot.periodoFim.toISOString(),
+      periodo_inicio: snapshot.periodo.inicio.toISOString(),
+      periodo_fim: snapshot.periodo.fim.toISOString(),
       resumo_geral: snapshot.resumoGeral || null,
       receita_mensal: snapshot.receitaMensal || null,
       eventos_resumo: snapshot.eventosResumo || null,

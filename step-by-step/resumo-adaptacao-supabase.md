@@ -167,3 +167,4 @@ Todos os repositórios Supabase estão implementados e funcionando:
 **A migração estrutural está 100% completa!** 🎉
 
 
+

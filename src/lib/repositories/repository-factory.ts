@@ -147,6 +147,8 @@ export class RepositoryFactory {
       this.contratoRepository = new ContratoRepository();
       this.modeloContratoRepository = new ModeloContratoRepository();
       this.configuracaoContratoRepository = new ConfiguracaoContratoRepository();
+      this.relatoriosDiariosRepository = new RelatoriosDiariosRepository();
+      this.relatorioCacheRepository = new RelatorioCacheRepository();
     }
 
     // Repositórios que ainda não têm versão Supabase (usar Firebase)

@@ -176,3 +176,4 @@ Para testar a solução:
 - Schema SQL: `supabase/schema.sql` (linhas 424-446)
 
 
+

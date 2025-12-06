@@ -23,3 +23,4 @@ ALTER TABLE relatorios_cache ENABLE ROW LEVEL SECURITY;
 ALTER TABLE google_calendar_tokens ENABLE ROW LEVEL SECURITY;
 
 
+

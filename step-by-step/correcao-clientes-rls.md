@@ -115,3 +115,4 @@ O erro mostra que ainda está tentando acessar subcollection do Firestore. Isso 
 3. ⏳ Configurar políticas RLS adequadas no Supabase (se necessário)
 
 
+
