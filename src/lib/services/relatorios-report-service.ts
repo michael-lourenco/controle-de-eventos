@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import { initializeAllCollections } from '../collections-init';
 import { repositoryFactory } from '../repositories/repository-factory';
 import { RelatoriosDiariosRepository, RelatorioPersistido } from '../repositories/relatorios-diarios-repository';
 import {
@@ -50,7 +49,7 @@ export class RelatoriosReportService {
       }
     }
 
-    await initializeAllCollections();
+    // Removido initializeAllCollections() - não é necessário e causa queries desnecessárias de subcollections
 
     // Buscar todos os dados necessários uma única vez
     const [eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada] = await Promise.all([

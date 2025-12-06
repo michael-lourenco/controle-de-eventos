@@ -38,11 +38,22 @@ export const authOptions: NextAuthOptions = {
             const userDoc = await getDoc(doc(db, 'controle_users', user.uid));
             const userData = userDoc.data();
             
+            const nome = userData?.nome || user.displayName || 'Usuário';
+            const role = (userData?.role || 'user') as 'admin' | 'user';
+            
+            // Sincronizar usuário com Supabase se estiver configurado
+            try {
+              const { syncFirebaseUserToSupabase } = await import('./utils/sync-firebase-user-to-supabase');
+              await syncFirebaseUserToSupabase(user.uid, user.email!, nome, role);
+            } catch (error) {
+              console.warn('Erro ao sincronizar usuário com Supabase (continuando com Firebase):', error);
+            }
+            
             return {
               id: user.uid,
               email: user.email!,
-              name: userData?.nome || user.displayName || 'Usuário',
-              role: userData?.role || 'user'
+              name: nome,
+              role: role
             };
           } catch (error) {
             return null;

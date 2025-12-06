@@ -1,5 +1,4 @@
 import { format, startOfDay, endOfDay, subMonths } from 'date-fns';
-import { initializeAllCollections } from '../collections-init';
 import { repositoryFactory } from '../repositories/repository-factory';
 import { RelatoriosDiariosRepository } from '../repositories/relatorios-diarios-repository';
 import {
@@ -63,7 +62,7 @@ export class DashboardReportService {
   }
 
   private async gerarDashboard(userId: string, referencia: Date, dateKey: string): Promise<DashboardData> {
-    await initializeAllCollections();
+    // Removido initializeAllCollections() - não é necessário e causa queries desnecessárias de subcollections
 
     const [eventos, pagamentos] = await Promise.all([
       this.eventoRepo.findAll(userId),

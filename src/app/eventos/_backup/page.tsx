@@ -12,10 +12,13 @@ import {
   CalendarIcon,
   MapPinIcon,
   ClockIcon,
+  UserGroupIcon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
   ArrowPathIcon,
+  ClipboardDocumentIcon,
+  CheckIcon,
 } from '@heroicons/react/24/outline';
 import { useEventos, useEventosArquivados, useTiposEvento } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -24,7 +27,7 @@ import { usePlano } from '@/lib/hooks/usePlano';
 import LimiteUsoCompacto from '@/components/LimiteUsoCompacto';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
+import { StatusEvento, Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
 import DateRangeFilter, { DateFilter, isDateInFilter } from '@/components/filters/DateRangeFilter';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
@@ -36,14 +39,18 @@ export default function EventosPage() {
   const { data: eventos, loading: loadingAtivos, error: errorAtivos, refetch: refetchAtivos } = useEventos();
   const { data: eventosArquivados, loading: loadingArquivados, error: errorArquivados, refetch: refetchArquivados } = useEventosArquivados();
   const { data: tiposEventoData } = useTiposEvento();
-  const { limites } = usePlano();
+  // Removido useAllServicos() - muito pesado! Buscaremos serviços sob demanda apenas quando necessário
+  const { limites, temPermissao } = usePlano();
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<DateFilter | null>(null);
   const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados'>('ativos');
   const [eventoParaArquivar, setEventoParaArquivar] = useState<Evento | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [eventoCopiado, setEventoCopiado] = useState<string | null>(null);
+  const [temAcessoCopiar, setTemAcessoCopiar] = useState<boolean | null>(null);
   
   const loading = loadingAtivos || loadingArquivados;
   const error = errorAtivos || errorArquivados;
@@ -72,6 +79,8 @@ export default function EventosPage() {
   const recarregarEventos = async () => {
     await Promise.all([refetchAtivos(), refetchArquivados()]);
   };
+
+  // Removido: tipos de serviços não são mais exibidos na lista para reduzir leituras do Firebase
 
   const tiposEventoFilterOptions = React.useMemo(() => {
     const nomes = new Set<string>();
@@ -105,20 +114,16 @@ export default function EventosPage() {
     }
     
     return eventosLista.filter(evento => {
-      // Verificações de segurança para evitar erros com valores undefined/null
-      const clienteNome = evento.cliente?.nome || '';
-      const local = evento.local || '';
-      const nomeEvento = evento.nomeEvento || '';
-      
-      const matchesSearch = clienteNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           local.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           nomeEvento.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = evento.cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           evento.local.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (evento.nomeEvento && evento.nomeEvento.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
       const matchesTipo = filterTipo === 'todos' || evento.tipoEvento === filterTipo;
       const matchesDate = isDateInFilter(evento.dataEvento, dateFilter);
       
-      return matchesSearch && matchesTipo && matchesDate;
+      return matchesSearch && matchesStatus && matchesTipo && matchesDate;
     });
-  }, [eventosLista, searchTerm, filterTipo, dateFilter]);
+  }, [eventosLista, searchTerm, filterStatus, filterTipo, dateFilter]);
 
   // Ordenar eventos por data do evento em ordem crescente - chamado antes dos early returns
   const sortedEventos = useMemo(() => {
@@ -132,6 +137,17 @@ export default function EventosPage() {
       return dataA - dataB;
     });
   }, [filteredEventos]);
+
+  // Removido: carregamento de serviços - não são mais exibidos na lista para reduzir leituras do Firebase
+
+  // Verificar acesso ao botão copiar - chamado antes dos early returns
+  useEffect(() => {
+    const verificarAcesso = async () => {
+      const acesso = await temPermissao('BOTAO_COPIAR');
+      setTemAcessoCopiar(acesso);
+    };
+    verificarAcesso();
+  }, [temPermissao]);
 
   // Early returns após todos os hooks
   if (loading) {
@@ -200,6 +216,203 @@ export default function EventosPage() {
       await recarregarEventos();
     } catch (error) {
       showToast('Erro ao desarquivar evento', 'error');
+    }
+  };
+
+  const handleStatusChange = async (evento: Evento, novoStatus: string) => {
+    if (!userId) return;
+
+    const statusAnterior = evento.status;
+    const novoStatusTyped = novoStatus as Evento['status'];
+
+    // Atualização otimista - atualizar UI imediatamente
+    const atualizarEventoLocal = (eventos: Evento[] | null) => {
+      if (!eventos) return eventos;
+      return eventos.map(e => 
+        e.id === evento.id ? { ...e, status: novoStatusTyped } : e
+      );
+    };
+
+    if (abaAtiva === 'ativos') {
+      setEventosLocais(prev => atualizarEventoLocal(prev));
+    } else {
+      setEventosArquivadosLocais(prev => atualizarEventoLocal(prev));
+    }
+
+    // Atualizar no backend de forma assíncrona (sem feedback visual)
+    dataService.updateEvento(evento.id, { status: novoStatusTyped }, userId)
+      .catch((error) => {
+        // Erro - reverter a atualização otimista
+        const reverterEvento = (eventos: Evento[] | null) => {
+          if (!eventos) return eventos;
+          return eventos.map(e => 
+            e.id === evento.id ? { ...e, status: statusAnterior } : e
+          );
+        };
+
+        if (abaAtiva === 'ativos') {
+          setEventosLocais(prev => reverterEvento(prev));
+        } else {
+          setEventosArquivadosLocais(prev => reverterEvento(prev));
+        }
+
+        showToast('Erro ao atualizar status do evento', 'error');
+      });
+  };
+
+  const statusOptions = [
+    { value: StatusEvento.AGENDADO, label: 'Agendado' },
+    { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
+    { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' },
+    { value: StatusEvento.CONCLUIDO, label: 'Concluído' },
+    { value: StatusEvento.CANCELADO, label: 'Cancelado' }
+  ];
+
+  const formatEventInfoForCopy = (evento: Evento, servicosNomes: string[]) => {
+    let text = '';
+
+    // Helpers para data com fuso horário de São Paulo
+    const formatDatePtBR = (value: any) => {
+      const d = value instanceof Date ? value : new Date(value);
+      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    };
+    const getWeekdayPtBR = (value: any) => {
+      const d = value instanceof Date ? value : new Date(value);
+      return d
+        .toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'America/Sao_Paulo' })
+        .toUpperCase();
+    };
+
+    // Nome do Evento
+    const nomeEvento =
+      (evento as any).nomeEvento ||
+      (evento.tipoEvento ? `${evento.tipoEvento}${evento.cliente?.nome ? ` - ${evento.cliente.nome}` : ''}` : '') ||
+      evento.local ||
+      'Evento';
+    text += 'Nome do Evento\n\n';
+    text += `${nomeEvento}\n`;
+
+    text += '\n────────────────────────\n\n';
+
+    // Informações do Evento
+    text += 'Informações do Evento\n\n';
+    text += `Data: ${formatDatePtBR(evento.dataEvento)} - ${getWeekdayPtBR(evento.dataEvento)}\n`;
+    if (evento.local) text += `Local: ${evento.local}\n`;
+    if (evento.endereco) text += `Endereço: ${evento.endereco}\n`;
+    if (evento.numeroConvidados) text += `Convidados: ${evento.numeroConvidados}\n`;
+    if (evento.tipoEvento) text += `Tipo: ${evento.tipoEvento}\n`;
+
+    text += '\n────────────────────────\n\n';
+
+    // Detalhes do Serviço
+    text += 'Detalhes do Serviço\n\n';
+    if ((evento as any).saida) text += `Saída: ${(evento as any).saida}\n`;
+    if ((evento as any).chegadaNoLocal) text += `Chegada no local: ${(evento as any).chegadaNoLocal}\n`;
+    if ((evento as any).horarioInicio) text += `Horário de início: ${(evento as any).horarioInicio}\n`;
+    if ((evento as any).horarioDesmontagem) text += `Horário de Desmontagem: ${(evento as any).horarioDesmontagem}\n`;
+    if ((evento as any).tempoEvento) text += `Duração: ${(evento as any).tempoEvento}\n`;
+    if ((evento as any).quantidadeMesas) text += `Mesas: ${(evento as any).quantidadeMesas}\n`;
+    if ((evento as any).numeroImpressoes) text += `Impressões: ${(evento as any).numeroImpressoes}\n`;
+    if ((evento as any).hashtag) text += `Hashtag: ${(evento as any).hashtag}\n`;
+
+    text += '\n────────────────────────\n\n';
+
+    // Cerimonialista
+    text += 'Cerimonialista\n\n';
+    if ((evento as any).cerimonialista?.nome) text += `Nome: ${(evento as any).cerimonialista.nome}\n`;
+    if ((evento as any).cerimonialista?.telefone) text += `Telefone: ${(evento as any).cerimonialista.telefone}\n`;
+
+    text += '\n────────────────────────\n\n';
+
+    // Serviços do Evento
+    text += 'Serviços do Evento\n\n';
+    text += servicosNomes.length > 0 ? servicosNomes.join(', ') : '-';
+    text += '\n';
+
+    return text;
+  };
+
+  const handleCopyInfo = async (evento: Evento) => {
+    // Verificar permissão antes de copiar
+    if (!temAcessoCopiar) {
+      showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Premium', 'error');
+      return;
+    }
+
+    // Buscar serviços do evento para compor a lista (nomes separados por vírgula)
+    let servicosNomes: string[] = [];
+    try {
+      if (userId) {
+        const servicos = await dataService.getServicosPorEvento(userId, evento.id);
+        servicosNomes = (servicos || []).map((s: any) => s?.tipoServico?.nome || s?.nome || s?.descricao).filter(Boolean);
+      }
+    } catch (e) {
+      // Não foi possível carregar serviços do evento para cópia
+    }
+
+    const text = formatEventInfoForCopy(evento, servicosNomes);
+    
+    // Tentar usar a API moderna do clipboard
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setEventoCopiado(evento.id);
+        setTimeout(() => {
+          setEventoCopiado(null);
+        }, 2000);
+        return;
+      } catch (error) {
+        // Erro ao copiar texto
+      }
+    }
+    
+    // Fallback para navegadores mais antigos
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        setEventoCopiado(evento.id);
+        setTimeout(() => {
+          setEventoCopiado(null);
+        }, 2000);
+      }
+    } catch (err) {
+      // Erro ao copiar texto
+    }
+  };
+
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Agendado':
+        return 'bg-info-bg text-info-text';
+      case 'Confirmado':
+        return 'bg-success-bg text-success-text';
+      case 'Em andamento':
+        return 'bg-warning-bg text-warning-text';
+      case 'Concluído':
+        return 'bg-surface text-text-secondary';
+      case 'Cancelado':
+        return 'bg-error-bg text-error-text';
+      default:
+        return 'bg-surface text-text-secondary';
     }
   };
 
@@ -312,13 +525,28 @@ export default function EventosPage() {
           {/* Filtros Básicos */}
           <Card className="lg:col-span-2 bg-surface/50 backdrop-blur-sm">
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                   <Input
                     label="Buscar"
                     placeholder="Nome do evento, cliente ou local..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Select
+                    label="Status"
+                    value={filterStatus}
+                    onValueChange={(value) => setFilterStatus(value)}
+                    options={[
+                      { value: 'todos', label: 'Todos' },
+                      { value: StatusEvento.AGENDADO, label: 'Agendado' },
+                      { value: StatusEvento.CANCELADO, label: 'Cancelado' },
+                      { value: StatusEvento.CONCLUIDO, label: 'Concluído' },
+                      { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
+                      { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' }
+                    ]}
                   />
                 </div>
                 <div>
@@ -335,7 +563,7 @@ export default function EventosPage() {
         </div>
 
         {/* Resumo dos Filtros Ativos */}
-        {(searchTerm || filterTipo !== 'todos' || dateFilter) && (
+        {(searchTerm || filterStatus !== 'todos' || filterTipo !== 'todos' || dateFilter) && (
           <Card className="bg-surface/50 backdrop-blur-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -345,6 +573,11 @@ export default function EventosPage() {
                     {searchTerm && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-bg text-info-text">
                         Busca: &quot;{searchTerm}&quot;
+                      </span>
+                    )}
+                    {filterStatus !== 'todos' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-bg text-success-text">
+                        Status: {filterStatus}
                       </span>
                     )}
                     {filterTipo !== 'todos' && (
@@ -383,16 +616,24 @@ export default function EventosPage() {
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between lg:gap-4">
                     <div className="min-w-0 flex-1">
                       <CardTitle className="text-lg leading-tight text-text-primary break-words">
-                        {evento.nomeEvento || evento.cliente?.nome || 'Evento sem nome'}
+                        {evento.nomeEvento || evento.cliente.nome}
                       </CardTitle>
                       <CardDescription className="mt-1 text-sm text-text-secondary">
                         <span className="block text-text-primary font-medium truncate lg:whitespace-normal">
-                          {evento.cliente?.nome || 'Cliente não encontrado'}
+                          {evento.cliente.nome}
                         </span>
                         <span className="block text-xs text-text-secondary truncate lg:whitespace-normal">
                           {evento.contratante}
                         </span>
                       </CardDescription>
+                    </div>
+                    <div className="mt-2 lg:mt-0 shrink-0">
+                      <Select
+                        value={evento.status}
+                        onValueChange={(value) => handleStatusChange(evento, value)}
+                        options={statusOptions}
+                        className={`w-[140px] [&>div>button]:h-7 [&>div>button]:px-2.5 [&>div>button]:py-0.5 [&>div>button]:text-xs [&>div>button]:rounded-full [&>div>button]:border-0 [&>div>button]:shadow-none ${getStatusColor(evento.status)}`}
+                      />
                     </div>
                   </div>
                 </div>
@@ -423,12 +664,39 @@ export default function EventosPage() {
                     <MapPinIcon className="h-4 w-4 mr-2" />
                     {evento.local}
                   </div>
+                  {/* Removido: exibição de tipos de serviços para reduzir leituras do Firebase */}
                 </div>
 
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-text-primary">{evento.tipoEvento}</span>
                     <div className="flex space-x-2">
+                      {temAcessoCopiar && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyInfo(evento);
+                                }}
+                                className={eventoCopiado === evento.id ? 'bg-success-bg text-success-text' : 'hover:bg-info/10 hover:text-info'}
+                              >
+                                {eventoCopiado === evento.id ? (
+                                  <CheckIcon className="h-4 w-4" />
+                                ) : (
+                                  <ClipboardDocumentIcon className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>{eventoCopiado === evento.id ? 'Copiado!' : 'Copiar informações'}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -557,7 +825,7 @@ export default function EventosPage() {
           title="Arquivar Evento"
           description={
             eventoParaArquivar
-              ? `Tem certeza que deseja arquivar o evento de "${eventoParaArquivar.cliente?.nome || 'cliente não encontrado'}"? Ele não aparecerá nas listas ativas, mas continuará disponível nos relatórios históricos.`
+              ? `Tem certeza que deseja arquivar o evento de "${eventoParaArquivar.cliente.nome}"? Ele não aparecerá nas listas ativas, mas continuará disponível nos relatórios históricos.`
               : 'Tem certeza que deseja arquivar este evento?'
           }
           confirmText="Arquivar"
@@ -569,3 +837,4 @@ export default function EventosPage() {
     </Layout>
   );
 }
+

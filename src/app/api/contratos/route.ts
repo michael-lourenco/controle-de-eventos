@@ -61,6 +61,8 @@ export async function POST(request: NextRequest) {
     }
 
     const numeroContrato = await ContratoService.gerarNumeroContrato(session.user.id);
+    
+    // Usar repositório (funciona tanto para Firebase quanto Supabase)
     const contratoRepo = repositoryFactory.getContratoRepository();
 
     const contrato = await contratoRepo.create({
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
       dataCadastro: new Date(),
       dataAtualizacao: new Date(),
       criadoPor: session.user.id
-    }, session.user.id);
+    });
 
     return NextResponse.json(contrato, { status: 201 });
   } catch (error: any) {

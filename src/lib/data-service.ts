@@ -37,6 +37,12 @@ export class DataService {
   private dashboardReportService = DashboardReportService.getInstance();
   private relatoriosReportService = RelatoriosReportService.getInstance();
 
+  constructor() {
+    // Log qual banco está sendo usado
+    const isUsingSupabase = repositoryFactory.isUsingSupabase();
+    console.log(`[DataService] ${isUsingSupabase ? '✅ Usando Supabase' : '🔥 Usando Firebase'}`);
+  }
+
   // Método para inicializar collections automaticamente
   private async ensureCollectionsInitialized(): Promise<void> {
     try {
@@ -55,6 +61,33 @@ export class DataService {
     try {
       const existentes = await this.tipoEventoRepo.findAll(userId);
       if (existentes.length === 0) {
+        // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
+        const isUsingSupabase = repositoryFactory.isUsingSupabase();
+        const isClient = typeof window !== 'undefined';
+        
+        if (isUsingSupabase && isClient) {
+          try {
+            const response = await fetch('/api/init/tipos-evento', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              return; // Sucesso via API route
+            } else {
+              const errorData = await response.json();
+              console.warn('Erro na API route de inicialização:', errorData);
+              // Continuar para tentar método direto
+            }
+          } catch (apiError) {
+            console.warn('Erro ao inicializar via API route, tentando método direto:', apiError);
+            // Continuar para tentar método direto
+          }
+        }
+
+        // Método direto (funciona para Firebase ou servidor Supabase)
         for (const tipo of DEFAULT_TIPOS_EVENTO) {
           await this.tipoEventoRepo.createTipoEvento(
             {
@@ -67,7 +100,24 @@ export class DataService {
           );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Se for erro de RLS do Supabase, tentar via API route como último recurso
+      if (error?.message?.includes('row-level security policy') && typeof window !== 'undefined') {
+        try {
+          const response = await fetch('/api/init/tipos-evento', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            return; // Sucesso via API route
+          }
+        } catch (apiError) {
+          console.error('Erro ao garantir tipos de evento padrões (tentativa via API também falhou):', apiError);
+        }
+      }
       console.error('Erro ao garantir tipos de evento padrões:', error);
     }
   }
@@ -78,6 +128,33 @@ export class DataService {
     try {
       const existentes = await this.canalEntradaRepo.findAll(userId);
       if (existentes.length === 0) {
+        // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
+        const isUsingSupabase = repositoryFactory.isUsingSupabase();
+        const isClient = typeof window !== 'undefined';
+        
+        if (isUsingSupabase && isClient) {
+          try {
+            const response = await fetch('/api/init/canais-entrada', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              return; // Sucesso via API route
+            } else {
+              const errorData = await response.json();
+              console.warn('Erro na API route de inicialização:', errorData);
+              // Continuar para tentar método direto
+            }
+          } catch (apiError) {
+            console.warn('Erro ao inicializar via API route, tentando método direto:', apiError);
+            // Continuar para tentar método direto
+          }
+        }
+
+        // Método direto (funciona para Firebase ou servidor Supabase)
         const defaults = [
           { nome: 'instagram', descricao: 'Origem: Instagram' },
           { nome: 'indicação', descricao: 'Origem: Indicação' },
@@ -91,7 +168,24 @@ export class DataService {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Se for erro de RLS do Supabase, tentar via API route como último recurso
+      if (error?.message?.includes('row-level security policy') && typeof window !== 'undefined') {
+        try {
+          const response = await fetch('/api/init/canais-entrada', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            return; // Sucesso via API route
+          }
+        } catch (apiError) {
+          console.error('Erro ao garantir canais de entrada padrões (tentativa via API também falhou):', apiError);
+        }
+      }
       console.error('Erro ao garantir canais de entrada padrões:', error);
     }
   }
@@ -102,6 +196,33 @@ export class DataService {
     try {
       const existentes = await this.tipoServicoRepo.findAll(userId);
       if (existentes.length === 0) {
+        // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
+        const isUsingSupabase = repositoryFactory.isUsingSupabase();
+        const isClient = typeof window !== 'undefined';
+        
+        if (isUsingSupabase && isClient) {
+          try {
+            const response = await fetch('/api/init/tipos-servico', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              return; // Sucesso via API route
+            } else {
+              const errorData = await response.json();
+              console.warn('Erro na API route de inicialização:', errorData);
+              // Continuar para tentar método direto
+            }
+          } catch (apiError) {
+            console.warn('Erro ao inicializar via API route, tentando método direto:', apiError);
+            // Continuar para tentar método direto
+          }
+        }
+
+        // Método direto (funciona para Firebase ou servidor Supabase)
         const defaults = [
           { nome: 'totem fotográfico', descricao: 'Serviço de totem fotográfico' },
           { nome: 'instaprint', descricao: 'Serviço de Instaprint' },
@@ -114,7 +235,24 @@ export class DataService {
           );
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Se for erro de RLS do Supabase, tentar via API route como último recurso
+      if (error?.message?.includes('row-level security policy') && typeof window !== 'undefined') {
+        try {
+          const response = await fetch('/api/init/tipos-servico', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            return; // Sucesso via API route
+          }
+        } catch (apiError) {
+          console.error('Erro ao garantir tipos de serviço padrões (tentativa via API também falhou):', apiError);
+        }
+      }
       console.error('Erro ao garantir tipos de serviço padrões:', error);
     }
   }
@@ -393,12 +531,70 @@ export class DataService {
   }
 
   async createPagamento(userId: string, eventoId: string, pagamento: Omit<Pagamento, 'id'>): Promise<Pagamento> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para criar pagamento');
+    }
+
     // Validar permissão para registrar pagamentos
     const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'PAGAMENTOS_REGISTRAR');
     if (!temPermissao) {
       const erro = new Error('Seu plano não permite registrar pagamentos');
       (erro as any).status = 403;
       throw erro;
+    }
+
+    // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
+    const isUsingSupabase = repositoryFactory.isUsingSupabase();
+    const isClient = typeof window !== 'undefined';
+    
+    if (isUsingSupabase && isClient) {
+      try {
+        const response = await fetch('/api/pagamentos/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventoId,
+            valor: pagamento.valor,
+            dataPagamento: pagamento.dataPagamento instanceof Date 
+              ? pagamento.dataPagamento.toISOString() 
+              : pagamento.dataPagamento,
+            formaPagamento: pagamento.formaPagamento,
+            status: pagamento.status,
+            observacoes: pagamento.observacoes,
+            comprovante: pagamento.comprovante,
+            anexoId: pagamento.anexoId,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erro ao criar pagamento');
+        }
+
+        const data = await response.json();
+        return {
+          id: data.id,
+          userId: data.userId,
+          eventoId: data.eventoId,
+          valor: data.valor,
+          dataPagamento: new Date(data.dataPagamento),
+          formaPagamento: data.formaPagamento,
+          status: data.status,
+          observacoes: data.observacoes,
+          comprovante: data.comprovante,
+          anexoId: data.anexoId,
+          cancelado: data.cancelado || false,
+          dataCancelamento: data.dataCancelamento ? new Date(data.dataCancelamento) : undefined,
+          motivoCancelamento: data.motivoCancelamento,
+          dataCadastro: new Date(data.dataCadastro),
+          dataAtualizacao: new Date(data.dataAtualizacao),
+        };
+      } catch (apiError: any) {
+        console.warn('Erro ao criar pagamento via API route, tentando método direto:', apiError);
+        // Continuar para tentar método direto
+      }
     }
 
     return this.pagamentoRepo.createPagamento(userId, eventoId, pagamento);
@@ -433,15 +629,23 @@ export class DataService {
   }
 
   // Método para buscar todos os pagamentos de todos os eventos do usuário
-  // Usa a collection global para melhor performance
+  // Usa a collection global para melhor performance (Firebase) ou busca direta (Supabase)
   async getAllPagamentos(userId: string): Promise<Pagamento[]> {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar pagamentos');
     }
     
     try {
-      // Buscar todos os pagamentos da collection global (muito mais eficiente)
-      const todosPagamentos = await this.pagamentoGlobalRepo.findAll(userId);
+      const isUsingSupabase = repositoryFactory.isUsingSupabase();
+      let todosPagamentos: Pagamento[];
+
+      if (isUsingSupabase) {
+        // No Supabase, buscar todos os pagamentos diretamente do repositório
+        todosPagamentos = await this.pagamentoRepo.findAll(userId);
+      } else {
+        // No Firebase, usar a collection global (muito mais eficiente)
+        todosPagamentos = await this.pagamentoGlobalRepo.findAll(userId);
+      }
       
       // Buscar todos os eventos do usuário para preencher informações do evento
       const eventos = await this.getAllEventos(userId);
@@ -570,6 +774,39 @@ export class DataService {
       throw erro;
     }
 
+    // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
+    const isUsingSupabase = repositoryFactory.isUsingSupabase();
+    const isClient = typeof window !== 'undefined';
+    
+    if (isUsingSupabase && isClient) {
+      try {
+        const response = await fetch('/api/tipos-custo/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(tipoCusto),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erro ao criar tipo de custo');
+        }
+
+        const data = await response.json();
+        return {
+          id: data.id,
+          nome: data.nome,
+          descricao: data.descricao || '',
+          ativo: data.ativo,
+          dataCadastro: new Date(data.dataCadastro),
+        };
+      } catch (apiError: any) {
+        console.warn('Erro ao criar tipo de custo via API route, tentando método direto:', apiError);
+        // Continuar para tentar método direto
+      }
+    }
+
     return this.tipoCustoRepo.createTipoCusto(tipoCusto, userId);
   }
 
@@ -603,6 +840,56 @@ export class DataService {
   }
 
   async createCustoEvento(userId: string, eventoId: string, custoEvento: Omit<CustoEvento, 'id'>): Promise<CustoEvento> {
+    if (!userId) {
+      throw new Error('userId é obrigatório para criar custo');
+    }
+
+    // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
+    const isUsingSupabase = repositoryFactory.isUsingSupabase();
+    const isClient = typeof window !== 'undefined';
+    
+    if (isUsingSupabase && isClient) {
+      try {
+        const response = await fetch('/api/custos/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            eventoId,
+            tipoCustoId: custoEvento.tipoCustoId,
+            valor: custoEvento.valor,
+            quantidade: custoEvento.quantidade,
+            observacoes: custoEvento.observacoes,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erro ao criar custo');
+        }
+
+        const data = await response.json();
+        return {
+          id: data.id,
+          eventoId: data.eventoId,
+          tipoCustoId: data.tipoCustoId,
+          valor: data.valor,
+          quantidade: data.quantidade,
+          observacoes: data.observacoes,
+          removido: data.removido || false,
+          dataRemocao: data.dataRemocao ? new Date(data.dataRemocao) : undefined,
+          motivoRemocao: data.motivoRemocao,
+          dataCadastro: new Date(data.dataCadastro),
+          tipoCusto: data.tipoCusto || {} as any,
+          evento: data.evento || {} as any,
+        };
+      } catch (apiError: any) {
+        console.warn('Erro ao criar custo via API route, tentando método direto:', apiError);
+        // Continuar para tentar método direto
+      }
+    }
+
     return this.custoEventoRepo.createCustoEvento(userId, eventoId, custoEvento);
   }
 
@@ -627,15 +914,23 @@ export class DataService {
   }
 
   // Método para buscar todos os custos de todos os eventos do usuário
-  // Usa a collection global para melhor performance
+  // Usa a collection global para melhor performance (Firebase) ou busca direta (Supabase)
   async getAllCustos(userId: string): Promise<CustoEvento[]> {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar custos');
     }
     
     try {
-      // Buscar todos os custos da collection global (muito mais eficiente)
-      const todosCustos = await this.custoGlobalRepo.findAll(userId);
+      const isUsingSupabase = repositoryFactory.isUsingSupabase();
+      let todosCustos: CustoEvento[];
+
+      if (isUsingSupabase) {
+        // No Supabase, buscar todos os custos diretamente do repositório
+        todosCustos = await this.custoEventoRepo.findAll(userId);
+      } else {
+        // No Firebase, usar a collection global (muito mais eficiente)
+        todosCustos = await this.custoGlobalRepo.findAll(userId);
+      }
       
       // Buscar todos os tipos de custo uma vez e criar um Map para lookup eficiente
       const tiposCusto = await this.getTiposCusto(userId);
@@ -944,37 +1239,47 @@ export class DataService {
   }
 
   // Métodos para serviços
+  // Usa a collection global para melhor performance (Firebase) ou busca direta (Supabase)
   async getAllServicos(userId: string): Promise<ServicoEvento[]> {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar serviços');
     }
     
     try {
-      // Buscar todos os serviços da collection global (muito mais eficiente)
-      const todosServicos = await this.servicoGlobalRepo.findAll(userId);
-      
-      // Buscar tipos de serviço para popular os objetos
-      const tiposServico = await this.getTiposServicos(userId);
-      const tiposMap = new Map(tiposServico.map(tipo => [tipo.id, tipo]));
-      
-      // Adicionar tipoServico a cada serviço
-      const servicosComTipo = todosServicos.map(servico => {
-        const tipoServico = tiposMap.get(servico.tipoServicoId) || {
-          id: servico.tipoServicoId,
-          nome: 'Tipo não encontrado',
-          descricao: '',
-          ativo: false,
-          dataCadastro: new Date()
-        } as TipoServico;
+      const isUsingSupabase = repositoryFactory.isUsingSupabase();
+      let todosServicos: ServicoEvento[];
+
+      if (isUsingSupabase) {
+        // No Supabase, buscar todos os serviços diretamente do repositório
+        // O findAll já retorna com tipo_servicos populado
+        todosServicos = await this.servicoEventoRepo.findAll(userId);
+      } else {
+        // No Firebase, usar a collection global (muito mais eficiente)
+        todosServicos = await this.servicoGlobalRepo.findAll(userId);
         
-        return {
-          ...servico,
-          tipoServico
-        };
-      });
+        // Buscar tipos de serviço para popular os objetos
+        const tiposServico = await this.getTiposServicos(userId);
+        const tiposMap = new Map(tiposServico.map(tipo => [tipo.id, tipo]));
+        
+        // Adicionar tipoServico a cada serviço
+        todosServicos = todosServicos.map(servico => {
+          const tipoServico = tiposMap.get(servico.tipoServicoId) || {
+            id: servico.tipoServicoId,
+            nome: 'Tipo não encontrado',
+            descricao: '',
+            ativo: false,
+            dataCadastro: new Date()
+          } as TipoServico;
+          
+          return {
+            ...servico,
+            tipoServico
+          };
+        });
+      }
       
       // Já vem ordenado por data de cadastro (mais recente primeiro) do repository
-      return servicosComTipo;
+      return todosServicos;
     } catch (error) {
       console.error('Erro ao buscar todos os serviços:', error);
       return [];
