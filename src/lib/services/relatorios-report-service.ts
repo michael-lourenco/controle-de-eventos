@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { repositoryFactory } from '../repositories/repository-factory';
-import { RelatoriosDiariosRepository, RelatorioPersistido } from '../repositories/relatorios-diarios-repository';
+import { RelatorioPersistido } from '../repositories/relatorios-diarios-repository';
 import {
   Evento,
   Pagamento,
@@ -25,7 +25,7 @@ export class RelatoriosReportService {
   private tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
   private clienteRepo = repositoryFactory.getClienteRepository();
   private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
-  private relatoriosRepo = new RelatoriosDiariosRepository();
+  private relatoriosRepo = repositoryFactory.getRelatoriosDiariosRepository();
 
   static getInstance(): RelatoriosReportService {
     if (!RelatoriosReportService.instance) {

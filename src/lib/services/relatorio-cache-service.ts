@@ -1,11 +1,11 @@
-import { RelatorioCacheRepository } from '../repositories/relatorio-cache-repository';
+import { repositoryFactory } from '../repositories/repository-factory';
 import { RelatorioSnapshot, ResumoGeral, ReceitaMensal, EventoResumo, FluxoCaixaMensal, ServicosResumo, CanalEntradaResumo, ImpressoesResumo, PerformanceEvento } from '@/types/relatorios';
 import { dataService } from '../data-service';
 import { format } from 'date-fns';
 import { eachMonthOfInterval, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 export class RelatorioCacheService {
-  private repository = new RelatorioCacheRepository();
+  private repository = repositoryFactory.getRelatorioCacheRepository();
 
   /**
    * Gera um snapshot completo de relatórios para um usuário

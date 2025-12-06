@@ -1,6 +1,5 @@
 import { format, startOfDay, endOfDay, subMonths } from 'date-fns';
 import { repositoryFactory } from '../repositories/repository-factory';
-import { RelatoriosDiariosRepository } from '../repositories/relatorios-diarios-repository';
 import {
   DashboardData,
   DashboardEventoResumo,
@@ -27,7 +26,7 @@ export class DashboardReportService {
 
   private eventoRepo = repositoryFactory.getEventoRepository();
   private pagamentoGlobalRepo = repositoryFactory.getPagamentoGlobalRepository();
-  private relatoriosRepo = new RelatoriosDiariosRepository();
+  private relatoriosRepo = repositoryFactory.getRelatoriosDiariosRepository();
 
   static getInstance(): DashboardReportService {
     if (!DashboardReportService.instance) {

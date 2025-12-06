@@ -332,11 +332,18 @@ CREATE INDEX idx_contratos_status ON contratos(user_id, status);
 
 -- Relatórios diários (cache)
 CREATE TABLE IF NOT EXISTS relatorios_diarios (
-    id VARCHAR(255) PRIMARY KEY, -- Firestore ID
+    id VARCHAR(255) PRIMARY KEY, -- Firestore ID (formato: userId_dateKey)
     user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     date_key VARCHAR(8) NOT NULL, -- yyyyMMdd
     data_geracao TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     dashboard JSONB,
+    detalhamento_receber JSONB,
+    receita_mensal JSONB,
+    performance_eventos JSONB,
+    fluxo_caixa JSONB,
+    servicos JSONB,
+    canais_entrada JSONB,
+    impressoes JSONB,
     
     UNIQUE(user_id, date_key)
 );

@@ -14,6 +14,8 @@ import { GoogleCalendarTokenRepository } from './google-calendar-token-repositor
 import { ModeloContratoRepository } from './modelo-contrato-repository';
 import { ConfiguracaoContratoRepository } from './configuracao-contrato-repository';
 import { ContratoRepository } from './contrato-repository';
+import { RelatoriosDiariosRepository } from './relatorios-diarios-repository';
+import { RelatorioCacheRepository } from './relatorio-cache-repository';
 
 // Importar repositórios Supabase
 import { ClienteSupabaseRepository } from './supabase/cliente-supabase-repository';
@@ -28,6 +30,8 @@ import { ServicoEventoSupabaseRepository } from './supabase/servico-evento-supab
 import { ContratoSupabaseRepository } from './supabase/contrato-supabase-repository';
 import { ModeloContratoSupabaseRepository } from './supabase/modelo-contrato-supabase-repository';
 import { ConfiguracaoContratoSupabaseRepository } from './supabase/configuracao-contrato-supabase-repository';
+import { RelatoriosDiariosSupabaseRepository } from './supabase/relatorios-diarios-supabase-repository';
+import { RelatorioCacheSupabaseRepository } from './supabase/relatorio-cache-supabase-repository';
 
 /**
  * Factory unificado que pode usar Firebase ou Supabase
@@ -58,6 +62,8 @@ export class RepositoryFactory {
   private modeloContratoRepository: ModeloContratoRepository | ModeloContratoSupabaseRepository;
   private configuracaoContratoRepository: ConfiguracaoContratoRepository | ConfiguracaoContratoSupabaseRepository;
   private contratoRepository: ContratoRepository | ContratoSupabaseRepository;
+  private relatoriosDiariosRepository: RelatoriosDiariosRepository | RelatoriosDiariosSupabaseRepository;
+  private relatorioCacheRepository: RelatorioCacheRepository | RelatorioCacheSupabaseRepository;
 
   private constructor() {
     // Verificar se deve usar Supabase (variável de ambiente)
@@ -97,6 +103,8 @@ export class RepositoryFactory {
         this.contratoRepository = new ContratoSupabaseRepository();
         this.modeloContratoRepository = new ModeloContratoSupabaseRepository();
         this.configuracaoContratoRepository = new ConfiguracaoContratoSupabaseRepository();
+        this.relatoriosDiariosRepository = new RelatoriosDiariosSupabaseRepository();
+        this.relatorioCacheRepository = new RelatorioCacheSupabaseRepository();
       } catch (error) {
         console.error('[RepositoryFactory] Erro ao inicializar Supabase, usando Firebase:', error);
         this.useSupabase = false;
@@ -113,6 +121,8 @@ export class RepositoryFactory {
         this.contratoRepository = new ContratoRepository();
         this.modeloContratoRepository = new ModeloContratoRepository();
         this.configuracaoContratoRepository = new ConfiguracaoContratoRepository();
+        this.relatoriosDiariosRepository = new RelatoriosDiariosRepository();
+        this.relatorioCacheRepository = new RelatorioCacheRepository();
       }
     } else {
       if (useSupabaseFlag === 'true' && !hasSupabaseConfig) {
@@ -150,7 +160,7 @@ export class RepositoryFactory {
     this.userRepository = new UserRepository();
     this.arquivoRepository = new ArquivoRepository();
     this.googleCalendarTokenRepository = new GoogleCalendarTokenRepository();
-    // modeloContratoRepository, configuracaoContratoRepository e contratoRepository já foram inicializados acima baseado em useSupabase
+    // modeloContratoRepository, configuracaoContratoRepository, contratoRepository, relatoriosDiariosRepository e relatorioCacheRepository já foram inicializados acima baseado em useSupabase
   }
 
   public static getInstance(): RepositoryFactory {
@@ -231,6 +241,14 @@ export class RepositoryFactory {
 
   public getContratoRepository(): ContratoRepository | ContratoSupabaseRepository {
     return this.contratoRepository;
+  }
+
+  public getRelatoriosDiariosRepository(): RelatoriosDiariosRepository | RelatoriosDiariosSupabaseRepository {
+    return this.relatoriosDiariosRepository;
+  }
+
+  public getRelatorioCacheRepository(): RelatorioCacheRepository | RelatorioCacheSupabaseRepository {
+    return this.relatorioCacheRepository;
   }
 
   /**
