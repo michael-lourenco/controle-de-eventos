@@ -18,7 +18,7 @@ import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { RelatoriosDiariosRepository } from '@/lib/repositories/relatorios-diarios-repository';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
 export default function RelatoriosPage() {
   const { userId } = useCurrentUser();
@@ -38,7 +38,7 @@ export default function RelatoriosPage() {
       try {
         const hoje = new Date();
         const dateKey = format(hoje, 'yyyyMMdd');
-        const relatoriosRepo = new RelatoriosDiariosRepository();
+        const relatoriosRepo = repositoryFactory.getRelatoriosDiariosRepository();
         const cached = await relatoriosRepo.getRelatorioDiario(userId, dateKey);
         
         if (cached?.dataGeracao) {
@@ -86,7 +86,7 @@ export default function RelatoriosPage() {
       // Buscar data de atualização atualizada
       const hoje = new Date();
       const dateKey = format(hoje, 'yyyyMMdd');
-      const relatoriosRepo = new RelatoriosDiariosRepository();
+      const relatoriosRepo = repositoryFactory.getRelatoriosDiariosRepository();
       const cached = await relatoriosRepo.getRelatorioDiario(userId, dateKey);
       
       if (cached?.dataGeracao) {
