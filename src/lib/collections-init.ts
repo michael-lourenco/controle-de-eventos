@@ -78,7 +78,7 @@ export async function initializeTiposCusto(userId?: string): Promise<void> {
     ];
     
     for (const tipoCusto of tiposCustoData) {
-      await tipoCustoRepo.create(tipoCusto, userId);
+      await tipoCustoRepo.createTipoCusto(tipoCusto, userId);
     }
   } catch (error) {
     // Erro ao inicializar tipos de custo

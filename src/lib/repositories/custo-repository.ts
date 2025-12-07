@@ -3,14 +3,10 @@ import { CustoEvento, TipoCusto } from '@/types';
 import { orderBy, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '../firestore/collections';
-import { CustoGlobalRepository } from './custo-global-repository';
 
 export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> {
-  private custoGlobalRepo: CustoGlobalRepository;
-
   constructor() {
     super(COLLECTIONS.EVENTOS, COLLECTIONS.CUSTOS);
-    this.custoGlobalRepo = new CustoGlobalRepository();
   }
 
   // Métodos específicos para subcollections de custos por evento
@@ -43,28 +39,6 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
       eventoId,
       dataCadastro: new Date()
     } as CustoEvento;
-
-    // Sincronizar com a collection global
-    try {
-      await this.custoGlobalRepo.createCusto(
-        userId,
-        eventoId,
-        docRef.id,
-        {
-          eventoId: custo.eventoId,
-          tipoCustoId: custo.tipoCustoId,
-          valor: custo.valor,
-          quantidade: custo.quantidade,
-          observacoes: custo.observacoes,
-          removido: custo.removido,
-          dataRemocao: custo.dataRemocao,
-          motivoRemocao: custo.motivoRemocao,
-          dataCadastro: custoCriado.dataCadastro
-        }
-      );
-    } catch (error) {
-      // Não lançar erro para não quebrar o fluxo principal
-    }
     
     return custoCriado;
   }
@@ -81,20 +55,6 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
     });
     
     await updateDoc(custoRef, cleanData);
-
-    // Sincronizar com a collection global
-    try {
-      // Filtrar apenas os campos que não são objetos relacionados
-      const { evento, tipoCusto, ...custoData } = custo as any;
-      await this.custoGlobalRepo.updateCusto(
-        userId,
-        eventoId,
-        custoId,
-        custoData
-      );
-    } catch (error) {
-      // Não lançar erro para não quebrar o fluxo principal
-    }
     
     return { id: custoId, ...custo } as CustoEvento;
   }
@@ -106,17 +66,6 @@ export class CustoEventoRepository extends SubcollectionRepository<CustoEvento> 
       removido: true,
       dataRemocao: new Date()
     });
-
-    // Sincronizar com a collection global
-    try {
-      await this.custoGlobalRepo.deleteCusto(
-        userId,
-        eventoId,
-        custoId
-      );
-    } catch (error) {
-      // Não lançar erro para não quebrar o fluxo principal
-    }
   }
 
   async findByEventoId(userId: string, eventoId: string): Promise<CustoEvento[]> {

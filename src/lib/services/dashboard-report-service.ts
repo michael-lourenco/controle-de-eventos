@@ -25,7 +25,7 @@ export class DashboardReportService {
   private static instance: DashboardReportService;
 
   private eventoRepo = repositoryFactory.getEventoRepository();
-  private pagamentoGlobalRepo = repositoryFactory.getPagamentoGlobalRepository();
+  private pagamentoRepo = repositoryFactory.getPagamentoRepository();
   private relatoriosRepo = repositoryFactory.getRelatoriosDiariosRepository();
 
   static getInstance(): DashboardReportService {
@@ -65,7 +65,7 @@ export class DashboardReportService {
 
     const [eventos, pagamentos] = await Promise.all([
       this.eventoRepo.findAll(userId),
-      this.pagamentoGlobalRepo.findAll(userId)
+      this.pagamentoRepo.findAll(userId)
     ]);
 
     const fontes: DashboardFontes = {

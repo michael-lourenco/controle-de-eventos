@@ -32,70 +32,51 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Criar tipos padrão usando cliente admin se for Supabase
-    if (repositoryFactory.isUsingSupabase()) {
-      // Usar cliente admin para contornar RLS
-      const supabaseAdmin = getSupabaseClient(true); // true = usar admin
+    // Usar cliente admin para contornar RLS
+    const supabaseAdmin = getSupabaseClient(true);
 
-      const defaults = [
-        { nome: 'totem fotográfico', descricao: 'Serviço de totem fotográfico', ativo: true },
-        { nome: 'instaprint', descricao: 'Serviço de Instaprint', ativo: true },
-        { nome: 'outros', descricao: 'Outros serviços', ativo: true }
-      ];
+    const defaults = [
+      { nome: 'totem fotográfico', descricao: 'Serviço de totem fotográfico', ativo: true },
+      { nome: 'instaprint', descricao: 'Serviço de Instaprint', ativo: true },
+      { nome: 'outros', descricao: 'Outros serviços', ativo: true }
+    ];
 
-      const tiposCriados = [];
+    const tiposCriados = [];
 
-      for (const item of defaults) {
-        // Gerar ID único usando UUID
-        const id = randomUUID();
-        
-        const { data, error } = await supabaseAdmin
-          .from('tipo_servicos')
-          .insert({
-            id: id,
-            nome: item.nome,
-            descricao: item.descricao,
-            ativo: item.ativo,
-            user_id: userId,
-            data_cadastro: new Date().toISOString()
-          })
-          .select()
-          .single();
+    for (const item of defaults) {
+      // Gerar ID único usando UUID
+      const id = randomUUID();
+      
+      const { data, error } = await supabaseAdmin
+        .from('tipo_servicos')
+        .insert({
+          id: id,
+          nome: item.nome,
+          descricao: item.descricao,
+          ativo: item.ativo,
+          user_id: userId,
+          data_cadastro: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-        if (error) {
-          // Se for erro de duplicação, ignorar silenciosamente
-          if (error.code === '23505') {
-            console.log(`Tipo de serviço "${item.nome}" já existe, ignorando...`);
-            tiposCriados.push({ id, nome: item.nome }); // Contar como criado
-          } else {
-            console.error(`Erro ao criar tipo de serviço "${item.nome}":`, error);
-          }
+      if (error) {
+        // Se for erro de duplicação, ignorar silenciosamente
+        if (error.code === '23505') {
+          console.log(`Tipo de serviço "${item.nome}" já existe, ignorando...`);
+          tiposCriados.push({ id, nome: item.nome }); // Contar como criado
         } else {
-          tiposCriados.push(data);
+          console.error(`Erro ao criar tipo de serviço "${item.nome}":`, error);
         }
+      } else {
+        tiposCriados.push(data);
       }
-
-      return NextResponse.json({
-        message: 'Tipos de serviço inicializados com sucesso',
-        tipos: tiposCriados.length
-      });
-    } else {
-      // Firebase - usar repositório normalmente
-      const defaults = [
-        { nome: 'totem fotográfico', descricao: 'Serviço de totem fotográfico', ativo: true },
-        { nome: 'instaprint', descricao: 'Serviço de Instaprint', ativo: true },
-        { nome: 'outros', descricao: 'Outros serviços', ativo: true }
-      ];
-
-      for (const item of defaults) {
-        await tipoServicoRepo.createTipoServico(item, userId);
-      }
-
-      return NextResponse.json({
-        message: 'Tipos de serviço inicializados com sucesso',
-        tipos: defaults.length
-      });
     }
+
+    return NextResponse.json({
+      message: 'Tipos de serviço inicializados com sucesso',
+      tipos: tiposCriados.length
+    });
   } catch (error: any) {
     console.error('Erro ao inicializar tipos de serviço:', error);
     return NextResponse.json(

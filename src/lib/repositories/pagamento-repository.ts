@@ -3,14 +3,10 @@ import { Pagamento } from '@/types';
 import { where, orderBy, limit as firestoreLimit, and, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { COLLECTIONS } from '../firestore/collections';
-import { PagamentoGlobalRepository } from './pagamento-global-repository';
 
 export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
-  private pagamentoGlobalRepo: PagamentoGlobalRepository;
-
   constructor() {
     super(COLLECTIONS.EVENTOS, COLLECTIONS.PAGAMENTOS);
-    this.pagamentoGlobalRepo = new PagamentoGlobalRepository();
   }
 
   // Métodos específicos para subcollections de pagamentos por evento
@@ -46,19 +42,6 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
       dataCadastro: new Date(),
       dataAtualizacao: new Date()
     } as Pagamento;
-
-    // Sincronizar com a collection global
-    try {
-      await this.pagamentoGlobalRepo.createPagamento(
-        userId,
-        eventoId,
-        docRef.id,
-        pagamento
-      );
-    } catch (error) {
-      // Não lançar erro para não quebrar o fluxo principal
-      // O pagamento já foi criado na collection principal
-    }
     
     return pagamentoCriado;
   }
@@ -78,18 +61,6 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
       ...cleanData,
       dataAtualizacao: new Date()
     });
-
-    // Sincronizar com a collection global
-    try {
-      await this.pagamentoGlobalRepo.updatePagamento(
-        userId,
-        eventoId,
-        pagamentoId,
-        pagamento
-      );
-    } catch (error) {
-      // Não lançar erro para não quebrar o fluxo principal
-    }
     
     return { id: pagamentoId, ...pagamento } as Pagamento;
   }
@@ -102,17 +73,6 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
       dataCancelamento: new Date(),
       status: 'Cancelado'
     });
-
-    // Sincronizar com a collection global
-    try {
-      await this.pagamentoGlobalRepo.deletePagamento(
-        userId,
-        eventoId,
-        pagamentoId
-      );
-    } catch (error) {
-      // Não lançar erro para não quebrar o fluxo principal
-    }
   }
 
   async findByEventoId(userId: string, eventoId: string): Promise<Pagamento[]> {

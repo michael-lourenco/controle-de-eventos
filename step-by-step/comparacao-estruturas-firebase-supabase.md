@@ -380,3 +380,4 @@ Todas as tabelas que eram subcollections no Firebase agora são tabelas relacion
 
 
 
+

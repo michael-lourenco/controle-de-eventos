@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
           if (precisaAtualizar) {
             if (!dryRun) {
-              await clienteRepo.update(cliente.id, updates, usuario.id);
+              await clienteRepo.updateCliente(cliente.id, updates, usuario.id);
             }
             resultados.clientesAtualizados++;
             resultados.detalhes.clientes.push(`${cliente.nome} (${usuario.email})`);
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
           if (precisaAtualizar) {
             if (!dryRun) {
-              await eventoRepo.update(evento.id, updates, usuario.id);
+              await eventoRepo.updateEvento(evento.id, updates, usuario.id);
             }
             resultados.eventosAtualizados++;
             const nomeEvento = evento.nomeEvento || evento.local || evento.tipoEvento || evento.id;
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
 
           if (precisaAtualizar) {
             if (!dryRun) {
-              await tipoServicoRepo.update(tipo.id, updates, usuario.id);
+              await tipoServicoRepo.updateTipoServico(tipo.id, updates, usuario.id);
             }
             resultados.tiposServicoAtualizados++;
             resultados.detalhes.tiposServico.push(`${tipo.nome} (${usuario.email})`);
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
 
           if (precisaAtualizar) {
             if (!dryRun) {
-              await tipoCustoRepo.update(tipo.id, updates, usuario.id);
+              await tipoCustoRepo.updateTipoCusto(tipo.id, updates, usuario.id);
             }
             resultados.tiposCustoAtualizados++;
             resultados.detalhes.tiposCusto.push(`${tipo.nome} (${usuario.email})`);
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
 
           if (precisaAtualizar) {
             if (!dryRun) {
-              await canalEntradaRepo.update(canal.id, updates, usuario.id);
+              await canalEntradaRepo.updateCanalEntrada(usuario.id, canal.id, updates);
             }
             resultados.canaisEntradaAtualizados++;
             resultados.detalhes.canaisEntrada.push(`${canal.nome} (${usuario.email})`);
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
 
           if (precisaAtualizar) {
             if (!dryRun) {
-              await tipoEventoRepo.update(tipo.id, updates, usuario.id);
+              await tipoEventoRepo.updateTipoEvento(tipo.id, updates, usuario.id);
             }
             resultados.tiposEventoAtualizados++;
             resultados.detalhes.tiposEvento.push(`${tipo.nome} (${usuario.email})`);

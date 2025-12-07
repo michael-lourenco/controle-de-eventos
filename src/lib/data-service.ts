@@ -24,24 +24,15 @@ export class DataService {
   private clienteRepo = repositoryFactory.getClienteRepository();
   private eventoRepo = repositoryFactory.getEventoRepository();
   private pagamentoRepo = repositoryFactory.getPagamentoRepository();
-  private pagamentoGlobalRepo = repositoryFactory.getPagamentoGlobalRepository();
   private tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
   private custoEventoRepo = repositoryFactory.getCustoEventoRepository();
-  private custoGlobalRepo = repositoryFactory.getCustoGlobalRepository();
   private tipoServicoRepo = repositoryFactory.getTipoServicoRepository();
   private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
-  private servicoGlobalRepo = repositoryFactory.getServicoGlobalRepository();
   private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
   private tipoEventoRepo = repositoryFactory.getTipoEventoRepository();
   private funcionalidadeService = new FuncionalidadeService();
   private dashboardReportService = DashboardReportService.getInstance();
   private relatoriosReportService = RelatoriosReportService.getInstance();
-
-  constructor() {
-    // Log qual banco está sendo usado
-    const isUsingSupabase = repositoryFactory.isUsingSupabase();
-    console.log(`[DataService] ${isUsingSupabase ? '✅ Usando Supabase' : '🔥 Usando Firebase'}`);
-  }
 
   // Método para inicializar collections automaticamente
   private async ensureCollectionsInitialized(): Promise<void> {
@@ -61,11 +52,10 @@ export class DataService {
     try {
       const existentes = await this.tipoEventoRepo.findAll(userId);
       if (existentes.length === 0) {
-        // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
-        const isUsingSupabase = repositoryFactory.isUsingSupabase();
+        // Se estiver no cliente, usar API route para evitar problemas de RLS
         const isClient = typeof window !== 'undefined';
         
-        if (isUsingSupabase && isClient) {
+        if (isClient) {
           try {
             const response = await fetch('/api/init/tipos-evento', {
               method: 'POST',
@@ -128,11 +118,10 @@ export class DataService {
     try {
       const existentes = await this.canalEntradaRepo.findAll(userId);
       if (existentes.length === 0) {
-        // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
-        const isUsingSupabase = repositoryFactory.isUsingSupabase();
+        // Se estiver no cliente, usar API route para evitar problemas de RLS
         const isClient = typeof window !== 'undefined';
         
-        if (isUsingSupabase && isClient) {
+        if (isClient) {
           try {
             const response = await fetch('/api/init/canais-entrada', {
               method: 'POST',
@@ -196,11 +185,10 @@ export class DataService {
     try {
       const existentes = await this.tipoServicoRepo.findAll(userId);
       if (existentes.length === 0) {
-        // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
-        const isUsingSupabase = repositoryFactory.isUsingSupabase();
+        // Se estiver no cliente, usar API route para evitar problemas de RLS
         const isClient = typeof window !== 'undefined';
         
-        if (isUsingSupabase && isClient) {
+        if (isClient) {
           try {
             const response = await fetch('/api/init/tipos-servico', {
               method: 'POST',
@@ -543,11 +531,10 @@ export class DataService {
       throw erro;
     }
 
-    // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
-    const isUsingSupabase = repositoryFactory.isUsingSupabase();
+    // Se estiver no cliente, usar API route para evitar problemas de RLS
     const isClient = typeof window !== 'undefined';
     
-    if (isUsingSupabase && isClient) {
+    if (isClient) {
       try {
         const response = await fetch('/api/pagamentos/create', {
           method: 'POST',
@@ -629,23 +616,14 @@ export class DataService {
   }
 
   // Método para buscar todos os pagamentos de todos os eventos do usuário
-  // Usa a collection global para melhor performance (Firebase) ou busca direta (Supabase)
   async getAllPagamentos(userId: string): Promise<Pagamento[]> {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar pagamentos');
     }
     
     try {
-      const isUsingSupabase = repositoryFactory.isUsingSupabase();
-      let todosPagamentos: Pagamento[];
-
-      if (isUsingSupabase) {
-        // No Supabase, buscar todos os pagamentos diretamente do repositório
-        todosPagamentos = await this.pagamentoRepo.findAll(userId);
-      } else {
-        // No Firebase, usar a collection global (muito mais eficiente)
-        todosPagamentos = await this.pagamentoGlobalRepo.findAll(userId);
-      }
+      // Buscar todos os pagamentos diretamente do repositório Supabase
+      const todosPagamentos = await this.pagamentoRepo.findAll(userId);
       
       // Buscar todos os eventos do usuário para preencher informações do evento
       const eventos = await this.getAllEventos(userId);
@@ -774,11 +752,10 @@ export class DataService {
       throw erro;
     }
 
-    // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
-    const isUsingSupabase = repositoryFactory.isUsingSupabase();
+    // Se estiver no cliente, usar API route para evitar problemas de RLS
     const isClient = typeof window !== 'undefined';
     
-    if (isUsingSupabase && isClient) {
+    if (isClient) {
       try {
         const response = await fetch('/api/tipos-custo/create', {
           method: 'POST',
@@ -844,11 +821,10 @@ export class DataService {
       throw new Error('userId é obrigatório para criar custo');
     }
 
-    // Se estiver usando Supabase no cliente, usar API route para evitar problemas de RLS
-    const isUsingSupabase = repositoryFactory.isUsingSupabase();
+    // Se estiver no cliente, usar API route para evitar problemas de RLS
     const isClient = typeof window !== 'undefined';
     
-    if (isUsingSupabase && isClient) {
+    if (isClient) {
       try {
         const response = await fetch('/api/custos/create', {
           method: 'POST',
@@ -914,23 +890,14 @@ export class DataService {
   }
 
   // Método para buscar todos os custos de todos os eventos do usuário
-  // Usa a collection global para melhor performance (Firebase) ou busca direta (Supabase)
   async getAllCustos(userId: string): Promise<CustoEvento[]> {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar custos');
     }
     
     try {
-      const isUsingSupabase = repositoryFactory.isUsingSupabase();
-      let todosCustos: CustoEvento[];
-
-      if (isUsingSupabase) {
-        // No Supabase, buscar todos os custos diretamente do repositório
-        todosCustos = await this.custoEventoRepo.findAll(userId);
-      } else {
-        // No Firebase, usar a collection global (muito mais eficiente)
-        todosCustos = await this.custoGlobalRepo.findAll(userId);
-      }
+      // Buscar todos os custos diretamente do repositório Supabase
+      const todosCustos = await this.custoEventoRepo.findAll(userId);
       
       // Buscar todos os tipos de custo uma vez e criar um Map para lookup eficiente
       const tiposCusto = await this.getTiposCusto(userId);
@@ -1239,44 +1206,15 @@ export class DataService {
   }
 
   // Métodos para serviços
-  // Usa a collection global para melhor performance (Firebase) ou busca direta (Supabase)
   async getAllServicos(userId: string): Promise<ServicoEvento[]> {
     if (!userId) {
       throw new Error('userId é obrigatório para buscar serviços');
     }
     
     try {
-      const isUsingSupabase = repositoryFactory.isUsingSupabase();
-      let todosServicos: ServicoEvento[];
-
-      if (isUsingSupabase) {
-        // No Supabase, buscar todos os serviços diretamente do repositório
-        // O findAll já retorna com tipo_servicos populado
-        todosServicos = await this.servicoEventoRepo.findAll(userId);
-      } else {
-        // No Firebase, usar a collection global (muito mais eficiente)
-        todosServicos = await this.servicoGlobalRepo.findAll(userId);
-        
-        // Buscar tipos de serviço para popular os objetos
-        const tiposServico = await this.getTiposServicos(userId);
-        const tiposMap = new Map(tiposServico.map(tipo => [tipo.id, tipo]));
-        
-        // Adicionar tipoServico a cada serviço
-        todosServicos = todosServicos.map(servico => {
-          const tipoServico = tiposMap.get(servico.tipoServicoId) || {
-            id: servico.tipoServicoId,
-            nome: 'Tipo não encontrado',
-            descricao: '',
-            ativo: false,
-            dataCadastro: new Date()
-          } as TipoServico;
-          
-          return {
-            ...servico,
-            tipoServico
-          };
-        });
-      }
+      // Buscar todos os serviços diretamente do repositório Supabase
+      // O findAll já retorna com tipo_servicos populado
+      const todosServicos = await this.servicoEventoRepo.findAll(userId);
       
       // Já vem ordenado por data de cadastro (mais recente primeiro) do repository
       return todosServicos;

@@ -36,8 +36,9 @@ export async function POST(
       pdfUrl: url,
       pdfPath: path,
       status: 'gerado',
-      dataGeracao: new Date()
-    }, session.user.id);
+      dataGeracao: new Date(),
+      userId: session.user.id
+    });
 
     return NextResponse.json(atualizado);
   } catch (error: any) {

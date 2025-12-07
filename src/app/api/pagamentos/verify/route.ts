@@ -19,13 +19,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const eventoId = searchParams.get('eventoId');
 
-    if (!repositoryFactory.isUsingSupabase()) {
-      return NextResponse.json({
-        usandoSupabase: false,
-        message: 'Sistema não está usando Supabase'
-      });
-    }
-
     const supabaseAdmin = getSupabaseClient(true);
 
     // Buscar todos os pagamentos do usuário
@@ -48,7 +41,6 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      usandoSupabase: true,
       totalEncontrado: pagamentos?.length || 0,
       pagamentos: pagamentos || [],
       eventoId: eventoId || 'todos'

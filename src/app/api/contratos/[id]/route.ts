@@ -61,8 +61,9 @@ export async function PUT(
 
     const atualizado = await contratoRepo.update(id, {
       ...body,
-      dataAtualizacao: new Date()
-    }, session.user.id);
+      dataAtualizacao: new Date(),
+      userId: session.user.id
+    });
 
     return NextResponse.json(atualizado);
   } catch (error: any) {
@@ -83,7 +84,7 @@ export async function DELETE(
 
     const { id } = await params;
     const contratoRepo = repositoryFactory.getContratoRepository();
-    await contratoRepo.delete(id, session.user.id);
+    await contratoRepo.delete(id);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -18,9 +18,9 @@ export class RelatoriosReportService {
   private static instance: RelatoriosReportService;
 
   private eventoRepo = repositoryFactory.getEventoRepository();
-  private pagamentoGlobalRepo = repositoryFactory.getPagamentoGlobalRepository();
-  private custoGlobalRepo = repositoryFactory.getCustoGlobalRepository();
-  private servicoGlobalRepo = repositoryFactory.getServicoGlobalRepository();
+  private pagamentoRepo = repositoryFactory.getPagamentoRepository();
+  private custoEventoRepo = repositoryFactory.getCustoEventoRepository();
+  private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
   private tipoServicoRepo = repositoryFactory.getTipoServicoRepository();
   private tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
   private clienteRepo = repositoryFactory.getClienteRepository();
@@ -54,9 +54,9 @@ export class RelatoriosReportService {
     // Buscar todos os dados necessários uma única vez
     const [eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada] = await Promise.all([
       this.eventoRepo.findAll(userId),
-      this.pagamentoGlobalRepo.findAll(userId),
-      this.custoGlobalRepo.findAll(userId),
-      this.servicoGlobalRepo.findAll(userId),
+      this.pagamentoRepo.findAll(userId),
+      this.custoEventoRepo.findAll(userId),
+      this.servicoEventoRepo.findAll(userId),
       this.tipoServicoRepo.findAll(userId),
       this.tipoCustoRepo.findAll(userId),
       this.clienteRepo.findAll(userId),
