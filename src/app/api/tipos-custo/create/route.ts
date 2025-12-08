@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
-import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 
 /**
  * API route para criar tipos de custo
@@ -10,34 +14,26 @@ import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const userId = session.user.id;
-    const body = await request.json();
+    const user = await getAuthenticatedUser();
+    const body = await getRequestBody(request);
     const { nome, descricao, ativo = true } = body;
 
     if (!nome || !nome.trim()) {
-      return NextResponse.json({ error: 'Nome é obrigatório' }, { status: 400 });
+      return createErrorResponse('Nome é obrigatório', 400);
     }
 
     // Validar permissão para criar tipos personalizados
-    const funcionalidadeService = new FuncionalidadeService();
-    const temPermissao = await funcionalidadeService.verificarPermissao(userId, 'TIPOS_PERSONALIZADO');
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const funcionalidadeService = serviceFactory.getFuncionalidadeService();
+    const temPermissao = await funcionalidadeService.verificarPermissao(user.id, 'TIPOS_PERSONALIZADO');
     if (!temPermissao) {
-      return NextResponse.json(
-        { 
-          error: 'Seu plano não permite criar tipos personalizados. Esta funcionalidade está disponível apenas nos planos Profissional e Premium.',
-          status: 403
-        },
-        { status: 403 }
+      return createErrorResponse(
+        'Seu plano não permite criar tipos personalizados. Esta funcionalidade está disponível apenas nos planos Profissional e Premium.',
+        403
       );
     }
 
-    // Usar repositório (funciona tanto para Firebase quanto Supabase)
     const tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
     const tipoCriado = await tipoCustoRepo.createTipoCusto(
       {
@@ -45,19 +41,12 @@ export async function POST(request: NextRequest) {
         descricao: descricao?.trim() || '',
         ativo: ativo
       },
-      userId
+      user.id
     );
 
-    return NextResponse.json(tipoCriado);
-  } catch (error: any) {
-    console.error('Erro ao criar tipo de custo:', error);
-    return NextResponse.json(
-      {
-        error: error.message || 'Erro ao criar tipo de custo',
-        details: error.toString()
-      },
-      { status: 500 }
-    );
+    return createApiResponse(tipoCriado, 201);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

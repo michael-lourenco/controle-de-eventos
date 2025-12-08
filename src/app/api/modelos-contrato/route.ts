@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse
+} from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
+    await getAuthenticatedUser();
 
     const modeloRepo = repositoryFactory.getModeloContratoRepository();
     const modelos = await modeloRepo.findAtivos();
@@ -24,11 +24,9 @@ export async function GET(request: NextRequest) {
         : modelo.dataAtualizacao
     }));
 
-    return NextResponse.json(modelosSerializados);
-  } catch (error: any) {
-    return NextResponse.json({ 
-      error: 'Erro ao listar modelos'
-    }, { status: 500 });
+    return createApiResponse(modelosSerializados);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

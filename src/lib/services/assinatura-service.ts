@@ -18,10 +18,15 @@ export class AssinaturaService {
   private planoRepo: PlanoRepository;
   private userRepo: UserRepository;
 
-  constructor() {
-    this.assinaturaRepo = new AssinaturaRepository();
-    this.planoRepo = new PlanoRepository();
-    this.userRepo = new UserRepository();
+  constructor(
+    assinaturaRepo?: AssinaturaRepository,
+    planoRepo?: PlanoRepository,
+    userRepo?: UserRepository
+  ) {
+    // Manter compatibilidade: se não passar dependências, criar novas instâncias
+    this.assinaturaRepo = assinaturaRepo || new AssinaturaRepository();
+    this.planoRepo = planoRepo || new PlanoRepository();
+    this.userRepo = userRepo || new UserRepository();
   }
 
   /**

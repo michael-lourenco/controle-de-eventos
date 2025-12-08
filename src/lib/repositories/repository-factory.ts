@@ -13,6 +13,10 @@ import { ConfiguracaoContratoRepository } from './configuracao-contrato-reposito
 import { ContratoRepository } from './contrato-repository';
 import { RelatoriosDiariosRepository } from './relatorios-diarios-repository';
 import { RelatorioCacheRepository } from './relatorio-cache-repository';
+import { PlanoRepository } from './plano-repository';
+import { FuncionalidadeRepository } from './funcionalidade-repository';
+import { AssinaturaRepository } from './assinatura-repository';
+import { PasswordResetTokenRepository } from './password-reset-token-repository';
 
 // Importar repositórios Supabase
 import { ClienteSupabaseRepository } from './supabase/cliente-supabase-repository';
@@ -58,6 +62,10 @@ export class RepositoryFactory {
   private userRepository: UserRepository;
   private arquivoRepository: ArquivoRepository;
   private googleCalendarTokenRepository: GoogleCalendarTokenRepository;
+  private planoRepository: PlanoRepository;
+  private funcionalidadeRepository: FuncionalidadeRepository;
+  private assinaturaRepository: AssinaturaRepository;
+  private passwordResetTokenRepository: PasswordResetTokenRepository;
 
   private constructor() {
     // Inicializar repositórios Supabase
@@ -81,6 +89,10 @@ export class RepositoryFactory {
     this.userRepository = new UserRepository();
     this.arquivoRepository = new ArquivoRepository();
     this.googleCalendarTokenRepository = new GoogleCalendarTokenRepository();
+    this.planoRepository = new PlanoRepository();
+    this.funcionalidadeRepository = new FuncionalidadeRepository();
+    this.assinaturaRepository = new AssinaturaRepository();
+    this.passwordResetTokenRepository = new PasswordResetTokenRepository();
   }
 
   public static getInstance(): RepositoryFactory {
@@ -158,6 +170,22 @@ export class RepositoryFactory {
 
   public getGoogleCalendarTokenRepository(): GoogleCalendarTokenRepository {
     return this.googleCalendarTokenRepository;
+  }
+
+  public getPlanoRepository(): PlanoRepository {
+    return this.planoRepository;
+  }
+
+  public getFuncionalidadeRepository(): FuncionalidadeRepository {
+    return this.funcionalidadeRepository;
+  }
+
+  public getAssinaturaRepository(): AssinaturaRepository {
+    return this.assinaturaRepository;
+  }
+
+  public getPasswordResetTokenRepository(): PasswordResetTokenRepository {
+    return this.passwordResetTokenRepository;
   }
 }
 

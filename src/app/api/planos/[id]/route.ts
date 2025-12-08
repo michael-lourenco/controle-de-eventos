@@ -1,8 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { PlanoRepository } from '@/lib/repositories/plano-repository';
-import { PlanoService } from '@/lib/services/plano-service';
+import { NextRequest } from 'next/server';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  requireAdmin,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody,
+  getRouteParams
+} from '@/lib/api/route-helpers';
 
 export async function GET(
   request: NextRequest,
@@ -10,22 +15,20 @@ export async function GET(
 ) {
   try {
     // Permitir acesso público para landing page
-    // Apenas criação/edição requer autenticação admin
-    const { id } = await params;
-    const service = new PlanoService();
+    const { id } = await getRouteParams(params);
+    // Importação dinâmica para evitar dependências circulares
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const service = serviceFactory.getPlanoService();
     const plano = await service.obterPlanoComFuncionalidades(id);
 
     if (!plano) {
-      return NextResponse.json({ error: 'Plano não encontrado' }, { status: 404 });
+      return createErrorResponse('Plano não encontrado', 404);
     }
 
-    return NextResponse.json({ plano });
-  } catch (error: any) {
-    console.error('Erro ao buscar plano:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao buscar plano' },
-      { status: 500 }
-    );
+    return createApiResponse({ plano });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -34,27 +37,20 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    await requireAdmin();
 
-    const { id } = await params;
-    const data = await request.json();
-    const repo = new PlanoRepository();
+    const { id } = await getRouteParams(params);
+    const data = await getRequestBody(request);
+    const planoRepo = repositoryFactory.getPlanoRepository();
     
-    const plano = await repo.update(id, {
+    const plano = await planoRepo.update(id, {
       ...data,
       dataAtualizacao: new Date()
     });
 
-    return NextResponse.json({ plano });
-  } catch (error: any) {
-    console.error('Erro ao atualizar plano:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao atualizar plano' },
-      { status: 500 }
-    );
+    return createApiResponse({ plano });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -63,22 +59,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    await requireAdmin();
 
-    const { id } = await params;
-    const repo = new PlanoRepository();
-    await repo.delete(id);
+    const { id } = await getRouteParams(params);
+    const planoRepo = repositoryFactory.getPlanoRepository();
+    await planoRepo.delete(id);
 
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Erro ao deletar plano:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao deletar plano' },
-      { status: 500 }
-    );
+    return createApiResponse({ success: true });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

@@ -1,22 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse
+} from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
+    const user = await getAuthenticatedUser();
 
     const configRepo = repositoryFactory.getConfiguracaoContratoRepository();
-    const camposFixos = await configRepo.getCamposFixos(session.user.id);
+    const camposFixos = await configRepo.getCamposFixos(user.id);
 
-    return NextResponse.json(camposFixos);
-  } catch (error: any) {
-    console.error('Erro ao buscar campos fixos:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createApiResponse(camposFixos);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

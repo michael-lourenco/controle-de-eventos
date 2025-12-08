@@ -4,23 +4,33 @@ import { UserRepository } from '../repositories/user-repository';
 import { Funcionalidade, LimitesUsuario } from '@/types/funcionalidades';
 import { EventoRepository } from '../repositories/evento-repository';
 import { ClienteRepository } from '../repositories/cliente-repository';
+import { EventoSupabaseRepository } from '../repositories/supabase/evento-supabase-repository';
+import { ClienteSupabaseRepository } from '../repositories/supabase/cliente-supabase-repository';
 import { AssinaturaService, PlanoStatus } from './assinatura-service';
 
 export class FuncionalidadeService {
   private funcionalidadeRepo: FuncionalidadeRepository;
   private assinaturaRepo: AssinaturaRepository;
   private userRepo: UserRepository;
-  private eventoRepo: EventoRepository;
-  private clienteRepo: ClienteRepository;
+  private eventoRepo: EventoRepository | EventoSupabaseRepository;
+  private clienteRepo: ClienteRepository | ClienteSupabaseRepository;
   private assinaturaService: AssinaturaService;
 
-  constructor() {
-    this.funcionalidadeRepo = new FuncionalidadeRepository();
-    this.assinaturaRepo = new AssinaturaRepository();
-    this.userRepo = new UserRepository();
-    this.eventoRepo = new EventoRepository();
-    this.clienteRepo = new ClienteRepository();
-    this.assinaturaService = new AssinaturaService();
+  constructor(
+    funcionalidadeRepo?: FuncionalidadeRepository,
+    assinaturaRepo?: AssinaturaRepository,
+    userRepo?: UserRepository,
+    eventoRepo?: EventoRepository | EventoSupabaseRepository,
+    clienteRepo?: ClienteRepository | ClienteSupabaseRepository,
+    assinaturaService?: AssinaturaService
+  ) {
+    // Manter compatibilidade: se não passar dependências, criar novas instâncias
+    this.funcionalidadeRepo = funcionalidadeRepo || new FuncionalidadeRepository();
+    this.assinaturaRepo = assinaturaRepo || new AssinaturaRepository();
+    this.userRepo = userRepo || new UserRepository();
+    this.eventoRepo = eventoRepo || new EventoRepository();
+    this.clienteRepo = clienteRepo || new ClienteRepository();
+    this.assinaturaService = assinaturaService || new AssinaturaService();
   }
 
   async verificarPermissao(userId: string, codigoFuncionalidade: string): Promise<boolean> {

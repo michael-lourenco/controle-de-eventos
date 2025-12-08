@@ -1,33 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { FuncionalidadeRepository } from '@/lib/repositories/funcionalidade-repository';
+import { NextRequest } from 'next/server';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  requireAdmin,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody,
+  getRouteParams
+} from '@/lib/api/route-helpers';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    await requireAdmin();
 
-    const { id } = await params;
-    const repo = new FuncionalidadeRepository();
+    const { id } = await getRouteParams(params);
+    const repo = repositoryFactory.getFuncionalidadeRepository();
     const funcionalidade = await repo.findById(id);
 
     if (!funcionalidade) {
-      return NextResponse.json({ error: 'Funcionalidade não encontrada' }, { status: 404 });
+      return createErrorResponse('Funcionalidade não encontrada', 404);
     }
 
-    return NextResponse.json({ funcionalidade });
-  } catch (error: any) {
-    console.error('Erro ao buscar funcionalidade:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao buscar funcionalidade' },
-      { status: 500 }
-    );
+    return createApiResponse({ funcionalidade });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -36,24 +35,17 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    await requireAdmin();
 
-    const { id } = await params;
-    const data = await request.json();
-    const repo = new FuncionalidadeRepository();
+    const { id } = await getRouteParams(params);
+    const data = await getRequestBody(request);
+    const repo = repositoryFactory.getFuncionalidadeRepository();
     
     const funcionalidade = await repo.update(id, data);
 
-    return NextResponse.json({ funcionalidade });
-  } catch (error: any) {
-    console.error('Erro ao atualizar funcionalidade:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao atualizar funcionalidade' },
-      { status: 500 }
-    );
+    return createApiResponse({ funcionalidade });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -62,22 +54,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    await requireAdmin();
 
-    const { id } = await params;
-    const repo = new FuncionalidadeRepository();
+    const { id } = await getRouteParams(params);
+    const repo = repositoryFactory.getFuncionalidadeRepository();
     await repo.delete(id);
 
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Erro ao deletar funcionalidade:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao deletar funcionalidade' },
-      { status: 500 }
-    );
+    return createApiResponse({ success: true });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

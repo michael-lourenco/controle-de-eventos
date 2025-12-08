@@ -1,72 +1,67 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody,
+  getQueryParams
+} from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const eventoId = searchParams.get('eventoId');
-    const status = searchParams.get('status');
+    const user = await getAuthenticatedUser();
+    const queryParams = getQueryParams(request);
+    const eventoId = queryParams.get('eventoId');
+    const status = queryParams.get('status');
 
     const contratoRepo = repositoryFactory.getContratoRepository();
     
     let contratos;
     if (eventoId) {
-      contratos = await contratoRepo.findByEventoId(eventoId, session.user.id);
+      contratos = await contratoRepo.findByEventoId(eventoId, user.id);
     } else {
-      contratos = await contratoRepo.findAll(session.user.id);
+      contratos = await contratoRepo.findAll(user.id);
     }
 
     if (status) {
       contratos = contratos.filter(c => c.status === status);
     }
 
-    return NextResponse.json(contratos);
-  } catch (error: any) {
-    console.error('Erro ao listar contratos:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createApiResponse(contratos);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const body = await request.json();
+    const user = await getAuthenticatedUser();
+    const body = await getRequestBody(request);
     const { eventoId, modeloContratoId, dadosPreenchidos, status = 'rascunho' } = body;
 
     if (!modeloContratoId || !dadosPreenchidos) {
-      return NextResponse.json({ error: 'modeloContratoId e dadosPreenchidos são obrigatórios' }, { status: 400 });
+      return createErrorResponse('modeloContratoId e dadosPreenchidos são obrigatórios', 400);
     }
 
     const modeloRepo = repositoryFactory.getModeloContratoRepository();
     const modelo = await modeloRepo.findById(modeloContratoId);
     if (!modelo || !modelo.ativo) {
-      return NextResponse.json({ error: 'Modelo de contrato não encontrado ou inativo' }, { status: 400 });
+      return createErrorResponse('Modelo de contrato não encontrado ou inativo', 400);
     }
 
     const { ContratoService } = await import('@/lib/services/contrato-service');
     const validacao = ContratoService.validarDadosPreenchidos(dadosPreenchidos, modelo.campos);
     if (!validacao.valido) {
-      return NextResponse.json({ error: 'Dados inválidos', erros: validacao.erros }, { status: 400 });
+      return createErrorResponse('Dados inválidos', 400, { erros: validacao.erros });
     }
 
-    const numeroContrato = await ContratoService.gerarNumeroContrato(session.user.id);
+    const numeroContrato = await ContratoService.gerarNumeroContrato(user.id);
     
-    // Usar repositório (funciona tanto para Firebase quanto Supabase)
     const contratoRepo = repositoryFactory.getContratoRepository();
-
     const contrato = await contratoRepo.create({
-      userId: session.user.id,
+      userId: user.id,
       eventoId: eventoId || undefined,
       modeloContratoId,
       dadosPreenchidos,
@@ -75,13 +70,12 @@ export async function POST(request: NextRequest) {
       dataGeracao: new Date(),
       dataCadastro: new Date(),
       dataAtualizacao: new Date(),
-      criadoPor: session.user.id
+      criadoPor: user.id
     });
 
-    return NextResponse.json(contrato, { status: 201 });
-  } catch (error: any) {
-    console.error('Erro ao criar contrato:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createApiResponse(contrato, 201);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

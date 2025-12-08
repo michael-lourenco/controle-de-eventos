@@ -12,12 +12,19 @@ export class PlanoService {
   private userRepo: UserRepository;
   private assinaturaService: AssinaturaService;
 
-  constructor() {
-    this.planoRepo = new PlanoRepository();
-    this.funcionalidadeRepo = new FuncionalidadeRepository();
-    this.assinaturaRepo = new AssinaturaRepository();
-    this.userRepo = new UserRepository();
-    this.assinaturaService = new AssinaturaService();
+  constructor(
+    planoRepo?: PlanoRepository,
+    funcionalidadeRepo?: FuncionalidadeRepository,
+    assinaturaRepo?: AssinaturaRepository,
+    userRepo?: UserRepository,
+    assinaturaService?: AssinaturaService
+  ) {
+    // Manter compatibilidade: se não passar dependências, criar novas instâncias
+    this.planoRepo = planoRepo || new PlanoRepository();
+    this.funcionalidadeRepo = funcionalidadeRepo || new FuncionalidadeRepository();
+    this.assinaturaRepo = assinaturaRepo || new AssinaturaRepository();
+    this.userRepo = userRepo || new UserRepository();
+    this.assinaturaService = assinaturaService || new AssinaturaService();
   }
 
   async obterTodosPlanos(): Promise<Plano[]> {

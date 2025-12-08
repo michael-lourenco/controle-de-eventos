@@ -1,8 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
-import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 
 /**
  * API route para criar pagamentos
@@ -10,24 +14,18 @@ import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const userId = session.user.id;
+    const user = await getAuthenticatedUser();
 
     // Validar permissão para registrar pagamentos
-    const funcionalidadeService = new FuncionalidadeService();
-    const temPermissao = await funcionalidadeService.verificarPermissao(userId, 'PAGAMENTOS_REGISTRAR');
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const funcionalidadeService = serviceFactory.getFuncionalidadeService();
+    const temPermissao = await funcionalidadeService.verificarPermissao(user.id, 'PAGAMENTOS_REGISTRAR');
     if (!temPermissao) {
-      return NextResponse.json(
-        { error: 'Seu plano não permite registrar pagamentos' },
-        { status: 403 }
-      );
+      return createErrorResponse('Seu plano não permite registrar pagamentos', 403);
     }
-    const body = await request.json();
+    
+    const body = await getRequestBody(request);
     const { 
       eventoId, 
       valor, 
@@ -40,10 +38,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!eventoId || !valor || !dataPagamento || !formaPagamento || !status) {
-      return NextResponse.json(
-        { error: 'eventoId, valor, dataPagamento, formaPagamento e status são obrigatórios' }, 
-        { status: 400 }
-      );
+      return createErrorResponse('eventoId, valor, dataPagamento, formaPagamento e status são obrigatórios', 400);
     }
 
     // Normalizar data_pagamento
@@ -53,26 +48,19 @@ export async function POST(request: NextRequest) {
     } else if (typeof dataPagamento === 'string') {
       const date = new Date(dataPagamento);
       if (isNaN(date.getTime())) {
-        return NextResponse.json(
-          { error: 'Formato de data inválido' },
-          { status: 400 }
-        );
+        return createErrorResponse('Formato de data inválido', 400);
       }
       dataPagamentoDate = date;
     } else {
-      return NextResponse.json(
-        { error: 'Data de pagamento é obrigatória e deve ser válida' },
-        { status: 400 }
-      );
+      return createErrorResponse('Data de pagamento é obrigatória e deve ser válida', 400);
     }
 
-    // Usar repositório (funciona tanto para Firebase quanto Supabase)
     const pagamentoRepo = repositoryFactory.getPagamentoRepository();
     const pagamentoCriado = await pagamentoRepo.createPagamento(
-      userId,
+      user.id,
       eventoId,
       {
-        userId,
+        userId: user.id,
         eventoId,
         valor: parseFloat(valor) || 0,
         dataPagamento: dataPagamentoDate,
@@ -87,16 +75,9 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    return NextResponse.json(pagamentoCriado);
-  } catch (error: any) {
-    console.error('Erro ao criar pagamento:', error);
-    return NextResponse.json(
-      {
-        error: error.message || 'Erro ao criar pagamento',
-        details: error.toString()
-      },
-      { status: 500 }
-    );
+    return createApiResponse(pagamentoCriado, 201);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

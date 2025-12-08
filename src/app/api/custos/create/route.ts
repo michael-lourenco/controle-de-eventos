@@ -1,7 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 
 /**
  * API route para criar custos
@@ -9,24 +14,17 @@ import { repositoryFactory } from '@/lib/repositories/repository-factory';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticação
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const userId = session.user.id;
-    const body = await request.json();
+    const user = await getAuthenticatedUser();
+    const body = await getRequestBody(request);
     const { eventoId, tipoCustoId, valor, quantidade, observacoes } = body;
 
     if (!eventoId || !tipoCustoId || valor === undefined) {
-      return NextResponse.json({ error: 'eventoId, tipoCustoId e valor são obrigatórios' }, { status: 400 });
+      return createErrorResponse('eventoId, tipoCustoId e valor são obrigatórios', 400);
     }
 
-    // Usar repositório (funciona tanto para Firebase quanto Supabase)
     const custoRepo = repositoryFactory.getCustoEventoRepository();
     const custoCriado = await custoRepo.createCustoEvento(
-      userId,
+      user.id,
       eventoId,
       {
         tipoCustoId,
@@ -41,16 +39,9 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    return NextResponse.json(custoCriado);
-  } catch (error: any) {
-    console.error('Erro ao criar custo:', error);
-    return NextResponse.json(
-      {
-        error: error.message || 'Erro ao criar custo',
-        details: error.toString()
-      },
-      { status: 500 }
-    );
+    return createApiResponse(custoCriado, 201);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

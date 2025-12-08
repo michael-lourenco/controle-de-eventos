@@ -1,22 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { FuncionalidadeRepository } from '@/lib/repositories/funcionalidade-repository';
+import { NextRequest } from 'next/server';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    await getAuthenticatedUser();
 
-    const { ids } = await request.json();
+    const { ids } = await getRequestBody<{ ids: string[] }>(request);
     
     if (!Array.isArray(ids)) {
-      return NextResponse.json({ error: 'IDs deve ser um array' }, { status: 400 });
+      return createErrorResponse('IDs deve ser um array', 400);
     }
 
-    const repo = new FuncionalidadeRepository();
+    const repo = repositoryFactory.getFuncionalidadeRepository();
     const funcionalidades = [];
     
     for (const id of ids) {
@@ -26,13 +28,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ funcionalidades });
-  } catch (error: any) {
-    console.error('Erro ao buscar funcionalidades por IDs:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao buscar funcionalidades' },
-      { status: 500 }
-    );
+    return createApiResponse({ funcionalidades });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

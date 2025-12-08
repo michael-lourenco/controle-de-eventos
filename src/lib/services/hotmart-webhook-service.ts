@@ -72,12 +72,19 @@ export class HotmartWebhookService {
   private planoService: PlanoService;
   private assinaturaService: AssinaturaService;
 
-  constructor() {
-    this.assinaturaRepo = new AssinaturaRepository();
-    this.planoRepo = new PlanoRepository();
-    this.userRepo = new UserRepository();
-    this.planoService = new PlanoService();
-    this.assinaturaService = new AssinaturaService();
+  constructor(
+    assinaturaRepo?: AssinaturaRepository,
+    planoRepo?: PlanoRepository,
+    userRepo?: UserRepository,
+    planoService?: PlanoService,
+    assinaturaService?: AssinaturaService
+  ) {
+    // Manter compatibilidade: se não passar dependências, criar novas instâncias
+    this.assinaturaRepo = assinaturaRepo || new AssinaturaRepository();
+    this.planoRepo = planoRepo || new PlanoRepository();
+    this.userRepo = userRepo || new UserRepository();
+    this.planoService = planoService || new PlanoService();
+    this.assinaturaService = assinaturaService || new AssinaturaService();
   }
 
   async processarWebhook(payload: any, isSandbox: boolean = false): Promise<{ success: boolean; message: string }> {

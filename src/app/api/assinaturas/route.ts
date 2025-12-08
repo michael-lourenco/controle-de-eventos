@@ -1,45 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { AssinaturaRepository } from '@/lib/repositories/assinatura-repository';
+import { NextRequest } from 'next/server';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  getQueryParams
+} from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
-    const repo = new AssinaturaRepository();
+    const user = await getAuthenticatedUser();
+    const repo = repositoryFactory.getAssinaturaRepository();
     
     // Admin pode ver todas, usuário apenas a sua
-    if (session.user?.role === 'admin') {
-      const { searchParams } = new URL(request.url);
-      const userId = searchParams.get('userId');
+    if (user.role === 'admin') {
+      const queryParams = getQueryParams(request);
+      const userId = queryParams.get('userId');
       
       if (userId) {
         const assinaturas = await repo.findAllByUserId(userId);
-        return NextResponse.json({ assinaturas });
+        return createApiResponse({ assinaturas });
       }
       
       const assinaturas = await repo.findAtivas();
-      return NextResponse.json({ assinaturas });
+      return createApiResponse({ assinaturas });
     }
 
     // Usuário comum: retornar assinatura ativa e todas as assinaturas (para histórico)
-    const assinatura = await repo.findByUserId(session.user.id);
-    const todasAssinaturas = await repo.findAllByUserId(session.user.id);
+    const assinatura = await repo.findByUserId(user.id);
+    const todasAssinaturas = await repo.findAllByUserId(user.id);
     
-    return NextResponse.json({ 
+    return createApiResponse({ 
       assinatura, // Assinatura ativa (ou null se não houver)
       todasAssinaturas // Todas as assinaturas do usuário (para histórico)
     });
-  } catch (error: any) {
-    console.error('Erro ao buscar assinaturas:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao buscar assinaturas' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
