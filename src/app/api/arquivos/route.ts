@@ -1,29 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { arquivoRepository } from '@/lib/repositories/arquivo-repository';
 import { s3Service } from '@/lib/s3-service';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getQueryParams
+} from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const eventoId = searchParams.get('eventoId');
+    const user = await getAuthenticatedUser();
+    const queryParams = getQueryParams(request);
+    const eventoId = queryParams.get('eventoId');
 
     if (!eventoId) {
-      return NextResponse.json({ 
-        error: 'eventoId é obrigatório' 
-      }, { status: 400 });
+      return createErrorResponse('eventoId é obrigatório', 400);
     }
 
     // Buscar arquivos do evento
     const arquivos = await arquivoRepository.getArquivosPorEvento(
-      session.user.id,
+      user.id,
       eventoId
     );
 
@@ -43,15 +41,12 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       arquivos: arquivosComUrls,
     });
 
   } catch (error) {
-    console.error('Erro ao buscar arquivos:', error);
-    return NextResponse.json({ 
-      error: 'Erro interno do servidor' 
-    }, { status: 500 });
+    return handleApiError(error);
   }
 }

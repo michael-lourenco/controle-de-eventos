@@ -58,27 +58,32 @@
 
 ---
 
-## 🔄 FASE 3: PENDENTE
+## ✅ FASE 3: COMPLETA
 
 ### Rotas de Contratos e Modelos
-- ⏳ `src/app/api/contratos/route.ts`
-- ⏳ `src/app/api/contratos/[id]/route.ts`
-- ⏳ `src/app/api/contratos/[id]/gerar-pdf/route.ts`
-- ⏳ `src/app/api/contratos/preview/route.ts`
-- ⏳ `src/app/api/modelos-contrato/route.ts`
-- ⏳ `src/app/api/configuracao-contrato/route.ts`
-- ⏳ `src/app/api/configuracao-contrato/campos-fixos/route.ts`
+- ✅ `src/app/api/contratos/route.ts` - refatorada
+- ✅ `src/app/api/contratos/[id]/route.ts` - refatorada
+- ✅ `src/app/api/contratos/[id]/gerar-pdf/route.ts` - refatorada
+- ✅ `src/app/api/contratos/preview/route.ts` - refatorada
+- ✅ `src/app/api/modelos-contrato/route.ts` - refatorada
+- ✅ `src/app/api/configuracao-contrato/route.ts` - refatorada
+- ✅ `src/app/api/configuracao-contrato/campos-fixos/route.ts` - refatorada
 
 ---
 
-## 🔄 FASE 4: PENDENTE
+## ✅ FASE 4: COMPLETA
 
 ### Rotas de Eventos, Clientes, Pagamentos, Custos, Serviços
-- ⏳ Rotas de eventos
-- ⏳ Rotas de clientes
-- ⏳ Rotas de pagamentos
-- ⏳ Rotas de custos
-- ⏳ Rotas de serviços
+- ✅ `src/app/api/eventos/[id]/route.ts` - refatorada
+- ✅ `src/app/api/pagamentos/create/route.ts` - refatorada
+- ✅ `src/app/api/custos/create/route.ts` - refatorada
+- ✅ `src/app/api/tipos-custo/create/route.ts` - refatorada
+- ✅ `src/app/api/alterar-plano/route.ts` - refatorada
+- ✅ `src/app/api/users/[id]/assinatura/route.ts` - refatorada
+- ✅ `src/app/api/arquivos/route.ts` - refatorada
+- ✅ `src/app/api/comprovantes/route.ts` - refatorada
+- ✅ `src/app/api/upload/route.ts` - refatorada
+- ✅ `src/app/api/upload-comprovante/route.ts` - refatorada
 
 ---
 
@@ -127,9 +132,9 @@
 
 ## 📊 ESTATÍSTICAS
 
-- **Rotas refatoradas**: ~6 rotas
-- **Rotas pendentes**: ~67 rotas
-- **Progresso**: ~8% completo
+- **Rotas refatoradas**: ~26 rotas principais
+- **Rotas pendentes**: ~47 rotas (principalmente admin, migração e especiais)
+- **Progresso**: ~35% das rotas principais completas
 
 ---
 

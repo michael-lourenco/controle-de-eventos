@@ -1,30 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { anexoPagamentoRepository } from '@/lib/repositories/anexo-pagamento-repository';
 import { s3Service } from '@/lib/s3-service';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getQueryParams
+} from '@/lib/api/route-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const eventoId = searchParams.get('eventoId');
-    const pagamentoId = searchParams.get('pagamentoId');
+    const user = await getAuthenticatedUser();
+    const queryParams = getQueryParams(request);
+    const eventoId = queryParams.get('eventoId');
+    const pagamentoId = queryParams.get('pagamentoId');
 
     if (!eventoId || !pagamentoId) {
-      return NextResponse.json({ 
-        error: 'eventoId e pagamentoId são obrigatórios' 
-      }, { status: 400 });
+      return createErrorResponse('eventoId e pagamentoId são obrigatórios', 400);
     }
 
     // Buscar anexos do pagamento
     const anexos = await anexoPagamentoRepository.getAnexosPorPagamento(
-      session.user.id,
+      user.id,
       eventoId,
       pagamentoId
     );
@@ -45,50 +43,38 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       anexos: anexosComUrls,
     });
 
   } catch (error) {
-    console.error('Erro ao buscar comprovantes:', error);
-    return NextResponse.json({ 
-      error: 'Erro interno do servidor' 
-    }, { status: 500 });
+    return handleApiError(error);
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
-    const eventoId = searchParams.get('eventoId');
-    const pagamentoId = searchParams.get('pagamentoId');
-    const anexoId = searchParams.get('anexoId');
+    const user = await getAuthenticatedUser();
+    const queryParams = getQueryParams(request);
+    const eventoId = queryParams.get('eventoId');
+    const pagamentoId = queryParams.get('pagamentoId');
+    const anexoId = queryParams.get('anexoId');
 
     if (!eventoId || !pagamentoId || !anexoId) {
-      return NextResponse.json({ 
-        error: 'eventoId, pagamentoId e anexoId são obrigatórios' 
-      }, { status: 400 });
+      return createErrorResponse('eventoId, pagamentoId e anexoId são obrigatórios', 400);
     }
 
     // Buscar anexo para obter s3Key
     const anexo = await anexoPagamentoRepository.getAnexoById(
-      session.user.id,
+      user.id,
       eventoId,
       pagamentoId,
       anexoId
     );
 
     if (!anexo) {
-      return NextResponse.json({ 
-        error: 'Anexo não encontrado' 
-      }, { status: 404 });
+      return createErrorResponse('Anexo não encontrado', 404);
     }
 
     // Deletar do S3
@@ -100,21 +86,18 @@ export async function DELETE(request: NextRequest) {
 
     // Deletar do Firestore
     await anexoPagamentoRepository.deleteAnexo(
-      session.user.id,
+      user.id,
       eventoId,
       pagamentoId,
       anexoId
     );
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       message: 'Anexo deletado com sucesso',
     });
 
   } catch (error) {
-    console.error('Erro ao deletar comprovante:', error);
-    return NextResponse.json({ 
-      error: 'Erro interno do servidor' 
-    }, { status: 500 });
+    return handleApiError(error);
   }
 }

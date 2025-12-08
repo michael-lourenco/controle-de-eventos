@@ -1,10 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { UserRepository } from '@/lib/repositories/user-repository';
-import { PlanoRepository } from '@/lib/repositories/plano-repository';
-import { AssinaturaService } from '@/lib/services/assinatura-service';
-import { AssinaturaRepository } from '@/lib/repositories/assinatura-repository';
+import { NextRequest } from 'next/server';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  getAuthenticatedUserOptional,
+  requireAdmin,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 import { StatusAssinatura } from '@/types/funcionalidades';
 
 export async function POST(request: NextRequest) {
@@ -12,11 +15,11 @@ export async function POST(request: NextRequest) {
     const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization');
     const isDevMode = process.env.NODE_ENV === 'development';
 
-    const session = await getServerSession(authOptions);
-
+    // Verificar autorização
     let isAuthorized = false;
-
-    if (session?.user?.role === 'admin') {
+    const authenticatedUser = await getAuthenticatedUserOptional();
+    
+    if (authenticatedUser?.role === 'admin') {
       isAuthorized = true;
     } else if (apiKey) {
       const validApiKey = process.env.SEED_API_KEY || 'dev-seed-key-2024';
@@ -28,39 +31,33 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isAuthorized) {
-      return NextResponse.json({
-        error: 'Não autorizado. Use autenticação admin, x-api-key header ou modo desenvolvimento'
-      }, { status: 401 });
+      return createErrorResponse('Não autorizado. Use autenticação admin, x-api-key header ou modo desenvolvimento', 401);
     }
 
-    const body = await request.json();
+    const body = await getRequestBody(request);
     const { email, codigoHotmart } = body;
 
     if (!email || !codigoHotmart) {
-      return NextResponse.json({
-        error: 'email e codigoHotmart são obrigatórios'
-      }, { status: 400 });
+      return createErrorResponse('email e codigoHotmart são obrigatórios', 400);
     }
 
-    const userRepo = new UserRepository();
-    const planoRepo = new PlanoRepository();
-    const assinaturaService = new AssinaturaService();
-    const assinaturaRepo = new AssinaturaRepository();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const userRepo = repositoryFactory.getUserRepository();
+    const planoRepo = repositoryFactory.getPlanoRepository();
+    const assinaturaService = serviceFactory.getAssinaturaService();
+    const assinaturaRepo = repositoryFactory.getAssinaturaRepository();
 
     // Buscar usuário pelo email
     const user = await userRepo.findByEmail(email);
     if (!user) {
-      return NextResponse.json({
-        error: 'Usuário não encontrado com o email fornecido'
-      }, { status: 404 });
+      return createErrorResponse('Usuário não encontrado com o email fornecido', 404);
     }
 
     // Buscar plano pelo codigoHotmart
     const plano = await planoRepo.findByCodigoHotmart(codigoHotmart);
     if (!plano) {
-      return NextResponse.json({
-        error: 'Plano não encontrado com o codigoHotmart fornecido'
-      }, { status: 404 });
+      return createErrorResponse('Plano não encontrado com o codigoHotmart fornecido', 404);
     }
 
     // Verificar se usuário já tem assinatura (buscar todas para verificar)
@@ -121,7 +118,7 @@ export async function POST(request: NextRequest) {
     // Sincronizar plano no usuário
     const userAtualizado = await assinaturaService.sincronizarPlanoUsuario(user.id);
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       message: `Assinatura ${acao} com sucesso`,
       dados: {
@@ -146,11 +143,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Erro ao alterar plano:', error);
-    return NextResponse.json({
-      error: 'Erro interno do servidor',
-      detalhes: error instanceof Error ? error.message : 'Erro desconhecido'
-    }, { status: 500 });
+    return handleApiError(error);
   }
 }
 

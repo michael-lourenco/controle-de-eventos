@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
 import { dataService } from '@/lib/data-service';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRouteParams
+} from '@/lib/api/route-helpers';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const { id } = await params;
-    const evento = await dataService.getEventoById(id, session.user.id);
+    const user = await getAuthenticatedUser();
+    const { id } = await getRouteParams(params);
+    const evento = await dataService.getEventoById(id, user.id);
     
     if (!evento) {
-      return NextResponse.json({ error: 'Evento não encontrado' }, { status: 404 });
+      return createErrorResponse('Evento não encontrado', 404);
     }
 
-    return NextResponse.json(evento);
-  } catch (error: any) {
-    console.error('Erro ao buscar evento:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return createApiResponse(evento);
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

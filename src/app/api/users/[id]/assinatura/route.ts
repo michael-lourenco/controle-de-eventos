@@ -1,39 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { AssinaturaService } from '@/lib/services/assinatura-service';
+import { NextRequest } from 'next/server';
+import { 
+  getAuthenticatedUser,
+  requireAdmin,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody,
+  getRouteParams
+} from '@/lib/api/route-helpers';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: userId } = await params;
-    const session = await getServerSession(authOptions);
-
-    // Verificar se usuário está autenticado
-    if (!session) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
+    const user = await getAuthenticatedUser();
+    const { id: userId } = await getRouteParams(params);
 
     // Verificar se usuário pode acessar (próprio usuário ou admin)
-    if (session.user?.id !== userId && session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 403 });
+    if (user.id !== userId && user.role !== 'admin') {
+      return createErrorResponse('Não autorizado', 403);
     }
 
-    const assinaturaService = new AssinaturaService();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const assinaturaService = serviceFactory.getAssinaturaService();
     const statusPlano = await assinaturaService.obterStatusPlanoUsuario(userId);
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       statusPlano
     });
-  } catch (error: any) {
-    console.error('Erro ao obter assinatura:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao obter assinatura' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -42,37 +41,26 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: userId } = await params;
-    const session = await getServerSession(authOptions);
-
-    // Verificar se usuário está autenticado e é admin
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
-    const { assinaturaId } = await request.json();
+    await requireAdmin();
+    const { id: userId } = await getRouteParams(params);
+    const { assinaturaId } = await getRequestBody<{ assinaturaId: string }>(request);
 
     if (!assinaturaId) {
-      return NextResponse.json(
-        { error: 'assinaturaId é obrigatório' },
-        { status: 400 }
-      );
+      return createErrorResponse('assinaturaId é obrigatório', 400);
     }
 
-    const assinaturaService = new AssinaturaService();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const assinaturaService = serviceFactory.getAssinaturaService();
     const user = await assinaturaService.atualizarAssinaturaUsuario(userId, assinaturaId);
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       message: 'Assinatura atualizada com sucesso',
       user
     });
-  } catch (error: any) {
-    console.error('Erro ao atualizar assinatura:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao atualizar assinatura' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
@@ -81,24 +69,20 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: userId } = await params;
-    const session = await getServerSession(authOptions);
+    await requireAdmin();
+    const { id: userId } = await getRouteParams(params);
+    const { sincronizar } = await getRequestBody<{ sincronizar?: boolean }>(request);
 
-    // Verificar se usuário está autenticado e é admin
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
-    const { sincronizar } = await request.json();
-
-    const assinaturaService = new AssinaturaService();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const assinaturaService = serviceFactory.getAssinaturaService();
     
     if (sincronizar) {
       // Forçar sincronização
       const user = await assinaturaService.sincronizarPlanoUsuario(userId);
       const statusPlano = await assinaturaService.obterStatusPlanoUsuario(userId);
 
-      return NextResponse.json({
+      return createApiResponse({
         success: true,
         message: 'Plano sincronizado com sucesso',
         user,
@@ -109,16 +93,12 @@ export async function POST(
     // Obter status atual
     const statusPlano = await assinaturaService.obterStatusPlanoUsuario(userId);
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       statusPlano
     });
-  } catch (error: any) {
-    console.error('Erro ao sincronizar plano:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao sincronizar plano' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
