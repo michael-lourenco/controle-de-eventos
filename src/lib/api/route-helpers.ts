@@ -15,7 +15,8 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
   return {
     id: session.user.id,
     role: session.user.role,
-    email: session.user.email
+    email: session.user.email,
+    name: (session.user as any).name
   };
 }
 
@@ -132,5 +133,45 @@ export async function getRouteParams<T = Record<string, string>>(
 export function getQueryParams(request: NextRequest): URLSearchParams {
   const { searchParams } = new URL(request.url);
   return searchParams;
+}
+
+/**
+ * Obtém userId com suporte a autenticação via sessão, API key ou dev mode
+ * Útil para rotas de migração/normalização que podem ser chamadas via API
+ * @param request - Request object
+ * @param body - Body já lido (opcional, para evitar leitura duplicada)
+ * @returns userId ou null se não autenticado
+ */
+export async function getUserIdWithApiKeyOrDev(
+  request: NextRequest,
+  body?: any
+): Promise<string | null> {
+  // Tentar autenticação via sessão primeiro
+  const session = await getServerSession(authOptions);
+  if (session?.user?.id) {
+    return session.user.id;
+  }
+
+  // Verificar API key ou dev mode
+  const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization');
+  const isDevMode = process.env.NODE_ENV === 'development';
+
+  // Obter userId do body (se fornecido) ou query params
+  const queryParams = new URL(request.url).searchParams;
+  const bodyUserId = body?.userId || queryParams.get('userId') || null;
+
+  if (apiKey) {
+    const validApiKey = process.env.SEED_API_KEY || 'dev-seed-key-2024';
+    if (apiKey !== validApiKey && !apiKey.includes(validApiKey)) {
+      return null; // API key inválida
+    }
+    return bodyUserId;
+  }
+
+  if (isDevMode) {
+    return bodyUserId;
+  }
+
+  return null; // Não autenticado
 }
 

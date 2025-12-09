@@ -1,5 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { HotmartWebhookService } from '@/lib/services/hotmart-webhook-service';
+import { NextRequest } from 'next/server';
+import { 
+  handleApiError,
+  createApiResponse,
+  createErrorResponse
+} from '@/lib/api/route-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,13 +15,12 @@ export async function POST(request: NextRequest) {
       payload = JSON.parse(bodyText);
     } catch (parseError) {
       console.error('❌ Erro ao fazer parse do JSON:', parseError);
-      return NextResponse.json(
-        { error: 'Payload JSON inválido' },
-        { status: 400 }
-      );
+      return createErrorResponse('Payload JSON inválido', 400);
     }
 
-    const service = new HotmartWebhookService();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const service = serviceFactory.getHotmartWebhookService();
 
     // Segundo a documentação oficial do Hotmart:
     // https://developers.hotmart.com/docs/pt-BR/tutorials/use-webhook-for-subscriptions/
@@ -34,10 +37,7 @@ export async function POST(request: NextRequest) {
     if (validateHmac && secret && !isDevelopment) {
       if (!signature) {
         console.error('❌ Webhook sem assinatura HMAC no header');
-        return NextResponse.json(
-          { error: 'Assinatura HMAC não fornecida' },
-          { status: 401 }
-        );
+        return createErrorResponse('Assinatura HMAC não fornecida', 401);
       }
 
       // Validar usando o body como texto (ordem original preservada)
@@ -45,10 +45,7 @@ export async function POST(request: NextRequest) {
       
       if (!isValid) {
         console.error('❌ Webhook HMAC inválido');
-        return NextResponse.json(
-          { error: 'Assinatura HMAC inválida' },
-          { status: 401 }
-        );
+        return createErrorResponse('Assinatura HMAC inválida', 401);
       }
     } else if (isDevelopment) {
       console.warn('⚠️ Modo desenvolvimento: Validação HMAC desabilitada');
@@ -61,38 +58,31 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       console.error('❌ Erro ao processar webhook:', result.message);
-      return NextResponse.json(
-        { error: result.message },
-        { status: 400 }
-      );
+      return createErrorResponse(result.message, 400);
     }
 
-    return NextResponse.json({ 
+    return createApiResponse({ 
       success: true, 
       message: result.message 
     });
-  } catch (error: any) {
-    console.error('❌ Erro ao processar webhook:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao processar webhook' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
 // GET para testar webhook mockado
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
-    const planoCodigo = searchParams.get('plano') || 'BASICO_MENSAL';
-    const evento = searchParams.get('evento') || 'SUBSCRIPTION_PURCHASE';
+    const queryParams = new URL(request.url).searchParams;
+    const email = queryParams.get('email');
+    const planoCodigo = queryParams.get('plano') || 'BASICO_MENSAL';
+    const evento = queryParams.get('evento') || 'SUBSCRIPTION_PURCHASE';
 
     if (!email) {
-      return NextResponse.json({
-        error: 'Parâmetro email é obrigatório',
-        exemplo: '/api/webhooks/hotmart?email=usuario@exemplo.com&plano=PROFISSIONAL_MENSAL&evento=SUBSCRIPTION_PURCHASE'
-      }, { status: 400 });
+      return createErrorResponse(
+        'Parâmetro email é obrigatório. Exemplo: /api/webhooks/hotmart?email=usuario@exemplo.com&plano=PROFISSIONAL_MENSAL&evento=SUBSCRIPTION_PURCHASE',
+        400
+      );
     }
 
     // Payload mockado para testes
@@ -115,20 +105,18 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    const service = new HotmartWebhookService();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const service = serviceFactory.getHotmartWebhookService();
     const result = await service.processarWebhook(mockPayload);
 
-    return NextResponse.json({
+    return createApiResponse({
       success: result.success,
       message: result.message,
       payloadEnviado: mockPayload
     });
-  } catch (error: any) {
-    console.error('Erro ao processar webhook mockado:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao processar webhook' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

@@ -6,58 +6,46 @@
  * Esta rota é opcional e não quebra o sistema se não estiver configurada.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Não autenticado' },
-        { status: 401 }
-      );
-    }
+    const user = await getAuthenticatedUser();
 
     // Verificar se usuário tem plano permitido
-    const temAcesso = await verificarAcessoGoogleCalendar(session.user.id);
+    const temAcesso = await verificarAcessoGoogleCalendar(user.id);
     if (!temAcesso) {
-      return NextResponse.json(
-        { 
-          error: 'Acesso negado',
-          message: 'Esta funcionalidade está disponível apenas para planos Profissional e Premium.'
-        },
-        { status: 403 }
+      return createErrorResponse(
+        'Esta funcionalidade está disponível apenas para planos Profissional e Premium.',
+        403
       );
     }
 
-    const body = await request.json();
+    const body = await getRequestBody<{ syncEnabled: boolean }>(request);
     const { syncEnabled } = body;
 
     if (typeof syncEnabled !== 'boolean') {
-      return NextResponse.json(
-        { error: 'syncEnabled deve ser um boolean' },
-        { status: 400 }
-      );
+      return createErrorResponse('syncEnabled deve ser um boolean', 400);
     }
 
     const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
-    await tokenRepo.updateSyncStatus(session.user.id, syncEnabled);
+    await tokenRepo.updateSyncStatus(user.id, syncEnabled);
 
-    return NextResponse.json({ 
+    return createApiResponse({ 
       success: true,
       syncEnabled
     });
-  } catch (error: any) {
-    console.error('Erro ao alternar sincronização:', error);
-    return NextResponse.json(
-      { error: 'Erro ao alternar sincronização', message: error.message },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

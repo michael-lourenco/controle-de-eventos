@@ -17,6 +17,9 @@ import { PlanoRepository } from './plano-repository';
 import { FuncionalidadeRepository } from './funcionalidade-repository';
 import { AssinaturaRepository } from './assinatura-repository';
 import { PasswordResetTokenRepository } from './password-reset-token-repository';
+import { PagamentoGlobalRepository } from './pagamento-global-repository';
+import { CustoGlobalRepository } from './custo-global-repository';
+import { ServicoGlobalRepository } from './servico-global-repository';
 
 // Importar repositórios Supabase
 import { ClienteSupabaseRepository } from './supabase/cliente-supabase-repository';
@@ -66,6 +69,11 @@ export class RepositoryFactory {
   private funcionalidadeRepository: FuncionalidadeRepository;
   private assinaturaRepository: AssinaturaRepository;
   private passwordResetTokenRepository: PasswordResetTokenRepository;
+  
+  // Repositórios Globais Firestore (para normalização)
+  private pagamentoGlobalRepository: PagamentoGlobalRepository;
+  private custoGlobalRepository: CustoGlobalRepository;
+  private servicoGlobalRepository: ServicoGlobalRepository;
 
   private constructor() {
     // Inicializar repositórios Supabase
@@ -93,6 +101,11 @@ export class RepositoryFactory {
     this.funcionalidadeRepository = new FuncionalidadeRepository();
     this.assinaturaRepository = new AssinaturaRepository();
     this.passwordResetTokenRepository = new PasswordResetTokenRepository();
+    
+    // Inicializar repositórios globais Firestore
+    this.pagamentoGlobalRepository = new PagamentoGlobalRepository();
+    this.custoGlobalRepository = new CustoGlobalRepository();
+    this.servicoGlobalRepository = new ServicoGlobalRepository();
   }
 
   public static getInstance(): RepositoryFactory {
@@ -186,6 +199,19 @@ export class RepositoryFactory {
 
   public getPasswordResetTokenRepository(): PasswordResetTokenRepository {
     return this.passwordResetTokenRepository;
+  }
+
+  // Métodos getter - Repositórios Globais Firestore
+  public getPagamentoGlobalRepository(): PagamentoGlobalRepository {
+    return this.pagamentoGlobalRepository;
+  }
+
+  public getCustoGlobalRepository(): CustoGlobalRepository {
+    return this.custoGlobalRepository;
+  }
+
+  public getServicoGlobalRepository(): ServicoGlobalRepository {
+    return this.servicoGlobalRepository;
   }
 }
 

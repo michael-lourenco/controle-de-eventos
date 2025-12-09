@@ -6,59 +6,45 @@
  * Esta rota é opcional e não quebra o sistema se não estiver configurada.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
 import { GoogleCalendarEvent } from '@/types/google-calendar';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Não autenticado' },
-        { status: 401 }
-      );
-    }
+    const user = await getAuthenticatedUser();
 
     // Verificar se usuário tem plano permitido
-    const temAcesso = await verificarAcessoGoogleCalendar(session.user.id);
+    const temAcesso = await verificarAcessoGoogleCalendar(user.id);
     if (!temAcesso) {
-      return NextResponse.json(
-        { 
-          error: 'Acesso negado',
-          message: 'Esta funcionalidade está disponível apenas para planos Profissional e Premium.'
-        },
-        { status: 403 }
+      return createErrorResponse(
+        'Esta funcionalidade está disponível apenas para planos Profissional e Premium.',
+        403
       );
     }
 
-    const body = await request.json();
+    const body = await getRequestBody(request);
     const { summary, description, startDateTime, endDateTime, location, timeZone } = body;
 
     // Validações
     if (!summary || !summary.trim()) {
-      return NextResponse.json(
-        { error: 'Título do evento é obrigatório' },
-        { status: 400 }
-      );
+      return createErrorResponse('Título do evento é obrigatório', 400);
     }
 
     if (!startDateTime) {
-      return NextResponse.json(
-        { error: 'Data/hora de início é obrigatória' },
-        { status: 400 }
-      );
+      return createErrorResponse('Data/hora de início é obrigatória', 400);
     }
 
     // Validar que endDateTime >= startDateTime (se fornecido)
     if (endDateTime && new Date(endDateTime) < new Date(startDateTime)) {
-      return NextResponse.json(
-        { error: 'Data/hora de término deve ser posterior à data/hora de início' },
-        { status: 400 }
-      );
+      return createErrorResponse('Data/hora de término deve ser posterior à data/hora de início', 400);
     }
 
     // Validar timezone (se fornecido)
@@ -67,10 +53,7 @@ export async function POST(request: NextRequest) {
       // Verificar se timezone é válido
       Intl.DateTimeFormat(undefined, { timeZone: timeZoneValue });
     } catch {
-      return NextResponse.json(
-        { error: 'Timezone inválido' },
-        { status: 400 }
-      );
+      return createErrorResponse('Timezone inválido', 400);
     }
 
     // Criar objeto de evento do Google Calendar
@@ -89,14 +72,15 @@ export async function POST(request: NextRequest) {
     };
 
     // Importar serviço (server-side apenas)
-    const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
-    const googleService = new GoogleCalendarService();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const googleService = serviceFactory.getGoogleCalendarService();
 
     // Criar evento no Google Calendar
     try {
-      const eventId = await googleService.createEventDirectly(session.user.id, googleEvent);
+      const eventId = await googleService.createEventDirectly(user.id, googleEvent);
 
-      return NextResponse.json({
+      return createApiResponse({
         success: true,
         eventId,
         message: 'Evento criado com sucesso no Google Calendar'
@@ -156,25 +140,14 @@ export async function POST(request: NextRequest) {
           }
       }
       
-      return NextResponse.json(
-        { 
-          error: 'Erro ao criar evento',
-          message: errorMessage,
-          code: errorCode,
-          details: errorData || null
-        },
-        { status: statusCode }
+      return createErrorResponse(
+        errorMessage,
+        statusCode,
+        { code: errorCode, details: errorData || null }
       );
     }
-  } catch (error: any) {
-    console.error('Erro geral ao criar evento no Google Calendar:', error);
-    return NextResponse.json(
-      { 
-        error: 'Erro ao criar evento',
-        message: error.message || 'Erro desconhecido'
-      },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

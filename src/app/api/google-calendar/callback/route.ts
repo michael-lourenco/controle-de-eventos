@@ -7,8 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { 
+  getAuthenticatedUser,
+  getQueryParams
+} from '@/lib/api/route-helpers';
 import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
@@ -26,33 +28,27 @@ export async function GET(request: NextRequest) {
   try {
     console.log('[Google Calendar Callback] Iniciando callback OAuth');
     
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      console.error('[Google Calendar Callback] Sessão não encontrada');
-      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
-    }
-
+    const user = await getAuthenticatedUser();
 
     // Verificar se usuário tem plano permitido
-    const temAcesso = await verificarAcessoGoogleCalendar(session.user.id);
+    const temAcesso = await verificarAcessoGoogleCalendar(user.id);
     if (!temAcesso) {
       return NextResponse.redirect(
         new URL('/configuracoes/calendario?error=access_denied', request.url)
       );
     }
 
-    const searchParams = request.nextUrl.searchParams;
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
-    const error = searchParams.get('error');
+    const queryParams = getQueryParams(request);
+    const code = queryParams.get('code');
+    const state = queryParams.get('state');
+    const error = queryParams.get('error');
 
     console.log('[Google Calendar Callback] Parâmetros recebidos:', {
       hasCode: !!code,
       hasState: !!state,
       hasError: !!error,
       stateValue: state,
-      expectedState: session.user.id
+      expectedState: user.id
     });
 
     // Verificar se usuário cancelou autorização
@@ -71,10 +67,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Validar state (deve ser o userId)
-    if (state !== session.user.id) {
+    if (state !== user.id) {
       console.error('[Google Calendar Callback] State inválido:', {
         received: state,
-        expected: session.user.id
+        expected: user.id
       });
       return NextResponse.redirect(
         new URL('/configuracoes/calendario?error=invalid_state', request.url)
@@ -84,8 +80,9 @@ export async function GET(request: NextRequest) {
     console.log('[Google Calendar Callback] Validando código com Google...');
 
     // Importação dinâmica do serviço
-    const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
-    const googleService = new GoogleCalendarService();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const googleService = serviceFactory.getGoogleCalendarService();
     const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
 
     // Trocar código por tokens
@@ -98,7 +95,7 @@ export async function GET(request: NextRequest) {
       // Se o código já foi usado, pode ser que o token já existe
       if (tokenError.message?.includes('invalid_grant') || tokenError.message?.includes('code')) {
         // Verificar se já existe token
-        const tokenExistente = await tokenRepo.findByUserId(session.user.id);
+        const tokenExistente = await tokenRepo.findByUserId(user.id);
         if (tokenExistente) {
           console.log('[Google Calendar Callback] Token já existe, redirecionando com sucesso');
           return NextResponse.redirect(
@@ -151,7 +148,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verificar se já existe token para este usuário
-    const tokenExistente = await tokenRepo.findByUserId(session.user.id);
+    const tokenExistente = await tokenRepo.findByUserId(user.id);
     console.log('[Google Calendar Callback] Token existente:', !!tokenExistente);
 
     // Criptografar tokens antes de armazenar
@@ -176,7 +173,7 @@ export async function GET(request: NextRequest) {
         // Criar novo token
         console.log('[Google Calendar Callback] Criando novo token');
         const novoToken = await tokenRepo.create({
-          userId: session.user.id,
+          userId: user.id,
           accessToken: encryptedAccessToken,
           refreshToken: encryptedRefreshToken,
           expiresAt: tokens.expiresAt,
@@ -189,7 +186,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Verificar se foi salvo corretamente
-      const tokenVerificado = await tokenRepo.findByUserId(session.user.id);
+      const tokenVerificado = await tokenRepo.findByUserId(user.id);
       if (!tokenVerificado) {
         throw new Error('Token não foi salvo corretamente');
       }

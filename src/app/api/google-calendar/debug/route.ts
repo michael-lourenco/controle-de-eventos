@@ -7,9 +7,13 @@
  * para fins de debug durante desenvolvimento.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse
+} from '@/lib/api/route-helpers';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
 // Função de descriptografia (mesma do serviço)
@@ -21,20 +25,12 @@ function decrypt(encrypted: string, key: string): string {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Não autenticado' },
-        { status: 401 }
-      );
-    }
-
+    const user = await getAuthenticatedUser();
     const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
-    const token = await tokenRepo.findByUserId(session.user.id);
+    const token = await tokenRepo.findByUserId(user.id);
 
     if (!token) {
-      return NextResponse.json({
+      return createApiResponse({
         connected: false,
         message: 'Token não encontrado. Conecte sua conta do Google Calendar primeiro.'
       });
@@ -80,9 +76,10 @@ export async function GET(request: NextRequest) {
     let calendarError = null;
     
     try {
-      const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
-      const googleService = new GoogleCalendarService();
-      calendarInfo = await googleService.getCalendarInfo(session.user.id);
+      const { getServiceFactory } = await import('@/lib/factories/service-factory');
+      const serviceFactory = getServiceFactory();
+      const googleService = serviceFactory.getGoogleCalendarService();
+      calendarInfo = await googleService.getCalendarInfo(user.id);
     } catch (error: any) {
       calendarError = {
         message: error.message,
@@ -97,11 +94,12 @@ export async function GET(request: NextRequest) {
     let tokenTestDetails = null;
     
     try {
-      const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
-      const googleService = new GoogleCalendarService();
+      const { getServiceFactory } = await import('@/lib/factories/service-factory');
+      const serviceFactory = getServiceFactory();
+      const googleService = serviceFactory.getGoogleCalendarService();
       
       // Tentar obter informações do calendário (vai validar e renovar token se necessário)
-      const calendarInfo = await googleService.getCalendarInfo(session.user.id);
+      const calendarInfo = await googleService.getCalendarInfo(user.id);
       tokenValid = !!calendarInfo && !!calendarInfo.email;
       tokenTestDetails = {
         success: true,
@@ -188,11 +186,12 @@ export async function GET(request: NextRequest) {
       // Tentar também com o OAuth2Client para ver se funciona
       try {
         console.log('[Debug] Testando com OAuth2Client...');
-        const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
-        const googleService = new GoogleCalendarService();
+        const { getServiceFactory } = await import('@/lib/factories/service-factory');
+        const serviceFactory = getServiceFactory();
+        const googleService = serviceFactory.getGoogleCalendarService();
         
         // Usar o método getCalendarInfo que já usa OAuth2Client internamente
-        const calendarInfo = await googleService.getCalendarInfo(session.user.id);
+        const calendarInfo = await googleService.getCalendarInfo(user.id);
         
         
         tokenTestDetails = {
@@ -236,7 +235,7 @@ export async function GET(request: NextRequest) {
       redirectUri: process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD || 'Não configurado'
     };
 
-    return NextResponse.json({
+    return createApiResponse({
       connected: true,
       environment: envCheck,
       token: {
@@ -265,19 +264,13 @@ export async function GET(request: NextRequest) {
         testDetails: tokenTestDetails
       },
       user: {
-        id: session.user.id,
-        email: session.user.email,
-        name: session.user.name
+        id: user.id,
+        email: user.email,
+        name: user.name
       }
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { 
-        error: 'Erro ao obter informações de debug',
-        message: error.message 
-      },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

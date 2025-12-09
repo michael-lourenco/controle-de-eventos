@@ -1,9 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { adminAuth, isFirebaseAdminInitialized, getFirebaseAdminInitializationError } from '@/lib/firebase-admin';
-import { PasswordResetTokenRepository } from '@/lib/repositories/password-reset-token-repository';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { generateShortToken, generatePasswordResetEmailTemplate } from '@/lib/services/email-service';
 import { sendEmail, isEmailServiceConfigured } from '@/lib/services/resend-email-service';
-import { UserRepository } from '@/lib/repositories/user-repository';
+import { 
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 
 // Rate limiting simples em memória (para produção, usar Redis ou similar)
 const resetAttempts = new Map<string, { count: number; lastAttempt: number }>();
@@ -39,25 +44,16 @@ function checkRateLimit(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await getRequestBody<{ email: string }>(request);
     const { email } = body;
 
     if (!email || typeof email !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Email é obrigatório' },
-        { status: 400 }
-      );
+      return createErrorResponse('Email é obrigatório', 400);
     }
 
     // Verificar rate limiting
     if (!checkRateLimit(email.toLowerCase())) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Muitas tentativas. Aguarde 1 hora antes de tentar novamente.' 
-        },
-        { status: 429 }
-      );
+      return createErrorResponse('Muitas tentativas. Aguarde 1 hora antes de tentar novamente.', 429);
     }
 
     // Verificar se o Firebase Admin está inicializado
@@ -68,12 +64,9 @@ export async function POST(request: NextRequest) {
       if (initError) {
         console.error('[reset-password] Erro de inicialização:', initError.message);
       }
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Firebase Admin não está configurado. Configure GOOGLE_CREDENTIALS_*, FIREBASE_ADMIN_SDK_KEY ou FIREBASE_SERVICE_ACCOUNT_KEY nas variáveis de ambiente.'
-        },
-        { status: 500 }
+      return createErrorResponse(
+        'Firebase Admin não está configurado. Configure GOOGLE_CREDENTIALS_*, FIREBASE_ADMIN_SDK_KEY ou FIREBASE_SERVICE_ACCOUNT_KEY nas variáveis de ambiente.',
+        500
       );
     }
     console.log('[reset-password] ✅ Firebase Admin está inicializado');
@@ -84,12 +77,9 @@ export async function POST(request: NextRequest) {
       console.error('[reset-password] RESEND_API_KEY não configurada. Configure a variável de ambiente RESEND_API_KEY.');
       console.error('[reset-password] RESEND_API_KEY existe?', !!process.env.RESEND_API_KEY);
       // Não fazer fallback para Firebase - retornar erro claro
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Serviço de email não configurado. Configure RESEND_API_KEY nas variáveis de ambiente.'
-        },
-        { status: 500 }
+      return createErrorResponse(
+        'Serviço de email não configurado. Configure RESEND_API_KEY nas variáveis de ambiente.',
+        500
       );
     }
     console.log('[reset-password] Serviço de email configurado corretamente.');
@@ -113,7 +103,7 @@ export async function POST(request: NextRequest) {
       console.log('[reset-password] Usuário encontrado:', user.uid);
       
       // Buscar nome do usuário no Firestore
-      const userRepo = new UserRepository();
+      const userRepo = repositoryFactory.getUserRepository();
       const userData = await userRepo.findById(user.uid);
       const nome = userData?.nome || '';
       console.log('[reset-password] Nome do usuário:', nome || '(não encontrado)');
@@ -146,7 +136,7 @@ export async function POST(request: NextRequest) {
 
       // Armazenar token no banco
       console.log('[reset-password] Armazenando token no banco...');
-      const tokenRepo = new PasswordResetTokenRepository();
+      const tokenRepo = repositoryFactory.getPasswordResetTokenRepository();
       await tokenRepo.createToken({
         token: shortToken,
         email: normalizedEmail,
@@ -178,18 +168,15 @@ export async function POST(request: NextRequest) {
         console.error('[reset-password] ERRO ao enviar email personalizado:', emailResult.error);
         console.error('[reset-password] Detalhes do erro:', JSON.stringify(emailResult, null, 2));
         // Não fazer fallback para Firebase - retornar erro
-        return NextResponse.json(
-          { 
-            success: false,
-            error: `Erro ao enviar email: ${emailResult.error}. Verifique a configuração do Resend.`
-          },
-          { status: 500 }
+        return createErrorResponse(
+          `Erro ao enviar email: ${emailResult.error}. Verifique a configuração do Resend.`,
+          500
         );
       }
 
       console.log('[reset-password] ✅ Email personalizado enviado com sucesso para:', normalizedEmail);
       
-      return NextResponse.json({
+      return createApiResponse({
         success: true,
         message: 'Email de redefinição enviado com sucesso'
       });
@@ -204,7 +191,7 @@ export async function POST(request: NextRequest) {
       // Se o erro for que o usuário não existe, não expor isso por segurança
       if (error.code === 'auth/user-not-found') {
         console.log('[reset-password] Usuário não encontrado (retornando mensagem genérica por segurança)');
-        return NextResponse.json({
+        return createApiResponse({
           success: true,
           message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
         });
@@ -212,25 +199,19 @@ export async function POST(request: NextRequest) {
 
       // Para outros erros, logar mas retornar mensagem genérica por segurança
       console.error('[reset-password] Erro desconhecido, retornando mensagem genérica por segurança');
-      return NextResponse.json({
+      return createApiResponse({
         success: true,
         message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
       });
     }
 
-  } catch (error: any) {
-    console.error('[reset-password] ❌ ERRO GERAL no endpoint:');
-    console.error('[reset-password] Tipo do erro:', error?.constructor?.name);
-    console.error('[reset-password] Mensagem:', error?.message);
-    console.error('[reset-password] Stack:', error?.stack);
+  } catch (error) {
+    console.error('[reset-password] ❌ ERRO GERAL no endpoint:', error);
     // Por segurança, sempre retornar sucesso mesmo em caso de erro
-    return NextResponse.json(
-      { 
-        success: true,
-        message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
-      },
-      { status: 200 }
-    );
+    return createApiResponse({
+      success: true,
+      message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
+    });
   }
 }
 

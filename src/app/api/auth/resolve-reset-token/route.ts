@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PasswordResetTokenRepository } from '@/lib/repositories/password-reset-token-repository';
+import { NextRequest } from 'next/server';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { 
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 
 /**
  * Converte um token curto no código do Firebase
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await getRequestBody<{ token: string }>(request);
     const { token } = body;
 
     if (!token || typeof token !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Token é obrigatório' },
-        { status: 400 }
-      );
+      return createErrorResponse('Token é obrigatório', 400);
     }
 
-    const tokenRepo = new PasswordResetTokenRepository();
+    const tokenRepo = repositoryFactory.getPasswordResetTokenRepository();
     const tokenData = await tokenRepo.findByToken(token);
 
     if (!tokenData) {
-      return NextResponse.json(
-        { success: false, error: 'Token inválido ou expirado' },
-        { status: 400 }
-      );
+      return createErrorResponse('Token inválido ou expirado', 400);
     }
 
     // Verificar se o token expirou
@@ -32,24 +32,18 @@ export async function POST(request: NextRequest) {
       : new Date(tokenData.expiresAt);
     
     if (expiresAt < new Date()) {
-      return NextResponse.json(
-        { success: false, error: 'Token expirado' },
-        { status: 400 }
-      );
+      return createErrorResponse('Token expirado', 400);
     }
 
     // Retornar o código do Firebase
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       code: tokenData.firebaseCode,
       email: tokenData.email
     });
 
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: 'Erro ao processar token' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

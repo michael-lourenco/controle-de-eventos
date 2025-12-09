@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  getQueryParams
+} from '@/lib/api/route-helpers';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
 /**
  * API route para verificar se pagamentos estão sendo salvos no Supabase
@@ -10,14 +13,9 @@ import { repositoryFactory } from '@/lib/repositories/repository-factory';
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const userId = session.user.id;
-    const { searchParams } = new URL(request.url);
-    const eventoId = searchParams.get('eventoId');
+    const user = await getAuthenticatedUser();
+    const queryParams = getQueryParams(request);
+    const eventoId = queryParams.get('eventoId');
 
     const supabaseAdmin = getSupabaseClient(true);
 
@@ -25,7 +23,7 @@ export async function GET(request: NextRequest) {
     let query = supabaseAdmin
       .from('pagamentos')
       .select('*')
-      .eq('user_id', userId);
+      .eq('user_id', user.id);
 
     if (eventoId) {
       query = query.eq('evento_id', eventoId);
@@ -34,26 +32,19 @@ export async function GET(request: NextRequest) {
     const { data: pagamentos, error } = await query.order('data_cadastro', { ascending: false }).limit(10);
 
     if (error) {
-      return NextResponse.json({
+      return createApiResponse({
         error: `Erro ao buscar pagamentos: ${error.message}`,
         details: error.toString()
-      }, { status: 500 });
+      }, 500);
     }
 
-    return NextResponse.json({
+    return createApiResponse({
       totalEncontrado: pagamentos?.length || 0,
       pagamentos: pagamentos || [],
       eventoId: eventoId || 'todos'
     });
-  } catch (error: any) {
-    console.error('Erro ao verificar pagamentos:', error);
-    return NextResponse.json(
-      {
-        error: error.message || 'Erro ao verificar pagamentos',
-        details: error.toString()
-      },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 

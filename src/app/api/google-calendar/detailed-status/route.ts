@@ -6,9 +6,13 @@
  * Retorna informações detalhadas de cada etapa do processo de conexão e uso do Google Calendar
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse
+} from '@/lib/api/route-helpers';
 import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
@@ -35,31 +39,24 @@ export async function GET(request: NextRequest) {
   try {
     // ETAPA 1: Verificar autenticação do sistema
     addStep('1. Autenticação do Sistema', 'pending', 'Verificando sessão do usuário...');
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      addStep('1. Autenticação do Sistema', 'error', 'Usuário não autenticado', {
-        session: null
-      });
-      return NextResponse.json({ steps, error: 'Não autenticado' }, { status: 401 });
-    }
+    const user = await getAuthenticatedUser();
     
     addStep('1. Autenticação do Sistema', 'success', 'Usuário autenticado', {
-      userId: session.user.id,
-      email: session.user.email,
-      name: session.user.name
+      userId: user.id,
+      email: user.email,
+      name: user.name
     });
 
     // ETAPA 2: Verificar plano
     addStep('2. Verificação de Plano', 'pending', 'Verificando se o plano permite Google Calendar...');
-    const planAllowed = await verificarAcessoGoogleCalendar(session.user.id);
+    const planAllowed = await verificarAcessoGoogleCalendar(user.id);
     
     if (!planAllowed) {
       addStep('2. Verificação de Plano', 'error', 'Plano não permite Google Calendar', {
         planAllowed: false,
         message: 'Esta funcionalidade está disponível apenas para planos Profissional e Premium'
       });
-      return NextResponse.json({ steps });
+      return createApiResponse({ steps });
     }
     
     addStep('2. Verificação de Plano', 'success', 'Plano permite Google Calendar', {
@@ -83,7 +80,7 @@ export async function GET(request: NextRequest) {
         GOOGLE_CLIENT_ID_PREVIEW: process.env.GOOGLE_CLIENT_ID?.substring(0, 20) + '...' || 'Não configurado',
         GOOGLE_REDIRECT_URI_VALUE: process.env.GOOGLE_REDIRECT_URI || process.env.GOOGLE_REDIRECT_URI_PROD || 'Não configurado'
       });
-      return NextResponse.json({ steps });
+      return createApiResponse({ steps });
     }
     
     addStep('3. Configuração do Ambiente', 'success', 'Todas as variáveis de ambiente configuradas', {
@@ -95,13 +92,13 @@ export async function GET(request: NextRequest) {
     // ETAPA 4: Buscar token no banco
     addStep('4. Buscar Token no Banco', 'pending', 'Buscando token do Google Calendar no Firestore...');
     const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
-    const token = await tokenRepo.findByUserId(session.user.id);
+    const token = await tokenRepo.findByUserId(user.id);
     
     if (!token) {
       addStep('4. Buscar Token no Banco', 'warning', 'Token não encontrado no banco', {
         message: 'Usuário precisa conectar Google Calendar primeiro'
       });
-      return NextResponse.json({ steps });
+      return createApiResponse({ steps });
     }
     
     addStep('4. Buscar Token no Banco', 'success', 'Token encontrado no banco', {
@@ -278,13 +275,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ steps });
-  } catch (error: any) {
+    return createApiResponse({ steps });
+  } catch (error) {
     addStep('Erro Geral', 'error', 'Erro inesperado', {
-      message: error.message,
-      error: error.toString()
+      message: error instanceof Error ? error.message : 'Erro desconhecido',
+      error: error instanceof Error ? error.toString() : String(error)
     });
-    return NextResponse.json({ steps, error: error.message }, { status: 500 });
+    return handleApiError(error);
   }
 }
 

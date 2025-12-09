@@ -1,63 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { RepositoryFactory } from '@/lib/repositories/repository-factory';
-import { ServicoGlobalRepository } from '@/lib/repositories/servico-global-repository';
+import { NextRequest } from 'next/server';
+import { 
+  getUserIdWithApiKeyOrDev,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody,
+  getQueryParams
+} from '@/lib/api/route-helpers';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization');
-    const isDevMode = process.env.NODE_ENV === 'development';
-
-    const session = await getServerSession(authOptions);
-
-    let userId: string | null = null;
-
-    if (session?.user?.id) {
-      userId = session.user.id;
-    }
-    else {
-      const body = await request.json().catch(() => ({}));
-      const queryParams = new URL(request.url).searchParams;
-      const bodyUserId = body.userId || queryParams.get('userId') || null;
-
-      if (apiKey) {
-        const validApiKey = process.env.SEED_API_KEY || 'dev-seed-key-2024';
-        if (apiKey !== validApiKey && !apiKey.includes(validApiKey)) {
-          return NextResponse.json({ error: 'API key inválida' }, { status: 401 });
-        }
-        userId = bodyUserId;
-
-        if (!userId) {
-          return NextResponse.json({
-            error: 'userId é obrigatório quando usando API key. Forneça no body: { "userId": "..." } ou query param: ?userId=...'
-          }, { status: 400 });
-        }
-      }
-      else if (isDevMode) {
-        userId = bodyUserId;
-
-        if (!userId) {
-          return NextResponse.json({
-            error: 'Em modo desenvolvimento, forneça userId no body: { "userId": "..." } ou query param: ?userId=...'
-          }, { status: 400 });
-        }
-      }
-      else {
-        return NextResponse.json({
-          error: 'Não autorizado. Use autenticação via sessão ou forneça x-api-key header com userId'
-        }, { status: 401 });
-      }
-    }
-
+    // Ler body uma vez
+    const body = await getRequestBody(request).catch(() => ({}));
+    
+    // Obter userId com suporte a sessão, API key ou dev mode
+    let userId = await getUserIdWithApiKeyOrDev(request, body);
+    
+    // Se não autenticado, tentar obter do body ou query params
     if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      const queryParams = getQueryParams(request);
+      userId = body.userId || queryParams.get('userId') || null;
+      
+      if (!userId) {
+        return createErrorResponse(
+          'Não autorizado. Use autenticação via sessão ou forneça x-api-key header com userId no body ou query param',
+          401
+        );
+      }
     }
 
-    const repositoryFactory = RepositoryFactory.getInstance();
     const eventoRepo = repositoryFactory.getEventoRepository();
     const servicoRepo = repositoryFactory.getServicoEventoRepository();
-    const servicoGlobalRepo = new ServicoGlobalRepository();
+    const servicoGlobalRepo = repositoryFactory.getServicoGlobalRepository();
 
     const eventos = await eventoRepo.findAll(userId);
 
@@ -111,7 +86,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       message: 'Normalização de serviços concluída',
       estatisticas: {
@@ -122,13 +97,8 @@ export async function POST(request: NextRequest) {
       },
       erros: erros.length > 0 ? erros : undefined
     });
-
   } catch (error) {
-    console.error('Erro ao normalizar serviços:', error);
-    return NextResponse.json({
-      error: 'Erro interno do servidor',
-      detalhes: error instanceof Error ? error.message : 'Erro desconhecido'
-    }, { status: 500 });
+    return handleApiError(error);
   }
 }
 

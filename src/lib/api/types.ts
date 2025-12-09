@@ -6,6 +6,7 @@ export interface AuthenticatedUser {
   id: string;
   role?: string;
   email?: string;
+  name?: string;
 }
 
 export interface ApiResponse<T = any> {

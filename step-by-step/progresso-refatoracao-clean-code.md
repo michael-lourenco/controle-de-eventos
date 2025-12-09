@@ -37,6 +37,13 @@
   - `getFuncionalidadeRepository()`
   - `getAssinaturaRepository()`
   - `getPasswordResetTokenRepository()`
+- ✅ Adicionados repositórios globais Firestore:
+  - `getPagamentoGlobalRepository()`
+  - `getCustoGlobalRepository()`
+  - `getServicoGlobalRepository()`
+
+### 1.5 Route Helpers Expandidos
+- ✅ Adicionada função `getUserIdWithApiKeyOrDev()` para autenticação flexível em rotas de migração/normalização
 
 ---
 
@@ -87,12 +94,19 @@
 
 ---
 
-## 🔄 FASE 5: PENDENTE
+## ✅ FASE 5: COMPLETA
 
 ### Rotas Especiais
-- ⏳ Rotas de webhooks (Hotmart)
-- ⏳ Rotas de Google Calendar
-- ⏳ Rotas de autenticação
+- ✅ `src/app/api/webhooks/hotmart/route.ts` - refatorada (POST, GET)
+- ✅ `src/app/api/google-calendar/auth/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/callback/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/status/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/disconnect/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/toggle-sync/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/refresh-token/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/events/route.ts` - refatorada
+- ✅ `src/app/api/auth/reset-password/route.ts` - refatorada
+- ✅ `src/app/api/auth/resolve-reset-token/route.ts` - refatorada
 
 ---
 
@@ -130,19 +144,131 @@
 
 ---
 
-## 📊 ESTATÍSTICAS
+---
 
-- **Rotas refatoradas**: ~26 rotas principais
-- **Rotas pendentes**: ~47 rotas (principalmente admin, migração e especiais)
-- **Progresso**: ~35% das rotas principais completas
+## ✅ FASE 4: COMPLETA
+
+### Rotas Refatoradas ✅
+- ✅ `src/app/api/eventos/[id]/route.ts` - refatorada
+- ✅ `src/app/api/pagamentos/create/route.ts` - refatorada
+- ✅ `src/app/api/pagamentos/atualiza-pagamento/route.ts` - refatorada
+- ✅ `src/app/api/pagamentos/verify/route.ts` - refatorada
+- ✅ `src/app/api/custos/create/route.ts` - refatorada
+- ✅ `src/app/api/custos/atualiza-custo/route.ts` - refatorada
+- ✅ `src/app/api/tipos-custo/create/route.ts` - refatorada
+- ✅ `src/app/api/servicos/atualiza-servico/route.ts` - refatorada
+- ✅ `src/app/api/alterar-plano/route.ts` - refatorada
+- ✅ `src/app/api/users/[id]/assinatura/route.ts` - refatorada
+- ✅ `src/app/api/arquivos/route.ts` - refatorada
+- ✅ `src/app/api/comprovantes/route.ts` - refatorada
+- ✅ `src/app/api/upload/route.ts` - refatorada
+- ✅ `src/app/api/upload-comprovante/route.ts` - refatorada
 
 ---
 
-## 🚀 PRÓXIMOS PASSOS
+## ✅ FASE 5: COMPLETA
 
-1. Continuar Fase 3 (Contratos e Modelos)
-2. Continuar Fase 4 (Eventos, Clientes, etc.)
-3. Continuar Fase 5 (Rotas especiais)
-4. Documentar padrões finais
-5. Criar exemplos de uso
+### Rotas Refatoradas ✅
+- ✅ `src/app/api/webhooks/hotmart/route.ts` - refatorada (POST, GET)
+- ✅ `src/app/api/google-calendar/auth/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/callback/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/status/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/disconnect/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/toggle-sync/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/refresh-token/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/events/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/debug/route.ts` - refatorada
+- ✅ `src/app/api/google-calendar/detailed-status/route.ts` - refatorada
+- ✅ `src/app/api/auth/reset-password/route.ts` - refatorada
+- ✅ `src/app/api/auth/reset-password-custom/route.ts` - refatorada
+- ✅ `src/app/api/auth/resolve-reset-token/route.ts` - refatorada
+- ✅ `src/app/api/auth/verify-reset-code/route.ts` - refatorada
+- ✅ `src/app/api/auth/confirm-reset-password/route.ts` - refatorada
+
+### Rotas Não Verificadas (Baixa Prioridade)
+- ⚠️ `src/app/api/webhooks/hotmart/mock/route.ts` - não verificada (rota de teste)
+- ⚠️ `src/app/api/webhooks/hotmart/sandbox/route.ts` - não verificada (rota de teste)
+
+---
+
+## ❌ FASE 6: ROTAS ADMIN (NÃO INICIADA)
+
+### Rotas Pendentes
+- ❌ `src/app/api/admin/adicionar-assinatura-usuarios-sem-plano/route.ts`
+- ❌ `src/app/api/admin/atualizar-planos-usuarios/route.ts`
+- ❌ `src/app/api/admin/create-default-admin/route.ts`
+- ❌ `src/app/api/admin/create-sandbox-plan/route.ts`
+- ❌ `src/app/api/admin/create-user/route.ts` - usa Firebase diretamente (não usa factories)
+- ❌ `src/app/api/admin/migrate-data-integrity-fields/route.ts`
+- ❌ `src/app/api/admin/migrate-enterprise-to-premium/route.ts`
+- ❌ `src/app/api/admin/migrate-user-assinatura-structure/route.ts`
+- ❌ `src/app/api/admin/migrate-users-to-plans/route.ts`
+
+**Nota**: Rotas admin podem ter lógica especial e podem não precisar de refatoração completa, mas devem usar `requireAdmin()` e factories quando possível.
+
+---
+
+## ❌ FASE 7: ROTAS DE INICIALIZAÇÃO E SEED (NÃO INICIADA)
+
+### Rotas Pendentes
+- ❌ `src/app/api/init/canais-entrada/route.ts` - usa `getServerSession` diretamente
+- ❌ `src/app/api/init/tipos-evento/route.ts`
+- ❌ `src/app/api/init/tipos-servico/route.ts`
+- ❌ `src/app/api/seed/funcionalidades-planos/route.ts`
+- ❌ `src/app/api/seed/modelos-contrato/route.ts`
+
+---
+
+## ❌ FASE 8: ROTAS DE MIGRAÇÃO E DEBUG (NÃO INICIADA)
+
+### Rotas Pendentes
+- ❌ `src/app/api/migrar-anexos-temp/route.ts`
+- ❌ `src/app/api/debug/funcionalidades/route.ts`
+- ❌ `src/app/api/test/generate-events/route.ts`
+
+**Nota**: Rotas de migração e debug podem ser mantidas como estão ou removidas após migração completa.
+
+---
+
+## 📊 ESTATÍSTICAS ATUALIZADAS
+
+### Rotas Refatoradas ✅
+- **Fase 1**: ✅ 100% completa (ServiceFactory, Route Helpers, Serviços)
+- **Fase 2**: ✅ 100% completa (Planos, Assinaturas, Funcionalidades)
+- **Fase 3**: ✅ 100% completa (Contratos e Modelos)
+- **Fase 4**: ✅ 100% completa (14/14 rotas)
+- **Fase 5**: ✅ 100% completa (15/15 rotas principais)
+
+### Rotas Pendentes ❌
+- **Fase 6**: 9 rotas (admin) - prioridade média
+- **Fase 7**: 5 rotas (init, seed) - prioridade baixa
+- **Fase 8**: 3 rotas (migração, debug, test) - prioridade baixa
+
+**Total**: 
+- ✅ **Rotas refatoradas**: ~50 rotas principais
+- ❌ **Rotas pendentes**: ~17 rotas (admin, migração, debug, init, seed)
+- **Progresso geral**: ~75% das rotas principais completas
+
+### Build Status
+- ✅ Build funcionando sem erros
+- ✅ ServiceFactory funcionando
+- ✅ Route helpers funcionando
+- ✅ Padrão consistente nas rotas refatoradas
+
+---
+
+## 🚀 PRÓXIMOS PASSOS RECOMENDADOS
+
+### Prioridade ALTA
+1. ✅ Completar Fase 4 - refatorar rotas de pagamentos, custos e serviços pendentes
+2. ✅ Completar Fase 5 - refatorar rotas de Google Calendar debug e auth custom
+
+### Prioridade MÉDIA
+3. Refatorar rotas admin (Fase 6) - usar `requireAdmin()` e factories quando possível
+4. Refatorar rotas de inicialização (Fase 7) - usar route-helpers
+
+### Prioridade BAIXA
+5. Rotas de migração e debug (Fase 8) - avaliar se devem ser mantidas ou removidas
+6. Documentar padrões finais
+7. Criar exemplos de uso para novos desenvolvedores
 

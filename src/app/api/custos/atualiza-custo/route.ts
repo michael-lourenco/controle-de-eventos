@@ -1,8 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
-import { RepositoryFactory } from '@/lib/repositories/repository-factory';
-import { CustoGlobalRepository } from '@/lib/repositories/custo-global-repository';
+import { NextRequest } from 'next/server';
+import { 
+  getUserIdWithApiKeyOrDev,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody,
+  getQueryParams
+} from '@/lib/api/route-helpers';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
 /**
  * Endpoint para normalizar custos existentes
@@ -15,66 +20,28 @@ import { CustoGlobalRepository } from '@/lib/repositories/custo-global-repositor
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verificar se há um token de segurança no header (para uso via Postman/API)
-    const apiKey = request.headers.get('x-api-key') || request.headers.get('authorization');
-    const isDevMode = process.env.NODE_ENV === 'development';
+    // Ler body uma vez
+    const body = await getRequestBody(request).catch(() => ({}));
     
-    // Tentar autenticação via sessão primeiro
-    const session = await getServerSession(authOptions);
+    // Obter userId com suporte a sessão, API key ou dev mode
+    let userId = await getUserIdWithApiKeyOrDev(request, body);
     
-    let userId: string | null = null;
-    
-    // Se houver sessão, usar userId da sessão
-    if (session?.user?.id) {
-      userId = session.user.id;
-    } 
-    // Se não houver sessão, verificar se é modo dev ou tem API key válida
-    else {
-      // Ler body e query params uma vez
-      const body = await request.json().catch(() => ({}));
-      const queryParams = new URL(request.url).searchParams;
-      const bodyUserId = body.userId || queryParams.get('userId') || null;
-      
-      if (apiKey) {
-        const validApiKey = process.env.SEED_API_KEY || 'dev-seed-key-2024';
-        if (apiKey !== validApiKey && !apiKey.includes(validApiKey)) {
-          return NextResponse.json({ error: 'API key inválida' }, { status: 401 });
-        }
-        // API key válida, usar userId do body ou query param
-        userId = bodyUserId;
-        
-        if (!userId) {
-          return NextResponse.json({ 
-            error: 'userId é obrigatório quando usando API key. Forneça no body: { "userId": "..." } ou query param: ?userId=...' 
-          }, { status: 400 });
-        }
-      } 
-      // Em desenvolvimento, permitir sem autenticação se fornecer userId
-      else if (isDevMode) {
-        userId = bodyUserId;
-        
-        if (!userId) {
-          return NextResponse.json({ 
-            error: 'Em modo desenvolvimento, forneça userId no body: { "userId": "..." } ou query param: ?userId=...' 
-          }, { status: 400 });
-        }
-      }
-      // Em produção, requer autenticação
-      else {
-        return NextResponse.json({ 
-          error: 'Não autorizado. Use autenticação via sessão ou forneça x-api-key header com userId' 
-        }, { status: 401 });
-      }
-    }
-    
+    // Se não autenticado, tentar obter do body ou query params
     if (!userId) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      const queryParams = getQueryParams(request);
+      userId = body.userId || queryParams.get('userId') || null;
+      
+      if (!userId) {
+        return createErrorResponse(
+          'Não autorizado. Use autenticação via sessão ou forneça x-api-key header com userId no body ou query param',
+          401
+        );
+      }
     }
-    
-    const repositoryFactory = RepositoryFactory.getInstance();
+
     const eventoRepo = repositoryFactory.getEventoRepository();
     const custoRepo = repositoryFactory.getCustoEventoRepository();
-    const custoGlobalRepo = new CustoGlobalRepository();
+    const custoGlobalRepo = repositoryFactory.getCustoGlobalRepository();
 
     // Buscar todos os eventos do usuário
     const eventos = await eventoRepo.findAll(userId);
@@ -135,7 +102,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    return createApiResponse({
       success: true,
       message: 'Normalização de custos concluída',
       estatisticas: {
@@ -146,13 +113,8 @@ export async function POST(request: NextRequest) {
       },
       erros: erros.length > 0 ? erros : undefined
     });
-
   } catch (error) {
-    console.error('Erro ao normalizar custos:', error);
-    return NextResponse.json({ 
-      error: 'Erro interno do servidor',
-      detalhes: error instanceof Error ? error.message : 'Erro desconhecido'
-    }, { status: 500 });
+    return handleApiError(error);
   }
 }
 

@@ -1,9 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { 
+  handleApiError,
+  createApiResponse,
+  createErrorResponse,
+  getRequestBody
+} from '@/lib/api/route-helpers';
 import { adminAuth, isFirebaseAdminInitialized, getFirebaseAdminInitializationError } from '@/lib/firebase-admin';
-import { PasswordResetTokenRepository } from '@/lib/repositories/password-reset-token-repository';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { generateShortToken, generatePasswordResetEmailTemplate } from '@/lib/services/email-service';
 import { sendEmail } from '@/lib/services/resend-email-service';
-import { UserRepository } from '@/lib/repositories/user-repository';
 
 // Rate limiting
 const resetAttempts = new Map<string, { count: number; lastAttempt: number }>();
@@ -36,26 +41,20 @@ function checkRateLimit(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await getRequestBody(request);
     const { email } = body;
 
     if (!email || typeof email !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Email é obrigatório' },
-        { status: 400 }
-      );
+      return createErrorResponse('Email é obrigatório', 400);
     }
 
     const normalizedEmail = email.toLowerCase().trim();
 
     // Verificar rate limiting
     if (!checkRateLimit(normalizedEmail)) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Muitas tentativas. Aguarde 1 hora antes de tentar novamente.' 
-        },
-        { status: 429 }
+      return createErrorResponse(
+        'Muitas tentativas. Aguarde 1 hora antes de tentar novamente.',
+        429
       );
     }
 
@@ -66,12 +65,9 @@ export async function POST(request: NextRequest) {
       if (initError) {
         console.error('[reset-password-custom] Erro de inicialização:', initError.message);
       }
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Firebase Admin não está configurado. Configure GOOGLE_CREDENTIALS_*, FIREBASE_ADMIN_SDK_KEY ou FIREBASE_SERVICE_ACCOUNT_KEY nas variáveis de ambiente.'
-        },
-        { status: 500 }
+      return createErrorResponse(
+        'Firebase Admin não está configurado. Configure GOOGLE_CREDENTIALS_*, FIREBASE_ADMIN_SDK_KEY ou FIREBASE_SERVICE_ACCOUNT_KEY nas variáveis de ambiente.',
+        500
       );
     }
 
@@ -80,7 +76,7 @@ export async function POST(request: NextRequest) {
       const user = await adminAuth!.getUserByEmail(normalizedEmail);
       
       // Buscar nome do usuário no Firestore
-      const userRepo = new UserRepository();
+      const userRepo = repositoryFactory.getUserRepository();
       const userData = await userRepo.findById(user.uid);
       const nome = userData?.nome || '';
 
@@ -106,7 +102,7 @@ export async function POST(request: NextRequest) {
       expiresAt.setHours(expiresAt.getHours() + 1);
 
       // Armazenar token no banco
-      const tokenRepo = new PasswordResetTokenRepository();
+      const tokenRepo = repositoryFactory.getPasswordResetTokenRepository();
       await tokenRepo.createToken({
         token: shortToken,
         email: normalizedEmail,
@@ -133,7 +129,7 @@ export async function POST(request: NextRequest) {
         throw new Error(emailResult.error || 'Erro ao enviar email');
       }
 
-      return NextResponse.json({
+      return createApiResponse({
         success: true,
         message: 'Email de redefinição enviado com sucesso'
       });
@@ -141,7 +137,7 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       // Não expor se o email existe ou não por segurança
       // Sempre retornar sucesso para evitar enumeração de emails
-      return NextResponse.json({
+      return createApiResponse({
         success: true,
         message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
       });
@@ -149,13 +145,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     // Sempre retornar sucesso por segurança
-    return NextResponse.json(
-      { 
-        success: true,
-        message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
-      },
-      { status: 200 }
-    );
+    return createApiResponse({
+      success: true,
+      message: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
+    });
   }
 }
 

@@ -6,9 +6,13 @@
  * Esta rota força a renovação do access token usando o refresh token
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { NextRequest } from 'next/server';
+import { 
+  getAuthenticatedUser,
+  handleApiError,
+  createApiResponse,
+  createErrorResponse
+} from '@/lib/api/route-helpers';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
@@ -19,31 +23,22 @@ function decrypt(encrypted: string, key: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Não autenticado' },
-        { status: 401 }
-      );
-    }
+    const user = await getAuthenticatedUser();
 
     const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
-    const token = await tokenRepo.findByUserId(session.user.id);
+    const token = await tokenRepo.findByUserId(user.id);
 
     if (!token) {
-      return NextResponse.json(
-        { error: 'Token não encontrado' },
-        { status: 404 }
-      );
+      return createErrorResponse('Token não encontrado', 404);
     }
 
     // Descriptografar refresh token
     const refreshToken = decrypt(token.refreshToken, ENCRYPTION_KEY);
 
     // Importar serviço
-    const { GoogleCalendarService } = await import('@/lib/services/google-calendar-service');
-    const googleService = new GoogleCalendarService();
+    const { getServiceFactory } = await import('@/lib/factories/service-factory');
+    const serviceFactory = getServiceFactory();
+    const googleService = serviceFactory.getGoogleCalendarService();
     
     // Forçar renovação marcando token como expirado
     await tokenRepo.update(token.id, {
@@ -53,12 +48,12 @@ export async function POST(request: NextRequest) {
     // Tentar obter novo token (vai forçar renovação)
     try {
       // Usar método privado através de getCalendarInfo que vai renovar o token
-      const calendarInfo = await googleService.getCalendarInfo(session.user.id);
+      const calendarInfo = await googleService.getCalendarInfo(user.id);
       
       // Buscar token atualizado
-      const updatedToken = await tokenRepo.findByUserId(session.user.id);
+      const updatedToken = await tokenRepo.findByUserId(user.id);
       
-      return NextResponse.json({
+      return createApiResponse({
         success: true,
         message: 'Token renovado com sucesso',
         calendarInfo: calendarInfo
@@ -68,33 +63,20 @@ export async function POST(request: NextRequest) {
       
       // Se o refresh token é inválido, usuário precisa reconectar
       if (error.message?.includes('invalid_grant') || error.code === 'invalid_grant') {
-        return NextResponse.json(
-          {
-            error: 'Refresh token inválido',
-            message: 'O refresh token é inválido ou foi revogado. Por favor, desconecte e conecte novamente sua conta do Google Calendar.',
-            requiresReconnect: true
-          },
-          { status: 401 }
+        return createErrorResponse(
+          'O refresh token é inválido ou foi revogado. Por favor, desconecte e conecte novamente sua conta do Google Calendar.',
+          401,
+          { requiresReconnect: true }
         );
       }
       
-      return NextResponse.json(
-        {
-          error: 'Erro ao renovar token',
-          message: error.message || 'Erro desconhecido'
-        },
-        { status: 500 }
+      return createErrorResponse(
+        error.message || 'Erro desconhecido ao renovar token',
+        500
       );
     }
-  } catch (error: any) {
-    console.error('Erro geral ao renovar token:', error);
-    return NextResponse.json(
-      { 
-        error: 'Erro ao renovar token',
-        message: error.message || 'Erro desconhecido'
-      },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
