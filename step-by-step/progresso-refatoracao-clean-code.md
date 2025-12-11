@@ -272,3 +272,67 @@
 6. Documentar padrões finais
 7. Criar exemplos de uso para novos desenvolvedores
 
+---
+
+## ✅ MIGRAÇÃO DE SUBCOLLECTIONS: COMPLETA
+
+### Data: 2025-01-XX
+
+### Problema Identificado
+Os custos e pagamentos dos eventos não foram migrados corretamente do Firestore para o Supabase porque:
+- O script original buscava de collections globais que não existem
+- Os dados estão em subcollections de eventos: `controle_users/{userId}/eventos/{eventoId}/pagamentos`
+- As tabelas tinham RLS habilitado durante a migração inicial
+
+### Solução Implementada
+
+#### 1. Script de Migração Criado
+- ✅ Arquivo: `supabase/migrate-user-subcollections.ts`
+- ✅ Migra subcollections de um usuário específico:
+  - `pagamentos` (de `eventos/{eventoId}/pagamentos`)
+  - `custos` (de `eventos/{eventoId}/custos`)
+  - `servicos` (de `eventos/{eventoId}/servicos`)
+  - `anexos_eventos` (de `eventos/{eventoId}/controle_anexos_eventos`)
+  - `canais_entrada` (de `controle_users/{userId}/canais_entrada`)
+
+#### 2. Rota API Criada
+- ✅ Arquivo: `src/app/api/admin/migrate-user-subcollections/route.ts`
+- ✅ Endpoint: `POST /api/admin/migrate-user-subcollections`
+- ✅ Autenticação: API key via header `x-api-key` ou sessão admin
+- ✅ Body: `{ "userId": "1AGkVjDbaqWOwk5tg3mHje11PaD2" }`
+
+#### 3. Características do Script
+- ✅ Usa `SUPABASE_SERVICE_ROLE_KEY` para bypassar RLS
+- ✅ Insere apenas novos registros (não faz upsert)
+- ✅ Verifica existência antes de inserir (evita duplicatas)
+- ✅ Extrai `userId` e `eventoId` do path do Firestore
+- ✅ Converte Timestamps do Firestore para ISO strings
+- ✅ Estatísticas detalhadas de migração
+
+### Como Usar
+
+#### Via Postman/API:
+```bash
+POST http://localhost:3000/api/admin/migrate-user-subcollections
+Headers:
+  x-api-key: <SEED_API_KEY>
+Body:
+  {
+    "userId": "1AGkVjDbaqWOwk5tg3mHje11PaD2"
+  }
+```
+
+#### Via CLI:
+```bash
+npx tsx supabase/migrate-user-subcollections.ts 1AGkVjDbaqWOwk5tg3mHje11PaD2
+```
+
+### Arquivos Criados/Modificados
+- ✅ `supabase/migrate-user-subcollections.ts` - Script de migração
+- ✅ `src/app/api/admin/migrate-user-subcollections/route.ts` - Rota API
+
+### Próximos Passos
+1. Testar migração com usuário `1AGkVjDbaqWOwk5tg3mHje11PaD2`
+2. Verificar dados migrados no Supabase
+3. Executar para outros usuários se necessário
+

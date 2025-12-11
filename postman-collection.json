@@ -1167,6 +1167,33 @@
           }
         },
         {
+          "name": "Migrar Subcollections de Usuário (Firestore → Supabase)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"1AGkVjDbaqWOwk5tg3mHje11PaD2\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-user-subcollections",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-user-subcollections"]
+            },
+            "description": "Migra subcollections de eventos de um usuário específico do Firestore para o Supabase.\n\n🔄 O que migra:\n- pagamentos (de eventos/{eventoId}/pagamentos)\n- custos (de eventos/{eventoId}/custos)\n- serviços (de eventos/{eventoId}/servicos)\n- anexos_eventos (de eventos/{eventoId}/controle_anexos_eventos)\n- canais_entrada (de controle_users/{userId}/canais_entrada)\n\n📋 Parâmetros:\n- userId (string, obrigatório): ID do usuário no Firestore (ex: 1AGkVjDbaqWOwk5tg3mHje11PaD2)\n\n✨ Características:\n- Usa SUPABASE_SERVICE_ROLE_KEY para bypassar RLS\n- Insere apenas novos registros (não faz upsert)\n- Verifica existência antes de inserir (evita duplicatas)\n- Extrai userId e eventoId do path do Firestore\n- Converte Timestamps do Firestore para ISO strings\n- Retorna estatísticas detalhadas da migração\n\n💡 Use este endpoint para migrar dados que não foram migrados corretamente na migração inicial.\n\n⚠️ IMPORTANTE: Execute apenas para usuários específicos. O script processa todos os eventos do usuário."
+          }
+        },
+        {
           "name": "Gerar Eventos Aleatórios (Teste de Estresse)",
           "request": {
             "method": "POST",

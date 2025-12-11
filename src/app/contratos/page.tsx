@@ -29,11 +29,18 @@ export default function ContratosPage() {
       const url = filtroStatus ? `/api/contratos?status=${filtroStatus}` : '/api/contratos';
       const response = await fetch(url);
       if (response.ok) {
-        const data = await response.json();
-        setContratos(data);
+        const result = await response.json();
+        // createApiResponse retorna { data: contratos }
+        const contratos = result.data || result;
+        setContratos(Array.isArray(contratos) ? contratos : []);
+      } else {
+        const error = await response.json();
+        console.error('Erro ao carregar contratos:', error);
+        showToast(error.error || 'Erro ao carregar contratos', 'error');
       }
     } catch (error) {
       console.error('Erro ao carregar contratos:', error);
+      showToast('Erro ao carregar contratos', 'error');
     } finally {
       setLoading(false);
     }
