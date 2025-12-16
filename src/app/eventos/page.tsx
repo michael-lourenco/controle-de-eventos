@@ -42,6 +42,7 @@ export default function EventosPage() {
   const [filterTipo, setFilterTipo] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<DateFilter | null>(null);
   const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados'>('ativos');
+  const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [eventoParaArquivar, setEventoParaArquivar] = useState<Evento | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
@@ -73,6 +74,48 @@ export default function EventosPage() {
     await Promise.all([refetchAtivos(), refetchArquivados()]);
   };
 
+  // Mapeamento de tipoEventoId -> nome do tipo de evento (otimização)
+  const tiposEventoMap = React.useMemo(() => {
+    const map = new Map<string, string>();
+    
+    // Adicionar tipos de evento do banco (estes têm IDs)
+    if (tiposEventoData) {
+      tiposEventoData.forEach(tipo => {
+        map.set(tipo.id, tipo.nome);
+      });
+    }
+    
+    return map;
+  }, [tiposEventoData]);
+
+  // Função auxiliar para obter o nome do tipo de evento
+  const getTipoEventoNome = (evento: Evento): string => {
+    // Se tiver tipoEventoId, usar o mapeamento
+    if (evento.tipoEventoId && tiposEventoMap.has(evento.tipoEventoId)) {
+      return tiposEventoMap.get(evento.tipoEventoId)!;
+    }
+    // Fallback para o nome direto (para compatibilidade)
+    return evento.tipoEvento || 'Sem tipo';
+  };
+
+  // Função auxiliar para obter cor do status
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'Agendado':
+        return 'bg-blue-100 text-blue-800';
+      case 'Confirmado':
+        return 'bg-green-100 text-green-800';
+      case 'Em andamento':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Concluído':
+        return 'bg-gray-100 text-gray-800';
+      case 'Cancelado':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   const tiposEventoFilterOptions = React.useMemo(() => {
     const nomes = new Set<string>();
     const options = [
@@ -82,7 +125,7 @@ export default function EventosPage() {
     const fontes = [
       ...(tiposEventoData ?? []).filter(tipo => tipo.ativo).map(tipo => tipo.nome),
       ...DEFAULT_TIPOS_EVENTO.map(tipo => tipo.nome),
-      ...eventosLista.map(evento => evento.tipoEvento)
+      ...eventosLista.map(evento => getTipoEventoNome(evento))
     ];
 
     fontes.forEach(nome => {
@@ -96,7 +139,7 @@ export default function EventosPage() {
     });
 
     return options;
-  }, [tiposEventoData, eventosLista]);
+  }, [tiposEventoData, eventosLista, tiposEventoMap]);
 
   // Filtrar eventos - chamado antes dos early returns para seguir as regras dos hooks
   const filteredEventos = useMemo(() => {
@@ -113,12 +156,14 @@ export default function EventosPage() {
       const matchesSearch = clienteNome.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            local.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            nomeEvento.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesTipo = filterTipo === 'todos' || evento.tipoEvento === filterTipo;
+      const tipoEventoNome = getTipoEventoNome(evento);
+      const matchesTipo = filterTipo === 'todos' || tipoEventoNome === filterTipo;
       const matchesDate = isDateInFilter(evento.dataEvento, dateFilter);
+      const matchesStatus = filterStatus === 'todos' || evento.status === filterStatus;
       
-      return matchesSearch && matchesTipo && matchesDate;
+      return matchesSearch && matchesTipo && matchesDate && matchesStatus;
     });
-  }, [eventosLista, searchTerm, filterTipo, dateFilter]);
+  }, [eventosLista, searchTerm, filterTipo, dateFilter, filterStatus, tiposEventoMap]);
 
   // Ordenar eventos por data do evento em ordem crescente - chamado antes dos early returns
   const sortedEventos = useMemo(() => {
@@ -276,7 +321,10 @@ export default function EventosPage() {
           <CardContent className="p-0">
             <div className="flex gap-2 p-2">
               <button
-                onClick={() => setAbaAtiva('ativos')}
+                onClick={() => {
+                  setAbaAtiva('ativos');
+                  setFilterStatus('todos'); // Resetar filtro de status ao mudar para ativos
+                }}
                 className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg cursor-pointer ${
                   abaAtiva === 'ativos'
                     ? 'bg-primary/10 text-primary shadow-sm'
@@ -286,7 +334,10 @@ export default function EventosPage() {
                 Ativos ({eventos?.length || 0})
               </button>
               <button
-                onClick={() => setAbaAtiva('arquivados')}
+                onClick={() => {
+                  setAbaAtiva('arquivados');
+                  setFilterStatus('todos'); // Resetar filtro de status ao mudar para arquivados
+                }}
                 className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg cursor-pointer ${
                   abaAtiva === 'arquivados'
                     ? 'bg-primary/10 text-primary shadow-sm'
@@ -298,6 +349,76 @@ export default function EventosPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Filtros por Status - apenas para eventos ativos */}
+        {abaAtiva === 'ativos' && (
+          <Card>
+            <CardContent className="p-0">
+              <div className="flex gap-2 p-2 overflow-x-auto">
+                <button
+                  onClick={() => setFilterStatus('todos')}
+                  className={`px-4 py-2 text-sm font-medium transition-all rounded-lg cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'todos'
+                      ? 'bg-primary/10 text-primary shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={() => setFilterStatus('Agendado')}
+                  className={`px-4 py-2 text-sm font-medium transition-all rounded-lg cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'Agendado'
+                      ? 'bg-primary/10 text-primary shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+                  }`}
+                >
+                  Agendado ({eventosLista.filter(e => e.status === 'Agendado').length})
+                </button>
+                <button
+                  onClick={() => setFilterStatus('Confirmado')}
+                  className={`px-4 py-2 text-sm font-medium transition-all rounded-lg cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'Confirmado'
+                      ? 'bg-primary/10 text-primary shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+                  }`}
+                >
+                  Confirmado ({eventosLista.filter(e => e.status === 'Confirmado').length})
+                </button>
+                <button
+                  onClick={() => setFilterStatus('Em andamento')}
+                  className={`px-4 py-2 text-sm font-medium transition-all rounded-lg cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'Em andamento'
+                      ? 'bg-primary/10 text-primary shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+                  }`}
+                >
+                  Em andamento ({eventosLista.filter(e => e.status === 'Em andamento').length})
+                </button>
+                <button
+                  onClick={() => setFilterStatus('Concluído')}
+                  className={`px-4 py-2 text-sm font-medium transition-all rounded-lg cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'Concluído'
+                      ? 'bg-primary/10 text-primary shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+                  }`}
+                >
+                  Concluído ({eventosLista.filter(e => e.status === 'Concluído').length})
+                </button>
+                <button
+                  onClick={() => setFilterStatus('Cancelado')}
+                  className={`px-4 py-2 text-sm font-medium transition-all rounded-lg cursor-pointer whitespace-nowrap ${
+                    filterStatus === 'Cancelado'
+                      ? 'bg-primary/10 text-primary shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+                  }`}
+                >
+                  Cancelado ({eventosLista.filter(e => e.status === 'Cancelado').length})
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filtros */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -335,7 +456,7 @@ export default function EventosPage() {
         </div>
 
         {/* Resumo dos Filtros Ativos */}
-        {(searchTerm || filterTipo !== 'todos' || dateFilter) && (
+        {(searchTerm || filterTipo !== 'todos' || dateFilter || (abaAtiva === 'ativos' && filterStatus !== 'todos')) && (
           <Card className="bg-surface/50 backdrop-blur-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -350,6 +471,11 @@ export default function EventosPage() {
                     {filterTipo !== 'todos' && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
                         Tipo: {filterTipo}
+                      </span>
+                    )}
+                    {abaAtiva === 'ativos' && filterStatus !== 'todos' && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        Status: {filterStatus}
                       </span>
                     )}
                     {dateFilter && (
@@ -426,8 +552,15 @@ export default function EventosPage() {
                 </div>
 
                 <div className="pt-4 border-t">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-text-primary">{evento.tipoEvento}</span>
+                  <div className="flex justify-between items-center flex-wrap gap-2">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-sm font-medium text-text-primary">
+                        {getTipoEventoNome(evento)}
+                      </span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(evento.status)}`}>
+                        {evento.status}
+                      </span>
+                    </div>
                     <div className="flex space-x-2">
                       <TooltipProvider>
                         <Tooltip>

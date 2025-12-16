@@ -57,6 +57,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // Estatísticas
 const stats = {
+  clientes: { total: 0, inserted: 0, skipped: 0, errors: 0 },
+  eventos: { total: 0, inserted: 0, skipped: 0, errors: 0 },
   pagamentos: { total: 0, inserted: 0, skipped: 0, errors: 0 },
   custos: { total: 0, inserted: 0, skipped: 0, errors: 0 },
   servicos: { total: 0, inserted: 0, skipped: 0, errors: 0 },
@@ -137,8 +139,19 @@ async function recordExists(table: string, id: string): Promise<boolean> {
   return !!data;
 }
 
-// Verificar se evento existe no Supabase
+// Cache de eventos já verificados/migrados durante a execução
+const eventosCache = new Map<string, boolean>();
+
+// Cache de clientes já verificados/migrados durante a execução
+const clientesCache = new Map<string, boolean>();
+
+// Verificar se evento existe no Supabase (com cache)
 async function eventoExists(eventoId: string): Promise<boolean> {
+  // Verificar cache primeiro
+  if (eventosCache.has(eventoId)) {
+    return eventosCache.get(eventoId)!;
+  }
+  
   const { data, error } = await supabase
     .from('eventos')
     .select('id')
@@ -146,11 +159,255 @@ async function eventoExists(eventoId: string): Promise<boolean> {
     .limit(1)
     .single();
   
-  if (error && error.code !== 'PGRST116') {
-    return false;
+  const exists = !error && !!data;
+  eventosCache.set(eventoId, exists);
+  
+  return exists;
+}
+
+// Verificar se cliente existe no Supabase (com cache)
+async function clienteExists(clienteId: string): Promise<boolean> {
+  // Verificar cache primeiro
+  if (clientesCache.has(clienteId)) {
+    return clientesCache.get(clienteId)!;
   }
   
-  return !!data;
+  const { data, error } = await supabase
+    .from('clientes')
+    .select('id')
+    .eq('id', clienteId)
+    .limit(1)
+    .single();
+  
+  const exists = !error && !!data;
+  clientesCache.set(clienteId, exists);
+  
+  return exists;
+}
+
+// Migrar um cliente específico do Firestore para o Supabase
+// Retorna o ID do cliente no Supabase (pode ser diferente do Firestore se já existir com mesmo CPF)
+async function migrateCliente(userId: string, clienteId: string): Promise<string | null> {
+  try {
+    // Verificar se já existe pelo ID (com cache)
+    if (await clienteExists(clienteId)) {
+      return clienteId; // Já existe com esse ID
+    }
+    
+    // Buscar cliente no Firestore
+    const clienteDoc = await db
+      .collection('controle_users')
+      .doc(userId)
+      .collection('clientes')
+      .doc(clienteId)
+      .get();
+    
+    if (!clienteDoc.exists) {
+      console.warn(`  ⚠️  Cliente ${clienteId} não encontrado no Firestore`);
+      clientesCache.set(clienteId, false);
+      return null;
+    }
+    
+    const data = clienteDoc.data();
+    
+    // Se o cliente tem CPF, verificar se já existe no Supabase com mesmo CPF
+    if (data?.cpf) {
+      const { data: clienteExistente } = await supabase
+        .from('clientes')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('cpf', data.cpf)
+        .single();
+      
+      if (clienteExistente) {
+        console.warn(`  ⚠️  Cliente ${clienteId} já existe no Supabase com ID ${clienteExistente.id} (mesmo CPF) - usando cliente existente`);
+        // Atualizar cache com ambos os IDs
+        clientesCache.set(clienteId, true);
+        clientesCache.set(clienteExistente.id, true);
+        return clienteExistente.id; // Retornar o ID existente
+      }
+    }
+    
+    // Validar foreign key canal_entrada_id
+    let canalEntradaIdValidado = data?.canalEntradaId || null;
+    if (canalEntradaIdValidado) {
+      const { data: canalExists } = await supabase
+        .from('canais_entrada')
+        .select('id')
+        .eq('id', canalEntradaIdValidado)
+        .single();
+      
+      if (!canalExists) {
+        console.warn(`  ⚠️  Cliente ${clienteId}: canal_entrada_id ${canalEntradaIdValidado} não encontrado, usando null...`);
+        canalEntradaIdValidado = null;
+      }
+    }
+    
+    const supabaseData = {
+      id: clienteId,
+      user_id: userId,
+      nome: data?.nome || '',
+      cpf: data?.cpf || null,
+      email: data?.email || null,
+      telefone: data?.telefone || null,
+      endereco: data?.endereco || null,
+      cep: data?.cep || null,
+      instagram: data?.instagram || null,
+      canal_entrada_id: canalEntradaIdValidado,
+      arquivado: data?.arquivado || false,
+      data_arquivamento: convertTimestamp(data?.dataArquivamento) || null,
+      motivo_arquivamento: data?.motivoArquivamento || null,
+      data_cadastro: convertTimestamp(data?.dataCadastro) || new Date().toISOString(),
+    };
+    
+    // Tentar inserir
+    const { error } = await supabase
+      .from('clientes')
+      .insert(supabaseData);
+    
+    if (error) {
+      // Se o erro for de constraint única de CPF, buscar cliente existente
+      if (error.message.includes('idx_clientes_user_cpf_unique') || error.message.includes('duplicate key')) {
+        if (data?.cpf) {
+          const { data: clienteExistente } = await supabase
+            .from('clientes')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('cpf', data.cpf)
+            .single();
+          
+          if (clienteExistente) {
+            console.warn(`  ⚠️  Cliente ${clienteId} já existe com ID ${clienteExistente.id} (mesmo CPF) - usando cliente existente`);
+            // Atualizar cache
+            clientesCache.set(clienteId, true);
+            clientesCache.set(clienteExistente.id, true);
+            return clienteExistente.id;
+          }
+        }
+        console.error(`  ❌ Erro ao migrar cliente ${clienteId}: ${error.message}`);
+        clientesCache.set(clienteId, false);
+        return null;
+      }
+      console.error(`  ❌ Erro ao migrar cliente ${clienteId}:`, error.message);
+      clientesCache.set(clienteId, false);
+      return null;
+    }
+    
+    // Atualizar cache para indicar que foi migrado com sucesso
+    clientesCache.set(clienteId, true);
+    console.log(`  ✅ Cliente ${clienteId} migrado com sucesso`);
+    return clienteId; // Retornar o ID usado
+  } catch (error: any) {
+    console.error(`  ❌ Erro ao processar cliente ${clienteId}:`, error.message);
+    clientesCache.set(clienteId, false);
+    return null;
+  }
+}
+
+// Migrar um evento específico do Firestore para o Supabase
+async function migrateEvento(userId: string, eventoId: string, eventoData: any): Promise<boolean> {
+  try {
+    // Verificar se já existe (com cache)
+    if (await eventoExists(eventoId)) {
+      return true; // Já existe, não precisa migrar
+    }
+    
+    // Atualizar cache para indicar que está sendo migrado
+    eventosCache.set(eventoId, false);
+
+    // Validar foreign keys antes de inserir
+    const clienteId = eventoData.clienteId || null;
+    const tipoEventoId = eventoData.tipoEventoId || null;
+    
+    // Se cliente não existe, migrar primeiro
+    let clienteIdFinal = clienteId;
+    if (clienteId) {
+      if (!await clienteExists(clienteId)) {
+        console.log(`  📦 Cliente ${clienteId} não existe no Supabase, migrando cliente primeiro...`);
+        const clienteIdMigrado = await migrateCliente(userId, clienteId);
+        if (!clienteIdMigrado) {
+          console.error(`  ❌ Evento ${eventoId}: não foi possível migrar cliente ${clienteId} - não é possível migrar evento sem cliente`);
+          eventosCache.set(eventoId, false);
+          return false;
+        }
+        // Usar o ID retornado (pode ser diferente se já existia com mesmo CPF)
+        clienteIdFinal = clienteIdMigrado;
+        stats.clientes.inserted++;
+      }
+    } else {
+      console.error(`  ❌ Evento ${eventoId}: não tem cliente_id - eventos precisam de um cliente`);
+      eventosCache.set(eventoId, false);
+      return false;
+    }
+    
+    // Verificar se tipo_evento existe (se tipoEventoId foi fornecido)
+    let tipoEventoIdValidado = tipoEventoId;
+    if (tipoEventoId) {
+      const { data: tipoExists } = await supabase
+        .from('tipo_eventos')
+        .select('id')
+        .eq('id', tipoEventoId)
+        .maybeSingle();
+      
+      if (!tipoExists) {
+        console.warn(`  ⚠️  Evento ${eventoId}: tipo_evento_id ${tipoEventoId} não encontrado, usando null...`);
+        tipoEventoIdValidado = null;
+      }
+    }
+    
+    const supabaseData = {
+      id: eventoId,
+      user_id: userId,
+      cliente_id: clienteIdFinal, // Usar o ID final (pode ser diferente do Firestore)
+      nome_evento: eventoData.nomeEvento || null,
+      data_evento: convertTimestamp(eventoData.dataEvento) || new Date().toISOString(),
+      dia_semana: eventoData.diaSemana || null,
+      local: eventoData.local || '',
+      endereco: eventoData.endereco || null,
+      tipo_evento: eventoData.tipoEvento || '',
+      tipo_evento_id: tipoEventoIdValidado,
+      saida: eventoData.saida || null,
+      chegada_no_local: eventoData.chegadaNoLocal || null,
+      horario_inicio: eventoData.horarioInicio || null,
+      horario_desmontagem: eventoData.horarioDesmontagem || null,
+      tempo_evento: eventoData.tempoEvento || null,
+      contratante: eventoData.contratante || null,
+      numero_convidados: convertNumber(eventoData.numeroConvidados),
+      quantidade_mesas: eventoData.quantidadeMesas || null,
+      hashtag: eventoData.hashtag || null,
+      numero_impressoes: eventoData.numeroImpressoes || null,
+      cerimonialista: eventoData.cerimonialista || null,
+      observacoes: eventoData.observacoes || null,
+      status: eventoData.status || 'Agendado',
+      valor_total: convertNumber(eventoData.valorTotal),
+      dia_final_pagamento: convertTimestamp(eventoData.diaFinalPagamento) || null,
+      arquivado: eventoData.arquivado || false,
+      data_arquivamento: convertTimestamp(eventoData.dataArquivamento) || null,
+      motivo_arquivamento: eventoData.motivoArquivamento || null,
+      google_calendar_event_id: eventoData.googleCalendarEventId || null,
+      google_calendar_synced_at: convertTimestamp(eventoData.googleCalendarSyncedAt) || null,
+      data_cadastro: convertTimestamp(eventoData.dataCadastro) || new Date().toISOString(),
+      data_atualizacao: convertTimestamp(eventoData.dataAtualizacao) || new Date().toISOString(),
+    };
+    
+    const { error } = await supabase
+      .from('eventos')
+      .insert(supabaseData);
+    
+    if (error) {
+      console.error(`  ❌ Erro ao migrar evento ${eventoId}:`, error.message);
+      eventosCache.set(eventoId, false);
+      return false;
+    }
+    
+    // Atualizar cache para indicar que foi migrado com sucesso
+    eventosCache.set(eventoId, true);
+    console.log(`  ✅ Evento ${eventoId} migrado com sucesso`);
+    return true;
+  } catch (error: any) {
+    console.error(`  ❌ Erro ao processar evento ${eventoId}:`, error.message);
+    return false;
+  }
 }
 
 // Migrar Pagamentos
@@ -171,11 +428,17 @@ async function migratePagamentos(userId: string) {
       
       for (const doc of pagamentosSnapshot.docs) {
         try {
-          // Verificar se evento existe
+          // Verificar se evento existe, se não existir, migrar primeiro
           if (!await eventoExists(eventoId)) {
-            console.warn(`  ⚠️  Pagamento ${doc.id}: evento ${eventoId} não existe no Supabase - pulando`);
-            stats.pagamentos.errors++;
-            continue;
+            console.log(`  📦 Evento ${eventoId} não existe no Supabase, migrando evento primeiro...`);
+            const eventoMigrado = await migrateEvento(userId, eventoId, eventoDoc.data());
+            if (eventoMigrado) {
+              stats.eventos.inserted++;
+            } else {
+              console.warn(`  ⚠️  Pagamento ${doc.id}: não foi possível migrar evento ${eventoId} - pulando`);
+              stats.pagamentos.errors++;
+              continue;
+            }
           }
           
           // Verificar se já existe
@@ -249,11 +512,17 @@ async function migrateCustos(userId: string) {
       
       for (const doc of custosSnapshot.docs) {
         try {
-          // Verificar se evento existe
+          // Verificar se evento existe, se não existir, migrar primeiro
           if (!await eventoExists(eventoId)) {
-            console.warn(`  ⚠️  Custo ${doc.id}: evento ${eventoId} não existe no Supabase - pulando`);
-            stats.custos.errors++;
-            continue;
+            console.log(`  📦 Evento ${eventoId} não existe no Supabase, migrando evento primeiro...`);
+            const eventoMigrado = await migrateEvento(userId, eventoId, eventoDoc.data());
+            if (eventoMigrado) {
+              stats.eventos.inserted++;
+            } else {
+              console.warn(`  ⚠️  Custo ${doc.id}: não foi possível migrar evento ${eventoId} - pulando`);
+              stats.custos.errors++;
+              continue;
+            }
           }
           
           // Verificar se já existe
@@ -323,11 +592,17 @@ async function migrateServicos(userId: string) {
       
       for (const doc of servicosSnapshot.docs) {
         try {
-          // Verificar se evento existe
+          // Verificar se evento existe, se não existir, migrar primeiro
           if (!await eventoExists(eventoId)) {
-            console.warn(`  ⚠️  Serviço ${doc.id}: evento ${eventoId} não existe no Supabase - pulando`);
-            stats.servicos.errors++;
-            continue;
+            console.log(`  📦 Evento ${eventoId} não existe no Supabase, migrando evento primeiro...`);
+            const eventoMigrado = await migrateEvento(userId, eventoId, eventoDoc.data());
+            if (eventoMigrado) {
+              stats.eventos.inserted++;
+            } else {
+              console.warn(`  ⚠️  Serviço ${doc.id}: não foi possível migrar evento ${eventoId} - pulando`);
+              stats.servicos.errors++;
+              continue;
+            }
           }
           
           // Verificar se já existe
@@ -395,11 +670,17 @@ async function migrateAnexosEventos(userId: string) {
       
       for (const doc of anexosSnapshot.docs) {
         try {
-          // Verificar se evento existe
+          // Verificar se evento existe, se não existir, migrar primeiro
           if (!await eventoExists(eventoId)) {
-            console.warn(`  ⚠️  Anexo ${doc.id}: evento ${eventoId} não existe no Supabase - pulando`);
-            stats.anexos_eventos.errors++;
-            continue;
+            console.log(`  📦 Evento ${eventoId} não existe no Supabase, migrando evento primeiro...`);
+            const eventoMigrado = await migrateEvento(userId, eventoId, eventoDoc.data());
+            if (eventoMigrado) {
+              stats.eventos.inserted++;
+            } else {
+              console.warn(`  ⚠️  Anexo ${doc.id}: não foi possível migrar evento ${eventoId} - pulando`);
+              stats.anexos_eventos.errors++;
+              continue;
+            }
           }
           
           // Verificar se já existe
@@ -516,6 +797,10 @@ export async function migrateUserSubcollections(userId: string) {
   const startTime = Date.now();
   
   try {
+    // Limpar caches
+    eventosCache.clear();
+    clientesCache.clear();
+    
     // Verificar se usuário existe no Firestore
     const userDoc = await db.collection('controle_users').doc(userId).get();
     if (!userDoc.exists) {
@@ -535,6 +820,8 @@ export async function migrateUserSubcollections(userId: string) {
     console.log('✅ Migração concluída!');
     console.log('='.repeat(50));
     console.log('\n📊 Estatísticas:');
+    console.log(`   Clientes: ${stats.clientes.inserted} migrados (${stats.clientes.skipped} pulados, ${stats.clientes.errors} erros)`);
+    console.log(`   Eventos: ${stats.eventos.inserted} migrados (${stats.eventos.skipped} pulados, ${stats.eventos.errors} erros)`);
     console.log(`   Canais de Entrada: ${stats.canais_entrada.inserted}/${stats.canais_entrada.total} inseridos (${stats.canais_entrada.skipped} pulados, ${stats.canais_entrada.errors} erros)`);
     console.log(`   Pagamentos: ${stats.pagamentos.inserted}/${stats.pagamentos.total} inseridos (${stats.pagamentos.skipped} pulados, ${stats.pagamentos.errors} erros)`);
     console.log(`   Custos: ${stats.custos.inserted}/${stats.custos.total} inseridos (${stats.custos.skipped} pulados, ${stats.custos.errors} erros)`);
@@ -546,6 +833,8 @@ export async function migrateUserSubcollections(userId: string) {
       success: true,
       duration,
       stats: {
+        clientes: stats.clientes,
+        eventos: stats.eventos,
         canais_entrada: stats.canais_entrada,
         pagamentos: stats.pagamentos,
         custos: stats.custos,
@@ -559,6 +848,8 @@ export async function migrateUserSubcollections(userId: string) {
       success: false,
       error: error.message,
       stats: {
+        clientes: stats.clientes,
+        eventos: stats.eventos,
         canais_entrada: stats.canais_entrada,
         pagamentos: stats.pagamentos,
         custos: stats.custos,
