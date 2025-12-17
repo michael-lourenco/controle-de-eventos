@@ -4,8 +4,10 @@ import { UserRepository } from '../repositories/user-repository';
 import { PlanoService } from './plano-service';
 import { AssinaturaService } from './assinatura-service';
 import { StatusAssinatura, Assinatura as AssinaturaType, Plano } from '@/types/funcionalidades';
-import { UserAssinatura } from '@/types';
+import { UserAssinatura, User } from '@/types';
 import crypto from 'crypto';
+import { adminAuth } from '@/lib/firebase-admin';
+import { syncFirebaseUserToSupabase } from '@/lib/utils/sync-firebase-user-to-supabase';
 
 export interface HotmartWebhookPayload {
   event: string;
@@ -257,13 +259,27 @@ export class HotmartWebhookService {
       ];
 
       // Buscar usuário por email (necessário para todos os eventos)
-      const user = await this.userRepo.findByEmail(email);
+      let user = await this.userRepo.findByEmail(email);
+      
+      // Se não encontrar usuário, vamos tentar pré-cadastrar (especialmente para novas compras)
       if (!user) {
-        const errorMsg = 'Usuário não encontrado. Verifique se o email está cadastrado no sistema e se está em lowercase.';
-        return { 
-          success: false, 
-          message: errorMsg
-        };
+        if (action === 'purchase' || action === 'activated' || action === 'renewed') {
+          console.log(`[HotmartWebhook] Usuário não encontrado para o email ${email}. Iniciando pré-cadastro...`);
+          try {
+            const nome = subscription.buyer?.name || payload.data?.buyer?.name || payload.data?.user?.name || 'Cliente Click-se';
+            user = await this.preCadastrarUsuario(email, nome);
+            console.log(`[HotmartWebhook] Pré-cadastro concluído para ${email} (ID: ${user.id})`);
+          } catch (preCadastroError: any) {
+            console.error(`[HotmartWebhook] Erro ao pré-cadastrar usuário:`, preCadastroError);
+            return { 
+              success: false, 
+              message: `Erro ao processar usuário não cadastrado: ${preCadastroError.message}`
+            };
+          }
+        } else {
+          const errorMsg = 'Usuário não encontrado. Verifique se o email está cadastrado no sistema.';
+          return { success: false, message: errorMsg };
+        }
       }
 
       // Buscar plano apenas se necessário
@@ -754,6 +770,65 @@ export class HotmartWebhookService {
     });
 
     return { success: true, message: 'Pagamento atrasado processado - Assinatura suspensa temporariamente' };
+  }
+
+  /**
+   * Realiza o pré-cadastro de um usuário que comprou via Hotmart mas ainda não tem conta
+   */
+  private async preCadastrarUsuario(email: string, nome: string): Promise<User> {
+    try {
+      let firebaseUid: string;
+
+      // 1. Tentar criar ou obter usuário no Firebase Auth usando Admin SDK
+      if (adminAuth) {
+        try {
+          const fbUser = await adminAuth.getUserByEmail(email);
+          firebaseUid = fbUser.uid;
+        } catch (error: any) {
+          if (error.code === 'auth/user-not-found') {
+            // Criar usuário sem senha (ele precisará usar "Esqueci minha senha" ou fluxo de primeiro acesso)
+            const newUser = await adminAuth.createUser({
+              email,
+              displayName: nome,
+              emailVerified: true // Hotmart já validou o email na compra
+            });
+            firebaseUid = newUser.uid;
+          } else {
+            throw error;
+          }
+        }
+      } else {
+        // Fallback se adminAuth não estiver disponível (não ideal, mas permite continuar)
+        console.warn('[HotmartWebhook] Firebase Admin Auth não disponível. Usando ID gerado localmente.');
+        firebaseUid = `TMP_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      }
+
+      // 2. Criar registro no Firestore (controle_users)
+      const userData: Omit<User, 'id'> = {
+        email,
+        nome,
+        role: 'user',
+        ativo: true,
+        dataCadastro: new Date(),
+        dataAtualizacao: new Date()
+      };
+
+      // Usar setWithId para garantir que o ID do Firestore seja o mesmo do Firebase Auth
+      const user = await this.userRepo.setWithId(firebaseUid, userData);
+
+      // 3. Sincronizar com Supabase
+      try {
+        await syncFirebaseUserToSupabase(firebaseUid, email, nome, 'user');
+      } catch (syncError) {
+        console.error('[HotmartWebhook] Erro ao sincronizar pré-cadastro com Supabase:', syncError);
+        // Continuamos mesmo com erro de sincronização
+      }
+
+      return user;
+    } catch (error: any) {
+      console.error('[HotmartWebhook] Erro no fluxo de pré-cadastro:', error);
+      throw new Error(`Falha ao criar conta para novo comprador: ${error.message}`);
+    }
   }
 
   /**

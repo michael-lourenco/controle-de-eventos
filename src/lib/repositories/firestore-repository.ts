@@ -4,6 +4,7 @@ import {
   getDocs, 
   getDoc, 
   addDoc, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   query, 
@@ -95,6 +96,17 @@ export class FirestoreRepository<T extends { id: string }> implements BaseReposi
       }
       
       return this.convertFirestoreData(docSnap.data(), docRef.id);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async setWithId(id: string, entity: Omit<T, 'id'>): Promise<T> {
+    try {
+      const docRef = doc(db, this.collectionName, id);
+      const firestoreData = this.convertToFirestoreData(entity as Partial<T>);
+      await setDoc(docRef, firestoreData);
+      return this.convertFirestoreData(firestoreData, id);
     } catch (error) {
       throw error;
     }
