@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/toast';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { Contrato } from '@/types';
 import { PlusIcon, DocumentTextIcon, ArrowDownTrayIcon, PencilIcon, TrashIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export default function ContratosPage() {
   const router = useRouter();
@@ -145,7 +146,11 @@ export default function ContratosPage() {
                         {contrato.modeloContrato?.nome || 'Modelo não encontrado'}
                       </p>
                       <p className="text-xs text-text-secondary">
-                        {new Date(contrato.dataCadastro).toLocaleDateString('pt-BR')}
+                        {contrato.dataCadastro 
+                          ? (contrato.dataCadastro instanceof Date 
+                              ? contrato.dataCadastro.toLocaleDateString('pt-BR')
+                              : new Date(contrato.dataCadastro).toLocaleDateString('pt-BR'))
+                          : 'N/A'}
                       </p>
                       <span className={`inline-block px-2 py-1 rounded text-xs mt-2 ${
                         contrato.status === 'gerado' ? 'bg-green-100 text-green-800' :
@@ -157,39 +162,75 @@ export default function ContratosPage() {
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push(`/contratos/${contrato.id}`)}
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/contratos/${contrato.id}`)}
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Editar Contrato</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       {contrato.status === 'gerado' && contrato.pdfUrl && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(contrato.pdfUrl, '_blank')}
-                        >
-                          <ArrowDownTrayIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(contrato.pdfUrl, '_blank')}
+                              >
+                                <ArrowDownTrayIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Baixar PDF</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                       {contrato.status === 'rascunho' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleGerarPDF(contrato.id)}
-                        >
-                          <DocumentTextIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleGerarPDF(contrato.id)}
+                              >
+                                <DocumentTextIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Gerar PDF</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExcluirContrato(contrato)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleExcluirContrato(contrato)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Excluir Contrato</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 ))}

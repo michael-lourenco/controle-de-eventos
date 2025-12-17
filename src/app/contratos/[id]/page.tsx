@@ -26,11 +26,17 @@ export default function ContratoViewPage() {
       setLoading(true);
       const response = await fetch(`/api/contratos/${params.id}`);
       if (response.ok) {
-        const data = await response.json();
-        setContrato(data);
+        const result = await response.json();
+        // createApiResponse retorna { data: contrato }
+        const contratoData = result.data || result;
+        setContrato(contratoData);
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Erro ao carregar contrato', 'error');
       }
     } catch (error) {
       console.error('Erro ao carregar contrato:', error);
+      showToast('Erro ao carregar contrato', 'error');
     } finally {
       setLoading(false);
     }
@@ -42,14 +48,17 @@ export default function ContratoViewPage() {
       setGerandoPDF(true);
       const response = await fetch(`/api/contratos/${contrato.id}/gerar-pdf`, { method: 'POST' });
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        // createApiResponse retorna { data: { pdfUrl, ... } }
+        const pdfData = result.data || result;
         showToast('PDF gerado com sucesso', 'success');
-        if (data.pdfUrl) {
-          window.open(data.pdfUrl, '_blank');
+        if (pdfData.pdfUrl) {
+          window.open(pdfData.pdfUrl, '_blank');
         }
         loadContrato();
       } else {
-        showToast('Erro ao gerar PDF', 'error');
+        const errorData = await response.json();
+        showToast(errorData.error || 'Erro ao gerar PDF', 'error');
       }
     } catch (error) {
       showToast('Erro ao gerar PDF', 'error');
@@ -113,10 +122,20 @@ export default function ContratoViewPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <p><strong>Status:</strong> {contrato.status}</p>
-              <p><strong>Data de Criação:</strong> {new Date(contrato.dataCadastro).toLocaleDateString('pt-BR')}</p>
+              <p><strong>Status:</strong> <span className="capitalize">{contrato.status || 'N/A'}</span></p>
+              <p><strong>Data de Criação:</strong> {
+                contrato.dataCadastro 
+                  ? (contrato.dataCadastro instanceof Date 
+                      ? contrato.dataCadastro.toLocaleDateString('pt-BR')
+                      : new Date(contrato.dataCadastro).toLocaleDateString('pt-BR'))
+                  : 'N/A'
+              }</p>
               {contrato.dataGeracao && (
-                <p><strong>Data de Geração:</strong> {new Date(contrato.dataGeracao).toLocaleDateString('pt-BR')}</p>
+                <p><strong>Data de Geração:</strong> {
+                  contrato.dataGeracao instanceof Date
+                    ? contrato.dataGeracao.toLocaleDateString('pt-BR')
+                    : new Date(contrato.dataGeracao).toLocaleDateString('pt-BR')
+                }</p>
               )}
             </div>
           </CardContent>

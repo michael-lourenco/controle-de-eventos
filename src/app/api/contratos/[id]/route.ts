@@ -23,7 +23,21 @@ export async function GET(
       return createErrorResponse('Contrato não encontrado', 404);
     }
 
-    return createApiResponse(contrato);
+    // Popular modeloContrato
+    let contratoComModelo = contrato;
+    if (contrato.modeloContratoId) {
+      try {
+        const modeloRepo = repositoryFactory.getModeloContratoRepository();
+        const modelo = await modeloRepo.findById(contrato.modeloContratoId);
+        if (modelo) {
+          contratoComModelo = { ...contrato, modeloContrato: modelo };
+        }
+      } catch (error) {
+        console.error(`Erro ao buscar modelo ${contrato.modeloContratoId}:`, error);
+      }
+    }
+
+    return createApiResponse(contratoComModelo);
   } catch (error) {
     return handleApiError(error);
   }
@@ -54,6 +68,12 @@ export async function PUT(
           return createErrorResponse('Dados inválidos', 400, { erros: validacao.erros });
         }
       }
+      
+      // Garantir que numero_contrato está nos dados preenchidos
+      body.dadosPreenchidos = {
+        ...body.dadosPreenchidos,
+        numero_contrato: contrato.numeroContrato || ''
+      };
     }
 
     const atualizado = await contratoRepo.update(id, {
@@ -61,8 +81,22 @@ export async function PUT(
       dataAtualizacao: new Date(),
       userId: user.id
     });
+    
+    // Popular modeloContrato no retorno
+    let atualizadoComModelo = atualizado;
+    if (atualizado.modeloContratoId) {
+      try {
+        const modeloRepo = repositoryFactory.getModeloContratoRepository();
+        const modelo = await modeloRepo.findById(atualizado.modeloContratoId);
+        if (modelo) {
+          atualizadoComModelo = { ...atualizado, modeloContrato: modelo };
+        }
+      } catch (error) {
+        console.error(`Erro ao buscar modelo ${atualizado.modeloContratoId}:`, error);
+      }
+    }
 
-    return createApiResponse(atualizado);
+    return createApiResponse(atualizadoComModelo);
   } catch (error) {
     return handleApiError(error);
   }

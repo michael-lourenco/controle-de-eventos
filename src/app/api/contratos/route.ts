@@ -29,7 +29,24 @@ export async function GET(request: NextRequest) {
       contratos = contratos.filter(c => c.status === status);
     }
 
-    return createApiResponse(contratos);
+    // Popular modeloContrato para cada contrato
+    const modeloRepo = repositoryFactory.getModeloContratoRepository();
+    const contratosComModelo = await Promise.all(
+      contratos.map(async (contrato) => {
+        if (contrato.modeloContratoId) {
+          try {
+            const modelo = await modeloRepo.findById(contrato.modeloContratoId);
+            return { ...contrato, modeloContrato: modelo || undefined };
+          } catch (error) {
+            console.error(`Erro ao buscar modelo ${contrato.modeloContratoId}:`, error);
+            return contrato;
+          }
+        }
+        return contrato;
+      })
+    );
+
+    return createApiResponse(contratosComModelo);
   } catch (error) {
     return handleApiError(error);
   }
@@ -59,12 +76,18 @@ export async function POST(request: NextRequest) {
 
     const numeroContrato = await ContratoService.gerarNumeroContrato(user.id);
     
+    // Adicionar numero_contrato aos dados preenchidos para uso no template
+    const dadosPreenchidosComNumero = {
+      ...dadosPreenchidos,
+      numero_contrato: numeroContrato
+    };
+    
     const contratoRepo = repositoryFactory.getContratoRepository();
     const contrato = await contratoRepo.create({
       userId: user.id,
       eventoId: eventoId || undefined,
       modeloContratoId,
-      dadosPreenchidos,
+      dadosPreenchidos: dadosPreenchidosComNumero,
       status,
       numeroContrato,
       dataGeracao: new Date(),
@@ -73,7 +96,15 @@ export async function POST(request: NextRequest) {
       criadoPor: user.id
     });
 
-    return createApiResponse(contrato, 201);
+    // Popular modeloContrato no retorno
+    let contratoComModelo = contrato;
+    try {
+      contratoComModelo = { ...contrato, modeloContrato: modelo };
+    } catch (error) {
+      console.error('Erro ao popular modelo no contrato criado:', error);
+    }
+
+    return createApiResponse(contratoComModelo, 201);
   } catch (error) {
     return handleApiError(error);
   }

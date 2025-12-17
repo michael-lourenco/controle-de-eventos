@@ -46,10 +46,13 @@ function NovoContratoPageContent() {
     try {
       const response = await fetch('/api/modelos-contrato');
       if (response.ok) {
-        const data = await response.json();
-        setModelos(data);
+        const result = await response.json();
+        // createApiResponse retorna { data: modelos[] }
+        const modelosData = result.data || result;
+        const modelosArray = Array.isArray(modelosData) ? modelosData : [];
+        setModelos(modelosArray);
         
-        if (data.length === 0) {
+        if (modelosArray.length === 0) {
           const seedResponse = await fetch('/api/seed/modelos-contrato', { method: 'POST' });
           if (seedResponse.ok) {
             const seedData = await seedResponse.json();
@@ -57,15 +60,21 @@ function NovoContratoPageContent() {
               showToast('Modelos de contrato inicializados!', 'success');
               const reloadResponse = await fetch('/api/modelos-contrato');
               if (reloadResponse.ok) {
-                const reloadData = await reloadResponse.json();
-                setModelos(reloadData);
+                const reloadResult = await reloadResponse.json();
+                const reloadModelos = reloadResult.data || reloadResult;
+                setModelos(Array.isArray(reloadModelos) ? reloadModelos : []);
               }
             }
           }
         }
+      } else {
+        const errorData = await response.json();
+        console.error('Erro ao carregar modelos:', errorData);
+        showToast(errorData.error || 'Erro ao carregar modelos', 'error');
       }
     } catch (error) {
       console.error('Erro ao carregar modelos:', error);
+      showToast('Erro ao carregar modelos', 'error');
     }
   };
 
@@ -73,15 +82,21 @@ function NovoContratoPageContent() {
     try {
       const response = await fetch(`/api/eventos/${eventoId}`);
       if (response.ok) {
-        const data = await response.json();
-        setEvento(data);
-        if (data && modeloSelecionado) {
-          const dados = await ContratoService.preencherDadosDoEvento(data, modeloSelecionado);
+        const result = await response.json();
+        // createApiResponse retorna { data: evento }
+        const eventoData = result.data || result;
+        setEvento(eventoData);
+        if (eventoData && modeloSelecionado) {
+          const dados = await ContratoService.preencherDadosDoEvento(eventoData, modeloSelecionado);
           setDadosPreenchidos(dados);
         }
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.error || 'Erro ao carregar evento', 'error');
       }
     } catch (error) {
       console.error('Erro ao carregar evento:', error);
+      showToast('Erro ao carregar evento', 'error');
     }
   };
 
@@ -98,13 +113,17 @@ function NovoContratoPageContent() {
         const configResponse = await fetch('/api/configuracao-contrato');
         
         if (configResponse.ok) {
-          const config = await configResponse.json();
+          const configResult = await configResponse.json();
+          // createApiResponse retorna { data: config }
+          const config = configResult.data || configResult;
           if (config && config.id) {
             setConfigExistente(true);
             // Buscar campos fixos formatados
             const camposFixosResponse = await fetch('/api/configuracao-contrato/campos-fixos');
             if (camposFixosResponse.ok) {
-              const camposFixos = await camposFixosResponse.json();
+              const camposFixosResult = await camposFixosResponse.json();
+              // createApiResponse retorna { data: camposFixos }
+              const camposFixos = camposFixosResult.data || camposFixosResult;
               setDadosPreenchidos(camposFixos);
             } else {
               setConfigExistente(false);
@@ -133,8 +152,10 @@ function NovoContratoPageContent() {
         body: JSON.stringify({ modeloContratoId: modeloSelecionado.id, dadosPreenchidos })
       });
       if (response.ok) {
-        const data = await response.json();
-        setPreviewHtml(data.html);
+        const result = await response.json();
+        // createApiResponse retorna { data: { html: ... } }
+        const previewData = result.data || result;
+        setPreviewHtml(previewData.html || '');
       }
     } catch (error) {
       console.error('Erro ao gerar preview:', error);
@@ -182,7 +203,9 @@ function NovoContratoPageContent() {
       });
 
       if (response.ok) {
-        const contrato = await response.json();
+        const result = await response.json();
+        // createApiResponse retorna { data: contrato }
+        const contrato = result.data || result;
         showToast('Contrato criado com sucesso', 'success');
         router.push(`/contratos/${contrato.id}`);
       } else {

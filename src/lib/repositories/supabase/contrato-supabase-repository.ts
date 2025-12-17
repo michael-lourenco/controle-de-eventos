@@ -9,6 +9,14 @@ export class ContratoSupabaseRepository extends BaseSupabaseRepository<Contrato>
   }
 
   protected convertFromSupabase(row: any): Contrato {
+    // Função auxiliar para converter data de forma segura
+    const parseDate = (dateValue: any): Date => {
+      if (!dateValue) return new Date();
+      if (dateValue instanceof Date) return dateValue;
+      const parsed = new Date(dateValue);
+      return isNaN(parsed.getTime()) ? new Date() : parsed;
+    };
+
     return {
       id: row.id,
       userId: row.user_id,
@@ -19,12 +27,12 @@ export class ContratoSupabaseRepository extends BaseSupabaseRepository<Contrato>
       pdfUrl: row.pdf_url || undefined,
       pdfPath: row.pdf_path || undefined,
       numeroContrato: row.numero_contrato || undefined,
-      dataGeracao: new Date(row.data_geracao),
-      dataAssinatura: row.data_assinatura ? new Date(row.data_assinatura) : undefined,
+      dataGeracao: row.data_geracao ? parseDate(row.data_geracao) : new Date(),
+      dataAssinatura: row.data_assinatura ? parseDate(row.data_assinatura) : undefined,
       assinadoPor: row.assinado_por || undefined,
       observacoes: row.observacoes || undefined,
-      dataCadastro: new Date(row.data_cadastro),
-      dataAtualizacao: new Date(row.data_atualizacao),
+      dataCadastro: parseDate(row.data_cadastro),
+      dataAtualizacao: parseDate(row.data_atualizacao),
       criadoPor: row.criado_por,
     };
   }

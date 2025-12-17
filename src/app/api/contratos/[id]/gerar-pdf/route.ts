@@ -31,7 +31,13 @@ export async function POST(
     const { ContratoService } = await import('@/lib/services/contrato-service');
     const { PDFService } = await import('@/lib/services/pdf-service');
     
-    const html = ContratoService.processarTemplate(modelo.template, contrato.dadosPreenchidos);
+    // Garantir que numero_contrato está nos dados preenchidos
+    const dadosPreenchidosComNumero = {
+      ...contrato.dadosPreenchidos,
+      numero_contrato: contrato.numeroContrato || ''
+    };
+    
+    const html = ContratoService.processarTemplate(modelo.template, dadosPreenchidosComNumero);
     const { url, path } = await PDFService.gerarPDFContrato(contrato, html);
 
     const atualizado = await contratoRepo.update(id, {

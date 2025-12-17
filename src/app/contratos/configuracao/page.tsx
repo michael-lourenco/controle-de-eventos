@@ -55,10 +55,15 @@ export default function ConfiguracaoContratoPage() {
       setLoading(true);
       const response = await fetch('/api/configuracao-contrato');
       if (response.ok) {
-        const config = await response.json();
-        if (config && config.id) {
-          setFormData(config);
+        const result = await response.json();
+        // createApiResponse retorna { data: config }
+        const configData = result.data || result;
+        if (configData && configData.id) {
+          setFormData(configData);
         }
+      } else {
+        const errorData = await response.json();
+        console.error('Erro ao carregar configuração:', errorData);
       }
     } catch (error) {
       console.error('Erro ao carregar configuração:', error);
@@ -71,20 +76,50 @@ export default function ConfiguracaoContratoPage() {
     e.preventDefault();
     try {
       setSaving(true);
+      
+      // Garantir que endereco e contato sejam objetos válidos (campos obrigatórios no schema)
+      const dadosParaEnviar = {
+        ...formData,
+        endereco: formData.endereco || {
+          logradouro: '',
+          numero: '',
+          complemento: '',
+          bairro: '',
+          cidade: '',
+          estado: '',
+          cep: ''
+        },
+        contato: formData.contato || {
+          telefone: '',
+          email: '',
+          site: ''
+        },
+        dadosBancarios: formData.dadosBancarios || {
+          banco: '',
+          agencia: '',
+          conta: '',
+          tipo: 'corrente',
+          pix: ''
+        }
+      };
+      
       const response = await fetch('/api/configuracao-contrato', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dadosParaEnviar)
       });
 
       if (response.ok) {
+        const result = await response.json();
         showToast('Configuração salva com sucesso!', 'success');
         router.push('/contratos');
       } else {
         const error = await response.json();
+        console.error('Erro ao salvar configuração:', error);
         showToast(error.error || 'Erro ao salvar configuração', 'error');
       }
     } catch (error) {
+      console.error('Erro ao salvar configuração:', error);
       showToast('Erro ao salvar configuração', 'error');
     } finally {
       setSaving(false);
@@ -94,13 +129,16 @@ export default function ConfiguracaoContratoPage() {
   const handleInputChange = (field: string, value: any) => {
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
-      setFormData(prev => ({
-        ...prev,
-        [parent]: {
-          ...(prev[parent as keyof typeof prev] as any),
-          [child]: value
-        }
-      }));
+      setFormData(prev => {
+        const parentValue = prev[parent as keyof typeof prev] as any;
+        return {
+          ...prev,
+          [parent]: {
+            ...(parentValue || {}),
+            [child]: value
+          }
+        };
+      });
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
     }

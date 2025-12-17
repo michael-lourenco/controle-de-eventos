@@ -9,6 +9,14 @@ export class ConfiguracaoContratoSupabaseRepository extends BaseSupabaseReposito
   }
 
   protected convertFromSupabase(row: any): ConfiguracaoContrato {
+    // Função auxiliar para converter data de forma segura
+    const parseDate = (dateValue: any): Date => {
+      if (!dateValue) return new Date();
+      if (dateValue instanceof Date) return dateValue;
+      const parsed = new Date(dateValue);
+      return isNaN(parsed.getTime()) ? new Date() : parsed;
+    };
+
     return {
       id: row.id,
       userId: row.user_id,
@@ -21,8 +29,8 @@ export class ConfiguracaoContratoSupabaseRepository extends BaseSupabaseReposito
       dadosBancarios: row.dados_bancarios || undefined,
       foro: row.foro || undefined,
       cidade: row.cidade || undefined,
-      dataCadastro: new Date(row.data_cadastro),
-      dataAtualizacao: new Date(row.data_atualizacao),
+      dataCadastro: parseDate(row.data_cadastro),
+      dataAtualizacao: parseDate(row.data_atualizacao),
     };
   }
 
@@ -34,8 +42,13 @@ export class ConfiguracaoContratoSupabaseRepository extends BaseSupabaseReposito
     if (entity.nomeFantasia !== undefined) data.nome_fantasia = entity.nomeFantasia || null;
     if (entity.cnpj !== undefined) data.cnpj = entity.cnpj;
     if (entity.inscricaoEstadual !== undefined) data.inscricao_estadual = entity.inscricaoEstadual || null;
-    if (entity.endereco !== undefined) data.endereco = entity.endereco || {};
-    if (entity.contato !== undefined) data.contato = entity.contato || {};
+    // Garantir que endereco e contato sejam sempre objetos (campos obrigatórios NOT NULL)
+    if (entity.endereco !== undefined) {
+      data.endereco = entity.endereco && typeof entity.endereco === 'object' ? entity.endereco : {};
+    }
+    if (entity.contato !== undefined) {
+      data.contato = entity.contato && typeof entity.contato === 'object' ? entity.contato : {};
+    }
     if (entity.dadosBancarios !== undefined) data.dados_bancarios = entity.dadosBancarios || null;
     if (entity.foro !== undefined) data.foro = entity.foro || null;
     if (entity.cidade !== undefined) data.cidade = entity.cidade || null;
@@ -62,15 +75,34 @@ export class ConfiguracaoContratoSupabaseRepository extends BaseSupabaseReposito
   async createOrUpdate(userId: string, data: Partial<ConfiguracaoContrato>): Promise<ConfiguracaoContrato> {
     const existente = await this.findByUserId(userId);
     
+    // Garantir que endereco e contato sejam objetos válidos (campos obrigatórios no schema)
+    const dadosCompletos: Partial<ConfiguracaoContrato> = {
+      ...data,
+      endereco: data.endereco || (existente?.endereco || {
+        logradouro: '',
+        numero: '',
+        complemento: '',
+        bairro: '',
+        cidade: '',
+        estado: '',
+        cep: ''
+      }),
+      contato: data.contato || (existente?.contato || {
+        telefone: '',
+        email: '',
+        site: ''
+      })
+    };
+    
     if (existente) {
       return await this.update(existente.id, {
-        ...data,
+        ...dadosCompletos,
         dataAtualizacao: new Date()
       });
     } else {
       return await this.create({
         userId,
-        ...data,
+        ...dadosCompletos,
         dataCadastro: new Date(),
         dataAtualizacao: new Date()
       } as Omit<ConfiguracaoContrato, 'id'>);
@@ -103,7 +135,23 @@ export class ConfiguracaoContratoSupabaseRepository extends BaseSupabaseReposito
   }
 
   async update(id: string, config: Partial<ConfiguracaoContrato>): Promise<ConfiguracaoContrato> {
-    const supabaseData = this.convertToSupabase(config);
+    // Buscar configuração existente para preservar campos não enviados
+    const existente = await this.findById(id);
+    if (!existente) {
+      throw new Error('Configuração não encontrada');
+    }
+
+    // Mesclar dados existentes com novos dados
+    const dadosCompletos: Partial<ConfiguracaoContrato> = {
+      ...existente,
+      ...config,
+      // Garantir que endereco e contato sejam sempre objetos válidos
+      endereco: config.endereco || existente.endereco || {},
+      contato: config.contato || existente.contato || {},
+      dataAtualizacao: new Date()
+    };
+
+    const supabaseData = this.convertToSupabase(dadosCompletos);
     // Sempre atualizar data_atualizacao
     supabaseData.data_atualizacao = new Date().toISOString();
 
