@@ -36,6 +36,7 @@ import { ModeloContratoSupabaseRepository } from './supabase/modelo-contrato-sup
 import { ConfiguracaoContratoSupabaseRepository } from './supabase/configuracao-contrato-supabase-repository';
 import { RelatoriosDiariosSupabaseRepository } from './supabase/relatorios-diarios-supabase-repository';
 import { RelatorioCacheSupabaseRepository } from './supabase/relatorio-cache-supabase-repository';
+import { AnexoEventoSupabaseRepository } from './supabase/anexo-evento-supabase-repository';
 
 /**
  * Factory que inicializa repositórios com regras fixas:
@@ -60,10 +61,11 @@ export class RepositoryFactory {
   private configuracaoContratoRepository: ConfiguracaoContratoSupabaseRepository;
   private relatoriosDiariosRepository: RelatoriosDiariosSupabaseRepository;
   private relatorioCacheRepository: RelatorioCacheSupabaseRepository;
+  private anexoEventoRepository: AnexoEventoSupabaseRepository;
 
   // Repositórios Firestore (sempre)
   private userRepository: UserRepository;
-  private arquivoRepository: ArquivoRepository;
+  private arquivoRepository: ArquivoRepository; // Mantido para compatibilidade, mas não usado para anexos de eventos
   private googleCalendarTokenRepository: GoogleCalendarTokenRepository;
   private planoRepository: PlanoRepository;
   private funcionalidadeRepository: FuncionalidadeRepository;
@@ -92,6 +94,7 @@ export class RepositoryFactory {
     this.configuracaoContratoRepository = new ConfiguracaoContratoSupabaseRepository();
     this.relatoriosDiariosRepository = new RelatoriosDiariosSupabaseRepository();
     this.relatorioCacheRepository = new RelatorioCacheSupabaseRepository();
+    this.anexoEventoRepository = new AnexoEventoSupabaseRepository();
 
     // Inicializar repositórios Firestore
     this.userRepository = new UserRepository();
@@ -170,6 +173,10 @@ export class RepositoryFactory {
 
   public getRelatorioCacheRepository(): RelatorioCacheSupabaseRepository {
     return this.relatorioCacheRepository;
+  }
+
+  public getAnexoEventoRepository(): AnexoEventoSupabaseRepository {
+    return this.anexoEventoRepository;
   }
 
   // Métodos getter - Repositórios Firestore

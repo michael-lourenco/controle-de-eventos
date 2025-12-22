@@ -61,35 +61,61 @@ export default function AnexosEvento({
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Validar evento.id antes de fazer upload
+    if (!evento?.id || typeof evento.id !== 'string' || evento.id.trim() === '') {
+      setUploadError('ID do evento inválido. Por favor, recarregue a página e tente novamente.');
+      return;
+    }
+
     setIsUploading(true);
     setUploadError(null);
     
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('eventoId', evento.id);
+      formData.append('eventoId', evento.id.trim());
 
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Erro no upload');
+      // Tentar parsear a resposta mesmo se não for OK
+      let result;
+      try {
+        const text = await response.text();
+        console.log('[AnexosEvento] Resposta do servidor:', { 
+          status: response.status, 
+          statusText: response.statusText,
+          body: text 
+        });
+        result = JSON.parse(text);
+      } catch (parseError) {
+        console.error('[AnexosEvento] Erro ao parsear resposta:', parseError);
+        throw new Error(`Erro ao processar resposta do servidor: ${response.status} ${response.statusText}`);
       }
 
-      if (result.success) {
+      if (!response.ok) {
+        // Se a resposta não for OK, result pode ter 'error' ou 'data.error'
+        const errorMessage = result.error || result.data?.error || `Erro no upload: ${response.status} ${response.statusText}`;
+        throw new Error(errorMessage);
+      }
+
+      // Verificar se a resposta tem success ou se está dentro de data
+      const success = result.success || result.data?.success;
+      const arquivo = result.arquivo || result.data?.arquivo;
+
+      if (success) {
         onAnexosChange();
         // Limpar o input
         event.target.value = '';
       } else {
-        throw new Error(result.error || 'Erro no upload');
+        const errorMessage = result.error || result.data?.error || 'Erro no upload';
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
-      setUploadError(error instanceof Error ? error.message : 'Erro desconhecido');
+      setUploadError(error instanceof Error ? error.message : 'Erro desconhecido ao fazer upload');
     } finally {
       setIsUploading(false);
     }

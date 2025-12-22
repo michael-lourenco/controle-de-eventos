@@ -1194,6 +1194,33 @@
           }
         },
         {
+          "name": "Migrar s3_key dos Anexos (Firestore → Supabase)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-api-key",
+                "value": "dev-seed-key-2024",
+                "description": "API key para bypass de autenticação em dev (ou usar SEED_API_KEY no .env)"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"1AGkVjDbaqWOwk5tg3mHje11PaD2\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/migrate-anexos-s3-keys",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "migrate-anexos-s3-keys"]
+            },
+            "description": "Migra s3_key dos anexos do Firestore para o Supabase.\n\n🔄 O que faz:\n- Busca todos os anexos do Firestore que têm s3Key\n- Encontra os anexos correspondentes no Supabase (por ID ou evento_id + nome)\n- Atualiza o campo s3_key no Supabase\n- Retorna relatório detalhado da migração\n\n📋 Parâmetros:\n- userId (string, opcional): ID do usuário específico. Se não fornecido, migra todos os usuários\n\n✨ Características:\n- Matching inteligente: primeiro tenta por ID do Firestore, depois por evento_id + nome\n- Atualiza apenas se s3_key for diferente (evita atualizações desnecessárias)\n- Retorna estatísticas detalhadas (total, atualizados, não encontrados, erros)\n- Retorna collection com detalhes de cada anexo processado\n- Processa todos os eventos de todos os usuários (ou usuário específico)\n\n💡 Use este endpoint quando os anexos já estão no Supabase mas faltam as s3_key.\n\n⚠️ IMPORTANTE: Execute após garantir que os anexos foram migrados para o Supabase. Este endpoint apenas atualiza as s3_key."
+          }
+        },
+        {
           "name": "Gerar Eventos Aleatórios (Teste de Estresse)",
           "request": {
             "method": "POST",

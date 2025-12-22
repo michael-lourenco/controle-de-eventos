@@ -31,10 +31,29 @@ export interface FileMetadata {
 }
 
 export class S3Service {
+  private sanitizePathSegment(segment: string): string {
+    if (!segment || typeof segment !== 'string') {
+      throw new Error('Segmento de caminho inválido');
+    }
+    // Remove caracteres inválidos e espaços, mantém apenas alfanuméricos, hífen e underscore
+    return segment.replace(/[^a-zA-Z0-9_-]/g, '_').replace(/\s+/g, '_');
+  }
+
   private generateS3Key(userId: string, eventoId: string, fileName: string): string {
+    if (!userId || !eventoId || !fileName) {
+      throw new Error('userId, eventoId e fileName são obrigatórios');
+    }
+
     const timestamp = Date.now();
+    const sanitizedUserId = this.sanitizePathSegment(userId);
+    const sanitizedEventoId = this.sanitizePathSegment(eventoId);
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    return `users/${userId}/eventos/${eventoId}/${timestamp}_${sanitizedFileName}`;
+    
+    if (!sanitizedFileName || sanitizedFileName.trim() === '') {
+      throw new Error('Nome do arquivo inválido após sanitização');
+    }
+
+    return `users/${sanitizedUserId}/eventos/${sanitizedEventoId}/${timestamp}_${sanitizedFileName}`;
   }
 
   private generateS3KeyPagamento(
@@ -43,9 +62,21 @@ export class S3Service {
     pagamentoId: string, 
     fileName: string
   ): string {
+    if (!userId || !eventoId || !pagamentoId || !fileName) {
+      throw new Error('userId, eventoId, pagamentoId e fileName são obrigatórios');
+    }
+
     const timestamp = Date.now();
+    const sanitizedUserId = this.sanitizePathSegment(userId);
+    const sanitizedEventoId = this.sanitizePathSegment(eventoId);
+    const sanitizedPagamentoId = this.sanitizePathSegment(pagamentoId);
     const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-    return `users/${userId}/eventos/${eventoId}/pagamentos/${pagamentoId}/comprovantes/${timestamp}_${sanitizedFileName}`;
+    
+    if (!sanitizedFileName || sanitizedFileName.trim() === '') {
+      throw new Error('Nome do arquivo inválido após sanitização');
+    }
+
+    return `users/${sanitizedUserId}/eventos/${sanitizedEventoId}/pagamentos/${sanitizedPagamentoId}/comprovantes/${timestamp}_${sanitizedFileName}`;
   }
 
   async uploadFile(
@@ -54,7 +85,21 @@ export class S3Service {
     eventoId: string
   ): Promise<UploadResult> {
     try {
+      // Validar configuração do S3
+      if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+        console.error('[S3Service] Credenciais AWS não configuradas');
+        return {
+          success: false,
+          error: 'Configuração do S3 não encontrada. Verifique as variáveis de ambiente AWS_ACCESS_KEY_ID e AWS_SECRET_ACCESS_KEY',
+        };
+      }
+
+      if (!BUCKET_NAME || BUCKET_NAME === 'controle-eventos') {
+        console.warn('[S3Service] Usando bucket padrão. Verifique se AWS_S3_BUCKET_NAME está configurado.');
+      }
+
       const s3Key = this.generateS3Key(userId, eventoId, file.name);
+      console.log('[S3Service] Fazendo upload:', { s3Key, fileName: file.name, fileSize: file.size, fileType: file.type });
       
       // Converter File para ArrayBuffer e depois para Buffer
       const arrayBuffer = await file.arrayBuffer();
@@ -74,6 +119,7 @@ export class S3Service {
       });
 
       await s3Client.send(command);
+      console.log('[S3Service] Upload concluído com sucesso:', s3Key);
 
       // Gerar URL assinada para acesso ao arquivo
       const getCommand = new GetObjectCommand({
@@ -89,10 +135,30 @@ export class S3Service {
         key: s3Key,
       };
     } catch (error) {
-      console.error('Erro ao fazer upload para S3:', error);
+      console.error('[S3Service] Erro ao fazer upload para S3:', error);
+      
+      // Mensagens de erro mais específicas
+      let errorMessage = 'Erro desconhecido ao fazer upload';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Mensagens específicas para erros comuns do AWS
+        if (error.message.includes('InvalidAccessKeyId')) {
+          errorMessage = 'Credenciais AWS inválidas. Verifique AWS_ACCESS_KEY_ID';
+        } else if (error.message.includes('SignatureDoesNotMatch')) {
+          errorMessage = 'Credenciais AWS inválidas. Verifique AWS_SECRET_ACCESS_KEY';
+        } else if (error.message.includes('NoSuchBucket')) {
+          errorMessage = `Bucket S3 não encontrado: ${BUCKET_NAME}. Verifique AWS_S3_BUCKET_NAME`;
+        } else if (error.message.includes('AccessDenied')) {
+          errorMessage = 'Acesso negado ao bucket S3. Verifique as permissões';
+        } else if (error.message.includes('illegal path') || error.message.includes('Invalid key')) {
+          errorMessage = `Caminho do arquivo inválido. Verifique userId e eventoId`;
+        }
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: errorMessage,
       };
     }
   }

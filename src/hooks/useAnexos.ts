@@ -29,10 +29,34 @@ export function useAnexos(eventoId: string): UseAnexosResult {
         throw new Error(result.error || 'Erro ao carregar anexos');
       }
 
-      if (result.success) {
-        setAnexos(result.arquivos);
+      // A API retorna { data: { success: true, arquivos: [...] } } via createApiResponse
+      const data = result.data || result;
+      const arquivos = data?.arquivos || [];
+      
+      console.log('[useAnexos] Resposta da API:', { 
+        hasData: !!result.data,
+        hasSuccess: !!(data?.success || result.success),
+        arquivosCount: arquivos.length,
+        eventoId,
+        resultKeys: Object.keys(result),
+        dataKeys: data ? Object.keys(data) : []
+      });
+      
+      if (data?.success || result.success) {
+        // Converter datas de string para Date se necessário
+        const anexosConvertidos = arquivos.map((anexo: any) => ({
+          ...anexo,
+          dataUpload: anexo.dataUpload instanceof Date 
+            ? anexo.dataUpload 
+            : anexo.dataUpload 
+              ? new Date(anexo.dataUpload) 
+              : new Date()
+        }));
+        console.log('[useAnexos] Anexos convertidos:', anexosConvertidos.length, 'anexos');
+        setAnexos(anexosConvertidos);
       } else {
-        throw new Error(result.error || 'Erro ao carregar anexos');
+        console.error('[useAnexos] Resposta sem success:', { data, result });
+        throw new Error(data?.error || result.error || 'Erro ao carregar anexos');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar anexos');
