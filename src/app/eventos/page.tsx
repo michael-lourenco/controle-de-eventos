@@ -30,6 +30,7 @@ import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ServicosBadges from '@/components/ServicosBadges';
+import EventoStatusSelect from '@/components/EventoStatusSelect';
 
 export default function EventosPage() {
   const router = useRouter();
@@ -268,6 +269,60 @@ export default function EventosPage() {
       await recarregarEventos();
     } catch (error) {
       showToast('Erro ao desarquivar evento', 'error');
+    }
+  };
+
+  const handleStatusChange = async (eventoId: string, novoStatus: string) => {
+    if (!userId) {
+      showToast('Usuário não autenticado', 'error');
+      return;
+    }
+
+    // Encontrar o evento na lista atual
+    const evento = eventosLista.find(e => e.id === eventoId);
+    if (!evento) {
+      showToast('Evento não encontrado', 'error');
+      return;
+    }
+
+    const statusAnterior = evento.status;
+    const novoStatusTyped = novoStatus as Evento['status'];
+
+    // Atualização otimista - atualizar UI imediatamente
+    const atualizarEventoLocal = (eventos: Evento[] | null) => {
+      if (!eventos) return eventos;
+      return eventos.map(e => 
+        e.id === eventoId ? { ...e, status: novoStatusTyped } : e
+      );
+    };
+
+    if (abaAtiva === 'ativos') {
+      setEventosLocais(prev => atualizarEventoLocal(prev));
+    } else {
+      setEventosArquivadosLocais(prev => atualizarEventoLocal(prev));
+    }
+
+    // Atualizar no backend de forma assíncrona
+    try {
+      await dataService.updateEvento(eventoId, { status: novoStatusTyped }, userId);
+      showToast('Status atualizado com sucesso!', 'success');
+    } catch (error) {
+      // Erro - reverter a atualização otimista
+      const reverterEvento = (eventos: Evento[] | null) => {
+        if (!eventos) return eventos;
+        return eventos.map(e => 
+          e.id === eventoId ? { ...e, status: statusAnterior } : e
+        );
+      };
+
+      if (abaAtiva === 'ativos') {
+        setEventosLocais(prev => reverterEvento(prev));
+      } else {
+        setEventosArquivadosLocais(prev => reverterEvento(prev));
+      }
+
+      showToast('Erro ao atualizar status do evento', 'error');
+      throw error; // Re-lançar para o componente tratar
     }
   };
 
@@ -545,6 +600,14 @@ export default function EventosPage() {
                         </span>
                       </CardDescription>
                     </div>
+                    {/* Status Select no topo direito */}
+                    <div className="flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <EventoStatusSelect
+                        eventoId={evento.id}
+                        statusAtual={evento.status}
+                        onStatusChange={handleStatusChange}
+                      />
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -600,9 +663,6 @@ export default function EventosPage() {
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="text-sm font-medium text-text-primary">
                         {getTipoEventoNome(evento)}
-                      </span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(evento.status)}`}>
-                        {evento.status}
                       </span>
                     </div>
                     <div className="flex space-x-2">
