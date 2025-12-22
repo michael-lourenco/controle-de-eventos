@@ -110,13 +110,28 @@ export default function PagamentoHistorico({
       
       if (response.ok) {
         const result = await response.json();
+        
+        // A API retorna { data: { success: true, anexos: [...] } } via createApiResponse
+        const data = result.data || result;
+        const anexos = data?.anexos || [];
+        
+        console.log('[PagamentoHistorico] Anexos carregados:', {
+          pagamentoId,
+          anexosCount: anexos.length,
+          result,
+          data
+        });
+        
         setAnexosPorPagamento(prev => ({
           ...prev,
-          [pagamentoId]: result.anexos
+          [pagamentoId]: anexos
         }));
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+        console.error('[PagamentoHistorico] Erro ao carregar anexos:', errorData);
       }
     } catch (error) {
-      console.error('Erro ao carregar anexos:', error);
+      console.error('[PagamentoHistorico] Erro ao carregar anexos:', error);
     }
   };
 
@@ -151,10 +166,8 @@ export default function PagamentoHistorico({
       novoSet.delete(pagamentoId);
     } else {
       novoSet.add(pagamentoId);
-      // Carregar anexos se ainda não foram carregados
-      if (!anexosPorPagamento[pagamentoId]) {
-        carregarAnexos(pagamentoId);
-      }
+      // Sempre recarregar anexos para garantir que está atualizado
+      carregarAnexos(pagamentoId);
     }
     setAnexosExpandidos(novoSet);
   };

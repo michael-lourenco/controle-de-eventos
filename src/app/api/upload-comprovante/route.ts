@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { s3Service } from '@/lib/s3-service';
-import { anexoPagamentoRepository } from '@/lib/repositories/anexo-pagamento-repository';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { 
   getAuthenticatedUser,
   handleApiError,
@@ -53,32 +53,79 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(uploadResult.error || 'Erro no upload', 500);
     }
 
-    // Salvar metadados no Firestore
-    const anexoData = {
+    // Salvar metadados no Supabase
+    console.log('[API Upload Comprovante] Salvando metadados no Supabase:', {
       userId: user.id,
       eventoId,
       pagamentoId,
-      nome: file.name,
-      tipo: file.type,
-      tamanho: file.size,
-      s3Key: uploadResult.key!,
-      url: uploadResult.url!,
-      dataUpload: new Date(),
-    };
-
-    const anexo = await anexoPagamentoRepository.createAnexo(
-      user.id,
-      eventoId,
-      pagamentoId,
-      anexoData
-    );
-
-    return createApiResponse({
-      success: true,
-      anexo,
+      fileName: file.name,
+      s3Key: uploadResult.key
     });
 
+    try {
+      const anexoPagamentoRepo = repositoryFactory.getAnexoPagamentoRepository();
+      
+      const anexoData = {
+        userId: user.id,
+        eventoId,
+        pagamentoId,
+        nome: file.name,
+        tipo: file.type,
+        tamanho: file.size,
+        s3Key: uploadResult.key!,
+        url: uploadResult.url!,
+        dataUpload: new Date(),
+      };
+
+      console.log('[API Upload Comprovante] Dados do anexo:', anexoData);
+
+      const anexo = await anexoPagamentoRepo.createAnexo(
+        user.id,
+        eventoId,
+        pagamentoId,
+        anexoData
+      );
+
+      console.log('[API Upload Comprovante] Metadados salvos com sucesso:', anexo.id);
+
+      // Converter Date para ISO string para serialização JSON
+      return NextResponse.json({
+        success: true,
+        anexo: {
+          ...anexo,
+          dataUpload: anexo.dataUpload instanceof Date 
+            ? anexo.dataUpload.toISOString() 
+            : anexo.dataUpload,
+          dataCadastro: anexo.dataCadastro instanceof Date 
+            ? anexo.dataCadastro.toISOString() 
+            : anexo.dataCadastro,
+        }
+      }, { status: 200 });
+    } catch (supabaseError: any) {
+      console.error('[API Upload Comprovante] Erro ao salvar no Supabase:', supabaseError);
+      // Mesmo que falhe ao salvar no Supabase, o arquivo já está no S3
+      // Retornar sucesso parcial para não perder o upload
+      return NextResponse.json({
+        success: true,
+        anexo: {
+          id: 'temp-' + Date.now(),
+          userId: user.id,
+          eventoId,
+          pagamentoId,
+          nome: file.name,
+          tipo: file.type,
+          tamanho: file.size,
+          s3Key: uploadResult.key!,
+          url: uploadResult.url!,
+          dataUpload: new Date().toISOString(),
+          dataCadastro: new Date().toISOString(),
+        },
+        warning: 'Arquivo enviado com sucesso, mas houve um problema ao salvar os metadados. O arquivo pode não aparecer na lista.'
+      }, { status: 200 });
+    }
+
   } catch (error) {
+    console.error('[API Upload Comprovante] Erro geral:', error);
     return handleApiError(error);
   }
 }

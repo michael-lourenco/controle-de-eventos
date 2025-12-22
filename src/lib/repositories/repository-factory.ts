@@ -37,6 +37,7 @@ import { ConfiguracaoContratoSupabaseRepository } from './supabase/configuracao-
 import { RelatoriosDiariosSupabaseRepository } from './supabase/relatorios-diarios-supabase-repository';
 import { RelatorioCacheSupabaseRepository } from './supabase/relatorio-cache-supabase-repository';
 import { AnexoEventoSupabaseRepository } from './supabase/anexo-evento-supabase-repository';
+import { AnexoPagamentoSupabaseRepository } from './supabase/anexo-pagamento-supabase-repository';
 
 /**
  * Factory que inicializa repositórios com regras fixas:
@@ -62,6 +63,7 @@ export class RepositoryFactory {
   private relatoriosDiariosRepository: RelatoriosDiariosSupabaseRepository;
   private relatorioCacheRepository: RelatorioCacheSupabaseRepository;
   private anexoEventoRepository: AnexoEventoSupabaseRepository;
+  private anexoPagamentoRepository: AnexoPagamentoSupabaseRepository;
 
   // Repositórios Firestore (sempre)
   private userRepository: UserRepository;
@@ -95,6 +97,7 @@ export class RepositoryFactory {
     this.relatoriosDiariosRepository = new RelatoriosDiariosSupabaseRepository();
     this.relatorioCacheRepository = new RelatorioCacheSupabaseRepository();
     this.anexoEventoRepository = new AnexoEventoSupabaseRepository();
+    this.anexoPagamentoRepository = new AnexoPagamentoSupabaseRepository();
 
     // Inicializar repositórios Firestore
     this.userRepository = new UserRepository();
@@ -177,6 +180,10 @@ export class RepositoryFactory {
 
   public getAnexoEventoRepository(): AnexoEventoSupabaseRepository {
     return this.anexoEventoRepository;
+  }
+
+  public getAnexoPagamentoRepository(): AnexoPagamentoSupabaseRepository {
+    return this.anexoPagamentoRepository;
   }
 
   // Métodos getter - Repositórios Firestore

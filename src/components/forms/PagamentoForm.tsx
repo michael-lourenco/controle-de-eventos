@@ -89,7 +89,11 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
       
       if (response.ok) {
         const result = await response.json();
-        setAnexos(result.anexos || []);
+        // A API retorna { data: { success: true, anexos: [...] } } via createApiResponse
+        const data = result.data || result;
+        const anexos = data?.anexos || [];
+        console.log('[PagamentoForm] Anexos carregados:', anexos.length);
+        setAnexos(anexos);
       }
     } catch (error) {
       console.error('Erro ao carregar anexos existentes:', error);
@@ -137,14 +141,25 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         });
 
         if (!response.ok) {
-          throw new Error('Erro no upload');
+          const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+          throw new Error(errorData.error || 'Erro no upload');
         }
 
         const result = await response.json();
-        return result.anexo;
+        
+        // A API pode retornar { success: true, anexo: {...} } ou { data: { success: true, anexo: {...} } }
+        const data = result.data || result;
+        const anexo = data?.anexo || result.anexo;
+        
+        if (!anexo) {
+          throw new Error('Anexo não retornado na resposta');
+        }
+        
+        return anexo;
       });
 
       const uploadedAnexos = await Promise.all(uploadPromises);
+      console.log('[PagamentoForm] Anexos enviados:', uploadedAnexos.length);
       setAnexos(prev => [...prev, ...uploadedAnexos]);
       
     } catch (error) {

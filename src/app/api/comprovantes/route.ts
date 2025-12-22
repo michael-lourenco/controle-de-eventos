@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { anexoPagamentoRepository } from '@/lib/repositories/anexo-pagamento-repository';
+import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { s3Service } from '@/lib/s3-service';
 import { 
   getAuthenticatedUser,
@@ -20,25 +20,41 @@ export async function GET(request: NextRequest) {
       return createErrorResponse('eventoId e pagamentoId são obrigatórios', 400);
     }
 
-    // Buscar anexos do pagamento
-    const anexos = await anexoPagamentoRepository.getAnexosPorPagamento(
+    // Buscar anexos do pagamento no Supabase
+    const anexoPagamentoRepo = repositoryFactory.getAnexoPagamentoRepository();
+    const anexos = await anexoPagamentoRepo.findByPagamentoId(
       user.id,
       eventoId,
       pagamentoId
     );
 
-    // Gerar URLs assinadas para cada anexo
+    // Gerar URLs assinadas para cada anexo (URLs expiram após 7 dias)
     const anexosComUrls = await Promise.all(
       anexos.map(async (anexo) => {
         try {
-          const signedUrl = await s3Service.getSignedUrl(anexo.s3Key);
+          const signedUrl = await s3Service.getSignedUrl(anexo.s3Key, 3600 * 24 * 7); // 7 dias
           return {
             ...anexo,
             url: signedUrl,
+            dataUpload: anexo.dataUpload instanceof Date 
+              ? anexo.dataUpload.toISOString() 
+              : anexo.dataUpload,
+            dataCadastro: anexo.dataCadastro instanceof Date 
+              ? anexo.dataCadastro.toISOString() 
+              : anexo.dataCadastro,
           };
         } catch (error) {
           console.error(`Erro ao gerar URL para anexo ${anexo.id}:`, error);
-          return anexo;
+          // Se falhar, usar URL existente (pode estar expirada, mas é melhor que nada)
+          return {
+            ...anexo,
+            dataUpload: anexo.dataUpload instanceof Date 
+              ? anexo.dataUpload.toISOString() 
+              : anexo.dataUpload,
+            dataCadastro: anexo.dataCadastro instanceof Date 
+              ? anexo.dataCadastro.toISOString() 
+              : anexo.dataCadastro,
+          };
         }
       })
     );
@@ -65,8 +81,9 @@ export async function DELETE(request: NextRequest) {
       return createErrorResponse('eventoId, pagamentoId e anexoId são obrigatórios', 400);
     }
 
-    // Buscar anexo para obter s3Key
-    const anexo = await anexoPagamentoRepository.getAnexoById(
+    // Buscar anexo para obter s3Key no Supabase
+    const anexoPagamentoRepo = repositoryFactory.getAnexoPagamentoRepository();
+    const anexo = await anexoPagamentoRepo.getAnexoById(
       user.id,
       eventoId,
       pagamentoId,
@@ -84,8 +101,8 @@ export async function DELETE(request: NextRequest) {
       console.warn(`Falha ao deletar arquivo do S3: ${anexo.s3Key}`);
     }
 
-    // Deletar do Firestore
-    await anexoPagamentoRepository.deleteAnexo(
+    // Deletar do Supabase
+    await anexoPagamentoRepo.deleteAnexo(
       user.id,
       eventoId,
       pagamentoId,
