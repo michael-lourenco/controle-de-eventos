@@ -503,6 +503,51 @@ export function useTiposServicos(): UseDataResult<TipoServico[]> {
   return { data, loading, error, refetch: fetchData };
 }
 
+// Hook para buscar serviços de múltiplos eventos de uma vez (otimizado)
+export function useServicosPorEventos(eventoIds: string[]): {
+  servicosPorEvento: Map<string, ServicoEvento[]>;
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+} {
+  const [servicosPorEvento, setServicosPorEvento] = useState<Map<string, ServicoEvento[]>>(new Map());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    if (!eventoIds || eventoIds.length === 0) {
+      setServicosPorEvento(new Map());
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await dataService.getServicosPorEventos(userId, eventoIds);
+      setServicosPorEvento(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar serviços');
+      setServicosPorEvento(new Map());
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, eventoIds.join(',')]); // Usar join para criar dependência estável
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { servicosPorEvento, loading, error, refetch: fetchData };
+}
+
 export function useTiposEvento(): UseDataResult<TipoEvento[]> {
   const [data, setData] = useState<TipoEvento[] | null>(null);
   const [loading, setLoading] = useState(true);

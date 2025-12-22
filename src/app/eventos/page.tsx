@@ -17,7 +17,7 @@ import {
   TrashIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { useEventos, useEventosArquivados, useTiposEvento } from '@/hooks/useData';
+import { useEventos, useEventosArquivados, useTiposEvento, useServicosPorEventos } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { usePlano } from '@/lib/hooks/usePlano';
@@ -29,6 +29,7 @@ import DateRangeFilter, { DateFilter, isDateInFilter } from '@/components/filter
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import ServicosBadges from '@/components/ServicosBadges';
 
 export default function EventosPage() {
   const router = useRouter();
@@ -177,6 +178,28 @@ export default function EventosPage() {
       return dataA - dataB;
     });
   }, [filteredEventos]);
+
+  // Extrair IDs dos eventos filtrados para buscar serviços
+  const eventoIds = useMemo(() => {
+    return sortedEventos.map(evento => evento.id);
+  }, [sortedEventos]);
+
+  // Buscar serviços de todos os eventos filtrados de uma vez (otimização)
+  const { servicosPorEvento, loading: loadingServicos, error: errorServicos } = useServicosPorEventos(eventoIds);
+
+  // Debug: verificar se os serviços estão sendo carregados
+  useEffect(() => {
+    if (!loadingServicos && eventoIds.length > 0) {
+      console.log('[EventosPage] Serviços carregados:', {
+        totalEventos: eventoIds.length,
+        servicosPorEvento: Array.from(servicosPorEvento.entries()).map(([id, servicos]) => ({
+          eventoId: id,
+          quantidade: servicos.length
+        })),
+        error: errorServicos
+      });
+    }
+  }, [loadingServicos, eventoIds.length, servicosPorEvento, errorServicos]);
 
   // Early returns após todos os hooks
   if (loading) {
@@ -498,7 +521,9 @@ export default function EventosPage() {
 
         {/* Lista de Eventos */}
         <div className="space-y-4">
-          {sortedEventos.map((evento) => (
+          {sortedEventos.map((evento) => {
+            const servicosDoEvento = servicosPorEvento.get(evento.id) || [];
+            return (
             <Card 
               key={evento.id} 
               className="hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
@@ -550,6 +575,25 @@ export default function EventosPage() {
                     {evento.local}
                   </div>
                 </div>
+
+                {/* Tipos de Serviços */}
+                {loadingServicos ? (
+                  <div className="pt-2 text-xs text-text-secondary">
+                    Carregando serviços...
+                  </div>
+                ) : servicosDoEvento.length > 0 ? (
+                  <div className="pt-2">
+                    <ServicosBadges 
+                      servicos={servicosDoEvento} 
+                      className="mt-2"
+                    />
+                  </div>
+                ) : null}
+                {errorServicos && (
+                  <div className="pt-2 text-xs text-error">
+                    Erro ao carregar serviços: {errorServicos}
+                  </div>
+                )}
 
                 <div className="pt-4 border-t">
                   <div className="flex justify-between items-center flex-wrap gap-2">
@@ -650,7 +694,8 @@ export default function EventosPage() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
 
         {sortedEventos.length === 0 && (

@@ -1027,6 +1027,14 @@ export class DataService {
     return this.servicoEventoRepo.getResumoServicosPorEvento(userId, eventoId);
   }
 
+  /**
+   * Busca serviços de múltiplos eventos de uma vez (otimização para listagens)
+   * Retorna um mapa de eventoId -> ServicoEvento[] para acesso rápido
+   */
+  async getServicosPorEventos(userId: string, eventoIds: string[]): Promise<Map<string, ServicoEvento[]>> {
+    return this.servicoEventoRepo.findByEventoIds(userId, eventoIds);
+  }
+
   // Métodos para Dashboard
   async getDashboardData(userId: string, options?: { forceRefresh?: boolean }): Promise<DashboardData> {
     return this.dashboardReportService.getDashboardData(userId, options);

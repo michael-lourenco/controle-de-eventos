@@ -269,5 +269,83 @@ export class ServicoEventoSupabaseRepository extends BaseSupabaseRepository<Serv
       porCategoria
     };
   }
+
+  /**
+   * Busca serviços de múltiplos eventos de uma vez (otimização para listagens)
+   * Retorna um mapa de eventoId -> ServicoEvento[] para acesso rápido
+   */
+  async findByEventoIds(userId: string, eventoIds: string[]): Promise<Map<string, ServicoEvento[]>> {
+    if (!eventoIds || eventoIds.length === 0) {
+      return new Map();
+    }
+
+    // Supabase tem limite de 1000 itens no IN, então dividimos em chunks se necessário
+    const CHUNK_SIZE = 1000;
+    const chunks: string[][] = [];
+    
+    for (let i = 0; i < eventoIds.length; i += CHUNK_SIZE) {
+      chunks.push(eventoIds.slice(i, i + CHUNK_SIZE));
+    }
+
+    const allServicos: ServicoEvento[] = [];
+
+    // Processar cada chunk
+    for (const chunk of chunks) {
+      const { data, error } = await this.supabase
+        .from(this.tableName)
+        .select('*, tipo_servicos(*)')
+        .eq('user_id', userId)
+        .in('evento_id', chunk)
+        .eq('removido', false)
+        .order('data_cadastro', { ascending: false });
+
+      if (error) {
+        console.error('[ServicoEventoSupabaseRepository] Erro ao buscar serviços:', error);
+        throw new Error(`Erro ao buscar serviços: ${error.message}`);
+      }
+
+      console.log(`[ServicoEventoSupabaseRepository] Buscou ${data?.length || 0} serviços para ${chunk.length} eventos`);
+
+      const servicos = (data || []).map(row => {
+        const servico = this.convertFromSupabase(row);
+        
+        // Type assertion para resolver problema de inferência de tipos do Supabase
+        const rowData = row as any;
+        if (rowData.tipo_servicos) {
+          servico.tipoServico = {
+            id: rowData.tipo_servicos.id,
+            nome: rowData.tipo_servicos.nome,
+            descricao: rowData.tipo_servicos.descricao,
+            ativo: rowData.tipo_servicos.ativo,
+            dataCadastro: new Date(rowData.tipo_servicos.data_cadastro),
+          };
+        }
+        
+        return servico;
+      });
+
+      allServicos.push(...servicos);
+    }
+
+    // Agrupar por eventoId
+    const servicosPorEvento = new Map<string, ServicoEvento[]>();
+    
+    allServicos.forEach(servico => {
+      const existing = servicosPorEvento.get(servico.eventoId) || [];
+      existing.push(servico);
+      servicosPorEvento.set(servico.eventoId, existing);
+    });
+
+    // Garantir que todos os eventos tenham uma entrada (mesmo que vazia)
+    eventoIds.forEach(eventoId => {
+      if (!servicosPorEvento.has(eventoId)) {
+        servicosPorEvento.set(eventoId, []);
+      }
+    });
+
+    console.log(`[ServicoEventoSupabaseRepository] Total de eventos com serviços: ${Array.from(servicosPorEvento.values()).filter(s => s.length > 0).length} de ${eventoIds.length}`);
+
+    return servicosPorEvento;
+  }
 }
 
