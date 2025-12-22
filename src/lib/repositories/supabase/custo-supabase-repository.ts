@@ -48,6 +48,7 @@ export class CustoSupabaseRepository extends BaseSupabaseRepository<CustoEvento>
       .select('*, tipo_custos(*)')
       .eq('user_id', userId)
       .eq('evento_id', eventoId)
+      .eq('removido', false) // Filtrar apenas custos não removidos
       .order('data_cadastro', { ascending: false });
 
     if (error) {
@@ -149,10 +150,33 @@ export class CustoSupabaseRepository extends BaseSupabaseRepository<CustoEvento>
   }
 
   async deleteCusto(userId: string, eventoId: string, custoId: string): Promise<void> {
-    await this.updateCusto(userId, eventoId, custoId, {
+    console.log('[CustoSupabaseRepository] Excluindo custo:', { userId, eventoId, custoId });
+    
+    const updateData = {
       removido: true,
       dataRemocao: new Date()
-    });
+    };
+    
+    console.log('[CustoSupabaseRepository] Dados de atualização:', updateData);
+    
+    const supabaseData = this.convertToSupabase(updateData);
+    console.log('[CustoSupabaseRepository] Dados convertidos para Supabase:', supabaseData);
+
+    const { data, error } = await this.supabase
+      .from(this.tableName)
+      .update(supabaseData)
+      .eq('id', custoId)
+      .eq('user_id', userId)
+      .eq('evento_id', eventoId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[CustoSupabaseRepository] Erro ao excluir custo:', error);
+      throw new Error(`Erro ao excluir custo: ${error.message}`);
+    }
+
+    console.log('[CustoSupabaseRepository] Custo excluído com sucesso:', data);
   }
 
   async findAll(userId?: string): Promise<CustoEvento[]> {

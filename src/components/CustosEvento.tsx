@@ -126,7 +126,9 @@ export default function CustosEvento({
     
     if (custoParaExcluir) {
       try {
+        console.log('[CustosEvento] Excluindo custo:', custoParaExcluir.id);
         await dataService.deleteCustoEvento(userId, evento.id, custoParaExcluir.id);
+        console.log('[CustosEvento] Custo excluído com sucesso');
         
         // Recarregar resumo de custos
         const resumo = await dataService.getResumoCustosPorEvento(userId, evento.id);
@@ -135,7 +137,9 @@ export default function CustosEvento({
         onCustosChange();
         setCustoParaExcluir(null);
       } catch (error) {
-        // Erro ao excluir custo
+        console.error('[CustosEvento] Erro ao excluir custo:', error);
+        // TODO: Mostrar toast de erro ao usuário
+        alert('Erro ao excluir custo. Por favor, tente novamente.');
       }
     }
   };

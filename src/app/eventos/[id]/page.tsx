@@ -30,7 +30,8 @@ import { useAnexos } from '@/hooks/useAnexos';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { usePlano } from '@/lib/hooks/usePlano';
 import { dataService } from '@/lib/data-service';
-import { AnexoEvento } from '@/types';
+import { AnexoEvento, Evento, StatusEvento } from '@/types';
+import EventoStatusSelect from '@/components/EventoStatusSelect';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
 import CustosEvento from '@/components/CustosEvento';
 import ServicosEvento from '@/components/ServicosEvento';
@@ -55,8 +56,9 @@ export default function EventoViewPage() {
   const [copied, setCopied] = useState(false);
   const [temAcessoCopiar, setTemAcessoCopiar] = useState<boolean | null>(null);
   const [temAcessoContrato, setTemAcessoContrato] = useState<boolean | null>(null);
+  const [eventoLocal, setEventoLocal] = useState<Evento | null>(null);
   
-  const { data: evento, loading: loadingEvento, error: errorEvento } = useEvento(params.id as string);
+  const { data: evento, loading: loadingEvento, error: errorEvento, refetch: refetchEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
   const { data: custos, loading: loadingCustos, refetch: refetchCustos } = useCustosPorEvento(params.id as string);
   const { data: servicos, loading: loadingServicos, refetch: refetchServicos } = useServicosPorEvento(params.id as string);
@@ -81,6 +83,13 @@ export default function EventoViewPage() {
     };
     verificarAcessoContrato();
   }, [temPermissao]);
+
+  // Sincronizar evento local com evento do hook
+  useEffect(() => {
+    if (evento) {
+      setEventoLocal(evento);
+    }
+  }, [evento]);
 
   if (loading) {
     return (
@@ -295,6 +304,31 @@ export default function EventoViewPage() {
         return 'bg-error-bg text-error-text';
       default:
         return 'bg-surface text-text-secondary';
+    }
+  };
+
+  const handleStatusChange = async (eventoId: string, novoStatus: string) => {
+    if (!userId || !eventoLocal) {
+      showToast('Usuário não autenticado', 'error');
+      return;
+    }
+
+    const statusAnterior = eventoLocal.status;
+    const novoStatusTyped = novoStatus as Evento['status'];
+
+    // Atualização otimista - atualizar UI imediatamente
+    setEventoLocal(prev => prev ? { ...prev, status: novoStatusTyped } : null);
+
+    try {
+      await dataService.updateEvento(eventoId, { status: novoStatusTyped }, userId);
+      showToast('Status do evento atualizado com sucesso!', 'success');
+      // Recarregar evento para garantir sincronização
+      await refetchEvento();
+    } catch (error) {
+      console.error('Erro ao atualizar status do evento:', error);
+      showToast('Erro ao atualizar status do evento', 'error');
+      // Reverter atualização otimista em caso de erro
+      setEventoLocal(prev => prev ? { ...prev, status: statusAnterior } : null);
     }
   };
 
@@ -586,9 +620,13 @@ export default function EventoViewPage() {
 
         {/* Status */}
         <div className="flex justify-between items-center">
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(evento.status)}`}>
-            {evento.status}
-          </span>
+          <div onClick={(e) => e.stopPropagation()}>
+            <EventoStatusSelect
+              eventoId={eventoLocal?.id || evento.id}
+              statusAtual={eventoLocal?.status || evento.status}
+              onStatusChange={handleStatusChange}
+            />
+          </div>
           <span className="text-sm text-text-muted">
             Criado em {format(evento.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
           </span>

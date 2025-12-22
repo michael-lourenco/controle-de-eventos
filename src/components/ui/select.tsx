@@ -20,7 +20,7 @@ export interface SelectProps extends React.ComponentPropsWithoutRef<typeof Selec
 const SelectWithLabel = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   SelectProps
->(({ className, label, error, helperText, options, placeholder, children, ...props }, ref) => {
+>(({ className, label, error, helperText, options, placeholder, children, value, ...props }, ref) => {
   const generatedId = useId();
   const selectId = `select-${generatedId}`;
   
@@ -29,22 +29,30 @@ const SelectWithLabel = React.forwardRef<
       {label && (
         <label
           htmlFor={selectId}
-          className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-1"
+          className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 mb-1 text-text-primary"
         >
           {label}
         </label>
       )}
-      <SelectPrimitive.Root {...props}>
+      <SelectPrimitive.Root {...props} value={value}>
         <SelectPrimitive.Trigger
           ref={ref}
           id={selectId}
           className={cn(
-            "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background data-[placeholder]:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+            "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-surface px-3 py-2 text-sm shadow-sm ring-offset-background focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+            "text-text-primary [&>span]:text-text-primary [&>span]:line-clamp-1",
+            "data-[placeholder]:text-muted-foreground [&>span[data-placeholder]]:text-muted-foreground",
             error && "form-error",
             className
           )}
+          style={{
+            color: 'var(--text-primary)',
+            backgroundColor: 'var(--surface)'
+          }}
         >
-          <SelectPrimitive.Value placeholder={placeholder} />
+          <SelectPrimitive.Value 
+            placeholder={placeholder}
+          />
           <SelectPrimitive.Icon asChild>
             <ChevronDown className="h-4 w-4 opacity-50" />
           </SelectPrimitive.Icon>

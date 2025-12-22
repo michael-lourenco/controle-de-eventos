@@ -24,6 +24,7 @@ import PlanoBloqueio from '@/components/PlanoBloqueio';
 import { usePlano } from '@/lib/hooks/usePlano';
 import { useToast } from '@/components/ui/toast';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
+import EventoStatusSelect from '@/components/EventoStatusSelect';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -173,6 +174,13 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     if (evento) {
       console.log('EventoForm: Inicializando formulário com evento:', evento);
       console.log('EventoForm: Dados do cliente:', evento.cliente);
+      console.log('EventoForm: Status do evento:', evento.status, 'Tipo:', typeof evento.status);
+      
+      // Usar o status do evento diretamente, como na página de detalhes
+      const statusInicial = (evento.status as StatusEvento) || StatusEvento.AGENDADO;
+      
+      console.log('EventoForm: Status do evento:', evento.status);
+      console.log('EventoForm: Status inicial definido:', statusInicial);
       
       setFormData({
         nomeEvento: evento.nomeEvento || '',
@@ -204,7 +212,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         numeroImpressoes: evento.numeroImpressoes || 0,
         cerimonialista: evento.cerimonialista || { nome: '', telefone: '' },
         observacoes: evento.observacoes || '',
-        status: evento.status as StatusEvento,
+        status: statusInicial,
         valorTotal: evento.valorTotal,
         diaFinalPagamento: evento.diaFinalPagamento.toISOString().split('T')[0]
       });
@@ -825,6 +833,28 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Status do Evento */}
+      {evento && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-primary">
+                Status do Evento
+              </label>
+              <EventoStatusSelect
+                eventoId={evento.id}
+                statusAtual={formData.status || evento.status}
+                onStatusChange={async (eventoId, novoStatus) => {
+                  // Apenas atualizar o formData localmente
+                  // A atualização no banco será feita ao salvar o formulário
+                  handleInputChange('status', novoStatus as StatusEvento);
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Nome do Evento */}
       <Card>
         <CardHeader>
@@ -1126,10 +1156,10 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         </CardContent>
       </Card>
 
-      {/* Observações e Status */}
+      {/* Observações */}
       <Card>
         <CardHeader>
-          <CardTitle>Observações e Status</CardTitle>
+          <CardTitle>Observações</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
@@ -1137,13 +1167,6 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
             value={formData.observacoes || ''}
             onChange={(e) => handleInputChange('observacoes', e.target.value)}
             rows={3}
-          />
-          
-          <Select
-            label="Status do Evento"
-            options={statusOptions}
-            value={formData.status}
-            onValueChange={(value) => handleInputChange('status', value as StatusEvento)}
           />
         </CardContent>
       </Card>
