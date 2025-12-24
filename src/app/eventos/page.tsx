@@ -667,85 +667,81 @@ export default function EventosPage() {
                       </span>
                     </div>
                     <div className="flex space-x-2">
-                      <TooltipProvider>
+                      <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button 
-                              variant="ghost" 
-                              size="sm"
+                              variant="action-view" 
+                              size="icon"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleView(evento);
                               }}
-                              className="hover:bg-primary/10 hover:text-primary"
                             >
-                              <EyeIcon className="h-4 w-4" />
+                              <EyeIcon className="h-5 w-5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p>Visualizar</p>
+                          <TooltipContent side="top" className="font-medium">
+                            <p>Visualizar evento</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      <TooltipProvider>
+                      <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button 
-                              variant="ghost" 
-                              size="sm"
+                              variant="action-edit" 
+                              size="icon"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEdit(evento);
                               }}
-                              className="hover:bg-accent/10 hover:text-accent"
                             >
-                              <PencilIcon className="h-4 w-4" />
+                              <PencilIcon className="h-5 w-5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top">
-                            <p>Editar</p>
+                          <TooltipContent side="top" className="font-medium">
+                            <p>Editar evento</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                       {abaAtiva === 'ativos' ? (
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button 
-                                variant="ghost" 
-                                size="sm"
+                                variant="action-delete" 
+                                size="icon"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleExcluirEvento(evento);
                                 }}
-                                className="text-error hover:text-error hover:bg-error/10"
                               >
-                                <TrashIcon className="h-4 w-4" />
+                                <TrashIcon className="h-5 w-5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="top">
-                              <p>Arquivar</p>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Arquivar evento</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       ) : (
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button 
-                                variant="ghost" 
-                                size="sm"
+                                variant="action-view" 
+                                size="icon"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDesarquivar(evento);
                                 }}
-                                className="text-success hover:text-success hover:bg-success/10"
                               >
-                                <ArrowPathIcon className="h-4 w-4" />
+                                <ArrowPathIcon className="h-5 w-5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="top">
-                              <p>Desarquivar</p>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Desarquivar evento</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

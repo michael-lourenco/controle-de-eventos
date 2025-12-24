@@ -221,13 +221,22 @@ export default function CanaisEntradaPage() {
             </p>
           </div>
           {temAcessoPersonalizado === true ? (
-            <Button
-              onClick={() => setMostrarFormNovo(true)}
-              className="btn-add flex items-center gap-2"
-            >
-              <PlusIcon className="h-4 w-4" />
-              Novo Canal
-            </Button>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setMostrarFormNovo(true)}
+                    className="btn-add"
+                    size="icon"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="font-medium">
+                  <p>Novo canal de entrada</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : (
             <TooltipProvider>
               <Tooltip>
@@ -442,34 +451,56 @@ export default function CanaisEntradaPage() {
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => iniciarEdicao(canal)}
-                        title="Editar"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="action-edit"
+                              size="icon"
+                              onClick={() => iniciarEdicao(canal)}
+                            >
+                              <PencilIcon className="h-5 w-5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="font-medium">
+                            <p>Editar canal de entrada</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       {abaAtiva === 'ativos' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleExcluirCanal(canal)}
-                          title="Inativar"
-                          className="text-error hover:text-error hover:bg-error/10"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="action-delete"
+                                size="icon"
+                                onClick={() => handleExcluirCanal(canal)}
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Inativar canal de entrada</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleReativar(canal)}
-                          title="Reativar"
-                          className="text-success hover:text-success hover:bg-success/10"
-                        >
-                          <ArrowPathIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="action-view"
+                                size="icon"
+                                onClick={() => handleReativar(canal)}
+                              >
+                                <ArrowPathIcon className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Reativar canal de entrada</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   </div>

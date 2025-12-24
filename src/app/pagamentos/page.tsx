@@ -284,20 +284,19 @@ export default function PagamentosPage() {
                           </div>
                         </div>
                         <div className="mt-2">
-                          <TooltipProvider>
+                          <TooltipProvider delayDuration={200}>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
-                                  size="sm"
-                                  variant="outline"
+                                  size="icon"
+                                  variant="action-view"
                                   onClick={() => router.push(`/eventos/${pagamento.evento?.id}`)}
-                                  className="p-2"
                                 >
-                                  <EyeIcon className="h-4 w-4" />
+                                  <EyeIcon className="h-5 w-5" />
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent side="top">
-                                <p>Ver Evento</p>
+                              <TooltipContent side="top" className="font-medium">
+                                <p>Visualizar evento</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -327,20 +326,20 @@ export default function PagamentosPage() {
                             </div>
                           </div>
                         </div>
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
-                                size="sm"
-                                variant="outline"
+                                size="icon"
+                                variant="action-view"
                                 onClick={() => router.push(`/eventos/${pagamento.evento?.id}`)}
-                                className="p-2 flex-shrink-0"
+                                className="flex-shrink-0"
                               >
-                                <EyeIcon className="h-4 w-4" />
+                                <EyeIcon className="h-5 w-5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="top">
-                              <p>Ver Evento</p>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Visualizar evento</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>

@@ -217,13 +217,22 @@ export default function TiposEventoPage() {
             <p className="text-text-secondary">Gerencie as categorias dos seus eventos</p>
           </div>
           {temAcessoPersonalizado === true ? (
-            <Button
-              onClick={() => setMostrarFormNovo(true)}
-              className="btn-add flex items-center gap-2"
-            >
-              <PlusIcon className="h-4 w-4" />
-              Novo Tipo
-            </Button>
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => setMostrarFormNovo(true)}
+                    className="btn-add"
+                    size="icon"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="font-medium">
+                  <p>Novo tipo de evento</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : (
             <TooltipProvider>
               <Tooltip>
@@ -428,34 +437,56 @@ export default function TiposEventoPage() {
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => iniciarEdicao(tipo)}
-                        title="Editar"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="action-edit"
+                              size="icon"
+                              onClick={() => iniciarEdicao(tipo)}
+                            >
+                              <PencilIcon className="h-5 w-5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="font-medium">
+                            <p>Editar tipo de evento</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       {abaAtiva === 'ativos' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleExcluirTipo(tipo)}
-                          title="Inativar"
-                          className="text-error hover:text-error hover:bg-error/10"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="action-delete"
+                                size="icon"
+                                onClick={() => handleExcluirTipo(tipo)}
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Inativar tipo de evento</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleReativar(tipo)}
-                          title="Reativar"
-                          className="text-success hover:text-success hover:bg-success/10"
-                        >
-                          <ArrowPathIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="action-view"
+                                size="icon"
+                                onClick={() => handleReativar(tipo)}
+                              >
+                                <ArrowPathIcon className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Reativar tipo de evento</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                     </div>
                   </div>

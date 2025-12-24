@@ -331,18 +331,19 @@ export default function ClientesPage() {
                   periodo="total"
                 />
               )}
-              <TooltipProvider>
+              <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       onClick={() => setMostrarFormNovo(true)}
-                      className="btn-add p-2"
+                      className="btn-add"
+                      size="icon"
                     >
-                      <PlusIcon className="h-4 w-4" />
+                      <PlusIcon className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>Novo Cliente</p>
+                  <TooltipContent side="bottom" className="font-medium">
+                    <p>Novo cliente</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -616,43 +617,72 @@ export default function ClientesPage() {
                         </div>
                       </div>
                       <div className="flex gap-1 flex-shrink-0 ml-4">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => router.push(`/clientes/${cliente.id}`)}
-                          title="Visualizar"
-                          className="hover:bg-primary/10 hover:text-primary"
-                        >
-                          <EyeIcon className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => iniciarEdicao(cliente)}
-                          title="Editar"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </Button>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="action-view"
+                                size="icon"
+                                onClick={() => router.push(`/clientes/${cliente.id}`)}
+                              >
+                                <EyeIcon className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Visualizar cliente</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="action-edit"
+                                size="icon"
+                                onClick={() => iniciarEdicao(cliente)}
+                              >
+                                <PencilIcon className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Editar cliente</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         {abaAtiva === 'ativos' ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleExcluirCliente(cliente)}
-                            title="Arquivar"
-                            className="text-error hover:text-error hover:bg-error/10"
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </Button>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="action-delete"
+                                  size="icon"
+                                  onClick={() => handleExcluirCliente(cliente)}
+                                >
+                                  <TrashIcon className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="font-medium">
+                                <p>Arquivar cliente</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDesarquivar(cliente)}
-                            title="Desarquivar"
-                            className="text-success hover:text-success hover:bg-success/10"
-                          >
-                            <ArrowPathIcon className="h-4 w-4" />
-                          </Button>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="action-view"
+                                  size="icon"
+                                  onClick={() => handleDesarquivar(cliente)}
+                                >
+                                  <ArrowPathIcon className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="font-medium">
+                                <p>Desarquivar cliente</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                     </div>
@@ -667,44 +697,72 @@ export default function ClientesPage() {
                           </span>
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => router.push(`/clientes/${cliente.id}`)}
-                            title="Visualizar"
-                            className="p-2 hover:bg-primary/10 hover:text-primary"
-                          >
-                            <EyeIcon className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => iniciarEdicao(cliente)}
-                            title="Editar"
-                            className="p-2"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </Button>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="action-view"
+                                  size="icon"
+                                  onClick={() => router.push(`/clientes/${cliente.id}`)}
+                                >
+                                  <EyeIcon className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="font-medium">
+                                <p>Visualizar cliente</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="action-edit"
+                                  size="icon"
+                                  onClick={() => iniciarEdicao(cliente)}
+                                >
+                                  <PencilIcon className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="font-medium">
+                                <p>Editar cliente</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           {abaAtiva === 'ativos' ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleExcluirCliente(cliente)}
-                              title="Arquivar"
-                              className="p-2 text-error hover:text-error hover:bg-error/10"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="action-delete"
+                                    size="icon"
+                                    onClick={() => handleExcluirCliente(cliente)}
+                                  >
+                                    <TrashIcon className="h-5 w-5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="font-medium">
+                                  <p>Arquivar cliente</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           ) : (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDesarquivar(cliente)}
-                              title="Desarquivar"
-                              className="p-2 text-success hover:text-success hover:bg-success/10"
-                            >
-                              <ArrowPathIcon className="h-4 w-4" />
-                            </Button>
+                            <TooltipProvider delayDuration={200}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="action-view"
+                                    size="icon"
+                                    onClick={() => handleDesarquivar(cliente)}
+                                  >
+                                    <ArrowPathIcon className="h-5 w-5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="font-medium">
+                                  <p>Desarquivar cliente</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                         </div>
                       </div>
