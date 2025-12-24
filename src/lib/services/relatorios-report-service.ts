@@ -478,10 +478,7 @@ export class RelatoriosReportService {
       });
     });
 
-    const eventosComServicos = eventos.filter(e => servicosPorEvento[e.id]?.length > 0).length;
-    const totalServicos = servicos.length;
-    const tiposUnicos = new Set(servicos.map(s => s.tipoServicoId)).size;
-    const taxaUtilizacao = eventos.length > 0 ? (eventosComServicos / eventos.length) * 100 : 0;
+    const totalServicos = servicos.length; // Mantido apenas para cálculo de percentuais
 
     return {
       data: {
@@ -502,13 +499,7 @@ export class RelatoriosReportService {
               value: quantidade
             };
           })
-        })),
-        resumoGeral: {
-          totalServicos,
-          tiposUnicos,
-          eventosComServicos,
-          taxaUtilizacao
-        }
+        }))
       },
       meta: {
         geradoEm: new Date().toISOString(),

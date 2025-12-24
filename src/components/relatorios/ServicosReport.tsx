@@ -51,12 +51,12 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
     // Criar mapa de tipos de serviços
     const tiposMap = new Map(tiposServicos.map(tipo => [tipo.id, tipo]));
 
-    // Resumo geral
-    const totalServicos = servicosPeriodo.length;
-    const tiposServicosUnicos = new Set(servicosPeriodo.map(s => s.tipoServicoId)).size;
+    // Resumo geral (apenas eventosSemServicos para alertas)
     const eventosComServicos = new Set(servicosPeriodo.map(s => s.eventoId)).size;
     const eventosSemServicos = eventosPeriodo.length - eventosComServicos;
-    const taxaUtilizacaoServicos = eventosPeriodo.length > 0 ? (eventosComServicos / eventosPeriodo.length) * 100 : 0;
+
+    // Total de serviços (mantido apenas para cálculo de percentuais)
+    const totalServicos = servicosPeriodo.length;
 
     // Serviços por tipo
     const servicosPorTipoMap: Record<string, { quantidade: number; eventos: Set<string> }> = {};
@@ -183,11 +183,7 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
     return {
       periodo: { inicio, fim },
       resumoGeral: {
-        totalServicos,
-        tiposServicosUnicos,
-        eventosComServicos,
-        eventosSemServicos,
-        taxaUtilizacaoServicos
+        eventosSemServicos
       },
       servicosPorTipo,
       servicosPorEvento,
@@ -272,13 +268,6 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
     const csvData = [
       ['Relatório de Serviços por Tipo'],
       [`Período: ${format(new Date(dataInicio), 'dd/MM/yyyy', { locale: ptBR })} - ${format(new Date(dataFim), 'dd/MM/yyyy', { locale: ptBR })}`],
-      [''],
-      ['RESUMO GERAL'],
-      ['Total de Serviços', dadosServicos.resumoGeral.totalServicos],
-      ['Tipos de Serviços Únicos', dadosServicos.resumoGeral.tiposServicosUnicos],
-      ['Eventos com Serviços', dadosServicos.resumoGeral.eventosComServicos],
-      ['Eventos sem Serviços', dadosServicos.resumoGeral.eventosSemServicos],
-      ['Taxa de Utilização (%)', dadosServicos.resumoGeral.taxaUtilizacaoServicos.toFixed(2)],
       [''],
       ['SERVIÇOS POR TIPO'],
       ['Tipo de Serviço', 'Quantidade', 'Percentual (%)', 'Eventos Utilizando'],
@@ -398,49 +387,6 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
         </Card>
       )}
 
-      {/* Resumo Geral */}
-      <StatGrid>
-        <StatCard
-          title="Total de Serviços"
-          value={dadosServicos.resumoGeral.totalServicos}
-          color="primary"
-          tooltip={{
-            title: "Total de Serviços",
-            description: "Quantidade total de serviços contratados no período analisado. Inclui todos os serviços de todos os eventos.",
-            calculation: "Total de Serviços = Soma de todos os serviços cadastrados em eventos cuja dataEvento está dentro do período selecionado."
-          }}
-        />
-        <StatCard
-          title="Tipos Únicos"
-          value={dadosServicos.resumoGeral.tiposServicosUnicos}
-          color="info"
-          tooltip={{
-            title: "Tipos Únicos",
-            description: "Quantidade de tipos diferentes de serviços utilizados no período. Indica a diversidade de serviços oferecidos.",
-            calculation: "Tipos Únicos = Contagem de tipos de serviços distintos (tipoServicoId) utilizados nos eventos do período."
-          }}
-        />
-        <StatCard
-          title="Eventos com Serviços"
-          value={dadosServicos.resumoGeral.eventosComServicos}
-          color="success"
-          tooltip={{
-            title: "Eventos com Serviços",
-            description: "Quantidade de eventos que possuem pelo menos um serviço cadastrado. Indica quantos eventos estão utilizando serviços.",
-            calculation: "Eventos com Serviços = Contagem de eventos únicos que possuem pelo menos um serviço cadastrado no período."
-          }}
-        />
-        <StatCard
-          title="Taxa de Utilização"
-          value={`${dadosServicos.resumoGeral.taxaUtilizacaoServicos.toFixed(1)}%`}
-          color={dadosServicos.resumoGeral.taxaUtilizacaoServicos >= 80 ? "success" : "warning"}
-          tooltip={{
-            title: "Taxa de Utilização",
-            description: "Percentual de eventos que possuem serviços cadastrados. Indica o quanto os serviços estão sendo utilizados nos eventos.",
-            calculation: "Taxa de Utilização = (Eventos com Serviços / Total de Eventos no Período) × 100. Valores acima de 80% indicam boa utilização."
-          }}
-        />
-      </StatGrid>
 
       {/* Serviços por Tipo */}
       <TabbedChart

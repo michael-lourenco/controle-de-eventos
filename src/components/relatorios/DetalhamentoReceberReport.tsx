@@ -15,6 +15,7 @@ import { InfoTooltip } from '@/components/ui/info-tooltip';
 interface DetalhamentoReceberReportProps {
   eventos: Evento[];
   pagamentos: Pagamento[];
+  clientes?: Array<{ id: string; nome: string }>;
   dashboardTotals?: {
     pendente: number;
     atrasado: number;
@@ -73,6 +74,7 @@ const formatarData = (data?: Date) => {
 export default function DetalhamentoReceberReport({
   eventos,
   pagamentos,
+  clientes,
   dashboardTotals
 }: DetalhamentoReceberReportProps) {
   const [clienteExpandido, setClienteExpandido] = useState<string | null>(null);
@@ -215,7 +217,19 @@ export default function DetalhamentoReceberReport({
       totalAtrasado += valorAtrasadoEvento;
 
       const clienteId = evento.clienteId || evento.cliente?.id || evento.id;
-      const clienteNome = evento.cliente?.nome || 'Cliente sem nome';
+      
+      // Buscar nome do cliente: primeiro do relacionamento do evento, depois da lista de clientes
+      let clienteNome: string = evento.cliente?.nome || '';
+      
+      if (!clienteNome && clientes && clienteId) {
+        const clienteEncontrado = clientes.find(c => c.id === clienteId);
+        clienteNome = clienteEncontrado?.nome || '';
+      }
+      
+      // Fallback apenas se não encontrou em nenhum lugar
+      if (!clienteNome) {
+        clienteNome = 'Cliente sem nome';
+      }
 
       if (!clientesMap.has(clienteId)) {
         clientesMap.set(clienteId, {
@@ -245,7 +259,7 @@ export default function DetalhamentoReceberReport({
       });
     });
 
-    const clientes = Array.from(clientesMap.values())
+    const clientesResumo = Array.from(clientesMap.values())
       .map((cliente) => ({
         ...cliente,
         eventos: cliente.eventos.sort((a, b) => {
@@ -260,9 +274,9 @@ export default function DetalhamentoReceberReport({
       totalPendente,
       totalAtrasado,
       totalReceber: totalPendente + totalAtrasado,
-      clientes
+      clientes: clientesResumo
     };
-  }, [eventos, pagamentos, resumosEventos]);
+  }, [eventos, pagamentos, resumosEventos, clientes]);
 
   const dashboardPendente = dashboardTotals?.pendente ?? null;
   const dashboardAtrasado = dashboardTotals?.atrasado ?? null;

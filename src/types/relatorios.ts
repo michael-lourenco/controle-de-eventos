@@ -67,11 +67,6 @@ export interface FluxoCaixaMensal {
 }
 
 export interface ServicosResumo {
-  totalServicos: number;
-  tiposServicosUnicos: number;
-  eventosComServicos: number;
-  eventosSemServicos: number;
-  taxaUtilizacaoServicos: number;
   servicosPorTipo: ServicoPorTipo[];
 }
 

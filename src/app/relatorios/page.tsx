@@ -276,18 +276,6 @@ export default function RelatoriosPage() {
             </div>
           </div>
         </div>
-        {/* Detalhamento do Valor a Receber */}
-        <div id="total-receber">
-          <DetalhamentoReceberReport
-            eventos={eventos}
-            pagamentos={pagamentos || []}
-            dashboardTotals={{
-              pendente: dashboardData.resumoFinanceiro.valorPendente,
-              atrasado: dashboardData.resumoFinanceiro.valorAtrasado
-            }}
-          />
-        </div>
-
         {/* Relatório de Receita Mensal */}
         <div id="receita-mensal-relatorio">
           <Card>
@@ -301,6 +289,19 @@ export default function RelatoriosPage() {
               <ReceitaMensalReport eventos={eventos} pagamentos={pagamentos || []} />
             </CardContent>
           </Card>
+        </div>
+
+        {/* Detalhamento do Valor a Receber */}
+        <div id="total-receber">
+          <DetalhamentoReceberReport
+            eventos={eventos}
+            pagamentos={pagamentos || []}
+            clientes={clientes ? clientes.map(c => ({ id: c.id, nome: c.nome })) : undefined}
+            dashboardTotals={{
+              pendente: dashboardData.resumoFinanceiro.valorPendente,
+              atrasado: dashboardData.resumoFinanceiro.valorAtrasado
+            }}
+          />
         </div>
 
         {/* Relatório de Performance de Eventos */}
@@ -327,7 +328,7 @@ export default function RelatoriosPage() {
               <CardHeader>
                 <CardTitle className="text-xl font-bold text-primary">💰 Fluxo de Caixa</CardTitle>
               <CardDescription>
-                Análise completa do fluxo de caixa mensal com projeções e alertas financeiros
+                Análise completa do fluxo de caixa mensal com alertas financeiros
               </CardDescription>
             </CardHeader>
             <CardContent>

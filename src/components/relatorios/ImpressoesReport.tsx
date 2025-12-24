@@ -412,6 +412,7 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                               <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Data do Evento</th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Tipo</th>
                               <th className="px-4 py-2 text-left text-xs font-medium text-text-secondary uppercase">Nome do Evento</th>
+                              <th className="px-4 py-2 text-center text-xs font-medium text-text-secondary uppercase">Ações</th>
                             </tr>
                           </thead>
                           <tbody className="bg-background/50 divide-y divide-border">
@@ -423,6 +424,17 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
                                 </td>
                                 <td className="px-4 py-2 text-sm text-text-primary">{evento.tipoEvento}</td>
                                 <td className="px-4 py-2 text-sm text-text-primary">{evento.nomeEvento}</td>
+                                <td className="px-4 py-2 text-sm text-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => router.push(`/eventos/${evento.id}`)}
+                                    className="hover:bg-primary/10 hover:text-primary"
+                                    title="Visualizar evento"
+                                  >
+                                    <EyeIcon className="h-4 w-4" />
+                                  </Button>
+                                </td>
                               </tr>
                             ))}
                           </tbody>

@@ -336,9 +336,7 @@ export class RelatorioCacheService {
       servicosPorTipo[tipoNome].eventos.add(servico.eventoId);
     });
 
-    const eventosComServicos = new Set(servicosAtivos.map(s => s.eventoId)).size;
-    const totalServicos = servicosAtivos.length;
-    const tiposServicosUnicos = Object.keys(servicosPorTipo).length;
+    const totalServicos = servicosAtivos.length; // Mantido apenas para cálculo de percentuais
 
     const servicosPorTipoArray = Object.entries(servicosPorTipo).map(([nome, dados]) => ({
       tipoServicoId: tiposServicos.find(t => t.nome === nome)?.id || '',
@@ -349,11 +347,6 @@ export class RelatorioCacheService {
     }));
 
     return {
-      totalServicos,
-      tiposServicosUnicos,
-      eventosComServicos,
-      eventosSemServicos: eventosAtivos.length - eventosComServicos,
-      taxaUtilizacaoServicos: eventosAtivos.length > 0 ? (eventosComServicos / eventosAtivos.length) * 100 : 0,
       servicosPorTipo: servicosPorTipoArray
     };
   }

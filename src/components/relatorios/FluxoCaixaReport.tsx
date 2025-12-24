@@ -706,65 +706,6 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
         </Card>
       </div>
 
-      {/* Projeções */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle className="flex items-center gap-2">
-              {dadosFluxoCaixa.projecao.tendencia === 'crescimento' ? (
-                <ArrowTrendingUpIcon className="h-5 w-5 text-accent" />
-              ) : dadosFluxoCaixa.projecao.tendencia === 'declinio' ? (
-                <ArrowTrendingDownIcon className="h-5 w-5 text-[#d97757]" />
-              ) : (
-                <ChartBarIcon className="h-5 w-5 text-text-secondary" />
-              )}
-              Projeções para os Próximos 3 Meses
-            </CardTitle>
-            <InfoTooltip
-              title="Projeções para os Próximos 3 Meses"
-              description="Estimativa de receitas, despesas e saldo para os próximos 3 meses baseada na média dos últimos 3 meses do período analisado."
-              calculation="Receita Projetada = Média de receitas dos últimos 3 meses. Despesa Projetada = Média de despesas dos últimos 3 meses. Saldo Projetado = Receita Projetada - Despesa Projetada. Confiabilidade = 75% (baseada na estabilidade dos dados)."
-              className="flex-shrink-0"
-              iconClassName="h-6 w-6"
-            />
-          </div>
-          <CardDescription>
-            Tendência: {dadosFluxoCaixa.projecao.tendencia} | 
-            Confiabilidade: {dadosFluxoCaixa.projecao.confiabilidade}%
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {dadosFluxoCaixa.projecao.proximos3Meses.map((projecao, index) => (
-              <div key={index} className="p-4 border rounded-lg bg-surface border-border">
-                <h4 className="font-medium text-text-primary mb-2">{projecao.mes}</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Receita:</span>
-                    <span className="text-accent font-medium">
-                      R$ {projecao.receitaProjetada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Despesa:</span>
-                    <span className="text-[#d97757] font-medium">
-                      R$ {projecao.despesaProjetada.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-t pt-1">
-                    <span className="text-text-secondary font-medium">Saldo:</span>
-                    <span className={`font-bold ${
-                      projecao.saldoProjetado >= 0 ? 'text-accent' : 'text-[#d97757]'
-                    }`}>
-                      R$ {projecao.saldoProjetado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
