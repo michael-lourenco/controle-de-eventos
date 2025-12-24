@@ -353,35 +353,36 @@ export default function EventosPage() {
                 />
               )}
               <div className="flex space-x-2 flex-shrink-0">
-                <TooltipProvider>
+                <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 
                         variant="outline" 
+                        size="icon"
                         onClick={() => recarregarEventos()}
                         disabled={loading}
-                        className="p-2"
                       >
-                        <ArrowPathIcon className="h-4 w-4" />
+                        <ArrowPathIcon className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>Atualizar</p>
+                    <TooltipContent side="bottom" className="font-medium">
+                      <p>Atualizar lista de eventos</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <TooltipProvider>
+                <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 
                         onClick={() => router.push('/eventos/novo')} 
-                        className="btn-add p-2"
+                        className="btn-add"
+                        size="icon"
                       >
-                        <PlusIcon className="h-4 w-4" />
+                        <PlusIcon className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>Novo Evento</p>
+                    <TooltipContent side="bottom" className="font-medium">
+                      <p>Novo evento</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

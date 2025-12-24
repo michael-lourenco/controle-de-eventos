@@ -489,36 +489,34 @@ export default function PagamentoHistorico({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      <TooltipProvider>
+                      <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
-                              variant="outline"
-                              size="sm"
+                              variant="action-edit"
+                              size="icon"
                               onClick={() => handleEditarPagamento(pagamento)}
-                              className="p-2"
                             >
-                              <PencilIcon className="h-4 w-4" />
+                              <PencilIcon className="h-5 w-5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top">
+                          <TooltipContent side="top" className="font-medium">
                             <p>Editar pagamento</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      <TooltipProvider>
+                      <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
-                              variant="outline"
-                              size="sm"
+                              variant="action-delete"
+                              size="icon"
                               onClick={() => handleExcluirPagamento(pagamento)}
-                              className="p-2 text-red-600 hover:text-red-700 hover:border-red-300"
                             >
-                              <TrashIcon className="h-4 w-4" />
+                              <TrashIcon className="h-5 w-5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top">
+                          <TooltipContent side="top" className="font-medium">
                             <p>Excluir pagamento</p>
                           </TooltipContent>
                         </Tooltip>
@@ -565,36 +563,34 @@ export default function PagamentoHistorico({
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
-                                variant="outline"
-                                size="sm"
+                                variant="action-edit"
+                                size="icon"
                                 onClick={() => handleEditarPagamento(pagamento)}
-                                className="p-2"
                               >
-                                <PencilIcon className="h-4 w-4" />
+                                <PencilIcon className="h-5 w-5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="top">
+                            <TooltipContent side="top" className="font-medium">
                               <p>Editar pagamento</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
-                                variant="outline"
-                                size="sm"
+                                variant="action-delete"
+                                size="icon"
                                 onClick={() => handleExcluirPagamento(pagamento)}
-                                className="p-2 text-red-600 hover:text-red-700 hover:border-red-300"
                               >
-                                <TrashIcon className="h-4 w-4" />
+                                <TrashIcon className="h-5 w-5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="top">
+                            <TooltipContent side="top" className="font-medium">
                               <p>Excluir pagamento</p>
                             </TooltipContent>
                           </Tooltip>

@@ -313,36 +313,34 @@ export default function CustosEvento({
                     </div>
                     
                     <div className="flex space-x-1 flex-shrink-0 ml-2">
-                      <TooltipProvider>
+                      <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
-                              variant="outline"
-                              size="sm"
+                              variant="action-edit"
+                              size="icon"
                               onClick={() => handleEditarCusto(custo)}
-                              className="p-2"
                             >
-                              <PencilIcon className="h-4 w-4" />
+                              <PencilIcon className="h-5 w-5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top">
+                          <TooltipContent side="top" className="font-medium">
                             <p>Editar custo</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      <TooltipProvider>
+                      <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
-                              variant="outline"
-                              size="sm"
+                              variant="action-delete"
+                              size="icon"
                               onClick={() => handleExcluirCusto(custo)}
-                              className="p-2 text-red-600 hover:text-red-700 hover:border-red-300"
                             >
-                              <TrashIcon className="h-4 w-4" />
+                              <TrashIcon className="h-5 w-5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent side="top">
+                          <TooltipContent side="top" className="font-medium">
                             <p>Excluir custo</p>
                           </TooltipContent>
                         </Tooltip>
@@ -361,36 +359,34 @@ export default function CustosEvento({
                         </div>
                       </div>
                       <div className="flex space-x-1 flex-shrink-0">
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
-                                variant="outline"
-                                size="sm"
+                                variant="action-edit"
+                                size="icon"
                                 onClick={() => handleEditarCusto(custo)}
-                                className="p-2"
                               >
-                                <PencilIcon className="h-4 w-4" />
+                                <PencilIcon className="h-5 w-5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="top">
+                            <TooltipContent side="top" className="font-medium">
                               <p>Editar custo</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        <TooltipProvider>
+                        <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
-                                variant="outline"
-                                size="sm"
+                                variant="action-delete"
+                                size="icon"
                                 onClick={() => handleExcluirCusto(custo)}
-                                className="p-2 text-red-600 hover:text-red-700 hover:border-red-300"
                               >
-                                <TrashIcon className="h-4 w-4" />
+                                <TrashIcon className="h-5 w-5" />
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent side="top">
+                            <TooltipContent side="top" className="font-medium">
                               <p>Excluir custo</p>
                             </TooltipContent>
                           </Tooltip>

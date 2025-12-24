@@ -348,23 +348,38 @@ export default function ServicosEvento({
                       </div>
                       <div className="flex items-center gap-2 ml-4 flex-shrink-0">
                         <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditarServico(servico)}
-                            title="Editar"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleExcluirServico(servico)}
-                            title="Excluir"
-                            className="text-error hover:text-error hover:bg-error/10"
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </Button>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="action-edit"
+                                  size="icon"
+                                  onClick={() => handleEditarServico(servico)}
+                                >
+                                  <PencilIcon className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="font-medium">
+                                <p>Editar serviço</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="action-delete"
+                                  size="icon"
+                                  onClick={() => handleExcluirServico(servico)}
+                                >
+                                  <TrashIcon className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="font-medium">
+                                <p>Excluir serviço</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                     </div>

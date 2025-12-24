@@ -388,51 +388,52 @@ export default function EventoViewPage() {
           </div>
 
           <div className="border-t border-border pt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <TooltipProvider>
+            <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="outline"
+                    variant="action-back"
+                    size="icon"
                     onClick={() => router.push('/eventos')}
-                    className="p-2"
                   >
-                    <ArrowLeftIcon className="h-4 w-4" />
+                    <ArrowLeftIcon className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p>Voltar</p>
+                <TooltipContent side="top" className="font-medium">
+                  <p>Voltar para lista de eventos</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <div className="flex items-center gap-2">
               {temAcessoContrato === true ? (
-                <TooltipProvider>
+                <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="outline"
+                        size="icon"
                         onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
-                        className="p-2"
                       >
-                        <DocumentTextIcon className="h-4 w-4" />
+                        <DocumentTextIcon className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>Gerar Contrato</p>
+                    <TooltipContent side="top" className="font-medium">
+                      <p>Gerar contrato</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <TooltipProvider>
+                <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span>
                         <Button
                           variant="outline"
                           disabled
-                          className="cursor-not-allowed p-2"
+                          size="icon"
+                          className="cursor-not-allowed opacity-50"
                         >
-                          <LockClosedIcon className="h-4 w-4" />
+                          <LockClosedIcon className="h-5 w-5" />
                         </Button>
                       </span>
                     </TooltipTrigger>
@@ -477,52 +478,53 @@ export default function EventoViewPage() {
                 </TooltipProvider>
               )}
               {temAcessoCopiar && (
-                <TooltipProvider>
+                <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button 
-                        variant="outline" 
+                        variant="action-copy" 
+                        size="icon"
                         onClick={handleCopyInfo}
-                        className={`p-2 ${copied ? 'bg-success-bg text-success-text' : ''}`}
+                        className={copied ? 'bg-success-bg text-success-text border-success' : ''}
                       >
                         {copied ? (
-                          <CheckIcon className="h-4 w-4" />
+                          <CheckIcon className="h-5 w-5" />
                         ) : (
-                          <ClipboardDocumentIcon className="h-4 w-4" />
+                          <ClipboardDocumentIcon className="h-5 w-5" />
                         )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent side="top">
-                      <p>{copied ? 'Copiado!' : 'Copiar informações do evento'}</p>
+                    <TooltipContent side="top" className="font-medium">
+                      <p>{copied ? 'Informações copiadas!' : 'Copiar informações do evento'}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
-              <TooltipProvider>
+              <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" onClick={handleEdit} className="p-2">
-                      <PencilIcon className="h-4 w-4" />
+                    <Button variant="action-edit" size="icon" onClick={handleEdit}>
+                      <PencilIcon className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>Editar</p>
+                  <TooltipContent side="top" className="font-medium">
+                    <p>Editar evento</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <TooltipProvider>
+              <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button 
-                      variant="outline" 
+                      variant="action-delete" 
+                      size="icon"
                       onClick={() => setShowDeleteConfirm(true)}
-                      className="p-2"
                     >
-                      <TrashIcon className="h-4 w-4" />
+                      <TrashIcon className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p>Arquivar</p>
+                  <TooltipContent side="top" className="font-medium">
+                    <p>Arquivar evento</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

@@ -7,6 +7,12 @@ import { cn } from "@/lib/utils"
 
 const TooltipProvider = TooltipPrimitive.Provider
 
+// Configuração padrão para tooltips mais responsivos
+const defaultTooltipProps = {
+  delayDuration: 200, // Reduzido de 700ms para 200ms
+  skipDelayDuration: 100,
+}
+
 const Tooltip = TooltipPrimitive.Root
 
 const TooltipTrigger = TooltipPrimitive.Trigger
