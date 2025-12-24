@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import Layout from '@/components/Layout';
 import {
   ArrowLeftIcon,
@@ -23,7 +24,8 @@ import {
   ClipboardDocumentIcon,
   CheckIcon,
   DocumentTextIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
@@ -57,6 +59,9 @@ export default function EventoViewPage() {
   const [temAcessoCopiar, setTemAcessoCopiar] = useState<boolean | null>(null);
   const [temAcessoContrato, setTemAcessoContrato] = useState<boolean | null>(null);
   const [eventoLocal, setEventoLocal] = useState<Evento | null>(null);
+  const [editandoImpressoes, setEditandoImpressoes] = useState(false);
+  const [valorImpressoes, setValorImpressoes] = useState<string>('');
+  const [salvandoImpressoes, setSalvandoImpressoes] = useState(false);
   
   const { data: evento, loading: loadingEvento, error: errorEvento, refetch: refetchEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
@@ -88,6 +93,7 @@ export default function EventoViewPage() {
   useEffect(() => {
     if (evento) {
       setEventoLocal(evento);
+      setValorImpressoes(evento.numeroImpressoes?.toString() || '');
     }
   }, [evento]);
 
@@ -158,6 +164,65 @@ export default function EventoViewPage() {
 
   const handleAnexosChange = () => {
     refetchAnexos();
+  };
+
+  const handleIniciarEdicaoImpressoes = () => {
+    if (!evento) return;
+    setValorImpressoes(evento.numeroImpressoes?.toString() || '');
+    setEditandoImpressoes(true);
+  };
+
+  const handleCancelarEdicaoImpressoes = () => {
+    if (!evento) return;
+    setValorImpressoes(evento.numeroImpressoes?.toString() || '');
+    setEditandoImpressoes(false);
+  };
+
+  const handleSalvarImpressoes = async () => {
+    if (!evento || !userId) return;
+
+    const numeroImpressoes = valorImpressoes.trim() === '' ? undefined : parseInt(valorImpressoes.trim(), 10);
+    
+    // Validar se é um número válido
+    if (valorImpressoes.trim() !== '' && (isNaN(numeroImpressoes!) || numeroImpressoes! < 0)) {
+      showToast('Por favor, insira um número válido de impressões', 'error');
+      return;
+    }
+
+    setSalvandoImpressoes(true);
+
+    try {
+      // Atualização otimista
+      const eventoAtualizado = {
+        ...eventoLocal!,
+        numeroImpressoes: numeroImpressoes
+      };
+      setEventoLocal(eventoAtualizado as Evento);
+
+      // Atualizar no banco
+      await dataService.updateEvento(evento.id, { numeroImpressoes }, userId);
+      
+      // Recarregar dados do servidor
+      await refetchEvento();
+      
+      showToast('Número de impressões atualizado com sucesso!', 'success');
+      setEditandoImpressoes(false);
+    } catch (error) {
+      console.error('Erro ao atualizar número de impressões:', error);
+      // Reverter atualização otimista
+      setEventoLocal(evento);
+      showToast('Erro ao atualizar número de impressões', 'error');
+    } finally {
+      setSalvandoImpressoes(false);
+    }
+  };
+
+  const handleKeyDownImpressoes = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSalvarImpressoes();
+    } else if (e.key === 'Escape') {
+      handleCancelarEdicaoImpressoes();
+    }
   };
 
   // Função auxiliar para formatar dia da semana
@@ -766,12 +831,93 @@ export default function EventoViewPage() {
                 </div>
               )}
               
-              {evento.numeroImpressoes && (
-                <div className="flex items-center text-sm text-text-secondary">
-                  <PrinterIcon className="h-4 w-4 mr-2 text-text-muted" />
-                  {evento.numeroImpressoes} impressões
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-sm">
+                <PrinterIcon className="h-4 w-4 text-text-muted flex-shrink-0" />
+                {editandoImpressoes ? (
+                  <div className="flex items-center gap-2 flex-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      value={valorImpressoes}
+                      onChange={(e) => setValorImpressoes(e.target.value)}
+                      onKeyDown={handleKeyDownImpressoes}
+                      placeholder="Número de impressões"
+                      className="w-32 h-8 text-sm"
+                      autoFocus
+                      disabled={salvandoImpressoes}
+                    />
+                    <span className="text-text-secondary">impressões</span>
+                    <div className="flex gap-1">
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="action-view"
+                              size="icon"
+                              onClick={handleSalvarImpressoes}
+                              disabled={salvandoImpressoes}
+                              className="h-7 w-7"
+                            >
+                              {salvandoImpressoes ? (
+                                <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                              ) : (
+                                <CheckIcon className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="font-medium">
+                            <p>Salvar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={handleCancelarEdicaoImpressoes}
+                              disabled={salvandoImpressoes}
+                              className="h-7 w-7"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="font-medium">
+                            <p>Cancelar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 group cursor-pointer" onClick={handleIniciarEdicaoImpressoes}>
+                    <span className="text-text-secondary">
+                      {eventoLocal?.numeroImpressoes || evento.numeroImpressoes || 0} impressões
+                    </span>
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="action-edit"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleIniciarEdicaoImpressoes();
+                            }}
+                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="font-medium">
+                          <p>Clique para editar número de impressões</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )}
+              </div>
               
               {evento.hashtag && (
                 <div className="flex items-center text-sm text-text-secondary">
