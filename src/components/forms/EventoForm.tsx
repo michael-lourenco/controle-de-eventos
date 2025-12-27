@@ -778,7 +778,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           telefone: formData.cerimonialista.telefone || ''
         } : undefined,
         observacoes: formData.observacoes || undefined,
-        status: formData.status,
+        status: (typeof formData.status === 'string' ? formData.status : String(formData.status)) as Evento['status'],
         valorTotal: formData.valorTotal,
         diaFinalPagamento: new Date(formData.diaFinalPagamento),
         dataCadastro: new Date(),

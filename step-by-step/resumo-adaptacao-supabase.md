@@ -174,3 +174,5 @@ Todos os repositórios Supabase estão implementados e funcionando:
 
 
 
+
+

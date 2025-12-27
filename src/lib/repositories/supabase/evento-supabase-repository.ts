@@ -1,6 +1,6 @@
 import { BaseSupabaseRepository } from './base-supabase-repository';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import { Evento } from '@/types';
+import { Evento, StatusEvento } from '@/types';
 import { generateUUID } from '@/lib/utils/uuid';
 
 export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
@@ -69,7 +69,28 @@ export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
     if (entity.numeroImpressoes !== undefined) data.numero_impressoes = entity.numeroImpressoes || null;
     if (entity.cerimonialista !== undefined) data.cerimonialista = entity.cerimonialista || null;
     if (entity.observacoes !== undefined) data.observacoes = entity.observacoes || null;
-    if (entity.status !== undefined) data.status = entity.status;
+    if (entity.status !== undefined) {
+      // Garantir que o status seja uma string válida conforme o constraint do banco
+      // Os valores permitidos são: 'Agendado', 'Confirmado', 'Em andamento', 'Concluído', 'Cancelado'
+      let statusValido: string;
+      
+      if (typeof entity.status === 'string') {
+        statusValido = entity.status;
+      } else {
+        // Se for um enum StatusEvento, extrair o valor
+        statusValido = String(entity.status);
+      }
+      
+      // Validar se o status está na lista permitida (case-sensitive)
+      const statusPermitidos = ['Agendado', 'Confirmado', 'Em andamento', 'Concluído', 'Cancelado'];
+      if (statusPermitidos.includes(statusValido)) {
+        data.status = statusValido;
+      } else {
+        // Se não for válido, usar 'Agendado' como fallback e logar o erro
+        console.error(`[EventoSupabaseRepository] Status inválido recebido: "${statusValido}" (tipo: ${typeof entity.status}). Valores permitidos: ${statusPermitidos.join(', ')}. Usando "Agendado" como fallback.`);
+        data.status = 'Agendado';
+      }
+    }
     if (entity.valorTotal !== undefined) data.valor_total = entity.valorTotal;
     if (entity.diaFinalPagamento !== undefined) data.dia_final_pagamento = entity.diaFinalPagamento instanceof Date ? entity.diaFinalPagamento.toISOString() : entity.diaFinalPagamento || null;
     if (entity.arquivado !== undefined) data.arquivado = entity.arquivado;

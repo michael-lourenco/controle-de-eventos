@@ -122,3 +122,5 @@ O erro mostra que ainda está tentando acessar subcollection do Firestore. Isso 
 
 
 
+
+
