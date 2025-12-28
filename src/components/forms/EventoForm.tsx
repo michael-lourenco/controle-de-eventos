@@ -25,6 +25,7 @@ import { usePlano } from '@/lib/hooks/usePlano';
 import { useToast } from '@/components/ui/toast';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
 import EventoStatusSelect from '@/components/EventoStatusSelect';
+import { parseLocalDate } from '@/lib/utils/date-helpers';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -757,7 +758,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         nomeEvento: formData.nomeEvento || undefined,
         clienteId: cliente.id,
         cliente,
-        dataEvento: new Date(formData.dataEvento + 'T00:00:00'),
+        dataEvento: parseLocalDate(formData.dataEvento),
         diaSemana: getDiaSemana(formData.dataEvento),
         local: formData.local,
         endereco: formData.endereco,
@@ -780,7 +781,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         observacoes: formData.observacoes || undefined,
         status: (typeof formData.status === 'string' ? formData.status : String(formData.status)) as Evento['status'],
         valorTotal: formData.valorTotal,
-        diaFinalPagamento: new Date(formData.diaFinalPagamento),
+        diaFinalPagamento: parseLocalDate(formData.diaFinalPagamento),
         dataCadastro: new Date(),
         dataAtualizacao: new Date()
       };

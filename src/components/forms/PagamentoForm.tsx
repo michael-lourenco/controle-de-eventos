@@ -13,6 +13,7 @@ import {
 } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { parseLocalDate } from '@/lib/utils/date-helpers';
 
 interface PagamentoFormProps {
   pagamento?: Pagamento;
@@ -259,7 +260,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
     try {
       const pagamentoData = {
         valor: formData.valor,
-        dataPagamento: new Date(formData.dataPagamento),
+        dataPagamento: parseLocalDate(formData.dataPagamento),
         formaPagamento: formData.formaPagamento,
         status: 'Pago' as const,
         observacoes: formData.observacoes || undefined,
