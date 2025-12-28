@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
+import { FirebaseAuthProvider } from "@/components/providers/FirebaseAuthProvider";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
 import { ToastProvider } from "@/components/ui/toast";
@@ -32,9 +33,11 @@ export default function RootLayout({
         <ThemeProvider>
           <SidebarProvider>
             <SessionProvider>
-              <ToastProvider>
-                {children}
-              </ToastProvider>
+              <FirebaseAuthProvider>
+                <ToastProvider>
+                  {children}
+                </ToastProvider>
+              </FirebaseAuthProvider>
             </SessionProvider>
           </SidebarProvider>
         </ThemeProvider>
