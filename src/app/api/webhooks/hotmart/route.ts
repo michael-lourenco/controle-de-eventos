@@ -4,6 +4,12 @@ import {
   createApiResponse,
   createErrorResponse
 } from '@/lib/api/route-helpers';
+import { HotmartWebhookService } from '@/lib/services/hotmart-webhook-service';
+import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
+import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
+import { AdminPlanoRepository } from '@/lib/repositories/admin-plano-repository';
+import { AssinaturaService } from '@/lib/services/assinatura-service';
+import { PlanoService } from '@/lib/services/plano-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,9 +24,14 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Payload JSON inválido', 400);
     }
 
-    const { getServiceFactory } = await import('@/lib/factories/service-factory');
-    const serviceFactory = getServiceFactory();
-    const service = serviceFactory.getHotmartWebhookService();
+    // Usar repositórios Admin que bypassam as regras de segurança do Firestore
+    // Webhooks são executados no servidor e precisam de acesso administrativo
+    const userRepo = new AdminUserRepository();
+    const planoRepo = new AdminPlanoRepository();
+    const assinaturaRepo = new AdminAssinaturaRepository();
+    const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
+    const planoService = new PlanoService(planoRepo);
+    const service = new HotmartWebhookService(assinaturaRepo, planoRepo, userRepo, planoService, assinaturaService);
 
     // Segundo a documentação oficial do Hotmart:
     // https://developers.hotmart.com/docs/pt-BR/tutorials/use-webhook-for-subscriptions/
@@ -105,9 +116,13 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    const { getServiceFactory } = await import('@/lib/factories/service-factory');
-    const serviceFactory = getServiceFactory();
-    const service = serviceFactory.getHotmartWebhookService();
+    // Usar repositórios Admin que bypassam as regras de segurança do Firestore
+    const userRepo = new AdminUserRepository();
+    const planoRepo = new AdminPlanoRepository();
+    const assinaturaRepo = new AdminAssinaturaRepository();
+    const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
+    const planoService = new PlanoService(planoRepo);
+    const service = new HotmartWebhookService(assinaturaRepo, planoRepo, userRepo, planoService, assinaturaService);
     const result = await service.processarWebhook(mockPayload);
 
     return createApiResponse({

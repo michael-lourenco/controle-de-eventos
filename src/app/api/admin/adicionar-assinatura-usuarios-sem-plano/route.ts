@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
-import { UserRepository } from '@/lib/repositories/user-repository';
-import { PlanoRepository } from '@/lib/repositories/plano-repository';
-import { AssinaturaRepository } from '@/lib/repositories/assinatura-repository';
+import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
+import { AdminPlanoRepository } from '@/lib/repositories/admin-plano-repository';
+import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
 import { AssinaturaService } from '@/lib/services/assinatura-service';
 import { StatusAssinatura } from '@/types/funcionalidades';
 
@@ -43,10 +43,11 @@ export async function POST(request: NextRequest) {
       dryRun = false
     } = body;
 
-    const userRepo = new UserRepository();
-    const planoRepo = new PlanoRepository();
-    const assinaturaRepo = new AssinaturaRepository();
-    const assinaturaService = new AssinaturaService();
+    // Usar repositórios Admin que bypassam as regras de segurança do Firestore
+    const userRepo = new AdminUserRepository();
+    const planoRepo = new AdminPlanoRepository();
+    const assinaturaRepo = new AdminAssinaturaRepository();
+    const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
 
     // Buscar plano padrão
     const plano = await planoRepo.findByCodigoHotmart(planoPadrao);

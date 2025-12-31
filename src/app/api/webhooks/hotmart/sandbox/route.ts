@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HotmartWebhookService } from '@/lib/services/hotmart-webhook-service';
+import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
+import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
+import { AdminPlanoRepository } from '@/lib/repositories/admin-plano-repository';
+import { AssinaturaService } from '@/lib/services/assinatura-service';
+import { PlanoService } from '@/lib/services/plano-service';
 
 /**
  * Endpoint de Webhook Sandbox do Hotmart
@@ -34,7 +39,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const service = new HotmartWebhookService();
+    // Usar repositórios Admin que bypassam as regras de segurança do Firestore
+    const userRepo = new AdminUserRepository();
+    const planoRepo = new AdminPlanoRepository();
+    const assinaturaRepo = new AdminAssinaturaRepository();
+    const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
+    const planoService = new PlanoService(planoRepo);
+    const service = new HotmartWebhookService(assinaturaRepo, planoRepo, userRepo, planoService, assinaturaService);
 
     // Obter assinatura HMAC do header
     const signature = request.headers.get('x-hotmart-hmac-sha256') || '';
@@ -159,7 +170,13 @@ export async function GET(request: NextRequest) {
       }
     };
 
-    const service = new HotmartWebhookService();
+    // Usar repositórios Admin que bypassam as regras de segurança do Firestore
+    const userRepo = new AdminUserRepository();
+    const planoRepo = new AdminPlanoRepository();
+    const assinaturaRepo = new AdminAssinaturaRepository();
+    const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
+    const planoService = new PlanoService(planoRepo);
+    const service = new HotmartWebhookService(assinaturaRepo, planoRepo, userRepo, planoService, assinaturaService);
     const result = await service.processarWebhook(mockPayload, true); // true = modo sandbox
 
     return NextResponse.json({

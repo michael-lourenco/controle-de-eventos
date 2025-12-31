@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { HotmartWebhookService } from '@/lib/services/hotmart-webhook-service';
-import { UserRepository } from '@/lib/repositories/user-repository';
-import { AssinaturaRepository } from '@/lib/repositories/assinatura-repository';
-import { PlanoRepository } from '@/lib/repositories/plano-repository';
+import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
+import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
+import { AdminPlanoRepository } from '@/lib/repositories/admin-plano-repository';
+import { AssinaturaService } from '@/lib/services/assinatura-service';
+import { PlanoService } from '@/lib/services/plano-service';
 
 /**
  * Endpoint Mock para Webhooks Hotmart
@@ -44,7 +46,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const service = new HotmartWebhookService();
+    // Usar repositórios Admin que bypassam as regras de segurança do Firestore
+    const userRepo = new AdminUserRepository();
+    const planoRepo = new AdminPlanoRepository();
+    const assinaturaRepo = new AdminAssinaturaRepository();
+    const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
+    const planoService = new PlanoService(planoRepo);
+    const service = new HotmartWebhookService(assinaturaRepo, planoRepo, userRepo, planoService, assinaturaService);
 
     // Gerar payload mock baseado no tipo de evento
     let payload: any;
@@ -124,8 +132,8 @@ export async function POST(request: NextRequest) {
       case 'PURCHASE_CANCELED':
         // Buscar dados reais do banco
         {
-          const userRepo = new UserRepository();
-          const assinaturaRepo = new AssinaturaRepository();
+          const userRepo = new AdminUserRepository();
+          const assinaturaRepo = new AdminAssinaturaRepository();
           
           // Buscar usuário
           const normalizedEmail = email.toLowerCase().trim();
@@ -185,8 +193,8 @@ export async function POST(request: NextRequest) {
       case 'PURCHASE_EXPIRED':
         // Buscar dados reais do banco
         {
-          const userRepo = new UserRepository();
-          const assinaturaRepo = new AssinaturaRepository();
+          const userRepo = new AdminUserRepository();
+          const assinaturaRepo = new AdminAssinaturaRepository();
           
           // Buscar usuário
           const normalizedEmail = email.toLowerCase().trim();
@@ -272,9 +280,9 @@ export async function POST(request: NextRequest) {
         }
         
         // Buscar dados reais do banco
-        const userRepo = new UserRepository();
-        const assinaturaRepo = new AssinaturaRepository();
-        const planoRepo = new PlanoRepository();
+        const userRepo = new AdminUserRepository();
+        const assinaturaRepo = new AdminAssinaturaRepository();
+        const planoRepo = new AdminPlanoRepository();
         
         // Buscar usuário
         const normalizedEmail = email.toLowerCase().trim();
