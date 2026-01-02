@@ -13,6 +13,7 @@ import {
 import { dataService } from '../data-service';
 import { startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { filtrarEventosValidos, filtrarEventosValidosComValor } from '../utils/evento-filters';
 
 export class RelatoriosReportService {
   private static instance: RelatoriosReportService;
@@ -137,6 +138,9 @@ export class RelatoriosReportService {
   }
 
   private async gerarDetalhamentoReceber(eventos: Evento[], pagamentos: Pagamento[]): Promise<RelatorioPersistido> {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidosComValor = filtrarEventosValidosComValor(eventos);
+    
     const resumosPorEvento: Record<string, {
       totalPago: number;
       valorPendente: number;
@@ -145,7 +149,7 @@ export class RelatoriosReportService {
       isAtrasado: boolean;
     }> = {};
 
-    eventos.forEach(evento => {
+    eventosValidosComValor.forEach(evento => {
       const valorPrevisto = evento.valorTotal || 0;
       if (valorPrevisto <= 0) return;
 
@@ -177,7 +181,7 @@ export class RelatoriosReportService {
       }>;
     }> = {};
 
-    eventos.forEach(evento => {
+    eventosValidosComValor.forEach(evento => {
       const resumo = resumosPorEvento[evento.id];
       if (!resumo || (resumo.valorPendente === 0 && resumo.valorAtrasado === 0)) return;
 
@@ -218,7 +222,7 @@ export class RelatoriosReportService {
       },
       meta: {
         geradoEm: new Date().toISOString(),
-        totalEventos: eventos.length,
+        totalEventos: eventosValidosComValor.length,
         totalPagamentos: pagamentos.length
       }
     };
@@ -279,17 +283,21 @@ export class RelatoriosReportService {
   }
 
   private async gerarPerformanceEventos(eventos: Evento[]): Promise<RelatorioPersistido> {
-    const total = eventos.length;
-    const concluidos = eventos.filter(e => e.status === 'Concluído').length;
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
+    const total = eventosValidos.length;
+    const concluidos = eventosValidos.filter(e => e.status === 'Concluído').length;
+    // Cancelados são excluídos dos cálculos, mas podem ser contados separadamente para estatísticas
     const cancelados = eventos.filter(e => e.status === 'Cancelado').length;
 
     const tipoCount: Record<string, number> = {};
-    eventos.forEach(evento => {
+    eventosValidos.forEach(evento => {
       tipoCount[evento.tipoEvento] = (tipoCount[evento.tipoEvento] || 0) + 1;
     });
 
     const statusCount: Record<string, number> = {};
-    eventos.forEach(evento => {
+    eventosValidos.forEach(evento => {
       statusCount[evento.status] = (statusCount[evento.status] || 0) + 1;
     });
 
@@ -453,20 +461,29 @@ export class RelatoriosReportService {
   }
 
   private async gerarServicos(eventos: Evento[], servicos: ServicoEvento[], tiposServicos: TipoServico[]): Promise<RelatorioPersistido> {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
     const servicosPorEvento: Record<string, string[]> = {};
-    eventos.forEach(evento => {
+    eventosValidos.forEach(evento => {
       const servicosEvento = servicos.filter(s => s.eventoId === evento.id);
       servicosPorEvento[evento.id] = servicosEvento.map(s => s.tipoServicoId);
     });
 
+    // Filtrar serviços apenas de eventos válidos
+    const servicosValidos = servicos.filter(s => {
+      const eventoId = s.eventoId;
+      return eventosValidos.some(e => e.id === eventoId);
+    });
+
     const servicosPorTipo: Record<string, number> = {};
-    servicos.forEach(servico => {
+    servicosValidos.forEach(servico => {
       const tipoId = servico.tipoServicoId;
       servicosPorTipo[tipoId] = (servicosPorTipo[tipoId] || 0) + 1;
     });
 
     const servicosPorTipoEvento: Record<string, Record<string, number>> = {};
-    eventos.forEach(evento => {
+    eventosValidos.forEach(evento => {
       const servicosEvento = servicos.filter(s => s.eventoId === evento.id);
       servicosEvento.forEach(servico => {
         if (!servicosPorTipoEvento[evento.tipoEvento]) {
@@ -503,13 +520,16 @@ export class RelatoriosReportService {
       },
       meta: {
         geradoEm: new Date().toISOString(),
-        totalEventos: eventos.length,
-        totalServicos: servicos.length
+        totalEventos: eventosValidos.length,
+        totalServicos: servicosValidos.length
       }
     };
   }
 
   private async gerarCanaisEntrada(clientes: Cliente[], canaisEntrada: CanalEntrada[], eventos: Evento[]): Promise<RelatorioPersistido> {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
     const clientesPorCanal: Record<string, number> = {};
     clientes.forEach(cliente => {
       const canalId = cliente.canalEntradaId || 'sem-canal';
@@ -517,7 +537,7 @@ export class RelatoriosReportService {
     });
 
     const eventosPorCanal: Record<string, number> = {};
-    eventos.forEach(evento => {
+    eventosValidos.forEach(evento => {
       const cliente = clientes.find(c => c.id === evento.clienteId);
       const canalId = cliente?.canalEntradaId || 'sem-canal';
       eventosPorCanal[canalId] = (eventosPorCanal[canalId] || 0) + 1;
@@ -555,18 +575,21 @@ export class RelatoriosReportService {
       meta: {
         geradoEm: new Date().toISOString(),
         totalClientes: clientes.length,
-        totalEventos: eventos.length
+        totalEventos: eventosValidos.length
       }
     };
   }
 
   private async gerarImpressoes(eventos: Evento[]): Promise<RelatorioPersistido> {
-    const eventosComImpressoes = eventos.filter(e => (e.numeroImpressoes || 0) > 0);
-    const totalImpressoes = eventos.reduce((total, e) => total + (e.numeroImpressoes || 0), 0);
-    const taxaUtilizacao = eventos.length > 0 ? (eventosComImpressoes.length / eventos.length) * 100 : 0;
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
+    const eventosComImpressoes = eventosValidos.filter(e => (e.numeroImpressoes || 0) > 0);
+    const totalImpressoes = eventosValidos.reduce((total, e) => total + (e.numeroImpressoes || 0), 0);
+    const taxaUtilizacao = eventosValidos.length > 0 ? (eventosComImpressoes.length / eventosValidos.length) * 100 : 0;
 
     const impressoesPorTipoEvento: Record<string, number> = {};
-    eventos.forEach(evento => {
+    eventosValidos.forEach(evento => {
       const impressoes = evento.numeroImpressoes || 0;
       if (impressoes > 0) {
         impressoesPorTipoEvento[evento.tipoEvento] =
@@ -581,7 +604,7 @@ export class RelatoriosReportService {
 
     meses.forEach(mes => {
       const mesKey = format(mes, 'yyyy-MM');
-      const eventosMes = eventos.filter(e => {
+      const eventosMes = eventosValidos.filter(e => {
         const dataEvento = new Date(e.dataEvento);
         return format(dataEvento, 'yyyy-MM') === mesKey;
       });
@@ -606,7 +629,7 @@ export class RelatoriosReportService {
       },
       meta: {
         geradoEm: new Date().toISOString(),
-        totalEventos: eventos.length
+        totalEventos: eventosValidos.length
       }
     };
   }

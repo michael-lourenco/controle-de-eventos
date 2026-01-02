@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Evento } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { filtrarEventosValidos } from '@/lib/utils/evento-filters';
 import { ArrowDownTrayIcon, PrinterIcon, ExclamationTriangleIcon, ChartBarIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -42,6 +43,9 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
       return dataNormalizada;
     };
 
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
     const inicio = normalizarData(new Date(dataInicio));
     const fim = normalizarData(new Date(dataFim));
     // Adicionar 1 dia ao fim para incluir eventos do último dia (comparar com <)
@@ -49,7 +53,7 @@ export default function ImpressoesReport({ eventos }: ImpressoesReportProps) {
     fimInclusivo.setDate(fimInclusivo.getDate() + 1);
     
     // Filtrar eventos do período
-    const eventosPeriodo = eventos.filter(evento => {
+    const eventosPeriodo = eventosValidos.filter(evento => {
       const dataEvento = normalizarData(new Date(evento.dataEvento));
       return dataEvento >= inicio && dataEvento < fimInclusivo;
     });

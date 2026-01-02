@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Evento, ServicoEvento, TipoServico } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { filtrarEventosValidos } from '@/lib/utils/evento-filters';
 import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
@@ -34,11 +35,14 @@ export default function ServicosReport({ eventos, servicos, tiposServicos }: Ser
   );
 
   const dadosServicos = useMemo(() => {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
     const inicio = new Date(dataInicio);
     const fim = new Date(dataFim);
     
     // Filtrar eventos do período
-    const eventosPeriodo = eventos.filter(evento => {
+    const eventosPeriodo = eventosValidos.filter(evento => {
       const dataEvento = new Date(evento.dataEvento);
       return dataEvento >= inicio && dataEvento <= fim;
     });

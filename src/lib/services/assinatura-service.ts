@@ -1,6 +1,9 @@
 import { AssinaturaRepository } from '../repositories/assinatura-repository';
+import { AdminAssinaturaRepository } from '../repositories/admin-assinatura-repository';
 import { PlanoRepository } from '../repositories/plano-repository';
+import { AdminPlanoRepository } from '../repositories/admin-plano-repository';
 import { UserRepository } from '../repositories/user-repository';
+import { AdminUserRepository } from '../repositories/admin-user-repository';
 import { Assinatura, StatusAssinatura, Plano } from '@/types/funcionalidades';
 import { User, UserAssinatura } from '@/types';
 
@@ -14,14 +17,14 @@ export interface PlanoStatus {
 }
 
 export class AssinaturaService {
-  private assinaturaRepo: AssinaturaRepository;
-  private planoRepo: PlanoRepository;
-  private userRepo: UserRepository;
+  private assinaturaRepo: AssinaturaRepository | AdminAssinaturaRepository;
+  private planoRepo: PlanoRepository | AdminPlanoRepository;
+  private userRepo: UserRepository | AdminUserRepository;
 
   constructor(
-    assinaturaRepo?: AssinaturaRepository,
-    planoRepo?: PlanoRepository,
-    userRepo?: UserRepository
+    assinaturaRepo?: AssinaturaRepository | AdminAssinaturaRepository,
+    planoRepo?: PlanoRepository | AdminPlanoRepository,
+    userRepo?: UserRepository | AdminUserRepository
   ) {
     // Manter compatibilidade: se não passar dependências, criar novas instâncias
     this.assinaturaRepo = assinaturaRepo || new AssinaturaRepository();

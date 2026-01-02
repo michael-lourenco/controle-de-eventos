@@ -3,9 +3,9 @@ import {
   CollectionReference,
   DocumentReference,
   Query,
-  QueryConstraint,
   Timestamp
 } from 'firebase-admin/firestore';
+import { QueryConstraint } from 'firebase/firestore'; // Usar tipo do cliente SDK para compatibilidade
 import { adminDb, isFirebaseAdminInitialized } from '../firebase-admin';
 import { BaseRepository } from './base-repository';
 
@@ -91,7 +91,7 @@ export class AdminFirestoreRepository<T extends { id: string }> implements BaseR
 
   async create(entity: Omit<T, 'id'>): Promise<T> {
     const collection = this.getCollection();
-    const firestoreData = this.convertToFirestoreData(entity);
+    const firestoreData = this.convertToFirestoreData(entity as Partial<T>);
     const docRef = await collection.add(firestoreData);
     const docSnap = await docRef.get();
     
@@ -104,7 +104,7 @@ export class AdminFirestoreRepository<T extends { id: string }> implements BaseR
 
   async setWithId(id: string, entity: Omit<T, 'id'>): Promise<T> {
     const docRef = this.getCollection().doc(id);
-    const firestoreData = this.convertToFirestoreData(entity);
+    const firestoreData = this.convertToFirestoreData(entity as Partial<T>);
     await docRef.set(firestoreData);
     return this.convertFirestoreData(firestoreData, id);
   }
@@ -149,6 +149,30 @@ export class AdminFirestoreRepository<T extends { id: string }> implements BaseR
       .where(field, operator, value)
       .get();
     return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
+  }
+
+  async query(constraints: QueryConstraint[]): Promise<T[]> {
+    try {
+      // No Firebase Admin SDK, não há uma função query() separada como no cliente SDK
+      // QueryConstraint do cliente SDK não é diretamente compatível com Admin SDK
+      // Para compatibilidade de tipos, implementamos uma versão básica
+      // Nota: Este método pode não funcionar corretamente com todos os tipos de constraints
+      // Se precisar de queries complexas, use findWhere() ou métodos específicos
+      
+      if (!constraints || constraints.length === 0) {
+        const querySnapshot = await this.getCollection().get();
+        return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
+      }
+      
+      // Como QueryConstraint do cliente SDK não é compatível com Admin SDK,
+      // e este método não é usado no código atual, retornamos todos os documentos
+      // Se precisar de queries específicas, use findWhere() ou implemente métodos específicos
+      console.warn('AdminFirestoreRepository.query() - QueryConstraint do cliente SDK não é compatível com Admin SDK. Retornando todos os documentos. Use findWhere() para queries específicas.');
+      const querySnapshot = await this.getCollection().get();
+      return querySnapshot.docs.map(doc => this.convertFirestoreData(doc.data(), doc.id));
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

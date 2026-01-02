@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Evento, StatusEvento } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { filtrarEventosValidos } from '@/lib/utils/evento-filters';
 import { ArrowDownTrayIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { 
@@ -31,10 +32,13 @@ export default function PerformanceEventosReport({ eventos }: PerformanceEventos
   );
 
   const eventosFiltrados = useMemo(() => {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
     const inicio = new Date(dataInicio);
     const fim = new Date(dataFim);
     
-    return eventos.filter(evento => {
+    return eventosValidos.filter(evento => {
       const dataEvento = new Date(evento.dataEvento);
       return dataEvento >= inicio && dataEvento <= fim;
     });

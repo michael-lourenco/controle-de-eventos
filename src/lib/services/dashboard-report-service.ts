@@ -7,6 +7,7 @@ import {
   Evento,
   Pagamento
 } from '@/types';
+import { filtrarEventosValidos, filtrarEventosValidosComValor } from '../utils/evento-filters';
 
 interface DashboardFontes {
   eventos: Evento[];
@@ -101,17 +102,20 @@ export class DashboardReportService {
   }
 
   private calcularDashboardData({ eventos, pagamentos, hoje }: DashboardFontes): DashboardData {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
     const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const fimMes = endOfDay(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0));
     const inicioAno = new Date(hoje.getFullYear(), 0, 1);
     const fimAno = endOfDay(new Date(hoje.getFullYear(), 11, 31));
 
-    const eventosHoje = eventos.filter(evento => {
+    const eventosHoje = eventosValidos.filter(evento => {
       const dataEvento = new Date(evento.dataEvento);
       return dataEvento.toDateString() === hoje.toDateString();
     });
 
-    const eventosMes = eventos.filter(evento => {
+    const eventosMes = eventosValidos.filter(evento => {
       const dataEvento = new Date(evento.dataEvento);
       return dataEvento >= inicioMes && dataEvento <= fimMes;
     });
@@ -121,7 +125,7 @@ export class DashboardReportService {
     proximos7Dias.setHours(23, 59, 59, 999);
     const hojeInicio = startOfDay(hoje);
 
-    const eventosProximos = eventos.filter(evento => {
+    const eventosProximos = eventosValidos.filter(evento => {
       const dataEvento = new Date(evento.dataEvento);
       return dataEvento >= hojeInicio && dataEvento <= proximos7Dias;
     });
@@ -145,7 +149,10 @@ export class DashboardReportService {
     let valorAtrasado = 0;
     let pagamentosPendentes = 0;
 
-    eventos.forEach(evento => {
+    // Usar apenas eventos válidos com valor para cálculos financeiros
+    const eventosValidosComValor = filtrarEventosValidosComValor(eventos);
+    
+    eventosValidosComValor.forEach(evento => {
       const valorPrevisto = evento.valorTotal || 0;
       if (valorPrevisto <= 0) {
         return;
@@ -170,7 +177,7 @@ export class DashboardReportService {
     });
 
     const eventosPorTipo: Record<string, number> = {};
-    eventos.forEach(evento => {
+    eventosValidos.forEach(evento => {
       eventosPorTipo[evento.tipoEvento] = (eventosPorTipo[evento.tipoEvento] || 0) + 1;
     });
 
@@ -192,8 +199,8 @@ export class DashboardReportService {
         receitaMes,
         valorPendente,
         valorAtrasado,
-        totalEventos: eventos.length,
-        eventosConcluidos: eventos.filter(e => e.status === 'Concluído').length
+        totalEventos: eventosValidos.length,
+        eventosConcluidos: eventosValidos.filter(e => e.status === 'Concluído').length
       },
       graficos: {
         receitaMensal: [],
@@ -207,11 +214,14 @@ export class DashboardReportService {
   }
 
   private calcularPeriodosResumo({ eventos, pagamentos, hoje }: DashboardFontes): DashboardPeriodoResumo[] {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
     return PERIODOS_MESES.map(periodo => {
       const fim = endOfDay(hoje);
       const inicio = startOfDay(subMonths(fim, periodo.meses));
 
-      const eventosPeriodo = eventos.filter(evento => {
+      const eventosPeriodo = eventosValidos.filter(evento => {
         const dataEvento = new Date(evento.dataEvento);
         return dataEvento >= inicio && dataEvento <= fim;
       });
@@ -232,7 +242,12 @@ export class DashboardReportService {
       let valorPendente = 0;
       let valorAtrasado = 0;
 
-      eventosPeriodo.forEach(evento => {
+      // Usar apenas eventos válidos com valor para cálculos financeiros
+      const eventosPeriodoValidosComValor = eventosPeriodo.filter(e => 
+        (e.valorTotal || 0) > 0
+      );
+
+      eventosPeriodoValidosComValor.forEach(evento => {
         const valorPrevisto = evento.valorTotal || 0;
         if (valorPrevisto <= 0) return;
 

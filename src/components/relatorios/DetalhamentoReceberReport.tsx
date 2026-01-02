@@ -11,6 +11,7 @@ import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { filtrarEventosValidosComValor } from '@/lib/utils/evento-filters';
 
 interface DetalhamentoReceberReportProps {
   eventos: Evento[];
@@ -102,8 +103,11 @@ export default function DetalhamentoReceberReport({
       setCarregandoResumos(true);
 
       try {
+        // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+        const eventosValidosComValor = filtrarEventosValidosComValor(eventos);
+        
         // Usar pagamentos já carregados para calcular resumos (muito mais rápido)
-        const resultados = eventos.map((evento) => {
+        const resultados = eventosValidosComValor.map((evento) => {
           try {
             const resumo = dataService.calcularResumoFinanceiroPorEvento(
               evento.id,
@@ -153,7 +157,10 @@ export default function DetalhamentoReceberReport({
   }, [userId, eventos]);
 
   const resumo = useMemo(() => {
-    if (!eventos?.length) {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidosComValor = filtrarEventosValidosComValor(eventos || []);
+    
+    if (!eventosValidosComValor?.length) {
       return {
         totalPendente: 0,
         totalAtrasado: 0,
@@ -178,7 +185,7 @@ export default function DetalhamentoReceberReport({
     let totalPendente = 0;
     let totalAtrasado = 0;
 
-    eventos.forEach((evento) => {
+    eventosValidosComValor.forEach((evento) => {
       const valorPrevisto = evento.valorTotal ?? 0;
 
       if (valorPrevisto <= 0) {

@@ -3,6 +3,7 @@ import { RelatorioSnapshot, ResumoGeral, ReceitaMensal, EventoResumo, FluxoCaixa
 import { dataService } from '../data-service';
 import { format } from 'date-fns';
 import { eachMonthOfInterval, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { filtrarEventosValidos } from '../utils/evento-filters';
 
 export class RelatorioCacheService {
   private repository = repositoryFactory.getRelatorioCacheRepository();
@@ -116,7 +117,8 @@ export class RelatorioCacheService {
     custos: any[],
     clientes: any[]
   ): ResumoGeral {
-    const eventosAtivos = eventos.filter(e => !e.arquivado);
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosAtivos = filtrarEventosValidos(eventos);
     const pagamentosPagos = pagamentos.filter(p => p.status === 'Pago' && !p.cancelado);
     const custosAtivos = custos.filter(c => !c.removido);
     const clientesAtivos = clientes.filter(c => !c.arquivado);
@@ -185,7 +187,8 @@ export class RelatorioCacheService {
     custos: any[],
     servicos: any[]
   ): Promise<EventoResumo[]> {
-    const eventosAtivos = eventos.filter(e => !e.arquivado);
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosAtivos = filtrarEventosValidos(eventos);
     const hoje = new Date();
 
     // Criar mapas para lookup rápido
@@ -320,7 +323,8 @@ export class RelatorioCacheService {
    * Calcula resumo de serviços
    */
   private calcularServicosResumo(eventos: any[], servicos: any[], tiposServicos: any[]): ServicosResumo {
-    const eventosAtivos = eventos.filter(e => !e.arquivado);
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosAtivos = filtrarEventosValidos(eventos);
     const servicosAtivos = servicos.filter(s => !s.removido);
 
     const tiposMap = new Map(tiposServicos.map(t => [t.id, t]));
@@ -356,7 +360,8 @@ export class RelatorioCacheService {
    */
   private calcularCanaisEntradaResumo(clientes: any[], eventos: any[], canaisEntrada: any[]): CanalEntradaResumo[] {
     const clientesAtivos = clientes.filter(c => !c.arquivado);
-    const eventosAtivos = eventos.filter(e => !e.arquivado);
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosAtivos = filtrarEventosValidos(eventos);
 
     const canaisMap = new Map(canaisEntrada.map(c => [c.id, c]));
 
@@ -407,7 +412,8 @@ export class RelatorioCacheService {
    * Calcula resumo de impressões
    */
   private calcularImpressoesResumo(eventos: any[]): ImpressoesResumo {
-    const eventosAtivos = eventos.filter(e => !e.arquivado);
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosAtivos = filtrarEventosValidos(eventos);
 
     const totalImpressoes = eventosAtivos.reduce((sum, e) => sum + (e.numeroImpressoes || 0), 0);
     const eventosComImpressoes = eventosAtivos.filter(e => (e.numeroImpressoes || 0) > 0).length;

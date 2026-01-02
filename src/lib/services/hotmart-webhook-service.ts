@@ -1,6 +1,9 @@
 import { AssinaturaRepository } from '../repositories/assinatura-repository';
+import { AdminAssinaturaRepository } from '../repositories/admin-assinatura-repository';
 import { PlanoRepository } from '../repositories/plano-repository';
+import { AdminPlanoRepository } from '../repositories/admin-plano-repository';
 import { UserRepository } from '../repositories/user-repository';
+import { AdminUserRepository } from '../repositories/admin-user-repository';
 import { PlanoService } from './plano-service';
 import { AssinaturaService } from './assinatura-service';
 import { StatusAssinatura, Assinatura as AssinaturaType, Plano } from '@/types/funcionalidades';
@@ -68,16 +71,16 @@ export interface HotmartWebhookPayload {
 }
 
 export class HotmartWebhookService {
-  private assinaturaRepo: AssinaturaRepository;
-  private planoRepo: PlanoRepository;
-  private userRepo: UserRepository;
+  private assinaturaRepo: AssinaturaRepository | AdminAssinaturaRepository;
+  private planoRepo: PlanoRepository | AdminPlanoRepository;
+  private userRepo: UserRepository | AdminUserRepository;
   private planoService: PlanoService;
   private assinaturaService: AssinaturaService;
 
   constructor(
-    assinaturaRepo?: AssinaturaRepository,
-    planoRepo?: PlanoRepository,
-    userRepo?: UserRepository,
+    assinaturaRepo?: AssinaturaRepository | AdminAssinaturaRepository,
+    planoRepo?: PlanoRepository | AdminPlanoRepository,
+    userRepo?: UserRepository | AdminUserRepository,
     planoService?: PlanoService,
     assinaturaService?: AssinaturaService
   ) {

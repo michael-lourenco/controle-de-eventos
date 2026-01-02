@@ -1,22 +1,25 @@
 import { PlanoRepository } from '../repositories/plano-repository';
+import { AdminPlanoRepository } from '../repositories/admin-plano-repository';
 import { FuncionalidadeRepository } from '../repositories/funcionalidade-repository';
 import { AssinaturaRepository } from '../repositories/assinatura-repository';
+import { AdminAssinaturaRepository } from '../repositories/admin-assinatura-repository';
 import { UserRepository } from '../repositories/user-repository';
+import { AdminUserRepository } from '../repositories/admin-user-repository';
 import { AssinaturaService } from './assinatura-service';
 import { Plano, PlanoComFuncionalidades, StatusAssinatura } from '@/types/funcionalidades';
 
 export class PlanoService {
-  private planoRepo: PlanoRepository;
+  private planoRepo: PlanoRepository | AdminPlanoRepository;
   private funcionalidadeRepo: FuncionalidadeRepository;
-  private assinaturaRepo: AssinaturaRepository;
-  private userRepo: UserRepository;
+  private assinaturaRepo: AssinaturaRepository | AdminAssinaturaRepository;
+  private userRepo: UserRepository | AdminUserRepository;
   private assinaturaService: AssinaturaService;
 
   constructor(
-    planoRepo?: PlanoRepository,
+    planoRepo?: PlanoRepository | AdminPlanoRepository,
     funcionalidadeRepo?: FuncionalidadeRepository,
-    assinaturaRepo?: AssinaturaRepository,
-    userRepo?: UserRepository,
+    assinaturaRepo?: AssinaturaRepository | AdminAssinaturaRepository,
+    userRepo?: UserRepository | AdminUserRepository,
     assinaturaService?: AssinaturaService
   ) {
     // Manter compatibilidade: se não passar dependências, criar novas instâncias

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Cliente, CanalEntrada, Evento } from '@/types';
 import { format, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { filtrarEventosValidos } from '@/lib/utils/evento-filters';
 import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, UserPlusIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { AreaChart, Area, Line, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -37,6 +38,9 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
   );
 
   const dadosCanaisEntrada = useMemo(() => {
+    // Filtrar apenas eventos válidos (não cancelados e não arquivados) para cálculos
+    const eventosValidos = filtrarEventosValidos(eventos);
+    
     const inicio = new Date(dataInicio);
     const fim = new Date(dataFim);
     
@@ -66,8 +70,8 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
         }
         clientesPorCanalMap[cliente.canalEntradaId].quantidade++;
         
-        // Buscar eventos deste cliente
-        const eventosCliente = eventos.filter(e => e.clienteId === cliente.id);
+        // Buscar eventos válidos deste cliente
+        const eventosCliente = eventosValidos.filter(e => e.clienteId === cliente.id);
         clientesPorCanalMap[cliente.canalEntradaId].eventos.push(...eventosCliente);
       }
     });
@@ -117,7 +121,7 @@ export default function CanaisEntradaReport({ clientes, canaisEntrada, eventos }
 
     // Conversão por canal
     const conversaoPorCanal = clientesPorCanal.map(canal => {
-      const eventosCanal = eventos.filter(e => {
+      const eventosCanal = eventosValidos.filter(e => {
         const cliente = clientesPeriodo.find(c => c.id === e.clienteId);
         return cliente?.canalEntradaId === canal.canalId;
       });
