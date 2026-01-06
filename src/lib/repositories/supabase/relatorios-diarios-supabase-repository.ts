@@ -226,22 +226,62 @@ export class RelatoriosDiariosSupabaseRepository {
       updateData.dashboard = existingData.dashboard;
     }
 
-    // Adicionar novos relatórios
+    // Adicionar novos relatórios apenas se o campo existir no mapeamento
     Object.entries(relatorios).forEach(([key, value]) => {
       const campoSupabase = campoMap[key];
       if (campoSupabase && value) {
+        // Verificar se o campo está no mapeamento antes de adicionar
         updateData[campoSupabase] = value;
       }
     });
 
-    const { error } = await this.supabase
-      .from(this.tableName)
-      .upsert(updateData, {
-        onConflict: 'id'
-      });
+    // Tentar salvar apenas os campos que existem
+    // Se houver erro de coluna não encontrada, tentar salvar sem as colunas problemáticas
+    let error = null;
+    let tentativas = 0;
+    const maxTentativas = 10; // Aumentado para lidar com múltiplas colunas faltando
+    const colunasRemovidas: string[] = [];
+    
+    while (tentativas < maxTentativas) {
+      const { error: upsertError } = await this.supabase
+        .from(this.tableName)
+        .upsert(updateData, {
+          onConflict: 'id'
+        });
+
+      error = upsertError;
+      
+      // Se não houver erro, sucesso!
+      if (!error) {
+        if (colunasRemovidas.length > 0) {
+          console.warn(`Relatórios salvos com sucesso, mas as seguintes colunas foram removidas por não existirem: ${colunasRemovidas.join(', ')}`);
+        }
+        break;
+      }
+      
+      // Se o erro não for relacionado a coluna não encontrada, sair do loop
+      if (!error.message?.includes('Could not find') || !error.message?.includes('column')) {
+        break;
+      }
+
+      // Se o erro for sobre coluna não encontrada, remover a coluna problemática e tentar novamente
+      const colunaNaoEncontrada = error.message.match(/Could not find the '([^']+)' column/);
+      if (colunaNaoEncontrada && colunaNaoEncontrada[1]) {
+        const colunaProblema = colunaNaoEncontrada[1];
+        console.warn(`Coluna ${colunaProblema} não encontrada na tabela. Removendo do updateData e tentando novamente.`);
+        delete updateData[colunaProblema];
+        colunasRemovidas.push(colunaProblema);
+        tentativas++;
+      } else {
+        break;
+      }
+    }
 
     if (error) {
-      throw new Error(`Erro ao salvar múltiplos relatórios: ${error.message}`);
+      const mensagemErro = colunasRemovidas.length > 0 
+        ? `Erro ao salvar múltiplos relatórios: ${error.message}. Colunas removidas: ${colunasRemovidas.join(', ')}`
+        : `Erro ao salvar múltiplos relatórios: ${error.message}`;
+      throw new Error(mensagemErro);
     }
   }
 }

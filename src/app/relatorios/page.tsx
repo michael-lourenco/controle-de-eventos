@@ -19,9 +19,11 @@ import { dataService } from '@/lib/data-service';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { useToast } from '@/components/ui/toast';
 
 export default function RelatoriosPage() {
   const { userId } = useCurrentUser();
+  const { showToast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   
@@ -77,7 +79,12 @@ export default function RelatoriosPage() {
   const loadingAdditional = loadAdditionalData && (loadingServicos || loadingTiposServicos || loadingClientes || loadingCanaisEntrada || loadingCustos);
 
   const handleRefresh = async () => {
-    if (refreshing || !userId) return;
+    if (refreshing || !userId) {
+      if (!userId) {
+        showToast('Usuário não autenticado', 'error');
+      }
+      return;
+    }
     setRefreshing(true);
     try {
       // Não força refresh - só gera se não existir cache para o dia
@@ -96,11 +103,35 @@ export default function RelatoriosPage() {
         setLastUpdatedAt(new Date());
       }
       
+      showToast('Relatórios atualizados com sucesso!', 'success');
+      
       // Recarregar dados após gerar relatórios (se necessário)
-      window.location.reload();
-    } catch (error) {
+      // Usar setTimeout para garantir que o toast seja exibido antes do reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (error: any) {
       console.error('Erro ao atualizar relatórios:', error);
-      alert('Erro ao atualizar relatórios. Tente novamente.');
+      
+      // Extrair mensagem de erro mais detalhada
+      let errorMessage = 'Erro ao atualizar relatórios. Tente novamente.';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.error?.message) {
+        errorMessage = error.error.message;
+      }
+      
+      // Log detalhado para debug
+      console.error('Detalhes do erro:', {
+        message: errorMessage,
+        error: error,
+        stack: error?.stack
+      });
+      
+      showToast(errorMessage, 'error');
     } finally {
       setRefreshing(false);
     }

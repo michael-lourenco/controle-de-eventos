@@ -43,26 +43,38 @@ export class RelatoriosReportService {
     const hoje = new Date();
     const dateKey = format(hoje, 'yyyyMMdd');
 
-    if (!options?.forceRefresh) {
-      const cached = await this.relatoriosRepo.getRelatorioDiario(userId, dateKey);
-      if (cached && this.todosRelatoriosPresentes(cached)) {
-        return; // Todos os relatórios já estão em cache
+    try {
+      if (!options?.forceRefresh) {
+        const cached = await this.relatoriosRepo.getRelatorioDiario(userId, dateKey);
+        if (cached && this.todosRelatoriosPresentes(cached)) {
+          return; // Todos os relatórios já estão em cache
+        }
       }
+    } catch (error: any) {
+      console.error('Erro ao verificar cache de relatórios:', error);
+      // Continuar mesmo se houver erro ao verificar cache
     }
 
     // Removido initializeAllCollections() - não é necessário e causa queries desnecessárias de subcollections
 
     // Buscar todos os dados necessários uma única vez
-    const [eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada] = await Promise.all([
-      this.eventoRepo.findAll(userId),
-      this.pagamentoRepo.findAll(userId),
-      this.custoEventoRepo.findAll(userId),
-      this.servicoEventoRepo.findAll(userId),
-      this.tipoServicoRepo.findAll(userId),
-      this.tipoCustoRepo.findAll(userId),
-      this.clienteRepo.findAll(userId),
-      this.canalEntradaRepo.findAll(userId)
-    ]);
+    let eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada;
+    
+    try {
+      [eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada] = await Promise.all([
+        this.eventoRepo.findAll(userId),
+        this.pagamentoRepo.findAll(userId),
+        this.custoEventoRepo.findAll(userId),
+        this.servicoEventoRepo.findAll(userId),
+        this.tipoServicoRepo.findAll(userId),
+        this.tipoCustoRepo.findAll(userId),
+        this.clienteRepo.findAll(userId),
+        this.canalEntradaRepo.findAll(userId)
+      ]);
+    } catch (error: any) {
+      console.error('Erro ao buscar dados para gerar relatórios:', error);
+      throw new Error(`Erro ao buscar dados: ${error?.message || 'Erro desconhecido ao buscar dados'}`);
+    }
 
     // Enriquecer custos e serviços com tipos
     const tiposCustoMap = new Map(tiposCusto.map(tipo => [tipo.id, tipo]));
@@ -90,39 +102,51 @@ export class RelatoriosReportService {
     }));
 
     // Gerar todos os relatórios em paralelo
-    const [
-      detalhamentoReceber,
-      receitaMensal,
-      performanceEventos,
-      fluxoCaixa,
-      servicosReport,
-      canaisEntradaReport,
-      impressoes
-    ] = await Promise.all([
-      this.gerarDetalhamentoReceber(eventos, pagamentos),
-      this.gerarReceitaMensal(pagamentos),
-      this.gerarPerformanceEventos(eventos),
-      this.gerarFluxoCaixa(pagamentos, custos),
-      this.gerarServicos(eventos, servicos, tiposServicos),
-      this.gerarCanaisEntrada(clientes, canaisEntrada, eventos),
-      this.gerarImpressoes(eventos)
-    ]);
-
-    // Salvar todos os relatórios de uma vez
-    await this.relatoriosRepo.salvarMultiplosRelatorios(
-      userId,
-      dateKey,
-      {
+    let detalhamentoReceber, receitaMensal, performanceEventos, fluxoCaixa, servicosReport, canaisEntradaReport, impressoes;
+    
+    try {
+      [
         detalhamentoReceber,
         receitaMensal,
         performanceEventos,
         fluxoCaixa,
-        servicos: servicosReport,
-        canaisEntrada: canaisEntradaReport,
+        servicosReport,
+        canaisEntradaReport,
         impressoes
-      },
-      hoje
-    );
+      ] = await Promise.all([
+        this.gerarDetalhamentoReceber(eventos, pagamentos),
+        this.gerarReceitaMensal(pagamentos),
+        this.gerarPerformanceEventos(eventos),
+        this.gerarFluxoCaixa(pagamentos, custos),
+        this.gerarServicos(eventos, servicos, tiposServicos),
+        this.gerarCanaisEntrada(clientes, canaisEntrada, eventos),
+        this.gerarImpressoes(eventos)
+      ]);
+    } catch (error: any) {
+      console.error('Erro ao gerar relatórios:', error);
+      throw new Error(`Erro ao gerar relatórios: ${error?.message || 'Erro desconhecido ao gerar relatórios'}`);
+    }
+
+    // Salvar todos os relatórios de uma vez
+    try {
+      await this.relatoriosRepo.salvarMultiplosRelatorios(
+        userId,
+        dateKey,
+        {
+          detalhamentoReceber,
+          receitaMensal,
+          performanceEventos,
+          fluxoCaixa,
+          servicos: servicosReport,
+          canaisEntrada: canaisEntradaReport,
+          impressoes
+        },
+        hoje
+      );
+    } catch (error: any) {
+      console.error('Erro ao salvar relatórios:', error);
+      throw new Error(`Erro ao salvar relatórios: ${error?.message || 'Erro desconhecido ao salvar relatórios'}`);
+    }
   }
 
   private todosRelatoriosPresentes(cached: any): boolean {
