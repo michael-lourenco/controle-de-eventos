@@ -1,9 +1,9 @@
-import { Evento, ModeloContrato, CampoContrato } from '@/types';
+import { Evento, ModeloContrato, CampoContrato, ServicoEvento } from '@/types';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { TemplateService } from './template-service';
 
 export class ContratoService {
-  static async preencherDadosDoEvento(evento: Evento, modelo: ModeloContrato): Promise<Record<string, any>> {
+  static async preencherDadosDoEvento(evento: Evento, modelo: ModeloContrato, servicosEvento?: ServicoEvento[]): Promise<Record<string, any>> {
     const dados: Record<string, any> = {};
     
     dados.nome_contratante = evento.contratante || evento.cliente?.nome || '';
@@ -15,14 +15,52 @@ export class ContratoService {
     
     dados.nome_evento = evento.nomeEvento || evento.tipoEvento || 'Evento';
     dados.tipo_evento = evento.tipoEvento || '';
-    dados.data_evento = evento.dataEvento ? new Date(evento.dataEvento).toLocaleDateString('pt-BR') : '';
+    
+    // Formatar data_evento para formato YYYY-MM-DD (necessário para campos date do HTML)
+    if (evento.dataEvento) {
+      const dataEvento = new Date(evento.dataEvento);
+      const ano = dataEvento.getFullYear();
+      const mes = String(dataEvento.getMonth() + 1).padStart(2, '0');
+      const dia = String(dataEvento.getDate()).padStart(2, '0');
+      dados.data_evento = `${ano}-${mes}-${dia}`;
+      console.log('ContratoService: data_evento formatada:', dados.data_evento, 'de', evento.dataEvento);
+    } else {
+      dados.data_evento = '';
+      console.log('ContratoService: evento.dataEvento não disponível');
+    }
+    
     dados.local_evento = evento.local || '';
     dados.endereco_evento = evento.endereco || '';
     dados.numero_convidados = evento.numeroConvidados || 0;
     dados.valor_total = evento.valorTotal || 0;
     dados.valor_total_formatado = evento.valorTotal ? `R$ ${evento.valorTotal.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
+    console.log('ContratoService: valor_total preenchido:', dados.valor_total);
+    console.log('ContratoService: valor_total_formatado preenchido:', dados.valor_total_formatado);
     dados.horario_inicio = evento.horarioInicio || '';
     dados.observacoes_evento = evento.observacoes || '';
+
+    // Preencher tipo_servico com os serviços do evento
+    if (servicosEvento && servicosEvento.length > 0) {
+      // Filtrar serviços não removidos e extrair nomes dos tipos de serviço
+      const tiposServicoNomes = servicosEvento
+        .filter(servico => !servico.removido && servico.tipoServico)
+        .map(servico => servico.tipoServico.nome)
+        .filter((nome, index, array) => array.indexOf(nome) === index); // Remover duplicatas
+      
+      dados.tipo_servico = tiposServicoNomes.join(', ') || '';
+      console.log('ContratoService: tipo_servico preenchido:', dados.tipo_servico, 'de', servicosEvento.length, 'serviços');
+    } else {
+      dados.tipo_servico = '';
+      console.log('ContratoService: Nenhum serviço fornecido para preencher tipo_servico');
+    }
+
+    // Preencher data_contrato com a data atual (formato YYYY-MM-DD)
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoje.getDate()).padStart(2, '0');
+    dados.data_contrato = `${ano}-${mes}-${dia}`;
+    console.log('ContratoService: data_contrato preenchida:', dados.data_contrato);
 
     const configRepo = repositoryFactory.getConfiguracaoContratoRepository();
     const userId = (evento as any).userId || '';

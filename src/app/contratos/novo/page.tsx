@@ -8,22 +8,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
-import { ModeloContrato, CampoContrato, Evento } from '@/types';
+import { ModeloContrato, CampoContrato, Evento, ServicoEvento } from '@/types';
 import { ContratoService } from '@/lib/services/contrato-service';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
 import LoadingHotmart from '@/components/LoadingHotmart';
+import { useCurrentUser } from '@/hooks/useAuth';
+import { dataService } from '@/lib/data-service';
 
 function NovoContratoPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
+  const { userId } = useCurrentUser();
   const eventoId = searchParams.get('eventoId');
 
   const [passo, setPasso] = useState(1);
   const [modelos, setModelos] = useState<ModeloContrato[]>([]);
   const [modeloSelecionado, setModeloSelecionado] = useState<ModeloContrato | null>(null);
   const [evento, setEvento] = useState<Evento | null>(null);
+  const [servicosEvento, setServicosEvento] = useState<ServicoEvento[]>([]);
   const [dadosPreenchidos, setDadosPreenchidos] = useState<Record<string, any>>({});
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -41,6 +45,34 @@ function NovoContratoPageContent() {
       gerarPreview();
     }
   }, [modeloSelecionado, dadosPreenchidos]);
+
+  // Atualizar dados quando serviços do evento forem carregados e modelo já estiver selecionado
+  useEffect(() => {
+    const atualizarDadosComServicos = async () => {
+      if (evento && modeloSelecionado && servicosEvento.length > 0) {
+        console.log('Atualizando dados com serviços carregados:', servicosEvento);
+        try {
+          const configResponse = await fetch('/api/configuracao-contrato/campos-fixos');
+          if (configResponse.ok) {
+            const camposFixosResult = await configResponse.json();
+            const camposFixos = camposFixosResult.data || camposFixosResult;
+            const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modeloSelecionado, servicosEvento);
+            console.log('Dados do evento preenchidos:', dadosEvento);
+            setDadosPreenchidos({ ...camposFixos, ...dadosEvento });
+          } else {
+            // Sem campos fixos, usar apenas dados do evento
+            const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modeloSelecionado, servicosEvento);
+            console.log('Dados do evento preenchidos (sem campos fixos):', dadosEvento);
+            setDadosPreenchidos(dadosEvento);
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar dados com serviços:', error);
+        }
+      }
+    };
+
+    atualizarDadosComServicos();
+  }, [servicosEvento, evento, modeloSelecionado]);
 
   const loadModelos = async () => {
     try {
@@ -86,8 +118,22 @@ function NovoContratoPageContent() {
         // createApiResponse retorna { data: evento }
         const eventoData = result.data || result;
         setEvento(eventoData);
+        
+        // Buscar serviços do evento
+        let servicos: ServicoEvento[] = [];
+        if (userId && eventoId) {
+          try {
+            servicos = await dataService.getServicosEvento(userId, eventoId);
+            setServicosEvento(servicos);
+          } catch (error) {
+            console.error('Erro ao carregar serviços do evento:', error);
+            // Não mostrar erro ao usuário, apenas log
+          }
+        }
+        
+        // Se já houver modelo selecionado, preencher dados com os serviços carregados
         if (eventoData && modeloSelecionado) {
-          const dados = await ContratoService.preencherDadosDoEvento(eventoData, modeloSelecionado);
+          const dados = await ContratoService.preencherDadosDoEvento(eventoData, modeloSelecionado, servicos);
           setDadosPreenchidos(dados);
         }
       } else {
@@ -104,41 +150,90 @@ function NovoContratoPageContent() {
     setModeloSelecionado(modelo);
     setPasso(2);
 
-    if (evento) {
-      const dados = await ContratoService.preencherDadosDoEvento(evento, modelo);
-      setDadosPreenchidos(dados);
-    } else {
-      // Buscar campos fixos via API
+    // Se houver evento mas serviços ainda não foram carregados, tentar carregar agora
+    let servicosParaUsar = servicosEvento;
+    if (evento && eventoId && userId && servicosEvento.length === 0) {
       try {
-        const configResponse = await fetch('/api/configuracao-contrato');
-        
-        if (configResponse.ok) {
-          const configResult = await configResponse.json();
-          // createApiResponse retorna { data: config }
-          const config = configResult.data || configResult;
-          if (config && config.id) {
-            setConfigExistente(true);
-            // Buscar campos fixos formatados
-            const camposFixosResponse = await fetch('/api/configuracao-contrato/campos-fixos');
-            if (camposFixosResponse.ok) {
-              const camposFixosResult = await camposFixosResponse.json();
-              // createApiResponse retorna { data: camposFixos }
-              const camposFixos = camposFixosResult.data || camposFixosResult;
-              setDadosPreenchidos(camposFixos);
-            } else {
-              setConfigExistente(false);
-            }
+        console.log('handleSelecionarModelo: Serviços não carregados, carregando agora...');
+        servicosParaUsar = await dataService.getServicosEvento(userId, eventoId);
+        setServicosEvento(servicosParaUsar);
+        console.log('handleSelecionarModelo: Serviços carregados:', servicosParaUsar.length);
+      } catch (error) {
+        console.error('Erro ao carregar serviços no handleSelecionarModelo:', error);
+      }
+    }
+
+    // Sempre buscar campos fixos via API (mesmo quando há evento)
+    try {
+      const configResponse = await fetch('/api/configuracao-contrato');
+      
+      if (configResponse.ok) {
+        const configResult = await configResponse.json();
+        // createApiResponse retorna { data: config }
+        const config = configResult.data || configResult;
+        if (config && config.id) {
+          setConfigExistente(true);
+          // Buscar campos fixos formatados
+          const camposFixosResponse = await fetch('/api/configuracao-contrato/campos-fixos');
+          if (camposFixosResponse.ok) {
+            const camposFixosResult = await camposFixosResponse.json();
+            // createApiResponse retorna { data: camposFixos }
+            const camposFixos = camposFixosResult.data || camposFixosResult;
+            
+          // Se houver evento, mesclar dados do evento com campos fixos
+          if (evento) {
+            console.log('handleSelecionarModelo: Preenchendo dados com evento e', servicosParaUsar.length, 'serviços');
+            const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
+            console.log('handleSelecionarModelo: Dados do evento:', dadosEvento);
+            // Mesclar: campos fixos primeiro, depois dados do evento (evento sobrescreve campos fixos se houver conflito)
+            const dadosMesclados = { ...camposFixos, ...dadosEvento };
+            console.log('handleSelecionarModelo: Dados mesclados:', dadosMesclados);
+            console.log('handleSelecionarModelo: data_evento =', dadosMesclados.data_evento);
+            console.log('handleSelecionarModelo: tipo_servico =', dadosMesclados.tipo_servico);
+            console.log('handleSelecionarModelo: data_contrato =', dadosMesclados.data_contrato);
+            setDadosPreenchidos(dadosMesclados);
+          } else {
+            // Sem evento, usar apenas campos fixos e adicionar data_contrato
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const dataContrato = `${ano}-${mes}-${dia}`;
+            setDadosPreenchidos({ ...camposFixos, data_contrato: dataContrato });
+          }
           } else {
             setConfigExistente(false);
-            showToast('Configure os dados da empresa antes de criar contratos', 'warning');
+            // Se houver evento, ainda tentar preencher com dados do evento
+            if (evento) {
+              const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
+              setDadosPreenchidos(dadosEvento);
+            }
           }
         } else {
           setConfigExistente(false);
+          // Se houver evento, ainda tentar preencher com dados do evento
+          if (evento) {
+            const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
+            setDadosPreenchidos(dadosEvento);
+          }
           showToast('Configure os dados da empresa antes de criar contratos', 'warning');
         }
-      } catch (error) {
-        console.error('Erro ao carregar configuração:', error);
+      } else {
         setConfigExistente(false);
+        // Se houver evento, ainda tentar preencher com dados do evento
+        if (evento) {
+          const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
+          setDadosPreenchidos(dadosEvento);
+        }
+        showToast('Configure os dados da empresa antes de criar contratos', 'warning');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configuração:', error);
+      setConfigExistente(false);
+      // Se houver evento, ainda tentar preencher com dados do evento
+      if (evento) {
+        const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
+        setDadosPreenchidos(dadosEvento);
       }
     }
   };
@@ -221,6 +316,11 @@ function NovoContratoPageContent() {
 
   const renderCampo = (campo: CampoContrato) => {
     const valor = dadosPreenchidos[campo.chave] || campo.valorPadrao || '';
+    
+    // Log para debug dos campos problemáticos
+    if (campo.chave === 'data_evento' || campo.chave === 'tipo_servico' || campo.chave === 'data_contrato' || campo.chave === 'valor_total_formatado') {
+      console.log(`Campo ${campo.chave} (${campo.label}): valor =`, valor, 'dadosPreenchidos =', dadosPreenchidos[campo.chave]);
+    }
 
     switch (campo.tipo) {
       case 'textarea':
@@ -252,11 +352,20 @@ function NovoContratoPageContent() {
           </div>
         );
       default:
+        // Para campos currency, usar text para aceitar valor formatado
+        const inputType = campo.tipo === 'date' 
+          ? 'date' 
+          : campo.tipo === 'currency' 
+            ? 'text' 
+            : campo.tipo === 'number' 
+              ? 'number' 
+              : 'text';
+        
         return (
           <div key={campo.id} className="mb-4">
             <Input
               label={campo.label}
-              type={campo.tipo === 'date' ? 'date' : campo.tipo === 'number' || campo.tipo === 'currency' ? 'number' : 'text'}
+              type={inputType}
               value={valor}
               onChange={(e) => setDadosPreenchidos({ ...dadosPreenchidos, [campo.chave]: e.target.value })}
               required={campo.obrigatorio}
