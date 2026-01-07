@@ -318,7 +318,7 @@ function NovoContratoPageContent() {
     const valor = dadosPreenchidos[campo.chave] || campo.valorPadrao || '';
     
     // Log para debug dos campos problemáticos
-    if (campo.chave === 'data_evento' || campo.chave === 'tipo_servico' || campo.chave === 'data_contrato' || campo.chave === 'valor_total_formatado') {
+    if (campo.chave === 'data_evento' || campo.chave === 'tipo_servico' || campo.chave === 'data_contrato' || campo.chave === 'valor_total_formatado' || campo.chave === 'servicos_incluidos' || campo.chave === 'duracao_servico' || campo.chave === 'horario_termino') {
       console.log(`Campo ${campo.chave} (${campo.label}): valor =`, valor, 'dadosPreenchidos =', dadosPreenchidos[campo.chave]);
     }
 

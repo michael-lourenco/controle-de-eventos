@@ -37,9 +37,29 @@ export class ContratoService {
     console.log('ContratoService: valor_total preenchido:', dados.valor_total);
     console.log('ContratoService: valor_total_formatado preenchido:', dados.valor_total_formatado);
     dados.horario_inicio = evento.horarioInicio || '';
+    dados.horario_termino = evento.horarioDesmontagem || '';
+    
+    // Extrair número de horas do tempoEvento (formato: "X HORAS" ou "X HORAS E Y MINUTOS")
+    // Para o campo duracao_servico que é do tipo number, extrair apenas as horas
+    if (evento.tempoEvento) {
+      const match = evento.tempoEvento.match(/(\d+)\s*HORA/i);
+      if (match) {
+        dados.duracao_servico = parseInt(match[1], 10);
+      } else {
+        // Se não encontrar padrão, tentar extrair qualquer número
+        const numeroMatch = evento.tempoEvento.match(/(\d+)/);
+        dados.duracao_servico = numeroMatch ? parseInt(numeroMatch[1], 10) : '';
+      }
+    } else {
+      dados.duracao_servico = '';
+    }
+    
+    console.log('ContratoService: horario_termino preenchido:', dados.horario_termino, 'de evento.horarioDesmontagem:', evento.horarioDesmontagem);
+    console.log('ContratoService: duracao_servico preenchido:', dados.duracao_servico, 'de evento.tempoEvento:', evento.tempoEvento);
     dados.observacoes_evento = evento.observacoes || '';
 
     // Preencher tipo_servico com os serviços do evento
+    let tiposServicoTexto = '';
     if (servicosEvento && servicosEvento.length > 0) {
       // Filtrar serviços não removidos e extrair nomes dos tipos de serviço
       const tiposServicoNomes = servicosEvento
@@ -47,12 +67,17 @@ export class ContratoService {
         .map(servico => servico.tipoServico.nome)
         .filter((nome, index, array) => array.indexOf(nome) === index); // Remover duplicatas
       
-      dados.tipo_servico = tiposServicoNomes.join(', ') || '';
+      tiposServicoTexto = tiposServicoNomes.join(', ') || '';
+      dados.tipo_servico = tiposServicoTexto;
       console.log('ContratoService: tipo_servico preenchido:', dados.tipo_servico, 'de', servicosEvento.length, 'serviços');
     } else {
       dados.tipo_servico = '';
       console.log('ContratoService: Nenhum serviço fornecido para preencher tipo_servico');
     }
+    
+    // Preencher servicos_incluidos (mesmo conteúdo de tipo_servico para o modelo "Contrato Click-se fotos instantâneas")
+    dados.servicos_incluidos = tiposServicoTexto;
+    console.log('ContratoService: servicos_incluidos preenchido:', dados.servicos_incluidos);
 
     // Preencher data_contrato com a data atual (formato YYYY-MM-DD)
     const hoje = new Date();

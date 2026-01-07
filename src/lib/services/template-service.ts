@@ -1,4 +1,43 @@
 export class TemplateService {
+  /**
+   * Formata uma data no formato "DD de mês de YYYY" (ex: "06 de janeiro de 2026")
+   */
+  private static formatarDataExtenso(data: string | Date | unknown): string {
+    if (!data) return '';
+    
+    let dataObj: Date;
+    
+    if (data instanceof Date) {
+      dataObj = data;
+    } else if (typeof data === 'string') {
+      // Verificar se está no formato YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+        dataObj = new Date(data + 'T00:00:00');
+      } else {
+        // Tentar parsear como data
+        dataObj = new Date(data);
+      }
+    } else {
+      return String(data);
+    }
+    
+    // Verificar se a data é válida
+    if (isNaN(dataObj.getTime())) {
+      return String(data);
+    }
+    
+    const meses = [
+      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+    ];
+    
+    const dia = dataObj.getDate();
+    const mes = meses[dataObj.getMonth()];
+    const ano = dataObj.getFullYear();
+    
+    return `${dia} de ${mes} de ${ano}`;
+  }
+
   static processarPlaceholders(template: string, dados: Record<string, unknown>): string {
     let resultado = template;
     
@@ -9,7 +48,16 @@ export class TemplateService {
     // Processar placeholders simples {{variavel}}
     Object.keys(dados).forEach(chave => {
       const valor = dados[chave];
-      const valorString = valor !== undefined && valor !== null ? String(valor) : '';
+      let valorString: string;
+      
+      // Formatar automaticamente campos de data para formato extenso
+      if (chave === 'data_evento' || chave === 'data_contrato') {
+        valorString = this.formatarDataExtenso(valor);
+        console.log(`TemplateService: ${chave} formatado de "${valor}" para "${valorString}"`);
+      } else {
+        valorString = valor !== undefined && valor !== null ? String(valor) : '';
+      }
+      
       const placeholder = new RegExp(`\\{\\{${chave}\\}\\}`, 'g');
       resultado = resultado.replace(placeholder, valorString);
     });
