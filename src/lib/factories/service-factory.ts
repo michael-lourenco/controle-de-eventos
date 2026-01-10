@@ -7,8 +7,7 @@ import { GoogleCalendarSyncService } from '../services/google-calendar-sync-serv
 import { ContratoService } from '../services/contrato-service';
 import { PDFService } from '../services/pdf-service';
 import { TemplateService } from '../services/template-service';
-import { RelatoriosReportService } from '../services/relatorios-report-service';
-import { DashboardReportService } from '../services/dashboard-report-service';
+// RelatoriosReportService e DashboardReportService importados dinamicamente para evitar dependência circular
 import { RelatorioCacheService } from '../services/relatorio-cache-service';
 import { S3Service } from '../s3-service';
 
@@ -189,12 +188,25 @@ export class ServiceFactory {
 
   // Métodos getter para serviços singleton
   // Estes serviços já gerenciam sua própria instância
-  public getRelatoriosReportService(): RelatoriosReportService {
-    return RelatoriosReportService.getInstance();
+  // Usar importação dinâmica para evitar dependência circular
+  public getRelatoriosReportService(): any {
+    try {
+      const { RelatoriosReportService } = require('../services/relatorios-report-service');
+      return RelatoriosReportService.getInstance();
+    } catch (error) {
+      console.error('[ServiceFactory] Erro ao inicializar RelatoriosReportService:', error);
+      throw error;
+    }
   }
 
-  public getDashboardReportService(): DashboardReportService {
-    return DashboardReportService.getInstance();
+  public getDashboardReportService(): any {
+    try {
+      const { DashboardReportService } = require('../services/dashboard-report-service');
+      return DashboardReportService.getInstance();
+    } catch (error) {
+      console.error('[ServiceFactory] Erro ao inicializar DashboardReportService:', error);
+      throw error;
+    }
   }
 }
 

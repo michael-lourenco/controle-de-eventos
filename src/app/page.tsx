@@ -94,14 +94,21 @@ export default function LandingPage() {
       
       if (!res.ok) {
         console.error('❌ [Landing] Erro na resposta da API:', res.status, res.statusText);
+        const errorData = await res.json().catch(() => ({}));
+        console.error('❌ [Landing] Dados do erro:', errorData);
         setPlanos([]);
         return;
       }
       
-      const data = await res.json();
+      const responseData = await res.json();
+      console.log('[Landing] Resposta completa da API:', responseData);
       
-      if (data.planos && Array.isArray(data.planos)) {
-        const planosOrdenados = data.planos
+      // A API retorna { data: { planos: [...] } } devido ao createApiResponse
+      const planosArray = responseData.data?.planos || responseData.planos || [];
+      console.log('[Landing] Planos encontrados:', planosArray.length);
+      
+      if (Array.isArray(planosArray) && planosArray.length > 0) {
+        const planosOrdenados = planosArray
           .filter((p: Plano) => p.ativo)
           .sort((a: Plano, b: Plano) => {
             if (a.destaque && !b.destaque) return -1;
@@ -110,7 +117,9 @@ export default function LandingPage() {
           });
         
         setPlanos(planosOrdenados);
+        console.log('[Landing] Planos ordenados e definidos:', planosOrdenados.length);
       } else {
+        console.warn('[Landing] Nenhum plano encontrado ou array vazio');
         setPlanos([]);
       }
     } catch (error) {

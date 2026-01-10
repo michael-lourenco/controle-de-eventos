@@ -80,19 +80,38 @@ export default function PlanosPage() {
     try {
       // Buscar planos ativos
       const res = await fetch('/api/planos?ativos=true');
-      const data = await res.json();
       
-      if (data.planos) {
-        const planosOrdenados = data.planos.sort((a: Plano, b: Plano) => {
+      if (!res.ok) {
+        console.error('[PlanosPage] Erro na resposta da API:', res.status, res.statusText);
+        const errorData = await res.json().catch(() => ({}));
+        console.error('[PlanosPage] Dados do erro:', errorData);
+        setPlanos([]);
+        return;
+      }
+      
+      const responseData = await res.json();
+      console.log('[PlanosPage] Resposta completa da API:', responseData);
+      
+      // A API retorna { data: { planos: [...] } } devido ao createApiResponse
+      const planosArray = responseData.data?.planos || responseData.planos || [];
+      console.log('[PlanosPage] Planos encontrados:', planosArray.length);
+      
+      if (Array.isArray(planosArray) && planosArray.length > 0) {
+        const planosOrdenados = planosArray.sort((a: Plano, b: Plano) => {
           // Ordenar por destaque primeiro, depois por preço
           if (a.destaque && !b.destaque) return -1;
           if (!a.destaque && b.destaque) return 1;
           return a.preco - b.preco;
         });
         setPlanos(planosOrdenados);
+        console.log('[PlanosPage] Planos ordenados e definidos:', planosOrdenados.length);
+      } else {
+        console.warn('[PlanosPage] Nenhum plano encontrado ou array vazio');
+        setPlanos([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar planos:', error);
+      console.error('[PlanosPage] Erro ao carregar planos:', error);
+      setPlanos([]);
     } finally {
       setLoading(false);
     }

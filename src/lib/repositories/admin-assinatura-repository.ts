@@ -14,8 +14,12 @@ export class AdminAssinaturaRepository extends AdminFirestoreRepository<Assinatu
     const assinaturas = await this.findWhere('userId', '==', userId);
     // Buscar a assinatura ativa mais recente
     const ativas = assinaturas
-      .filter(a => a.status === 'trial' || a.status === 'active')
-      .sort((a, b) => b.dataInicio.getTime() - a.dataInicio.getTime());
+      .filter(a => (a.status === 'trial' || a.status === 'active') && a.dataInicio)
+      .sort((a, b) => {
+        const dataA = a.dataInicio instanceof Date ? a.dataInicio.getTime() : new Date(a.dataInicio || 0).getTime();
+        const dataB = b.dataInicio instanceof Date ? b.dataInicio.getTime() : new Date(b.dataInicio || 0).getTime();
+        return dataB - dataA;
+      });
     
     return ativas.length > 0 ? ativas[0] : null;
   }
@@ -27,7 +31,11 @@ export class AdminAssinaturaRepository extends AdminFirestoreRepository<Assinatu
 
   async findAllByUserId(userId: string): Promise<Assinatura[]> {
     const assinaturas = await this.findWhere('userId', '==', userId);
-    return assinaturas.sort((a, b) => b.dataInicio.getTime() - a.dataInicio.getTime());
+    return assinaturas.sort((a, b) => {
+      const dataA = a.dataInicio instanceof Date ? a.dataInicio.getTime() : new Date(a.dataInicio || 0).getTime();
+      const dataB = b.dataInicio instanceof Date ? b.dataInicio.getTime() : new Date(b.dataInicio || 0).getTime();
+      return dataB - dataA;
+    });
   }
 
   async findAtivas(): Promise<Assinatura[]> {

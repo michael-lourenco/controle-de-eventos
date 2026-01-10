@@ -18,7 +18,7 @@ import {
 import { initializeAllCollections, initializeTiposCusto } from './collections-init';
 import { FuncionalidadeService } from './services/funcionalidade-service';
 import { DashboardReportService } from './services/dashboard-report-service';
-import { RelatoriosReportService } from './services/relatorios-report-service';
+// RelatoriosReportService importado dinamicamente para evitar dependência circular
 
 export class DataService {
   private clienteRepo = repositoryFactory.getClienteRepository();
@@ -58,7 +58,21 @@ export class DataService {
     return this._funcionalidadeService;
   }
   private dashboardReportService = DashboardReportService.getInstance();
-  private relatoriosReportService = RelatoriosReportService.getInstance();
+  private _relatoriosReportService?: any; // Lazy initialization para evitar dependência circular
+  
+  private get relatoriosReportService() {
+    // Lazy initialization: importação dinâmica para evitar dependência circular
+    if (!this._relatoriosReportService) {
+      try {
+        const { RelatoriosReportService } = require('./services/relatorios-report-service');
+        this._relatoriosReportService = RelatoriosReportService.getInstance();
+      } catch (error) {
+        console.error('[DataService] Erro ao inicializar RelatoriosReportService:', error);
+        throw error;
+      }
+    }
+    return this._relatoriosReportService;
+  }
 
   // Método para inicializar collections automaticamente
   private async ensureCollectionsInitialized(): Promise<void> {
