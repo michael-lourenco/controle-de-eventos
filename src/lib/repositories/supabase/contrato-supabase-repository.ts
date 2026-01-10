@@ -5,7 +5,7 @@ import { generateUUID } from '@/lib/utils/uuid';
 
 export class ContratoSupabaseRepository extends BaseSupabaseRepository<Contrato> {
   constructor() {
-    super('contratos', getSupabaseClient());
+    super('contratos', undefined, true); // Usar service role para bypassar RLS
   }
 
   protected convertFromSupabase(row: any): Contrato {

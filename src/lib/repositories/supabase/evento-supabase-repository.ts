@@ -1,11 +1,10 @@
 import { BaseSupabaseRepository } from './base-supabase-repository';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import { Evento, StatusEvento } from '@/types';
 import { generateUUID } from '@/lib/utils/uuid';
 
 export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
   constructor() {
-    super('eventos', getSupabaseClient());
+    super('eventos', undefined, true); // Usar service role para bypassar RLS
   }
 
   protected convertFromSupabase(row: any): Evento {

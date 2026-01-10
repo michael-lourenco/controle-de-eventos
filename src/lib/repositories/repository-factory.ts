@@ -38,6 +38,8 @@ import { RelatoriosDiariosSupabaseRepository } from './supabase/relatorios-diari
 import { RelatorioCacheSupabaseRepository } from './supabase/relatorio-cache-supabase-repository';
 import { AnexoEventoSupabaseRepository } from './supabase/anexo-evento-supabase-repository';
 import { AnexoPagamentoSupabaseRepository } from './supabase/anexo-pagamento-supabase-repository';
+import { PreCadastroEventoSupabaseRepository } from './supabase/pre-cadastro-evento-supabase-repository';
+import { PreCadastroServicoSupabaseRepository } from './supabase/pre-cadastro-servico-supabase-repository';
 
 /**
  * Factory que inicializa repositórios com regras fixas:
@@ -64,6 +66,8 @@ export class RepositoryFactory {
   private relatorioCacheRepository: RelatorioCacheSupabaseRepository;
   private anexoEventoRepository: AnexoEventoSupabaseRepository;
   private anexoPagamentoRepository: AnexoPagamentoSupabaseRepository;
+  private preCadastroEventoRepository: PreCadastroEventoSupabaseRepository;
+  private preCadastroServicoRepository: PreCadastroServicoSupabaseRepository;
 
   // Repositórios Firestore (sempre)
   private userRepository: UserRepository;
@@ -98,6 +102,8 @@ export class RepositoryFactory {
     this.relatorioCacheRepository = new RelatorioCacheSupabaseRepository();
     this.anexoEventoRepository = new AnexoEventoSupabaseRepository();
     this.anexoPagamentoRepository = new AnexoPagamentoSupabaseRepository();
+    this.preCadastroEventoRepository = new PreCadastroEventoSupabaseRepository();
+    this.preCadastroServicoRepository = new PreCadastroServicoSupabaseRepository();
 
     // Inicializar repositórios Firestore
     this.userRepository = new UserRepository();
@@ -184,6 +190,14 @@ export class RepositoryFactory {
 
   public getAnexoPagamentoRepository(): AnexoPagamentoSupabaseRepository {
     return this.anexoPagamentoRepository;
+  }
+
+  public getPreCadastroEventoRepository(): PreCadastroEventoSupabaseRepository {
+    return this.preCadastroEventoRepository;
+  }
+
+  public getPreCadastroServicoRepository(): PreCadastroServicoSupabaseRepository {
+    return this.preCadastroServicoRepository;
   }
 
   // Métodos getter - Repositórios Firestore

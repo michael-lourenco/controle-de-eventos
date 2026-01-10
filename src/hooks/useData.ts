@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '@/lib/data-service';
-import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData, TipoEvento } from '@/types';
+import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData, TipoEvento, PreCadastroEvento } from '@/types';
 import { useCurrentUser } from './useAuth';
 
 export interface UseDataResult<T> {
@@ -619,4 +619,61 @@ export function useDashboardData(): UseDataResult<DashboardData> {
   const refetch = useCallback(() => fetchData({ forceRefresh: true, skipLoadingState: true }), [fetchData]);
 
   return { data, loading, error, refetch };
+}
+
+// Hook para pré-cadastros de eventos
+export function usePreCadastros(status?: string): UseDataResult<PreCadastroEvento[]> {
+  const [data, setData] = useState<PreCadastroEvento[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const url = status 
+        ? `/api/pre-cadastros?status=${status}`
+        : '/api/pre-cadastros';
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Erro ao carregar pré-cadastros');
+      }
+      
+      const result = await response.json();
+      const data = result.data || result;
+      const preCadastros = data.preCadastros || data || [];
+      
+      // Converter datas de string para Date se necessário
+      const preCadastrosConvertidos = preCadastros.map((pc: any) => ({
+        ...pc,
+        dataExpiracao: pc.dataExpiracao ? new Date(pc.dataExpiracao) : new Date(),
+        dataPreenchimento: pc.dataPreenchimento ? new Date(pc.dataPreenchimento) : undefined,
+        dataConversao: pc.dataConversao ? new Date(pc.dataConversao) : undefined,
+        dataEvento: pc.dataEvento ? new Date(pc.dataEvento) : undefined,
+        dataCadastro: pc.dataCadastro ? new Date(pc.dataCadastro) : new Date(),
+        dataAtualizacao: pc.dataAtualizacao ? new Date(pc.dataAtualizacao) : new Date(),
+      }));
+      
+      setData(preCadastrosConvertidos);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar pré-cadastros');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, status]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
 }

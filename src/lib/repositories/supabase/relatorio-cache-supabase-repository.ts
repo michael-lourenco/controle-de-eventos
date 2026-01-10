@@ -3,7 +3,7 @@ import { RelatorioSnapshot } from '@/types/relatorios';
 
 export class RelatorioCacheSupabaseRepository {
   private tableName = 'relatorios_cache';
-  private supabase = getSupabaseClient();
+  private supabase = getSupabaseClient(true); // Usar service role para bypassar RLS
 
   /**
    * Busca o snapshot mais recente de relatórios para um usuário

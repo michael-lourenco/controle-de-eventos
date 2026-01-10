@@ -5,7 +5,7 @@ import { generateUUID } from '@/lib/utils/uuid';
 
 export class CustoSupabaseRepository extends BaseSupabaseRepository<CustoEvento> {
   constructor() {
-    super('custos', getSupabaseClient());
+    super('custos', undefined, true); // Usar service role para bypassar RLS
   }
 
   protected convertFromSupabase(row: any): CustoEvento {

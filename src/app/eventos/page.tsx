@@ -17,7 +17,7 @@ import {
   TrashIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { useEventos, useEventosArquivados, useTiposEvento, useServicosPorEventos } from '@/hooks/useData';
+import { useEventos, useEventosArquivados, useTiposEvento, useServicosPorEventos, usePreCadastros } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { usePlano } from '@/lib/hooks/usePlano';
@@ -31,6 +31,7 @@ import { useToast } from '@/components/ui/toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ServicosBadges from '@/components/ServicosBadges';
 import EventoStatusSelect from '@/components/EventoStatusSelect';
+import PreCadastrosSection from '@/components/PreCadastrosSection';
 
 export default function EventosPage() {
   const router = useRouter();
@@ -38,12 +39,13 @@ export default function EventosPage() {
   const { data: eventos, loading: loadingAtivos, error: errorAtivos, refetch: refetchAtivos } = useEventos();
   const { data: eventosArquivados, loading: loadingArquivados, error: errorArquivados, refetch: refetchArquivados } = useEventosArquivados();
   const { data: tiposEventoData } = useTiposEvento();
+  const { data: preCadastros } = usePreCadastros();
   const { limites } = usePlano();
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
   const [dateFilter, setDateFilter] = useState<DateFilter | null>(null);
-  const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados'>('ativos');
+  const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados' | 'pre-cadastros'>('ativos');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [eventoParaArquivar, setEventoParaArquivar] = useState<Evento | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -425,9 +427,35 @@ export default function EventosPage() {
               >
                 Arquivados ({eventosArquivados?.length || 0})
               </button>
+              <button
+                onClick={() => {
+                  setAbaAtiva('pre-cadastros');
+                  setFilterStatus('todos');
+                }}
+                className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg cursor-pointer relative ${
+                  abaAtiva === 'pre-cadastros'
+                    ? 'bg-primary/10 text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+                }`}
+              >
+                Pré-Cadastros
+                {preCadastros && preCadastros.length > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-primary rounded-full">
+                    {preCadastros.filter(pc => {
+                      const status = typeof pc.status === 'string' ? pc.status.toLowerCase() : pc.status;
+                      return status === 'pendente' || status === 'preenchido';
+                    }).length}
+                  </span>
+                )}
+              </button>
             </div>
           </CardContent>
         </Card>
+
+        {/* Seção de Pré-Cadastros */}
+        {abaAtiva === 'pre-cadastros' && (
+          <PreCadastrosSection />
+        )}
 
         {/* Filtros por Status - apenas para eventos ativos */}
         {abaAtiva === 'ativos' && (
@@ -499,7 +527,8 @@ export default function EventosPage() {
           </Card>
         )}
 
-        {/* Filtros */}
+        {/* Filtros - apenas para eventos */}
+        {abaAtiva !== 'pre-cadastros' && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Filtro por Período */}
           <div>
@@ -533,9 +562,10 @@ export default function EventosPage() {
             </CardContent>
           </Card>
         </div>
+        )}
 
-        {/* Resumo dos Filtros Ativos */}
-        {(searchTerm || filterTipo !== 'todos' || dateFilter || (abaAtiva === 'ativos' && filterStatus !== 'todos')) && (
+        {/* Resumo dos Filtros Ativos - apenas para eventos */}
+        {abaAtiva !== 'pre-cadastros' && (searchTerm || filterTipo !== 'todos' || dateFilter || (abaAtiva === 'ativos' && filterStatus !== 'todos')) && (
           <Card className="bg-surface/50 backdrop-blur-sm">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -575,7 +605,8 @@ export default function EventosPage() {
           </Card>
         )}
 
-        {/* Lista de Eventos */}
+        {/* Lista de Eventos - apenas para eventos */}
+        {abaAtiva !== 'pre-cadastros' && (
         <div className="space-y-4">
           {sortedEventos.map((evento) => {
             const servicosDoEvento = servicosPorEvento.get(evento.id) || [];
@@ -754,8 +785,9 @@ export default function EventosPage() {
             );
           })}
         </div>
+        )}
 
-        {sortedEventos.length === 0 && (
+        {sortedEventos.length === 0 && abaAtiva !== 'pre-cadastros' && (
           <Card className="bg-surface/50 backdrop-blur-sm">
             <CardContent className="text-center py-12">
               <CalendarIcon className="mx-auto h-12 w-12 text-text-muted" />

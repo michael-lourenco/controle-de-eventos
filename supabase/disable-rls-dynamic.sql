@@ -2,7 +2,7 @@
 -- DESABILITAR RLS DINAMICAMENTE EM TODAS AS TABELAS
 -- ============================================
 -- Este script desabilita RLS em todas as tabelas do schema public automaticamente
--- ⚠️ ATENÇÃO: Isso remove a segurança RLS. Use apenas para desenvolvimento!
+-- Use este script se o RLS foi habilitado por engano e você precisa desabilitá-lo em todas as tabelas
 
 DO $$
 DECLARE

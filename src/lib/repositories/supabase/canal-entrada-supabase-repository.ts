@@ -5,7 +5,7 @@ import { generateUUID } from '@/lib/utils/uuid';
 
 export class CanalEntradaSupabaseRepository extends BaseSupabaseRepository<CanalEntrada> {
   constructor() {
-    super('canais_entrada', getSupabaseClient());
+    super('canais_entrada', undefined, true); // Usar service role para bypassar RLS
   }
 
   protected convertFromSupabase(row: any): CanalEntrada {

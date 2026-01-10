@@ -35,7 +35,7 @@ export interface RelatorioDiario {
 
 export class RelatoriosDiariosSupabaseRepository {
   private tableName = 'relatorios_diarios';
-  private supabase = getSupabaseClient();
+  private supabase = getSupabaseClient(true); // Usar service role para bypassar RLS
 
   private getDocId(userId: string, dateKey: string): string {
     // Usar dateKey como ID para garantir unicidade

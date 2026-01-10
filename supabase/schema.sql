@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT users_email_unique UNIQUE (email)
 );
 
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_ativo ON users(ativo) WHERE ativo = true;
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_ativo ON users(ativo) WHERE ativo = true;
 
 -- ============================================
 -- TABELAS DE CONFIGURAÇÃO (por usuário)
@@ -50,8 +50,8 @@ CREATE TABLE IF NOT EXISTS canais_entrada (
     UNIQUE(user_id, nome)
 );
 
-CREATE INDEX idx_canais_entrada_user_id ON canais_entrada(user_id);
-CREATE INDEX idx_canais_entrada_ativo ON canais_entrada(user_id, ativo) WHERE ativo = true;
+CREATE INDEX IF NOT EXISTS idx_canais_entrada_user_id ON canais_entrada(user_id);
+CREATE INDEX IF NOT EXISTS idx_canais_entrada_ativo ON canais_entrada(user_id, ativo) WHERE ativo = true;
 
 -- Tipos de eventos
 CREATE TABLE IF NOT EXISTS tipo_eventos (
@@ -65,8 +65,8 @@ CREATE TABLE IF NOT EXISTS tipo_eventos (
     UNIQUE(user_id, nome)
 );
 
-CREATE INDEX idx_tipo_eventos_user_id ON tipo_eventos(user_id);
-CREATE INDEX idx_tipo_eventos_ativo ON tipo_eventos(user_id, ativo) WHERE ativo = true;
+CREATE INDEX IF NOT EXISTS idx_tipo_eventos_user_id ON tipo_eventos(user_id);
+CREATE INDEX IF NOT EXISTS idx_tipo_eventos_ativo ON tipo_eventos(user_id, ativo) WHERE ativo = true;
 
 -- Tipos de custos
 CREATE TABLE IF NOT EXISTS tipo_custos (
@@ -80,8 +80,8 @@ CREATE TABLE IF NOT EXISTS tipo_custos (
     UNIQUE(user_id, nome)
 );
 
-CREATE INDEX idx_tipo_custos_user_id ON tipo_custos(user_id);
-CREATE INDEX idx_tipo_custos_ativo ON tipo_custos(user_id, ativo) WHERE ativo = true;
+CREATE INDEX IF NOT EXISTS idx_tipo_custos_user_id ON tipo_custos(user_id);
+CREATE INDEX IF NOT EXISTS idx_tipo_custos_ativo ON tipo_custos(user_id, ativo) WHERE ativo = true;
 
 -- Tipos de serviços
 CREATE TABLE IF NOT EXISTS tipo_servicos (
@@ -95,8 +95,8 @@ CREATE TABLE IF NOT EXISTS tipo_servicos (
     UNIQUE(user_id, nome)
 );
 
-CREATE INDEX idx_tipo_servicos_user_id ON tipo_servicos(user_id);
-CREATE INDEX idx_tipo_servicos_ativo ON tipo_servicos(user_id, ativo) WHERE ativo = true;
+CREATE INDEX IF NOT EXISTS idx_tipo_servicos_user_id ON tipo_servicos(user_id);
+CREATE INDEX IF NOT EXISTS idx_tipo_servicos_ativo ON tipo_servicos(user_id, ativo) WHERE ativo = true;
 
 -- ============================================
 -- TABELAS DE DADOS PRINCIPAIS
@@ -120,13 +120,13 @@ CREATE TABLE IF NOT EXISTS clientes (
     data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_clientes_user_id ON clientes(user_id);
-CREATE INDEX idx_clientes_arquivado ON clientes(user_id, arquivado) WHERE arquivado = false;
-CREATE INDEX idx_clientes_canal_entrada ON clientes(canal_entrada_id);
-CREATE INDEX idx_clientes_nome_trgm ON clientes USING gin(nome gin_trgm_ops); -- Busca de texto
+CREATE INDEX IF NOT EXISTS idx_clientes_user_id ON clientes(user_id);
+CREATE INDEX IF NOT EXISTS idx_clientes_arquivado ON clientes(user_id, arquivado) WHERE arquivado = false;
+CREATE INDEX IF NOT EXISTS idx_clientes_canal_entrada ON clientes(canal_entrada_id);
+CREATE INDEX IF NOT EXISTS idx_clientes_nome_trgm ON clientes USING gin(nome gin_trgm_ops); -- Busca de texto
 
 -- Índice único parcial para CPF (apenas quando CPF não é NULL)
-CREATE UNIQUE INDEX idx_clientes_user_cpf_unique ON clientes(user_id, cpf) WHERE cpf IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_clientes_user_cpf_unique ON clientes(user_id, cpf) WHERE cpf IS NOT NULL;
 
 -- Eventos
 CREATE TABLE IF NOT EXISTS eventos (
@@ -164,13 +164,13 @@ CREATE TABLE IF NOT EXISTS eventos (
     data_atualizacao TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_eventos_user_id ON eventos(user_id);
-CREATE INDEX idx_eventos_cliente_id ON eventos(cliente_id);
-CREATE INDEX idx_eventos_data_evento ON eventos(data_evento);
-CREATE INDEX idx_eventos_arquivado ON eventos(user_id, arquivado) WHERE arquivado = false;
-CREATE INDEX idx_eventos_status ON eventos(user_id, status);
-CREATE INDEX idx_eventos_tipo_evento ON eventos(user_id, tipo_evento);
-CREATE INDEX idx_eventos_data_evento_range ON eventos(user_id, data_evento) WHERE arquivado = false;
+CREATE INDEX IF NOT EXISTS idx_eventos_user_id ON eventos(user_id);
+CREATE INDEX IF NOT EXISTS idx_eventos_cliente_id ON eventos(cliente_id);
+CREATE INDEX IF NOT EXISTS idx_eventos_data_evento ON eventos(data_evento);
+CREATE INDEX IF NOT EXISTS idx_eventos_arquivado ON eventos(user_id, arquivado) WHERE arquivado = false;
+CREATE INDEX IF NOT EXISTS idx_eventos_status ON eventos(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_eventos_tipo_evento ON eventos(user_id, tipo_evento);
+CREATE INDEX IF NOT EXISTS idx_eventos_data_evento_range ON eventos(user_id, data_evento) WHERE arquivado = false;
 
 -- Pagamentos (collection global)
 CREATE TABLE IF NOT EXISTS pagamentos (
@@ -191,10 +191,10 @@ CREATE TABLE IF NOT EXISTS pagamentos (
     data_atualizacao TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_pagamentos_user_id ON pagamentos(user_id);
-CREATE INDEX idx_pagamentos_evento_id ON pagamentos(evento_id);
-CREATE INDEX idx_pagamentos_status ON pagamentos(user_id, status) WHERE cancelado = false;
-CREATE INDEX idx_pagamentos_data_pagamento ON pagamentos(data_pagamento);
+CREATE INDEX IF NOT EXISTS idx_pagamentos_user_id ON pagamentos(user_id);
+CREATE INDEX IF NOT EXISTS idx_pagamentos_evento_id ON pagamentos(evento_id);
+CREATE INDEX IF NOT EXISTS idx_pagamentos_status ON pagamentos(user_id, status) WHERE cancelado = false;
+CREATE INDEX IF NOT EXISTS idx_pagamentos_data_pagamento ON pagamentos(data_pagamento);
 
 -- Anexos de pagamento
 CREATE TABLE IF NOT EXISTS anexos_pagamento (
@@ -211,8 +211,8 @@ CREATE TABLE IF NOT EXISTS anexos_pagamento (
     data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_anexos_pagamento_pagamento_id ON anexos_pagamento(pagamento_id);
-CREATE INDEX idx_anexos_pagamento_evento_id ON anexos_pagamento(evento_id);
+CREATE INDEX IF NOT EXISTS idx_anexos_pagamento_pagamento_id ON anexos_pagamento(pagamento_id);
+CREATE INDEX IF NOT EXISTS idx_anexos_pagamento_evento_id ON anexos_pagamento(evento_id);
 
 -- Custos (collection global)
 CREATE TABLE IF NOT EXISTS custos (
@@ -229,9 +229,9 @@ CREATE TABLE IF NOT EXISTS custos (
     data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_custos_user_id ON custos(user_id);
-CREATE INDEX idx_custos_evento_id ON custos(evento_id);
-CREATE INDEX idx_custos_removido ON custos(evento_id, removido) WHERE removido = false;
+CREATE INDEX IF NOT EXISTS idx_custos_user_id ON custos(user_id);
+CREATE INDEX IF NOT EXISTS idx_custos_evento_id ON custos(evento_id);
+CREATE INDEX IF NOT EXISTS idx_custos_removido ON custos(evento_id, removido) WHERE removido = false;
 
 -- Serviços de evento (collection global)
 CREATE TABLE IF NOT EXISTS servicos_evento (
@@ -246,9 +246,75 @@ CREATE TABLE IF NOT EXISTS servicos_evento (
     data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_servicos_evento_user_id ON servicos_evento(user_id);
-CREATE INDEX idx_servicos_evento_evento_id ON servicos_evento(evento_id);
-CREATE INDEX idx_servicos_evento_removido ON servicos_evento(evento_id, removido) WHERE removido = false;
+CREATE INDEX IF NOT EXISTS idx_servicos_evento_user_id ON servicos_evento(user_id);
+CREATE INDEX IF NOT EXISTS idx_servicos_evento_evento_id ON servicos_evento(evento_id);
+CREATE INDEX IF NOT EXISTS idx_servicos_evento_removido ON servicos_evento(evento_id, removido) WHERE removido = false;
+
+-- Pré-Cadastros de Eventos
+CREATE TABLE IF NOT EXISTS pre_cadastros_eventos (
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    
+    -- Dados do Cliente (preenchidos pelo cliente)
+    cliente_nome VARCHAR(255),
+    cliente_email VARCHAR(255),
+    cliente_telefone VARCHAR(50),
+    cliente_cpf VARCHAR(20),
+    cliente_endereco TEXT,
+    cliente_cep VARCHAR(10),
+    cliente_instagram VARCHAR(255),
+    cliente_canal_entrada_id VARCHAR(255) REFERENCES canais_entrada(id) ON DELETE SET NULL,
+    
+    -- Dados do Evento (preenchidos pelo cliente)
+    nome_evento VARCHAR(255),
+    data_evento TIMESTAMP WITH TIME ZONE,
+    local VARCHAR(255),
+    endereco TEXT,
+    tipo_evento VARCHAR(255),
+    tipo_evento_id VARCHAR(255) REFERENCES tipo_eventos(id) ON DELETE SET NULL,
+    contratante VARCHAR(255),
+    numero_convidados INTEGER DEFAULT 0,
+    quantidade_mesas INTEGER,
+    hashtag VARCHAR(255),
+    horario_inicio VARCHAR(50),
+    horario_termino VARCHAR(50), -- Horário de Desmontagem
+    cerimonialista JSONB, -- { nome, telefone }
+    observacoes TEXT,
+    
+    -- Metadados
+    status VARCHAR(50) NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'preenchido', 'convertido', 'expirado', 'ignorado')),
+    data_expiracao TIMESTAMP WITH TIME ZONE NOT NULL, -- 7 dias após criação
+    data_preenchimento TIMESTAMP WITH TIME ZONE,
+    data_conversao TIMESTAMP WITH TIME ZONE, -- Quando foi convertido em evento
+    evento_id VARCHAR(255) REFERENCES eventos(id) ON DELETE SET NULL, -- ID do evento criado a partir deste pré-cadastro
+    cliente_id VARCHAR(255) REFERENCES clientes(id) ON DELETE SET NULL, -- ID do cliente criado/utilizado
+    
+    -- Timestamps
+    data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    data_atualizacao TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pre_cadastros_user_id ON pre_cadastros_eventos(user_id);
+CREATE INDEX IF NOT EXISTS idx_pre_cadastros_status ON pre_cadastros_eventos(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_pre_cadastros_data_expiracao ON pre_cadastros_eventos(data_expiracao) WHERE status NOT IN ('expirado', 'convertido');
+CREATE INDEX IF NOT EXISTS idx_pre_cadastros_cliente_email ON pre_cadastros_eventos(user_id, cliente_email);
+
+-- Serviços dos Pré-Cadastros
+CREATE TABLE IF NOT EXISTS pre_cadastros_servicos (
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    pre_cadastro_id VARCHAR(255) NOT NULL REFERENCES pre_cadastros_eventos(id) ON DELETE CASCADE,
+    tipo_servico_id VARCHAR(255) NOT NULL REFERENCES tipo_servicos(id) ON DELETE RESTRICT,
+    observacoes TEXT,
+    removido BOOLEAN NOT NULL DEFAULT false,
+    data_remocao TIMESTAMP WITH TIME ZONE,
+    motivo_remocao TEXT,
+    data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_pre_cadastros_servicos_user_id ON pre_cadastros_servicos(user_id);
+CREATE INDEX IF NOT EXISTS idx_pre_cadastros_servicos_pre_cadastro_id ON pre_cadastros_servicos(pre_cadastro_id);
+CREATE INDEX IF NOT EXISTS idx_pre_cadastros_servicos_removido ON pre_cadastros_servicos(pre_cadastro_id, removido) WHERE removido = false;
 
 -- Anexos de eventos
 CREATE TABLE IF NOT EXISTS anexos_eventos (
@@ -261,7 +327,7 @@ CREATE TABLE IF NOT EXISTS anexos_eventos (
     data_upload TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_anexos_eventos_evento_id ON anexos_eventos(evento_id);
+CREATE INDEX IF NOT EXISTS idx_anexos_eventos_evento_id ON anexos_eventos(evento_id);
 
 -- ============================================
 -- TABELAS DE CONTRATOS
@@ -279,7 +345,7 @@ CREATE TABLE IF NOT EXISTS modelos_contrato (
     data_atualizacao TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_modelos_contrato_ativo ON modelos_contrato(ativo) WHERE ativo = true;
+CREATE INDEX IF NOT EXISTS idx_modelos_contrato_ativo ON modelos_contrato(ativo) WHERE ativo = true;
 
 -- Configuração de contrato (por usuário)
 CREATE TABLE IF NOT EXISTS configuracao_contrato (
@@ -300,7 +366,7 @@ CREATE TABLE IF NOT EXISTS configuracao_contrato (
     UNIQUE(user_id)
 );
 
-CREATE INDEX idx_configuracao_contrato_user_id ON configuracao_contrato(user_id);
+CREATE INDEX IF NOT EXISTS idx_configuracao_contrato_user_id ON configuracao_contrato(user_id);
 
 -- Contratos
 CREATE TABLE IF NOT EXISTS contratos (
@@ -322,9 +388,9 @@ CREATE TABLE IF NOT EXISTS contratos (
     criado_por VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE RESTRICT
 );
 
-CREATE INDEX idx_contratos_user_id ON contratos(user_id);
-CREATE INDEX idx_contratos_evento_id ON contratos(evento_id);
-CREATE INDEX idx_contratos_status ON contratos(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_contratos_user_id ON contratos(user_id);
+CREATE INDEX IF NOT EXISTS idx_contratos_evento_id ON contratos(evento_id);
+CREATE INDEX IF NOT EXISTS idx_contratos_status ON contratos(user_id, status);
 
 -- ============================================
 -- TABELAS DE RELATÓRIOS E CACHE
@@ -348,7 +414,7 @@ CREATE TABLE IF NOT EXISTS relatorios_diarios (
     UNIQUE(user_id, date_key)
 );
 
-CREATE INDEX idx_relatorios_diarios_user_date ON relatorios_diarios(user_id, date_key);
+CREATE INDEX IF NOT EXISTS idx_relatorios_diarios_user_date ON relatorios_diarios(user_id, date_key);
 
 -- Snapshots de relatórios (cache)
 CREATE TABLE IF NOT EXISTS relatorios_cache (
@@ -369,8 +435,8 @@ CREATE TABLE IF NOT EXISTS relatorios_cache (
     UNIQUE(user_id, id)
 );
 
-CREATE INDEX idx_relatorios_cache_user_id ON relatorios_cache(user_id);
-CREATE INDEX idx_relatorios_cache_data_geracao ON relatorios_cache(user_id, data_geracao DESC);
+CREATE INDEX IF NOT EXISTS idx_relatorios_cache_user_id ON relatorios_cache(user_id);
+CREATE INDEX IF NOT EXISTS idx_relatorios_cache_data_geracao ON relatorios_cache(user_id, data_geracao DESC);
 
 -- ============================================
 -- TABELAS DE INTEGRAÇÃO
@@ -391,7 +457,7 @@ CREATE TABLE IF NOT EXISTS google_calendar_tokens (
     UNIQUE(user_id)
 );
 
-CREATE INDEX idx_google_calendar_tokens_user_id ON google_calendar_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_google_calendar_tokens_user_id ON google_calendar_tokens(user_id);
 
 -- ============================================
 -- FUNÇÕES E TRIGGERS
@@ -407,57 +473,33 @@ END;
 $$ language 'plpgsql';
 
 -- Aplicar trigger em tabelas com data_atualizacao
+DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_eventos_updated_at ON eventos;
 CREATE TRIGGER update_eventos_updated_at BEFORE UPDATE ON eventos
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_pagamentos_updated_at ON pagamentos;
 CREATE TRIGGER update_pagamentos_updated_at BEFORE UPDATE ON pagamentos
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_modelos_contrato_updated_at ON modelos_contrato;
 CREATE TRIGGER update_modelos_contrato_updated_at BEFORE UPDATE ON modelos_contrato
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_configuracao_contrato_updated_at ON configuracao_contrato;
 CREATE TRIGGER update_configuracao_contrato_updated_at BEFORE UPDATE ON configuracao_contrato
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_contratos_updated_at ON contratos;
 CREATE TRIGGER update_contratos_updated_at BEFORE UPDATE ON contratos
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_google_calendar_tokens_updated_at ON google_calendar_tokens;
 CREATE TRIGGER update_google_calendar_tokens_updated_at BEFORE UPDATE ON google_calendar_tokens
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- ============================================
--- ROW LEVEL SECURITY (RLS)
--- ============================================
-
--- Habilitar RLS em todas as tabelas
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE canais_entrada ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tipo_eventos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tipo_custos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tipo_servicos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE eventos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pagamentos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE anexos_pagamento ENABLE ROW LEVEL SECURITY;
-ALTER TABLE custos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE servicos_evento ENABLE ROW LEVEL SECURITY;
-ALTER TABLE anexos_eventos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE modelos_contrato ENABLE ROW LEVEL SECURITY;
-ALTER TABLE configuracao_contrato ENABLE ROW LEVEL SECURITY;
-ALTER TABLE contratos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE relatorios_diarios ENABLE ROW LEVEL SECURITY;
-ALTER TABLE relatorios_cache ENABLE ROW LEVEL SECURITY;
-ALTER TABLE google_calendar_tokens ENABLE ROW LEVEL SECURITY;
-
--- Políticas RLS: Usuários só podem acessar seus próprios dados
--- Nota: Estas políticas serão configuradas via Supabase Dashboard ou via código
--- Exemplo de política (será implementada via Supabase client):
-
--- CREATE POLICY "Users can view own data" ON clientes
---     FOR SELECT USING (auth.uid()::text = user_id::text);
 
 -- ============================================
 -- COMENTÁRIOS NAS TABELAS
@@ -469,4 +511,6 @@ COMMENT ON TABLE eventos IS 'Eventos agendados';
 COMMENT ON TABLE pagamentos IS 'Pagamentos dos eventos (collection global)';
 COMMENT ON TABLE custos IS 'Custos dos eventos (collection global)';
 COMMENT ON TABLE servicos_evento IS 'Serviços vinculados aos eventos (collection global)';
+COMMENT ON TABLE pre_cadastros_eventos IS 'Pré-cadastros de eventos preenchidos por clientes via link público';
+COMMENT ON TABLE pre_cadastros_servicos IS 'Serviços vinculados aos pré-cadastros de eventos';
 

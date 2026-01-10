@@ -196,7 +196,9 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           instagram: '',
           canalEntradaId: evento.cliente.canalEntradaId || ''
         },
-        dataEvento: new Date(evento.dataEvento.getTime() - evento.dataEvento.getTimezoneOffset() * 60000).toISOString().split('T')[0],
+        dataEvento: evento.dataEvento 
+          ? new Date(evento.dataEvento.getTime() - evento.dataEvento.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+          : '',
         local: evento.local,
         endereco: evento.endereco,
         tipoEvento: evento.tipoEvento || '',
@@ -215,7 +217,9 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         observacoes: evento.observacoes || '',
         status: statusInicial,
         valorTotal: evento.valorTotal,
-        diaFinalPagamento: evento.diaFinalPagamento.toISOString().split('T')[0]
+        diaFinalPagamento: evento.diaFinalPagamento 
+          ? new Date(evento.diaFinalPagamento.getTime() - evento.diaFinalPagamento.getTimezoneOffset() * 60000).toISOString().split('T')[0]
+          : ''
       });
       
       // Definir o cliente selecionado para exibição
@@ -744,7 +748,8 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       let cliente: Cliente;
       
       if (isNovoCliente) {
-        cliente = await dataService.createCliente(formData.novoCliente, userId);
+        // Criar cliente sem validar plano (é parte da criação do evento)
+        cliente = await dataService.createCliente(formData.novoCliente, userId, true);
       } else {
         const clienteExistente = clientes?.find(c => c.id === formData.clienteId);
         if (!clienteExistente) {

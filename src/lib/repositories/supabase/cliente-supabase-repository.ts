@@ -1,11 +1,10 @@
 import { BaseSupabaseRepository } from './base-supabase-repository';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import { Cliente } from '@/types';
 import { generateUUID } from '@/lib/utils/uuid';
 
 export class ClienteSupabaseRepository extends BaseSupabaseRepository<Cliente> {
   constructor() {
-    super('clientes', getSupabaseClient());
+    super('clientes', undefined, true); // Usar service role para bypassar RLS
   }
 
   protected convertFromSupabase(row: any): Cliente {

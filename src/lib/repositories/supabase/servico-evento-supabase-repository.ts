@@ -5,7 +5,7 @@ import { generateUUID } from '@/lib/utils/uuid';
 
 export class ServicoEventoSupabaseRepository extends BaseSupabaseRepository<ServicoEvento> {
   constructor() {
-    super('servicos_evento', getSupabaseClient());
+    super('servicos_evento', undefined, true); // Usar service role para bypassar RLS
   }
 
   protected convertFromSupabase(row: any): ServicoEvento {

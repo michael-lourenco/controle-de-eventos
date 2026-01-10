@@ -30,7 +30,33 @@ export class DataService {
   private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
   private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
   private tipoEventoRepo = repositoryFactory.getTipoEventoRepository();
-  private funcionalidadeService = new FuncionalidadeService();
+  private _funcionalidadeService?: FuncionalidadeService;
+  
+  private get funcionalidadeService(): FuncionalidadeService {
+    // Lazy initialization: só inicializar quando necessário e apenas no servidor
+    if (!this._funcionalidadeService) {
+      try {
+        if (typeof window === 'undefined') {
+          // No servidor, usar ServiceFactory com repositórios corretos (importação dinâmica)
+          const { getServiceFactory } = require('./factories/service-factory');
+          this._funcionalidadeService = getServiceFactory().getFuncionalidadeService();
+        } else {
+          // No cliente, criar instância básica (não será usado diretamente no cliente)
+          // As operações no cliente devem usar API routes
+          this._funcionalidadeService = new FuncionalidadeService();
+        }
+      } catch (error) {
+        console.error('[DataService] Erro ao inicializar FuncionalidadeService:', error);
+        // Fallback: criar instância básica
+        this._funcionalidadeService = new FuncionalidadeService();
+      }
+    }
+    // Garantir que sempre retornamos uma instância válida
+    if (!this._funcionalidadeService) {
+      this._funcionalidadeService = new FuncionalidadeService();
+    }
+    return this._funcionalidadeService;
+  }
   private dashboardReportService = DashboardReportService.getInstance();
   private relatoriosReportService = RelatoriosReportService.getInstance();
 
@@ -268,21 +294,24 @@ export class DataService {
 
   async createCliente(
     cliente: Omit<Cliente, 'id' | 'dataCadastro'>,
-    userId: string
+    userId: string,
+    skipPlanValidation: boolean = false
   ): Promise<Cliente> {
     if (!userId) {
       throw new Error('userId é obrigatório para criar cliente');
     }
 
-    // Validar permissão e limite antes de criar
-    const validacao = await this.funcionalidadeService.verificarPodeCriar(userId, 'clientes');
-    if (!validacao.pode) {
-      const erro = new Error(validacao.motivo || 'Não é possível criar cliente');
-      (erro as any).status = 403;
-      (erro as any).limite = validacao.limite;
-      (erro as any).usado = validacao.usado;
-      (erro as any).restante = validacao.restante;
-      throw erro;
+    // Validar permissão e limite antes de criar (a menos que seja bypassado)
+    if (!skipPlanValidation) {
+      const validacao = await this.funcionalidadeService.verificarPodeCriar(userId, 'clientes');
+      if (!validacao.pode) {
+        const erro = new Error(validacao.motivo || 'Não é possível criar cliente');
+        (erro as any).status = 403;
+        (erro as any).limite = validacao.limite;
+        (erro as any).usado = validacao.usado;
+        (erro as any).restante = validacao.restante;
+        throw erro;
+      }
     }
 
     // Normalizar e validar email antes de criar
@@ -350,21 +379,24 @@ export class DataService {
 
   async createEvento(
     evento: Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'>,
-    userId: string
+    userId: string,
+    skipPlanValidation: boolean = false
   ): Promise<Evento> {
     if (!userId) {
       throw new Error('userId é obrigatório para criar evento');
     }
 
-    // Validar permissão e limite antes de criar
-    const validacao = await this.funcionalidadeService.verificarPodeCriar(userId, 'eventos');
-    if (!validacao.pode) {
-      const erro = new Error(validacao.motivo || 'Não é possível criar evento');
-      (erro as any).status = 403;
-      (erro as any).limite = validacao.limite;
-      (erro as any).usado = validacao.usado;
-      (erro as any).restante = validacao.restante;
-      throw erro;
+    // Validar permissão e limite antes de criar (a menos que seja bypassado)
+    if (!skipPlanValidation) {
+      const validacao = await this.funcionalidadeService.verificarPodeCriar(userId, 'eventos');
+      if (!validacao.pode) {
+        const erro = new Error(validacao.motivo || 'Não é possível criar evento');
+        (erro as any).status = 403;
+        (erro as any).limite = validacao.limite;
+        (erro as any).usado = validacao.usado;
+        (erro as any).restante = validacao.restante;
+        throw erro;
+      }
     }
 
     console.log('DataService: Criando evento:', evento);

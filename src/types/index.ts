@@ -523,6 +523,82 @@ export interface RelatorioPerformanceEventos {
   };
 }
 
+// ============================================
+// PRÉ-CADASTRO DE EVENTOS
+// ============================================
+
+export enum StatusPreCadastro {
+  PENDENTE = 'pendente',
+  PREENCHIDO = 'preenchido',
+  CONVERTIDO = 'convertido',
+  EXPIRADO = 'expirado',
+  IGNORADO = 'ignorado'
+}
+
+export interface PreCadastroEvento {
+  id: string;
+  userId: string;
+  
+  // Dados do Cliente (preenchidos pelo cliente)
+  clienteNome?: string;
+  clienteEmail?: string;
+  clienteTelefone?: string;
+  clienteCpf?: string;
+  clienteEndereco?: string;
+  clienteCep?: string;
+  clienteInstagram?: string;
+  clienteCanalEntradaId?: string;
+  clienteCanalEntrada?: CanalEntrada;
+  
+  // Dados do Evento (preenchidos pelo cliente)
+  nomeEvento?: string;
+  dataEvento?: Date;
+  local?: string;
+  endereco?: string;
+  tipoEvento?: string;
+  tipoEventoId?: string;
+  tipoEventoObj?: TipoEvento;
+  contratante?: string;
+  numeroConvidados?: number;
+  quantidadeMesas?: number;
+  hashtag?: string;
+  horarioInicio?: string;
+  horarioTermino?: string; // Horário de Desmontagem (horarioDesmontagem no Evento)
+  cerimonialista?: {
+    nome?: string;
+    telefone?: string;
+  };
+  observacoes?: string;
+  
+  // Metadados
+  status: StatusPreCadastro;
+  dataExpiracao: Date;
+  dataPreenchimento?: Date;
+  dataConversao?: Date;
+  eventoId?: string;
+  clienteId?: string;
+  
+  // Relacionamentos
+  servicos?: PreCadastroServico[];
+  
+  // Timestamps
+  dataCadastro: Date;
+  dataAtualizacao: Date;
+}
+
+export interface PreCadastroServico {
+  id: string;
+  userId: string;
+  preCadastroId: string;
+  tipoServicoId: string;
+  tipoServico?: TipoServico;
+  observacoes?: string;
+  removido?: boolean;
+  dataRemocao?: Date;
+  motivoRemocao?: string;
+  dataCadastro: Date;
+}
+
 export interface RelatorioFluxoCaixa {
   periodo: {
     inicio: Date;
