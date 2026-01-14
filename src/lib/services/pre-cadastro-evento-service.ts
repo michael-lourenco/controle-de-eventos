@@ -214,7 +214,7 @@ export class PreCadastroEventoService {
     const eventoData: Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'> = {
       nomeEvento: preCadastro.nomeEvento,
       clienteId: cliente.id,
-      cliente,
+      cliente, // Incluído para satisfazer o tipo, mas não será salvo no banco (apenas clienteId)
       dataEvento,
       diaSemana: getDiaSemana(dataEvento),
       local: preCadastro.local,
@@ -236,7 +236,7 @@ export class PreCadastroEventoService {
       status: StatusEvento.AGENDADO,
       valorTotal: 0, // Será preenchido depois
       diaFinalPagamento: new Date(dataEvento.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 dias após o evento como padrão
-    } as Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'>;
+    };
     
     // Criar evento sem validar plano (é parte do fluxo de pré-cadastro)
     const evento = await dataService.createEvento(eventoData, userId, true);

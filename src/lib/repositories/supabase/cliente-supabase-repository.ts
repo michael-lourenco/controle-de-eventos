@@ -25,15 +25,67 @@ export class ClienteSupabaseRepository extends BaseSupabaseRepository<Cliente> {
     };
   }
 
+  /**
+   * Normaliza CPF para garantir que não exceda 14 caracteres
+   * Remove caracteres não numéricos, mantém apenas números e formata se necessário
+   */
+  private normalizarCpf(cpf: string | undefined | null): string | null {
+    if (!cpf) return null;
+    
+    // Remover todos os caracteres não numéricos
+    const apenasNumeros = cpf.replace(/\D/g, '');
+    
+    // Se não tiver números, retornar null
+    if (!apenasNumeros) return null;
+    
+    // Se tiver mais de 11 dígitos, truncar para 11
+    const numerosLimitados = apenasNumeros.slice(0, 11);
+    
+    // Se tiver 11 dígitos, formatar como CPF: XXX.XXX.XXX-XX
+    if (numerosLimitados.length === 11) {
+      return `${numerosLimitados.slice(0, 3)}.${numerosLimitados.slice(3, 6)}.${numerosLimitados.slice(6, 9)}-${numerosLimitados.slice(9, 11)}`;
+    }
+    
+    // Se tiver menos de 11 dígitos, retornar como está (pode ser um documento incompleto)
+    // Mas limitar a 14 caracteres para não exceder o limite do banco
+    return numerosLimitados.slice(0, 14);
+  }
+
+  /**
+   * Normaliza CEP para garantir que não exceda 10 caracteres
+   * Remove caracteres não numéricos e formata se necessário
+   */
+  private normalizarCep(cep: string | undefined | null): string | null {
+    if (!cep) return null;
+    
+    // Remover todos os caracteres não numéricos
+    const apenasNumeros = cep.replace(/\D/g, '');
+    
+    // Se não tiver números, retornar null
+    if (!apenasNumeros) return null;
+    
+    // Se tiver mais de 8 dígitos, truncar para 8
+    const numerosLimitados = apenasNumeros.slice(0, 8);
+    
+    // Se tiver 8 dígitos, formatar como CEP: XXXXX-XXX
+    if (numerosLimitados.length === 8) {
+      return `${numerosLimitados.slice(0, 5)}-${numerosLimitados.slice(5, 8)}`;
+    }
+    
+    // Se tiver menos de 8 dígitos, retornar como está
+    // Mas limitar a 10 caracteres para não exceder o limite do banco
+    return numerosLimitados.slice(0, 10);
+  }
+
   protected convertToSupabase(entity: Partial<Cliente>): any {
     const data: any = {};
     
     if (entity.nome !== undefined) data.nome = entity.nome;
-    if (entity.cpf !== undefined) data.cpf = entity.cpf || null;
+    if (entity.cpf !== undefined) data.cpf = this.normalizarCpf(entity.cpf);
     if (entity.email !== undefined) data.email = entity.email || null;
     if (entity.telefone !== undefined) data.telefone = entity.telefone || null;
     if (entity.endereco !== undefined) data.endereco = entity.endereco || null;
-    if (entity.cep !== undefined) data.cep = entity.cep || null;
+    if (entity.cep !== undefined) data.cep = this.normalizarCep(entity.cep);
     if (entity.instagram !== undefined) data.instagram = entity.instagram || null;
     if (entity.canalEntradaId !== undefined) data.canal_entrada_id = entity.canalEntradaId || null;
     if (entity.arquivado !== undefined) data.arquivado = entity.arquivado;
