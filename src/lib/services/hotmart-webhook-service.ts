@@ -160,10 +160,14 @@ export class HotmartWebhookService {
         const d = payload.data;
         // Tentar sintetizar um objeto subscription mínimo para nosso fluxo
         const synthesized = {
-          subscription_code: d.subscriber?.code || d.subscriber_code || d.subscription_code || d.id,
+          subscriber: {
+            code: d.subscriber?.code || d.subscriber_code || d.subscription_code || d.id
+          },
           plan: {
-            // Preferimos plan_code/code; se vier apenas id/name, tentamos montar uma string estável
-            plan_code: d.plan?.plan_code || d.plan?.code || d.plan?.id || d.plan?.name
+            // Para webhooks reais, o plano vem como { id: number, name: string }
+            id: d.plan?.id,
+            name: d.plan?.name,
+            plan_code: d.plan?.plan_code || d.plan?.code
           },
           buyer: {
             email: d.user?.email || d.buyer?.email || d.subscriber?.email
@@ -172,7 +176,7 @@ export class HotmartWebhookService {
           date_next_charge: d.next_charge_date || d.date_next_charge
         };
         // Apenas use se houver pelo menos subscription_code e email
-        if (synthesized.subscription_code && synthesized.buyer.email) {
+        if (synthesized.subscriber?.code && synthesized.buyer.email) {
           subscription = synthesized as any;
         }
       }
@@ -202,9 +206,9 @@ export class HotmartWebhookService {
         subscription.plan?.plan_code ||
         subscription.plan?.code ||
         (subscription.plan?.id ? String(subscription.plan.id) : undefined) ||
-        (typeof subscription.plan?.name === 'string' ? subscription.plan.name : undefined) ||
+        (typeof subscription.plan?.name === 'string' ? subscription.plan.name.trim().toUpperCase() : undefined) ||
         (payload.data?.plan?.id ? String(payload.data?.plan?.id) : undefined) ||
-        (typeof payload.data?.plan?.name === 'string' ? payload.data?.plan?.name : undefined);
+        (typeof payload.data?.plan?.name === 'string' ? payload.data?.plan.name.trim().toUpperCase() : undefined);
 
       // Extrair email de múltiplas fontes possíveis
       const emailRaw = (
@@ -219,9 +223,38 @@ export class HotmartWebhookService {
       
       const email = emailRaw?.toLowerCase().trim();
 
-      // Regra de sandbox: se o código do plano for "123", aplicar o plano BASICO_MENSAL
-      if (codigoPlano === '123') {
-        codigoPlano = 'BASICO_MENSAL';
+      // Log detalhado para debug (especialmente para webhooks reais)
+      console.log(`[HotmartWebhook] 🔍 Extraindo código do plano (isSandbox: ${isSandbox}):`);
+      console.log(`[HotmartWebhook] - subscription.plan:`, JSON.stringify(subscription.plan, null, 2));
+      console.log(`[HotmartWebhook] - payload.data?.plan:`, JSON.stringify(payload.data?.plan, null, 2));
+      console.log(`[HotmartWebhook] - codigoPlano extraído (antes fallback):`, codigoPlano);
+
+      // Mapeamento de IDs de planos do Hotmart para códigos do banco
+      // Webhooks reais enviam plan.id (numérico) como identificador principal
+      const mapeamentoPlanosPorId: Record<string, string> = {
+        '1196829': 'BASICO_MENSAL',
+        '1197348': 'PROFISSIONAL_MENSAL',
+        '1197349': 'PREMIUM_MENSAL',
+      };
+      
+      // Mapeamento de nomes de planos (fallback para sandbox ou casos especiais)
+      const mapeamentoPlanosPorNome: Record<string, string> = {
+        '123': 'BASICO_MENSAL', // Sandbox
+        'BÁSICO': 'BASICO_MENSAL',
+        'BASICO': 'BASICO_MENSAL',
+        'PROFISSIONAL': 'PROFISSIONAL_MENSAL',
+        'PREMIUM': 'PREMIUM_MENSAL',
+        'ENTERPRISE': 'ENTERPRISE_MENSAL',
+      };
+      
+      // Aplicar mapeamento por ID primeiro (prioridade)
+      if (codigoPlano && mapeamentoPlanosPorId[codigoPlano]) {
+        console.log(`[HotmartWebhook] 🔄 Mapeando ID do plano "${codigoPlano}" para "${mapeamentoPlanosPorId[codigoPlano]}"`);
+        codigoPlano = mapeamentoPlanosPorId[codigoPlano];
+      } else if (codigoPlano && mapeamentoPlanosPorNome[codigoPlano]) {
+        // Fallback para mapeamento por nome
+        console.log(`[HotmartWebhook] 🔄 Mapeando nome do plano "${codigoPlano}" para "${mapeamentoPlanosPorNome[codigoPlano]}"`);
+        codigoPlano = mapeamentoPlanosPorNome[codigoPlano];
       }
       // Fallbacks para shape do Sandbox v2: subscription.subscriber.code e plan.id/name
       if (!hotmartSubscriptionId) {
@@ -233,7 +266,10 @@ export class HotmartWebhookService {
         if (codigoPlano && typeof codigoPlano !== 'string') {
           codigoPlano = String(codigoPlano);
         }
+        console.log(`[HotmartWebhook] - codigoPlano após fallback:`, codigoPlano);
       }
+      
+      console.log(`[HotmartWebhook] - codigoPlano final:`, codigoPlano);
 
       if (!hotmartSubscriptionId) {
         const errorMsg = 'Dados incompletos: subscription_id não encontrado';
@@ -289,18 +325,31 @@ export class HotmartWebhookService {
       let plano: any = null;
       if (!eventosQueNaoPrecisamPlano.includes(action)) {
         if (!codigoPlano) {
+          console.error(`[HotmartWebhook] ❌ Código do plano não encontrado no payload. Action: ${action}`);
+          console.error(`[HotmartWebhook] Payload subscription:`, JSON.stringify(subscription, null, 2));
+          console.error(`[HotmartWebhook] Payload data:`, JSON.stringify(payload.data, null, 2));
           const errorMsg = 'Dados incompletos: código do plano não encontrado';
           return { success: false, message: errorMsg };
         }
 
+        console.log(`[HotmartWebhook] 🔍 Buscando plano com código Hotmart: "${codigoPlano}"`);
         plano = await this.planoRepo.findByCodigoHotmart(codigoPlano);
         if (!plano) {
-          const errorMsg = 'Plano não encontrado. Verifique se o código do plano está correto no banco de dados.';
+          // Tentar buscar todos os planos para debug
+          try {
+            const todosPlanos = await this.planoRepo.findAll();
+            console.error(`[HotmartWebhook] ❌ Plano não encontrado com código: "${codigoPlano}"`);
+            console.error(`[HotmartWebhook] Planos disponíveis no banco:`, todosPlanos.map(p => ({ id: p.id, nome: p.nome, codigoHotmart: p.codigoHotmart })));
+          } catch (error) {
+            console.error(`[HotmartWebhook] Erro ao buscar planos para debug:`, error);
+          }
+          const errorMsg = `Plano não encontrado com código "${codigoPlano}". Verifique se o código do plano está correto no banco de dados.`;
           return { 
             success: false, 
             message: errorMsg
           };
         }
+        console.log(`[HotmartWebhook] ✅ Plano encontrado: ${plano.nome} (ID: ${plano.id}, codigoHotmart: ${plano.codigoHotmart})`);
       }
 
       // Processar evento

@@ -143,14 +143,34 @@ export default function PlanosPage() {
     }).format(preco);
   };
 
+  // Mapeamento de códigos de planos para links de pagamento da Hotmart
+  const linksPagamentoHotmart: Record<string, string> = {
+    'BASICO_MENSAL': 'https://pay.hotmart.com/E102958850J?off=8i552qn2',
+    'PROFISSIONAL_MENSAL': 'https://pay.hotmart.com/E102958850J?off=muk2aovg',
+    'PREMIUM_MENSAL': 'https://pay.hotmart.com/E102958850J?off=edavff1s',
+  };
+
   const handleAssinar = (plano: Plano) => {
-    // Aqui você redirecionaria para a Hotmart ou processaria a assinatura
-    showToast(
-      `Para assinar o plano ${plano.nome}, você será redirecionado para a Hotmart. Em produção, isso redirecionaria para: ${plano.codigoHotmart}`,
-      'info',
-      8000
-    );
-    // window.location.href = `https://hotmart.com/.../${plano.codigoHotmart}`;
+    // Verificar se o plano tem código Hotmart e link de pagamento configurado
+    if (!plano.codigoHotmart) {
+      showToast('Plano não possui código Hotmart configurado', 'error');
+      return;
+    }
+
+    const linkPagamento = linksPagamentoHotmart[plano.codigoHotmart];
+    
+    if (!linkPagamento) {
+      showToast(
+        `Link de pagamento não configurado para o plano ${plano.nome}. Código: ${plano.codigoHotmart}`,
+        'error',
+        8000
+      );
+      console.error(`[PlanosPage] Link de pagamento não encontrado para código: ${plano.codigoHotmart}`);
+      return;
+    }
+
+    // Redirecionar para a página de pagamento da Hotmart
+    window.location.href = linkPagamento;
   };
 
   if (loading) {
