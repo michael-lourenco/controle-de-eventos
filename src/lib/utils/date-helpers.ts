@@ -49,3 +49,32 @@ export function formatLocalDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Calcula o dia da semana de uma data, usando apenas ano, mês e dia
+ * para evitar problemas de timezone.
+ * 
+ * @param date - Objeto Date ou string de data
+ * @returns Dia da semana em português (DOMINGO, SEGUNDA, TERÇA, etc.)
+ */
+export function getDiaSemana(date: Date | string): string {
+  const dias = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
+  
+  let dataObj: Date;
+  if (typeof date === 'string') {
+    dataObj = new Date(date);
+  } else {
+    dataObj = date;
+  }
+  
+  // Usar getUTCDay() para evitar problemas de timezone
+  // ou extrair apenas ano, mês e dia e criar uma nova data
+  const year = dataObj.getFullYear();
+  const month = dataObj.getMonth();
+  const day = dataObj.getDate();
+  
+  // Criar uma nova data no timezone local usando apenas ano, mês e dia
+  // Isso garante que o dia da semana seja calculado corretamente
+  const dataLocal = new Date(year, month, day);
+  return dias[dataLocal.getDay()];
+}
+

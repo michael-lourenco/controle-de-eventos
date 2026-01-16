@@ -1,6 +1,7 @@
 import { PreCadastroEvento, PreCadastroServico, StatusPreCadastro, Evento, Cliente, ServicoEvento, StatusEvento } from '@/types';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { dataService } from '@/lib/data-service';
+import { getDiaSemana } from '@/lib/utils/date-helpers';
 
 export class PreCadastroEventoService {
   /**
@@ -186,12 +187,6 @@ export class PreCadastroEventoService {
         throw error;
       }
     }
-    
-    // Calcular dia da semana
-    const getDiaSemana = (data: Date): string => {
-      const dias = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
-      return dias[data.getDay()];
-    };
     
     // Criar evento
     if (!preCadastro.dataEvento) {

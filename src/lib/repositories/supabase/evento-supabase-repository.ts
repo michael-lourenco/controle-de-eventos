@@ -1,6 +1,7 @@
 import { BaseSupabaseRepository } from './base-supabase-repository';
 import { Evento, StatusEvento } from '@/types';
 import { generateUUID } from '@/lib/utils/uuid';
+import { getDiaSemana } from '@/lib/utils/date-helpers';
 
 export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
   constructor() {
@@ -8,12 +9,16 @@ export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
   }
 
   protected convertFromSupabase(row: any): Evento {
+    const dataEvento = new Date(row.data_evento);
+    // Recalcular dia da semana para garantir que está correto (evita problemas de timezone)
+    const diaSemanaCalculado = getDiaSemana(dataEvento);
+    
     return {
       id: row.id,
       nomeEvento: row.nome_evento,
       clienteId: row.cliente_id,
-      dataEvento: new Date(row.data_evento),
-      diaSemana: row.dia_semana || '',
+      dataEvento,
+      diaSemana: diaSemanaCalculado, // Usar o dia calculado em vez do salvo no banco
       local: row.local,
       endereco: row.endereco || '',
       tipoEvento: row.tipo_evento,

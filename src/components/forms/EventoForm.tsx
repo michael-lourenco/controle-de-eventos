@@ -25,7 +25,7 @@ import { usePlano } from '@/lib/hooks/usePlano';
 import { useToast } from '@/components/ui/toast';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
 import EventoStatusSelect from '@/components/EventoStatusSelect';
-import { parseLocalDate } from '@/lib/utils/date-helpers';
+import { parseLocalDate, getDiaSemana } from '@/lib/utils/date-helpers';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -78,8 +78,6 @@ const statusOptions = [
   { value: StatusEvento.CONFIRMADO, label: 'Confirmado' },
   { value: StatusEvento.EM_ANDAMENTO, label: 'Em andamento' }
 ];
-
-const diasSemana = ['DOMINGO', 'SEGUNDA', 'TERÇA', 'QUARTA', 'QUINTA', 'SEXTA', 'SÁBADO'];
 
 export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps) {
   const router = useRouter();
@@ -610,11 +608,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
     }
   };
 
-  const getDiaSemana = (data: string) => {
-    if (!data) return '';
-    const dataObj = new Date(data);
-    return diasSemana[dataObj.getDay()];
-  };
+  // getDiaSemana agora é importado de date-helpers
 
   const calcularTempoEvento = (inicio: string, fim: string): string => {
     if (!inicio || !fim) return '';
