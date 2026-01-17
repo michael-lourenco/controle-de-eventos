@@ -76,7 +76,7 @@ export default function DashboardPage() {
 
   const stats = [
     {
-      name: 'Receita Total',
+      name: 'Receita Total Deste Ano',
       value: receitaTotalFormatado,
       icon: CurrencyDollarIcon,
       color: 'text-success',
@@ -173,11 +173,11 @@ export default function DashboardPage() {
                       <p className="text-xs font-medium text-text-secondary leading-tight">
                         {stat.name}
                       </p>
-                      {stat.name === 'Receita Total' && (
+                      {stat.name === 'Receita Total Deste Ano' && (
                         <InfoTooltip
-                          title="Receita Total"
-                          description="Soma de todos os pagamentos recebidos (com status 'Pago') desde o início. Representa a receita total acumulada da empresa."
-                          calculation="Receita Total = Soma de todos os pagamentos com status 'Pago' registrados no sistema. Considera todos os pagamentos liquidados, independentemente da data."
+                          title="Receita Total Deste Ano"
+                          description="Soma de todos os pagamentos recebidos (com status 'Pago') no ano atual. Representa a receita acumulada do ano corrente."
+                          calculation="Receita Total Deste Ano = Soma de todos os pagamentos com status 'Pago' e dataPagamento dentro do ano atual (de janeiro até dezembro)."
                           className="flex-shrink-0"
                           iconClassName="h-5 w-5"
                         />
@@ -301,8 +301,8 @@ export default function DashboardPage() {
                 </CardTitle>
                 <InfoTooltip
                   title="Valores Atrasados"
-                  description="Quantidade de pagamentos pendentes cuja data de vencimento já passou. Representa valores vencidos que precisam de atenção para cobrança."
-                  calculation="Valores Atrasados = Contagem de pagamentos com status 'Pendente' cuja data de vencimento (diaFinalPagamento do evento) já passou."
+                  description="Quantidade de eventos com valores a receber que já estão após o diaFinalPagamento. Representa valores vencidos que precisam de atenção para cobrança."
+                  calculation="Valores Atrasados = Contagem de eventos com valorPendente > 0 cuja data de vencimento (diaFinalPagamento) já passou. Diferente de valores pendentes que ainda estão dentro do prazo."
                   className="flex-shrink-0"
                   iconClassName="h-5 w-5"
                 />
@@ -312,15 +312,18 @@ export default function DashboardPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {dashboardData.pagamentosPendentes === 0 ? (
-                <p className="text-text-muted text-center py-4">Nenhum pagamento pendente</p>
+              {dashboardData.eventosComValoresAtrasados === 0 ? (
+                <p className="text-text-muted text-center py-4">Nenhum valor em atraso</p>
               ) : (
                 <div className="text-center">
                   <div className="text-3xl font-bold text-error">
-                    {dashboardData.pagamentosPendentes}
+                    {dashboardData.eventosComValoresAtrasados || 0}
                   </div>
                   <p className="text-sm text-text-secondary mt-2">
-                    Pagamentos pendentes
+                    Eventos com valores atrasados
+                  </p>
+                  <p className="text-xs text-text-muted mt-1">
+                    Valor: {formatarValor(dashboardData.resumoFinanceiro.valorAtrasado)}
                   </p>
                 </div>
               )}
@@ -481,7 +484,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Resumo Financeiro */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
           <Card 
             onClick={() => {
               router.push('/relatorios');
@@ -514,68 +517,6 @@ export default function DashboardPage() {
               </div>
               <p className="text-sm text-text-muted mt-1">
                 {format(new Date(), 'MMMM yyyy', { locale: ptBR })}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            onClick={() => {
-              router.push('/relatorios');
-              setTimeout(() => {
-                const element = document.getElementById('fluxo-caixa');
-                if (element) {
-                  const offset = 120;
-                  const elementPosition = element.offsetTop - offset;
-                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
-                }
-              }, 100);
-            }}
-            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg">Receita do Ano</CardTitle>
-                <InfoTooltip
-                  title="Receita do Ano"
-                  description="Soma de todos os pagamentos recebidos (com status 'Pago') no ano atual. Representa a receita acumulada desde o início do ano."
-                  calculation="Receita do Ano = Soma de todos os pagamentos com status 'Pago' e dataPagamento dentro do ano atual (1º de janeiro até hoje)."
-                  className="flex-shrink-0"
-                  iconClassName="h-5 w-5"
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-info">
-                R$ {dashboardData.receitaAno.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </div>
-              <p className="text-sm text-text-muted mt-1">
-                {new Date().getFullYear()}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card 
-            onClick={() => router.push('/relatorios')}
-            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg">Total de Pagamentos</CardTitle>
-                <InfoTooltip
-                  title="Total de Pagamentos"
-                  description="Quantidade total de pagamentos pendentes registrados no sistema. Representa pagamentos que ainda não foram liquidados."
-                  calculation="Total de Pagamentos = Contagem de pagamentos com status 'Pendente' no sistema. Inclui pagamentos dentro do prazo e em atraso."
-                  className="flex-shrink-0"
-                  iconClassName="h-5 w-5"
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-text-primary">
-                {dashboardData.pagamentosPendentes}
-              </div>
-              <p className="text-sm text-text-muted mt-1">
-                Registros no sistema
               </p>
             </CardContent>
           </Card>

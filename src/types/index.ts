@@ -349,6 +349,8 @@ export interface DashboardData {
   pagamentosPendentes: number;
   valorPendente: number;
   valorAtrasado: number;
+  eventosComValoresAtrasados?: number;
+  eventosComValoresPendentes?: number;
   eventosProximos: DashboardEventoResumo[];
   pagamentosVencendo: Pagamento[];
   resumoFinanceiro: {

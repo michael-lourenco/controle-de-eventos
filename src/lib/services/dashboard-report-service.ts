@@ -148,6 +148,8 @@ export class DashboardReportService {
     let valorPendente = 0;
     let valorAtrasado = 0;
     let pagamentosPendentes = 0;
+    let eventosComValoresAtrasados = 0;
+    let eventosComValoresPendentes = 0;
 
     // Usar apenas eventos válidos com valor para cálculos financeiros
     const eventosValidosComValor = filtrarEventosValidosComValor(eventos);
@@ -170,6 +172,15 @@ export class DashboardReportService {
         valorPendente += resumo.valorPendente;
         valorAtrasado += resumo.valorAtrasado;
 
+        // Separar contagem de eventos com valores atrasados vs pendentes
+        if (resumo.valorAtrasado > 0) {
+          eventosComValoresAtrasados++;
+        }
+        if (resumo.valorPendente > 0) {
+          eventosComValoresPendentes++;
+        }
+
+        // Manter compatibilidade: pagamentosPendentes = total de eventos com valores não pagos
         if (resumo.valorPendente > 0 || resumo.valorAtrasado > 0) {
           pagamentosPendentes++;
         }
@@ -190,6 +201,8 @@ export class DashboardReportService {
       pagamentosPendentes,
       valorPendente,
       valorAtrasado,
+      eventosComValoresAtrasados,
+      eventosComValoresPendentes,
       eventosProximos: eventosProximos
         .sort((a, b) => new Date(a.dataEvento).getTime() - new Date(b.dataEvento).getTime())
         .map(this.mapearEventoResumo),
