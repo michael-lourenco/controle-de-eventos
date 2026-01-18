@@ -39,16 +39,36 @@ export function usePlano(): UsePlanoReturn {
       const userId = session.user.id;
 
       // Carregar status do plano e limites em paralelo
-      const [status, limitesData] = await Promise.all([
+      // Usar API para limites (bypassa regras do Firestore)
+      const [status, limitesResponse] = await Promise.all([
         assinaturaService.obterStatusPlanoUsuario(userId),
-        funcionalidadeService.obterLimitesUsuario(userId)
+        fetch('/api/limites-usuario').then(res => res.json())
       ]);
 
       setStatusPlano(status);
-      setLimites(limitesData);
+      
+      // Extrair limites da resposta da API
+      if (limitesResponse.data?.limites) {
+        setLimites(limitesResponse.data.limites);
+      } else {
+        // Fallback: valores padrão
+        setLimites({
+          eventosMesAtual: 0,
+          clientesTotal: 0,
+          usuariosConta: 1,
+          armazenamentoUsado: 0
+        });
+      }
     } catch (err: any) {
       console.error('Erro ao carregar dados do plano:', err);
       setError(err.message || 'Erro ao carregar dados do plano');
+      // Em caso de erro, definir valores padrão
+      setLimites({
+        eventosMesAtual: 0,
+        clientesTotal: 0,
+        usuariosConta: 1,
+        armazenamentoUsado: 0
+      });
     } finally {
       setLoading(false);
     }
