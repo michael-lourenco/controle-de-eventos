@@ -102,11 +102,18 @@ export async function POST(request: NextRequest) {
       const user = await auth.getUserByEmail(normalizedEmail);
       console.log('[reset-password] Usuário encontrado:', user.uid);
       
-      // Buscar nome do usuário no Firestore
-      const userRepo = repositoryFactory.getUserRepository();
-      const userData = await userRepo.findById(user.uid);
-      const nome = userData?.nome || '';
-      console.log('[reset-password] Nome do usuário:', nome || '(não encontrado)');
+      // Buscar nome do usuário no Firestore (usar Admin para bypassar regras)
+      let nome = '';
+      try {
+        const { AdminUserRepository } = await import('@/lib/repositories/admin-user-repository');
+        const userRepo = new AdminUserRepository();
+        const userData = await userRepo.findById(user.uid);
+        nome = userData?.nome || '';
+        console.log('[reset-password] Nome do usuário:', nome || '(não encontrado)');
+      } catch (userRepoError: any) {
+        console.error('[reset-password] Erro ao buscar dados do usuário:', userRepoError);
+        // Continuar mesmo sem o nome do usuário
+      }
 
       // Gerar código de reset usando Firebase Admin
       console.log('[reset-password] Gerando link de reset do Firebase...');
@@ -134,16 +141,22 @@ export async function POST(request: NextRequest) {
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 1);
 
-      // Armazenar token no banco
+      // Armazenar token no banco (usar Admin para bypassar regras)
       console.log('[reset-password] Armazenando token no banco...');
-      const tokenRepo = repositoryFactory.getPasswordResetTokenRepository();
-      await tokenRepo.createToken({
-        token: shortToken,
-        email: normalizedEmail,
-        firebaseCode: oobCode,
-        expiresAt
-      });
-      console.log('[reset-password] Token armazenado no banco com sucesso');
+      try {
+        const { AdminPasswordResetTokenRepository } = await import('@/lib/repositories/admin-password-reset-token-repository');
+        const tokenRepo = new AdminPasswordResetTokenRepository();
+        await tokenRepo.createToken({
+          token: shortToken,
+          email: normalizedEmail,
+          firebaseCode: oobCode,
+          expiresAt
+        });
+        console.log('[reset-password] Token armazenado no banco com sucesso');
+      } catch (tokenError: any) {
+        console.error('[reset-password] Erro ao armazenar token:', tokenError);
+        throw new Error(`Erro ao armazenar token: ${tokenError.message}`);
+      }
 
       // Criar URL curta e limpa
       const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha?token=${shortToken}`;

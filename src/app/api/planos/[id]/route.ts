@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { 
   requireAdmin,
   handleApiError,
@@ -16,17 +15,31 @@ export async function GET(
   try {
     // Permitir acesso público para landing page
     const { id } = await getRouteParams(params);
-    // Importação dinâmica para evitar dependências circulares
-    const { getServiceFactory } = await import('@/lib/factories/service-factory');
-    const serviceFactory = getServiceFactory();
-    const service = serviceFactory.getPlanoService();
-    const plano = await service.obterPlanoComFuncionalidades(id);
-
+    // Usar Admin diretamente para bypassar regras do Firestore
+    const { AdminPlanoRepository } = await import('@/lib/repositories/admin-plano-repository');
+    const { AdminFuncionalidadeRepository } = await import('@/lib/repositories/admin-funcionalidade-repository');
+    const planoRepo = new AdminPlanoRepository();
+    const funcionalidadeRepo = new AdminFuncionalidadeRepository();
+    
+    const plano = await planoRepo.findById(id);
     if (!plano) {
       return createErrorResponse('Plano não encontrado', 404);
     }
 
-    return createApiResponse({ plano });
+    const funcionalidadesDetalhes = [];
+    for (const funcId of plano.funcionalidades) {
+      const func = await funcionalidadeRepo.findById(funcId);
+      if (func) {
+        funcionalidadesDetalhes.push(func);
+      }
+    }
+
+    const planoComFuncionalidades = {
+      ...plano,
+      funcionalidadesDetalhes
+    };
+
+    return createApiResponse({ plano: planoComFuncionalidades });
   } catch (error) {
     return handleApiError(error);
   }
@@ -41,7 +54,8 @@ export async function PUT(
 
     const { id } = await getRouteParams(params);
     const data = await getRequestBody(request);
-    const planoRepo = repositoryFactory.getPlanoRepository();
+    const { AdminPlanoRepository } = await import('@/lib/repositories/admin-plano-repository');
+    const planoRepo = new AdminPlanoRepository();
     
     const plano = await planoRepo.update(id, {
       ...data,
@@ -62,7 +76,8 @@ export async function DELETE(
     await requireAdmin();
 
     const { id } = await getRouteParams(params);
-    const planoRepo = repositoryFactory.getPlanoRepository();
+    const { AdminPlanoRepository } = await import('@/lib/repositories/admin-plano-repository');
+    const planoRepo = new AdminPlanoRepository();
     await planoRepo.delete(id);
 
     return createApiResponse({ success: true });

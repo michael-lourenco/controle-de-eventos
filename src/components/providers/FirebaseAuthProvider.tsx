@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import { signInWithCustomToken, signOut as firebaseSignOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -16,6 +17,7 @@ interface FirebaseAuthProviderProps {
  */
 export function FirebaseAuthProvider({ children }: FirebaseAuthProviderProps) {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,18 +99,25 @@ export function FirebaseAuthProvider({ children }: FirebaseAuthProviderProps) {
     syncFirebaseAuth();
 
     // Monitorar mudanças no estado de autenticação do Firebase
+    // Apenas logar se estiver em uma página que requer autenticação
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('[FirebaseAuthProvider] Usuário autenticado no Firebase Auth:', user.uid);
-      } else {
-        console.log('[FirebaseAuthProvider] Usuário não autenticado no Firebase Auth');
+      // Não logar em páginas públicas (esqueci-senha, redefinir-senha, login, etc)
+      const publicRoutes = ['/esqueci-senha', '/redefinir-senha', '/login', '/painel', '/'];
+      const isPublicRoute = pathname && publicRoutes.some(route => pathname.startsWith(route));
+      
+      if (!isPublicRoute) {
+        if (user) {
+          console.log('[FirebaseAuthProvider] Usuário autenticado no Firebase Auth:', user.uid);
+        } else {
+          console.log('[FirebaseAuthProvider] Usuário não autenticado no Firebase Auth');
+        }
       }
     });
 
     return () => {
       unsubscribe();
     };
-  }, [session, status]);
+  }, [session, status, pathname]);
 
   // Não renderizar nada, apenas sincronizar em background
   return <>{children}</>;

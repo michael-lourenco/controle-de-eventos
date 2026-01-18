@@ -40,13 +40,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"event\": \"PURCHASE_APPROVED\",\n  \"data\": {\n    \"subscription\": {\n      \"subscription_code\": \"SUB-SANDBOX-123456\",\n      \"plan\": { \"plan_code\": \"BASICO_MENSAL\" },\n      \"buyer\": { \"email\": \"cliente@exemplo.com\", \"name\": \"Nome do Cliente\" },\n      \"status\": \"TRIAL\",\n      \"trial_period_end\": \"2025-01-15T00:00:00Z\",\n      \"date_next_charge\": \"2025-01-22T00:00:00Z\"\n    }\n  }\n}"
+              "raw": "{\n  \"id\": \"b7c49973-43ca-4883-a7bb-d4ef2c88b716\",\n  \"creation_date\": 1768533022809,\n  \"event\": \"PURCHASE_APPROVED\",\n  \"version\": \"2.0.0\",\n  \"data\": {\n    \"product\": {\n      \"id\": 6644384,\n      \"ucode\": \"51fd3955-e2a0-447b-9f1b-0e0f5a5caf55c\",\n      \"name\": \"CLICKSEHUB\",\n      \"warranty_date\": \"2026-01-23T00:00:00Z\",\n      \"has_co_production\": false,\n      \"is_physical_product\": false\n    },\n    \"affiliates\": [\n      {\n        \"affiliate_code\": \"\",\n        \"name\": \"\"\n      }\n    ],\n    \"buyer\": {\n      \"email\": \"cliente@exemplo.com\",\n      \"name\": \"Nome do Cliente\",\n      \"first_name\": \"Nome\",\n      \"last_name\": \"Cliente\",\n      \"address\": {\n        \"city\": \"\",\n        \"country\": \"Brasil\",\n        \"country_iso\": \"BR\",\n        \"zipcode\": \"\",\n        \"address\": \"\",\n        \"complement\": \"\"\n      },\n      \"document\": \"\",\n      \"document_type\": \"\"\n    },\n    \"producer\": {\n      \"name\": \"Michael Gomes da Cunha Lourenço\",\n      \"document\": \"33762021848\",\n      \"legal_nature\": \"Pessoa Física\"\n    },\n    \"commissions\": [\n      {\n        \"value\": 0,\n        \"source\": \"MARKETPLACE\",\n        \"currency_value\": \"BRL\"\n      },\n      {\n        \"value\": 0,\n        \"source\": \"PRODUCER\",\n        \"currency_value\": \"BRL\"\n      }\n    ],\n    \"purchase\": {\n      \"approved_date\": 1768533011000,\n      \"full_price\": {\n        \"value\": 0,\n        \"currency_value\": \"BRL\"\n      },\n      \"price\": {\n        \"value\": 0,\n        \"currency_value\": \"BRL\"\n      },\n      \"checkout_country\": {\n        \"name\": \"Brasil\",\n        \"iso\": \"BR\"\n      },\n      \"order_bump\": {\n        \"is_order_bump\": false\n      },\n      \"original_offer_price\": {\n        \"value\": 0,\n        \"currency_value\": \"BRL\"\n      },\n      \"order_date\": 1768533008000,\n      \"status\": \"APPROVED\",\n      \"transaction\": \"HP2534387717\",\n      \"payment\": {\n        \"installments_number\": 1,\n        \"type\": \"CREDIT_CARD\"\n      },\n      \"offer\": {\n        \"code\": \"8i552qn2\",\n        \"description\": \"Sistema completo de gestão para empresas de eventos que estão começando. Ideal para pequenos negócios que precisam organizar seus eventos de forma profissional sem complicações.\"\n      },\n      \"invoice_by\": \"HOTMART\",\n      \"subscription_anticipation_purchase\": false,\n      \"date_next_charge\": 1769169600000,\n      \"recurrence_number\": 1,\n      \"is_funnel\": false,\n      \"business_model\": \"I\"\n    },\n    \"subscription\": {\n      \"status\": \"ACTIVE\",\n      \"plan\": {\n        \"id\": 1196829,\n        \"name\": \"BÁSICO\"\n      },\n      \"subscriber\": {\n        \"code\": \"JIK44XYF\"\n      }\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/webhooks/hotmart/sandbox",
               "host": ["{{base_url}}"],
               "path": ["api", "webhooks", "hotmart", "sandbox"]
-            }
+            },
+            "description": "Payload completo do webhook PURCHASE_APPROVED no formato v2.0.0 da Hotmart. Inclui subscription.plan.id (1196829 = BASICO_MENSAL)."
           }
         },
         {
@@ -505,7 +506,7 @@
           }
         },
         {
-          "name": "Webhook Hotmart (POST - Produção)",
+          "name": "Webhook Hotmart (POST - Produção) - PURCHASE_APPROVED",
           "request": {
             "method": "POST",
             "header": [
@@ -516,14 +517,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"event\": \"SUBSCRIPTION_PURCHASE\",\n  \"data\": {\n    \"subscription\": {\n      \"code\": \"SUB-123456\",\n      \"plan\": {\n        \"code\": \"PROFISSIONAL_MENSAL\"\n      },\n      \"buyer\": {\n        \"email\": \"cliente@exemplo.com\",\n        \"name\": \"Nome do Cliente\"\n      },\n      \"status\": \"TRIAL\",\n      \"trial_period_end\": \"2025-01-15T00:00:00Z\",\n      \"date_next_charge\": \"2025-01-22T00:00:00Z\"\n    }\n  }\n}"
+              "raw": "{\n  \"id\": \"b7c49973-43ca-4883-a7bb-d4ef2c88b716\",\n  \"creation_date\": 1768533022809,\n  \"event\": \"PURCHASE_APPROVED\",\n  \"version\": \"2.0.0\",\n  \"data\": {\n    \"product\": {\n      \"id\": 6644384,\n      \"ucode\": \"51fd3955-e2a0-447b-9f1b-0e0f5a5caf55c\",\n      \"name\": \"CLICKSEHUB\",\n      \"warranty_date\": \"2026-01-23T00:00:00Z\",\n      \"has_co_production\": false,\n      \"is_physical_product\": false\n    },\n    \"affiliates\": [\n      {\n        \"affiliate_code\": \"\",\n        \"name\": \"\"\n      }\n    ],\n    \"buyer\": {\n      \"email\": \"cliente@exemplo.com\",\n      \"name\": \"Nome do Cliente\",\n      \"first_name\": \"Nome\",\n      \"last_name\": \"Cliente\",\n      \"address\": {\n        \"city\": \"\",\n        \"country\": \"Brasil\",\n        \"country_iso\": \"BR\",\n        \"zipcode\": \"\",\n        \"address\": \"\",\n        \"complement\": \"\"\n      },\n      \"document\": \"\",\n      \"document_type\": \"\"\n    },\n    \"producer\": {\n      \"name\": \"Michael Gomes da Cunha Lourenço\",\n      \"document\": \"33762021848\",\n      \"legal_nature\": \"Pessoa Física\"\n    },\n    \"commissions\": [\n      {\n        \"value\": 0,\n        \"source\": \"MARKETPLACE\",\n        \"currency_value\": \"BRL\"\n      },\n      {\n        \"value\": 0,\n        \"source\": \"PRODUCER\",\n        \"currency_value\": \"BRL\"\n      }\n    ],\n    \"purchase\": {\n      \"approved_date\": 1768533011000,\n      \"full_price\": {\n        \"value\": 0,\n        \"currency_value\": \"BRL\"\n      },\n      \"price\": {\n        \"value\": 0,\n        \"currency_value\": \"BRL\"\n      },\n      \"checkout_country\": {\n        \"name\": \"Brasil\",\n        \"iso\": \"BR\"\n      },\n      \"order_bump\": {\n        \"is_order_bump\": false\n      },\n      \"original_offer_price\": {\n        \"value\": 0,\n        \"currency_value\": \"BRL\"\n      },\n      \"order_date\": 1768533008000,\n      \"status\": \"APPROVED\",\n      \"transaction\": \"HP2534387717\",\n      \"payment\": {\n        \"installments_number\": 1,\n        \"type\": \"CREDIT_CARD\"\n      },\n      \"offer\": {\n        \"code\": \"8i552qn2\",\n        \"description\": \"Sistema completo de gestão para empresas de eventos que estão começando. Ideal para pequenos negócios que precisam organizar seus eventos de forma profissional sem complicações.\"\n      },\n      \"invoice_by\": \"HOTMART\",\n      \"subscription_anticipation_purchase\": false,\n      \"date_next_charge\": 1769169600000,\n      \"recurrence_number\": 1,\n      \"is_funnel\": false,\n      \"business_model\": \"I\"\n    },\n    \"subscription\": {\n      \"status\": \"ACTIVE\",\n      \"plan\": {\n        \"id\": 1196829,\n        \"name\": \"BÁSICO\"\n      },\n      \"subscriber\": {\n        \"code\": \"JIK44XYF\"\n      }\n    }\n  }\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/webhooks/hotmart",
               "host": ["{{base_url}}"],
               "path": ["api", "webhooks", "hotmart"]
             },
-            "description": "Endpoint POST para receber webhooks da Hotmart (quando integração real for feita)"
+            "description": "Endpoint POST para receber webhooks da Hotmart em produção. Payload completo do PURCHASE_APPROVED no formato v2.0.0. Inclui subscription.plan.id (1196829 = BASICO_MENSAL, 1197348 = PROFISSIONAL_MENSAL, 1197349 = PREMIUM_MENSAL)."
           }
         },
         {

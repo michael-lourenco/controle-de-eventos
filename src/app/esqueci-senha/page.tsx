@@ -44,10 +44,13 @@ export default function EsqueciSenhaPage() {
 
       const data = await response.json();
 
-      if (response.ok && data.success) {
+      // A API retorna { data: { success: true, message: '...' } } quando sucesso
+      // ou { error: '...' } quando erro
+      if (response.ok && data.data?.success) {
         setSuccess(true);
       } else {
-        setError(data.error || 'Erro ao enviar email de redefinição');
+        // Se houver erro, mostrar a mensagem de erro
+        setError(data.error || data.data?.error || 'Erro ao enviar email de redefinição');
       }
     } catch (err) {
       setError('Erro inesperado. Tente novamente.');
