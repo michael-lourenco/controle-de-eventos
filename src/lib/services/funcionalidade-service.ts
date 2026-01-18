@@ -1,6 +1,9 @@
 import { FuncionalidadeRepository } from '../repositories/funcionalidade-repository';
+import { AdminFuncionalidadeRepository } from '../repositories/admin-funcionalidade-repository';
 import { AssinaturaRepository } from '../repositories/assinatura-repository';
+import { AdminAssinaturaRepository } from '../repositories/admin-assinatura-repository';
 import { UserRepository } from '../repositories/user-repository';
+import { AdminUserRepository } from '../repositories/admin-user-repository';
 import { Funcionalidade, LimitesUsuario } from '@/types/funcionalidades';
 import { EventoRepository } from '../repositories/evento-repository';
 import { ClienteRepository } from '../repositories/cliente-repository';
@@ -9,17 +12,17 @@ import { ClienteSupabaseRepository } from '../repositories/supabase/cliente-supa
 import { AssinaturaService, PlanoStatus } from './assinatura-service';
 
 export class FuncionalidadeService {
-  private funcionalidadeRepo: FuncionalidadeRepository;
-  private assinaturaRepo: AssinaturaRepository;
-  private userRepo: UserRepository;
+  private funcionalidadeRepo: FuncionalidadeRepository | AdminFuncionalidadeRepository;
+  private assinaturaRepo: AssinaturaRepository | AdminAssinaturaRepository;
+  private userRepo: UserRepository | AdminUserRepository;
   private eventoRepo: EventoRepository | EventoSupabaseRepository;
   private clienteRepo: ClienteRepository | ClienteSupabaseRepository;
   private assinaturaService: AssinaturaService;
 
   constructor(
-    funcionalidadeRepo?: FuncionalidadeRepository,
-    assinaturaRepo?: AssinaturaRepository,
-    userRepo?: UserRepository,
+    funcionalidadeRepo?: FuncionalidadeRepository | AdminFuncionalidadeRepository,
+    assinaturaRepo?: AssinaturaRepository | AdminAssinaturaRepository,
+    userRepo?: UserRepository | AdminUserRepository,
     eventoRepo?: EventoRepository | EventoSupabaseRepository,
     clienteRepo?: ClienteRepository | ClienteSupabaseRepository,
     assinaturaService?: AssinaturaService
