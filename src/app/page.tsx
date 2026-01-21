@@ -53,8 +53,10 @@ export default function LandingPage() {
           try {
             const res = await fetch(`/api/planos/${plano.id}`);
             const data = await res.json();
-            if (data.plano?.funcionalidadesDetalhes) {
-              data.plano.funcionalidadesDetalhes.forEach((f: Funcionalidade) => {
+            // createApiResponse retorna { data: { plano } }, compatível com { plano }
+            const planoData = (data.data ?? data)?.plano;
+            if (planoData?.funcionalidadesDetalhes) {
+              planoData.funcionalidadesDetalhes.forEach((f: Funcionalidade) => {
                 if (!funcMap.has(f.id)) {
                   funcMap.set(f.id, f);
                   funcs.push(f);
@@ -559,36 +561,18 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border bg-surface/50 py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Image 
-                src="/logo.png" 
-                alt="Clicksehub Logo" 
-                width={32} 
-                height={32}
-                className="object-contain"
-              />
-              <span className="text-text-secondary">
-                <span className="text-primary font-bold">Clickse</span>
-                <span style={{ color: '#FF4001' }} className="font-bold">hub</span>
-              </span>
-            </div>
-            <div className="flex gap-6 text-sm text-text-secondary">
-              <button 
-                onClick={() => router.push('/painel')}
-                className="hover:text-primary transition-colors"
-              >
-                Entrar
-              </button>
-              <button 
-                onClick={() => {
-                  document.getElementById('planos')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="hover:text-primary transition-colors"
-              >
-                Planos
-              </button>
-            </div>
+          <div className="flex items-center justify-center gap-3">
+            <Image 
+              src="/logo.png" 
+              alt="Clicksehub Logo" 
+              width={32} 
+              height={32}
+              className="object-contain"
+            />
+            <span className="text-text-secondary">
+              <span className="text-primary font-bold">Clickse</span>
+              <span style={{ color: '#FF4001' }} className="font-bold">hub</span>
+            </span>
           </div>
           <div className="mt-8 space-y-4">
             <div className="flex flex-wrap justify-center gap-4 text-sm text-text-secondary">
