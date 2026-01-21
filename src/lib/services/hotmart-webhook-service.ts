@@ -362,11 +362,12 @@ export class HotmartWebhookService {
       switch (action) {
         case 'purchase':
           result = await this.processarCompra(user.id, plano.id, hotmartSubscriptionId, subscription);
-          if (isNewUser) {
+          if (isNewUser || isSandbox) {
             try {
               await this.enviarEmailPrimeiroAcesso(user, plano);
             } catch (err: any) {
               console.error('[HotmartWebhook] Erro ao enviar email de primeiro acesso (webhook segue):', err?.message);
+              console.error('[HotmartWebhook] Stack:', err?.stack);
             }
           }
           break;
@@ -839,13 +840,44 @@ export class HotmartWebhookService {
   /**
    * Envia email de boas-vindas + link para definir senha (primeiro acesso pós-compra).
    * Não falha o webhook em caso de erro; apenas registra em log.
+   * Garante que o usuário existe no Firebase Auth antes de gerar o link (usuário pode
+   * existir só no Firestore, ex.: criado por outro fluxo ou em testes sandbox).
    */
   private async enviarEmailPrimeiroAcesso(user: User, _plano?: Plano | null): Promise<void> {
+    console.log('[HotmartWebhook] 📧 enviarEmailPrimeiroAcesso chamado para:', user.email);
+
     if (!isEmailServiceConfigured()) {
       console.warn('[HotmartWebhook] RESEND_API_KEY não configurada. Email de primeiro acesso não enviado.');
       return;
     }
-    const { resetUrl } = await createPasswordResetLink(user.email, { expiryHours: 24 });
+
+    // Garantir que o usuário existe no Firebase Auth (createPasswordResetLink exige isso)
+    if (adminAuth) {
+      try {
+        await adminAuth.getUserByEmail(user.email);
+      } catch (e: any) {
+        if (e?.code === 'auth/user-not-found') {
+          console.log('[HotmartWebhook] Usuário não existe no Firebase Auth; criando para permitir o link de senha.');
+          await adminAuth.createUser({
+            email: user.email,
+            displayName: user.nome || 'Cliente',
+            emailVerified: true,
+          });
+        } else {
+          throw e;
+        }
+      }
+    }
+
+    let resetUrl: string;
+    try {
+      const linkResult = await createPasswordResetLink(user.email, { expiryHours: 24 });
+      resetUrl = linkResult.resetUrl;
+    } catch (err: any) {
+      console.error('[HotmartWebhook] Erro ao criar link de senha (createPasswordResetLink):', err?.message, err?.stack);
+      return;
+    }
+
     const html = generateFirstAccessEmailTemplate(user.nome || '', resetUrl);
     const r = await sendEmail({
       to: user.email,
@@ -856,7 +888,7 @@ export class HotmartWebhookService {
     if (!r.success) {
       console.error('[HotmartWebhook] Falha ao enviar email de primeiro acesso:', r.error);
     } else {
-      console.log('[HotmartWebhook] Email de primeiro acesso enviado para:', user.email);
+      console.log('[HotmartWebhook] ✅ Email de primeiro acesso enviado para:', user.email);
     }
   }
 
