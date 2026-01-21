@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const planoRepo = new AdminPlanoRepository();
     const assinaturaRepo = new AdminAssinaturaRepository();
     const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
-    const planoService = new PlanoService(planoRepo);
+    const planoService = new PlanoService(planoRepo, undefined, assinaturaRepo, undefined, assinaturaService);
     const service = new HotmartWebhookService(assinaturaRepo, planoRepo, userRepo, planoService, assinaturaService);
 
     // Gerar payload mock baseado no tipo de evento

@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
     const planoRepo = new AdminPlanoRepository();
     const assinaturaRepo = new AdminAssinaturaRepository();
     const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
-    const planoService = new PlanoService(planoRepo);
+    // PlanoService.aplicarPlanoUsuario cria/atualiza assinatura e sincroniza no user: precisa de assinaturaRepo e assinaturaService Admin
+    const planoService = new PlanoService(planoRepo, undefined, assinaturaRepo, undefined, assinaturaService);
     const service = new HotmartWebhookService(assinaturaRepo, planoRepo, userRepo, planoService, assinaturaService);
 
     // Segundo a documentação oficial do Hotmart:
@@ -121,7 +122,7 @@ export async function GET(request: NextRequest) {
     const planoRepo = new AdminPlanoRepository();
     const assinaturaRepo = new AdminAssinaturaRepository();
     const assinaturaService = new AssinaturaService(assinaturaRepo, planoRepo, userRepo);
-    const planoService = new PlanoService(planoRepo);
+    const planoService = new PlanoService(planoRepo, undefined, assinaturaRepo, undefined, assinaturaService);
     const service = new HotmartWebhookService(assinaturaRepo, planoRepo, userRepo, planoService, assinaturaService);
     const result = await service.processarWebhook(mockPayload);
 
