@@ -22,9 +22,17 @@ export async function GET(
       return createErrorResponse('Não autorizado', 403);
     }
 
-    const { getServiceFactory } = await import('@/lib/factories/service-factory');
-    const serviceFactory = getServiceFactory();
-    const assinaturaService = serviceFactory.getAssinaturaService();
+    // Usar repositórios Admin para bypassar regras do Firestore (evita "Missing or insufficient permissions")
+    const { AdminAssinaturaRepository } = await import('@/lib/repositories/admin-assinatura-repository');
+    const { AdminPlanoRepository } = await import('@/lib/repositories/admin-plano-repository');
+    const { AdminUserRepository } = await import('@/lib/repositories/admin-user-repository');
+    const { AssinaturaService } = await import('@/lib/services/assinatura-service');
+
+    const assinaturaService = new AssinaturaService(
+      new AdminAssinaturaRepository(),
+      new AdminPlanoRepository(),
+      new AdminUserRepository()
+    );
     const statusPlano = await assinaturaService.obterStatusPlanoUsuario(userId);
 
     return createApiResponse({

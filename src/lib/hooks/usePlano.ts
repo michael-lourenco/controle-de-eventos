@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { FuncionalidadeService } from '../services/funcionalidade-service';
-import { AssinaturaService, PlanoStatus } from '../services/assinatura-service';
+import type { PlanoStatus } from '../services/assinatura-service';
 import { LimitesUsuario } from '@/types/funcionalidades';
 
 export interface UsePlanoReturn {
@@ -24,7 +24,6 @@ export function usePlano(): UsePlanoReturn {
   const [error, setError] = useState<string | null>(null);
 
   const funcionalidadeService = new FuncionalidadeService();
-  const assinaturaService = new AssinaturaService();
 
   const loadData = async () => {
     if (sessionStatus !== 'authenticated' || !session?.user?.id) {
@@ -38,15 +37,16 @@ export function usePlano(): UsePlanoReturn {
 
       const userId = session.user.id;
 
-      // Carregar status do plano e limites em paralelo
-      // Usar API para limites (bypassa regras do Firestore)
-      const [status, limitesResponse] = await Promise.all([
-        assinaturaService.obterStatusPlanoUsuario(userId),
+      // Carregar status do plano e limites em paralelo via API (bypassa regras do Firestore no cliente)
+      const [statusRes, limitesResponse] = await Promise.all([
+        fetch(`/api/users/${userId}/assinatura`),
         fetch('/api/limites-usuario').then(res => res.json())
       ]);
 
+      const statusData = await statusRes.json().catch(() => ({}));
+      const status = statusRes.ok ? ((statusData.data ?? statusData)?.statusPlano ?? null) : null;
       setStatusPlano(status);
-      
+
       // Extrair limites da resposta da API
       if (limitesResponse.data?.limites) {
         setLimites(limitesResponse.data.limites);

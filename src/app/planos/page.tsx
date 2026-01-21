@@ -39,8 +39,10 @@ export default function PlanosPage() {
           try {
             const res = await fetch(`/api/planos/${plano.id}`);
             const data = await res.json();
-            if (data.plano?.funcionalidadesDetalhes) {
-              data.plano.funcionalidadesDetalhes.forEach((f: Funcionalidade) => {
+            // createApiResponse retorna { data: { plano } }, compatível com { plano }
+            const planoData = (data.data ?? data)?.plano;
+            if (planoData?.funcionalidadesDetalhes) {
+              planoData.funcionalidadesDetalhes.forEach((f: Funcionalidade) => {
                 if (!funcMap.has(f.id)) {
                   funcMap.set(f.id, f);
                   funcs.push(f);
