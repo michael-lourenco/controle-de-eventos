@@ -11,6 +11,7 @@ import { CheckIcon, SparklesIcon, ChartBarIcon, CalendarIcon, UserGroupIcon, Cur
 import LoadingHotmart from '@/components/LoadingHotmart';
 import { Plano, Funcionalidade } from '@/types/funcionalidades';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useToast } from '@/components/ui/toast';
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
@@ -20,6 +21,7 @@ export default function LandingPage() {
   const [loadingPlanos, setLoadingPlanos] = useState(true);
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { showToast } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -150,6 +152,30 @@ export default function LandingPage() {
       style: 'currency',
       currency: 'BRL'
     }).format(preco);
+  };
+
+  // Mapeamento de códigos de planos para links de pagamento da Hotmart (igual /planos)
+  const linksPagamentoHotmart: Record<string, string> = {
+    'BASICO_MENSAL': 'https://pay.hotmart.com/E102958850J?off=8i552qn2',
+    'PROFISSIONAL_MENSAL': 'https://pay.hotmart.com/E102958850J?off=muk2aovg',
+    'PREMIUM_MENSAL': 'https://pay.hotmart.com/E102958850J?off=edavff1s',
+  };
+
+  const handleAssinar = (plano: Plano) => {
+    if (!plano.codigoHotmart) {
+      showToast('Plano não possui código Hotmart configurado', 'error');
+      return;
+    }
+    const linkPagamento = linksPagamentoHotmart[plano.codigoHotmart];
+    if (!linkPagamento) {
+      showToast(
+        `Link de pagamento não configurado para o plano ${plano.nome}. Código: ${plano.codigoHotmart}`,
+        'error',
+        8000
+      );
+      return;
+    }
+    window.location.href = linkPagamento;
   };
 
   if (!mounted || status === 'loading') {
@@ -486,11 +512,11 @@ export default function LandingPage() {
                         </div>
                       )}
 
-                      {/* Botão CTA */}
+                      {/* Botão CTA - redireciona para aquisição (Hotmart) igual /planos */}
                       <div className="pt-4 mt-auto">
                         <Button
                           className={plano.nome.toLowerCase().includes('profissional') ? 'btn-add w-full' : 'w-full'}
-                          onClick={() => router.push('/painel')}
+                          onClick={() => handleAssinar(plano)}
                           size="lg"
                         >
                           {plano.nome.toLowerCase().includes('profissional') ? 'Assinar Agora' : 'Escolher Plano'}
