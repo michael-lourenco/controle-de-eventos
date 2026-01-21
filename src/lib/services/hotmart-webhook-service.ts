@@ -11,6 +11,9 @@ import { UserAssinatura, User } from '@/types';
 import crypto from 'crypto';
 import { adminAuth } from '@/lib/firebase-admin';
 import { syncFirebaseUserToSupabase } from '@/lib/utils/sync-firebase-user-to-supabase';
+import { createPasswordResetLink } from './password-link-service';
+import { generateFirstAccessEmailTemplate } from './email-service';
+import { sendEmail, isEmailServiceConfigured } from './resend-email-service';
 
 export interface HotmartWebhookPayload {
   event: string;
@@ -299,7 +302,8 @@ export class HotmartWebhookService {
 
       // Buscar usuário por email (necessário para todos os eventos)
       let user = await this.userRepo.findByEmail(email);
-      
+      let isNewUser = false;
+
       // Se não encontrar usuário, vamos tentar pré-cadastrar (especialmente para novas compras)
       if (!user) {
         if (action === 'purchase' || action === 'activated' || action === 'renewed') {
@@ -307,6 +311,7 @@ export class HotmartWebhookService {
           try {
             const nome = subscription.buyer?.name || payload.data?.buyer?.name || payload.data?.user?.name || 'Cliente Click-se';
             user = await this.preCadastrarUsuario(email, nome);
+            isNewUser = true;
             console.log(`[HotmartWebhook] Pré-cadastro concluído para ${email} (ID: ${user.id})`);
           } catch (preCadastroError: any) {
             console.error(`[HotmartWebhook] Erro ao pré-cadastrar usuário:`, preCadastroError);
@@ -357,6 +362,13 @@ export class HotmartWebhookService {
       switch (action) {
         case 'purchase':
           result = await this.processarCompra(user.id, plano.id, hotmartSubscriptionId, subscription);
+          if (isNewUser) {
+            try {
+              await this.enviarEmailPrimeiroAcesso(user, plano);
+            } catch (err: any) {
+              console.error('[HotmartWebhook] Erro ao enviar email de primeiro acesso (webhook segue):', err?.message);
+            }
+          }
           break;
         case 'activated':
           result = await this.processarAtivacao(hotmartSubscriptionId, subscription);
@@ -822,6 +834,30 @@ export class HotmartWebhookService {
     });
 
     return { success: true, message: 'Pagamento atrasado processado - Assinatura suspensa temporariamente' };
+  }
+
+  /**
+   * Envia email de boas-vindas + link para definir senha (primeiro acesso pós-compra).
+   * Não falha o webhook em caso de erro; apenas registra em log.
+   */
+  private async enviarEmailPrimeiroAcesso(user: User, _plano?: Plano | null): Promise<void> {
+    if (!isEmailServiceConfigured()) {
+      console.warn('[HotmartWebhook] RESEND_API_KEY não configurada. Email de primeiro acesso não enviado.');
+      return;
+    }
+    const { resetUrl } = await createPasswordResetLink(user.email, { expiryHours: 24 });
+    const html = generateFirstAccessEmailTemplate(user.nome || '', resetUrl);
+    const r = await sendEmail({
+      to: user.email,
+      subject: 'Bem-vindo ao Clicksehub! Defina sua senha para acessar',
+      html,
+      from: 'Clicksehub <noreply@clicksehub.com>'
+    });
+    if (!r.success) {
+      console.error('[HotmartWebhook] Falha ao enviar email de primeiro acesso:', r.error);
+    } else {
+      console.log('[HotmartWebhook] Email de primeiro acesso enviado para:', user.email);
+    }
   }
 
   /**

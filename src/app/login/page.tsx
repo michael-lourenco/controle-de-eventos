@@ -164,6 +164,17 @@ export default function LoginPage() {
                 Esqueci minha senha
               </button>
               <p className="text-sm text-text-secondary">
+                <strong>Primeira vez aqui?</strong> Defina sua senha em{' '}
+                <button
+                  type="button"
+                  onClick={() => router.push('/esqueci-senha')}
+                  className="font-medium text-link cursor-pointer transition-colors"
+                >
+                  Esqueci minha senha
+                </button>
+                {' '}com o e-mail da sua compra.
+              </p>
+              <p className="text-sm text-text-secondary">
                 Não tem uma conta?{' '}
                 <button
                   type="button"

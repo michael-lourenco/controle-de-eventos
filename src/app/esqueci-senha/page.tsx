@@ -97,6 +97,11 @@ export default function EsqueciSenhaPage() {
                 ? 'Enviamos um email com instruções para redefinir sua senha'
                 : 'Digite seu email para receber instruções de redefinição de senha'}
             </CardDescription>
+            {!success && (
+              <p className="text-sm text-text-secondary mt-1">
+                <strong>Acabou de comprar o Clicksehub?</strong> Use o <strong>mesmo e-mail da compra</strong> aqui para receber um link e <strong>definir sua senha de acesso</strong>. Não é preciso ter senha antiga.
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             {success ? (

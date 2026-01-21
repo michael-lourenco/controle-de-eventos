@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { adminAuth, isFirebaseAdminInitialized, getFirebaseAdminInitializationError } from '@/lib/firebase-admin';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
-import { generateShortToken, generatePasswordResetEmailTemplate } from '@/lib/services/email-service';
+import { generatePasswordResetEmailTemplate } from '@/lib/services/email-service';
+import { createPasswordResetLink } from '@/lib/services/password-link-service';
 import { sendEmail, isEmailServiceConfigured } from '@/lib/services/resend-email-service';
 import { 
   handleApiError,
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       console.log('[reset-password] Verificando se usuário existe no Firebase...');
       const user = await auth.getUserByEmail(normalizedEmail);
       console.log('[reset-password] Usuário encontrado:', user.uid);
-      
+
       // Buscar nome do usuário no Firestore (usar Admin para bypassar regras)
       let nome = '';
       try {
@@ -112,55 +112,12 @@ export async function POST(request: NextRequest) {
         console.log('[reset-password] Nome do usuário:', nome || '(não encontrado)');
       } catch (userRepoError: any) {
         console.error('[reset-password] Erro ao buscar dados do usuário:', userRepoError);
-        // Continuar mesmo sem o nome do usuário
       }
 
-      // Gerar código de reset usando Firebase Admin
-      console.log('[reset-password] Gerando link de reset do Firebase...');
-      const resetLink = await auth.generatePasswordResetLink(normalizedEmail, {
-        url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha`,
-        handleCodeInApp: false,
-      });
-      console.log('[reset-password] Link de reset gerado com sucesso');
-
-      // Extrair o código do link gerado
-      const urlObj = new URL(resetLink);
-      const oobCode = urlObj.searchParams.get('oobCode');
-      
-      if (!oobCode) {
-        console.error('[reset-password] ERRO: Código de reset não gerado pelo Firebase');
-        throw new Error('Código de reset não gerado pelo Firebase');
-      }
-      console.log('[reset-password] Código oobCode extraído com sucesso');
-
-      // Gerar token curto
-      const shortToken = generateShortToken();
-      console.log('[reset-password] Token curto gerado:', shortToken);
-      
-      // Calcular expiração (1 hora)
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1);
-
-      // Armazenar token no banco (usar Admin para bypassar regras)
-      console.log('[reset-password] Armazenando token no banco...');
-      try {
-        const { AdminPasswordResetTokenRepository } = await import('@/lib/repositories/admin-password-reset-token-repository');
-        const tokenRepo = new AdminPasswordResetTokenRepository();
-        await tokenRepo.createToken({
-          token: shortToken,
-          email: normalizedEmail,
-          firebaseCode: oobCode,
-          expiresAt
-        });
-        console.log('[reset-password] Token armazenado no banco com sucesso');
-      } catch (tokenError: any) {
-        console.error('[reset-password] Erro ao armazenar token:', tokenError);
-        throw new Error(`Erro ao armazenar token: ${tokenError.message}`);
-      }
-
-      // Criar URL curta e limpa
-      const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/redefinir-senha?token=${shortToken}`;
-      console.log('[reset-password] URL de reset criada:', resetUrl);
+      // Gerar link de reset (1 hora de validade)
+      console.log('[reset-password] Gerando link de reset...');
+      const { resetUrl } = await createPasswordResetLink(normalizedEmail, { expiryHours: 1 });
+      console.log('[reset-password] Link de reset criado com sucesso');
 
       // Gerar template de email
       console.log('[reset-password] Gerando template de email...');
