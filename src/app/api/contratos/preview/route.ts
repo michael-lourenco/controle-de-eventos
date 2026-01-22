@@ -42,18 +42,19 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('modeloContratoId ou template é obrigatório', 400);
     }
 
-    // Se eventoId fornecido, obter variáveis do evento
+    // Se eventoId fornecido, obter variáveis do evento (sempre buscar dados mais recentes)
     if (eventoId) {
       const { ContratoService } = await import('@/lib/services/contrato-service');
       const variaveisEvento = await ContratoService.obterVariaveisParaTemplate(user.id, eventoId);
-      // Mesclar: dados manuais têm prioridade sobre variáveis do evento
-      dados = { ...variaveisEvento, ...dados };
+      // Mesclar: variáveis do evento primeiro, depois dados manuais (dados manuais sobrescrevem)
+      // Isso garante que sempre temos os dados mais recentes do evento, mas permite edição manual
+      dados = { ...variaveisEvento, ...dadosPreenchidos };
     } else {
       // Se não houver eventoId, obter apenas variáveis de configuração + customizadas
       const { VariavelContratoService } = await import('@/lib/services/variavel-contrato-service');
       const variaveisBase = await VariavelContratoService.obterTodasVariaveisDisponiveis(user.id);
       // Mesclar: dados manuais têm prioridade
-      dados = { ...variaveisBase, ...dados };
+      dados = { ...variaveisBase, ...dadosPreenchidos };
     }
 
     const { ContratoService } = await import('@/lib/services/contrato-service');

@@ -123,12 +123,17 @@ export class VariavelContratoService {
 
     // Variáveis do evento (hardcoded baseado no que ContratoService.preencherDadosDoEvento retorna)
     const evento = [
+      // Dados do cliente do evento
+      'nome_cliente', 'cpf_cliente', 'email_cliente', 'telefone_cliente',
+      'endereco_cliente', 'cep_cliente', 'instagram_cliente', 'id_cliente',
+      // Dados do contratante (pode ser diferente do cliente)
       'nome_contratante', 'cpf_contratante', 'email_contratante', 'telefone_contratante',
-      'endereco_contratante', 'cep_contratante', 'nome_evento', 'tipo_evento',
-      'data_evento', 'local_evento', 'endereco_evento', 'numero_convidados',
-      'valor_total', 'valor_total_formatado', 'horario_inicio', 'horario_termino',
-      'duracao_servico', 'observacoes_evento', 'tipo_servico', 'tipos_servico',
-      'data_contrato'
+      'endereco_contratante', 'cep_contratante',
+      // Dados do evento
+      'nome_evento', 'tipo_evento', 'data_evento', 'local_evento', 'endereco_evento', 
+      'numero_convidados', 'valor_total', 'valor_total_formatado', 'horario_inicio', 
+      'horario_termino', 'duracao_servico', 'observacoes_evento', 'tipo_servico', 
+      'tipos_servico', 'data_contrato'
     ];
 
     return {

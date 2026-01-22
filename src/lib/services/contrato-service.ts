@@ -7,6 +7,17 @@ export class ContratoService {
   static async preencherDadosDoEvento(evento: Evento, modelo: ModeloContrato, servicosEvento?: ServicoEvento[]): Promise<Record<string, any>> {
     const dados: Record<string, any> = {};
     
+    // Dados do cliente do evento
+    dados.nome_cliente = evento.cliente?.nome || '';
+    dados.cpf_cliente = evento.cliente?.cpf || '';
+    dados.email_cliente = evento.cliente?.email || '';
+    dados.telefone_cliente = evento.cliente?.telefone || '';
+    dados.endereco_cliente = evento.cliente?.endereco || '';
+    dados.cep_cliente = evento.cliente?.cep || '';
+    dados.instagram_cliente = evento.cliente?.instagram || '';
+    dados.id_cliente = evento.cliente?.id || '';
+    
+    // Dados do contratante (pode ser diferente do cliente)
     dados.nome_contratante = evento.contratante || evento.cliente?.nome || '';
     dados.cpf_contratante = evento.cliente?.cpf || '';
     dados.email_contratante = evento.cliente?.email || '';

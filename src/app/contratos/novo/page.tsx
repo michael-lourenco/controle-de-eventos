@@ -183,8 +183,12 @@ function NovoContratoPageContent() {
           // Se houver evento, mesclar dados do evento com campos fixos
           if (evento) {
             console.log('handleSelecionarModelo: Preenchendo dados com evento e', servicosParaUsar.length, 'serviços');
+            console.log('handleSelecionarModelo: Cliente do evento:', evento.cliente);
             const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
             console.log('handleSelecionarModelo: Dados do evento:', dadosEvento);
+            console.log('handleSelecionarModelo: nome_cliente =', dadosEvento.nome_cliente);
+            console.log('handleSelecionarModelo: cpf_cliente =', dadosEvento.cpf_cliente);
+            console.log('handleSelecionarModelo: telefone_cliente =', dadosEvento.telefone_cliente);
             // Mesclar: campos fixos primeiro, depois dados do evento (evento sobrescreve campos fixos se houver conflito)
             const dadosMesclados = { ...camposFixos, ...dadosEvento };
             console.log('handleSelecionarModelo: Dados mesclados:', dadosMesclados);
@@ -244,7 +248,11 @@ function NovoContratoPageContent() {
       const response = await fetch('/api/contratos/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ modeloContratoId: modeloSelecionado.id, dadosPreenchidos })
+        body: JSON.stringify({ 
+          modeloContratoId: modeloSelecionado.id, 
+          dadosPreenchidos,
+          eventoId: eventoId || undefined // Incluir eventoId se disponível
+        })
       });
       if (response.ok) {
         const result = await response.json();
