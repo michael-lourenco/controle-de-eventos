@@ -628,3 +628,105 @@ select:focus {
     color: var(--text-primary) !important;
   }
 }
+
+/* Estilos para TipTap Editor - Forçar texto preto e fundo branco sempre */
+.ProseMirror {
+  outline: none;
+  min-height: 400px;
+  padding: 1rem;
+  color: #1f2937 !important;
+  background-color: #ffffff !important;
+}
+
+.ProseMirror * {
+  color: #1f2937 !important;
+}
+
+.ProseMirror p {
+  margin: 0.5em 0;
+  color: #1f2937 !important;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #9ca3af !important;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #1f2937 !important;
+}
+
+.ProseMirror h1 {
+  font-size: 2em;
+  color: #1f2937 !important;
+}
+
+.ProseMirror h2 {
+  font-size: 1.5em;
+  color: #1f2937 !important;
+}
+
+.ProseMirror h3 {
+  font-size: 1.25em;
+  color: #1f2937 !important;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.ProseMirror li {
+  margin: 0.25em 0;
+  color: #1f2937 !important;
+}
+
+.ProseMirror strong,
+.ProseMirror b {
+  font-weight: bold;
+  color: #1f2937 !important;
+}
+
+.ProseMirror em,
+.ProseMirror i {
+  font-style: italic;
+  color: #1f2937 !important;
+}
+
+.ProseMirror u {
+  text-decoration: underline;
+  color: #1f2937 !important;
+}
+
+.ProseMirror hr {
+  margin: 1em 0;
+  border: none;
+  border-top: 1px solid #d1d5db;
+}
+
+.ProseMirror a {
+  color: #2563eb !important;
+}
+
+/* Container do editor - forçar fundo branco */
+.tiptap-editor-container {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+.tiptap-editor-container .ProseMirror {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}

@@ -6,9 +6,10 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import ContractPreview from '@/components/ContractPreview';
+import TemplateEditor, { TemplateEditorRef } from '@/components/TemplateEditor';
 
 interface VariavelDisponivel {
   chave: string;
@@ -20,6 +21,7 @@ interface VariavelDisponivel {
 export default function NovoTemplatePage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const editorRef = useRef<TemplateEditorRef>(null);
   const [loading, setLoading] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [mostrarPreview, setMostrarPreview] = useState(false);
@@ -30,7 +32,6 @@ export default function NovoTemplatePage() {
     descricao: '',
     template: ''
   });
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     loadVariaveisDisponiveis();
@@ -71,26 +72,7 @@ export default function NovoTemplatePage() {
   };
 
   const inserirVariavel = (variavel: VariavelDisponivel) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const texto = formData.template;
-    
-    const placeholder = variavel.tipo === 'unica' 
-      ? `{{${variavel.chave}}}`
-      : `[${variavel.chave}]`;
-    
-    const novoTexto = texto.substring(0, start) + placeholder + texto.substring(end);
-    setFormData({ ...formData, template: novoTexto });
-    
-    // Focar no textarea e posicionar cursor após o placeholder inserido
-    setTimeout(() => {
-      textarea.focus();
-      const novaPosicao = start + placeholder.length;
-      textarea.setSelectionRange(novaPosicao, novaPosicao);
-    }, 0);
+    editorRef.current?.inserirVariavel(variavel);
   };
 
   const handlePreview = async () => {
@@ -205,7 +187,7 @@ export default function NovoTemplatePage() {
                         <button
                           key={v.chave}
                           onClick={() => inserirVariavel(v)}
-                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary"
+                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors"
                         >
                           {v.tipo === 'unica' ? '{{' : '['}{v.chave}{v.tipo === 'unica' ? '}}' : ']'}
                         </button>
@@ -222,7 +204,7 @@ export default function NovoTemplatePage() {
                         <button
                           key={v.chave}
                           onClick={() => inserirVariavel(v)}
-                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary"
+                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors"
                         >
                           {v.tipo === 'unica' ? '{{' : '['}{v.chave}{v.tipo === 'unica' ? '}}' : ']'}
                         </button>
@@ -239,7 +221,7 @@ export default function NovoTemplatePage() {
                         <button
                           key={v.chave}
                           onClick={() => inserirVariavel(v)}
-                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary"
+                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors"
                         >
                           {v.tipo === 'unica' ? '{{' : '['}{v.chave}{v.tipo === 'unica' ? '}}' : ']'}
                         </button>
@@ -291,13 +273,12 @@ export default function NovoTemplatePage() {
                   <label className="block text-sm font-medium text-text-primary mb-1">
                     Template *
                   </label>
-                  <Textarea
-                    ref={textareaRef}
+                  <TemplateEditor
+                    ref={editorRef}
                     value={formData.template}
-                    onChange={(e) => setFormData({ ...formData, template: e.target.value })}
-                    placeholder="Digite seu template aqui..."
-                    rows={20}
-                    className="font-mono text-sm"
+                    onChange={(html) => setFormData({ ...formData, template: html })}
+                    variaveisDisponiveis={variaveisDisponiveis}
+                    placeholder="Digite seu template aqui... Use a barra de ferramentas para formatar e clique nas variáveis na sidebar para inserir."
                   />
                 </div>
 
@@ -327,12 +308,12 @@ export default function NovoTemplatePage() {
               <Card className="mt-6">
                 <CardHeader>
                   <CardTitle>Preview</CardTitle>
+                  <CardDescription>
+                    Visualização do contrato formatado
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div
-                    className="prose max-w-none"
-                    dangerouslySetInnerHTML={{ __html: previewHtml }}
-                  />
+                  <ContractPreview html={previewHtml} className="max-h-[800px]" />
                 </CardContent>
               </Card>
             )}
@@ -341,4 +322,6 @@ export default function NovoTemplatePage() {
       </div>
     </Layout>
   );
+}
+
 }
