@@ -224,6 +224,8 @@ export interface Contrato {
   modeloContratoId: string;
   modeloContrato?: ModeloContrato;
   dadosPreenchidos: Record<string, any>;
+  /** HTML editado pelo usuário antes de salvar. Usado no PDF quando preenchido. */
+  conteudoHtml?: string;
   status: 'rascunho' | 'gerado' | 'assinado' | 'cancelado';
   pdfUrl?: string;
   pdfPath?: string;

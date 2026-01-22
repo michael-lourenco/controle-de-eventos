@@ -11,10 +11,11 @@ import { useToast } from '@/components/ui/toast';
 import { ModeloContrato, CampoContrato, Evento, ServicoEvento } from '@/types';
 import { ContratoService } from '@/lib/services/contrato-service';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
-import { ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import LoadingHotmart from '@/components/LoadingHotmart';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
+import TemplateEditor from '@/components/TemplateEditor';
 
 function NovoContratoPageContent() {
   const router = useRouter();
@@ -30,6 +31,7 @@ function NovoContratoPageContent() {
   const [servicosEvento, setServicosEvento] = useState<ServicoEvento[]>([]);
   const [dadosPreenchidos, setDadosPreenchidos] = useState<Record<string, any>>({});
   const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [conteudoEditado, setConteudoEditado] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [configExistente, setConfigExistente] = useState<boolean | null>(null);
 
@@ -283,12 +285,23 @@ function NovoContratoPageContent() {
     }
   };
 
+  const irParaEdicao = () => {
+    setConteudoEditado(previewHtml);
+    setPasso(3);
+  };
+
   const handleSalvar = async () => {
     if (!modeloSelecionado) return;
 
     const validacao = ContratoService.validarDadosPreenchidos(dadosPreenchidos, modeloSelecionado.campos);
     if (!validacao.valido) {
       showToast(`Erro: ${validacao.erros.join(', ')}`, 'error');
+      return;
+    }
+
+    const htmlParaSalvar = passo === 3 ? conteudoEditado : previewHtml;
+    if (passo === 3 && (!htmlParaSalvar || !htmlParaSalvar.trim())) {
+      showToast('O conteúdo do contrato não pode estar vazio.', 'error');
       return;
     }
 
@@ -301,6 +314,7 @@ function NovoContratoPageContent() {
           eventoId: eventoId || undefined,
           modeloContratoId: modeloSelecionado.id,
           dadosPreenchidos,
+          conteudoHtml: htmlParaSalvar?.trim() || undefined,
           status: 'rascunho'
         })
       });
@@ -477,14 +491,52 @@ function NovoContratoPageContent() {
             <Card className="mb-4">
               <CardHeader>
                 <CardTitle>Preview do Contrato</CardTitle>
+                <CardDescription>
+                  Revise o contrato gerado. Em seguida, edite-o se precisar antes de salvar.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded p-4 bg-white text-gray-900 [&_*]:text-gray-900 [&_*]:dark:text-gray-900" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                <div className="border rounded p-4 bg-white text-gray-900 [&_*]:text-gray-900 [&_*]:dark:text-gray-900 min-h-[200px]" dangerouslySetInnerHTML={{ __html: previewHtml }} />
               </CardContent>
             </Card>
 
             <div className="flex gap-4">
               <Button onClick={() => setPasso(1)} variant="outline">
+                Voltar
+              </Button>
+              <Button
+                onClick={irParaEdicao}
+                disabled={loading || !previewHtml.trim()}
+                className="bg-primary"
+              >
+                <PencilSquareIcon className="h-4 w-4 mr-2" />
+                Editar contrato e continuar
+              </Button>
+            </div>
+          </>
+        )}
+
+        {passo === 3 && modeloSelecionado && (
+          <>
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle>Editar Contrato</CardTitle>
+                <CardDescription>
+                  Edite o contrato à vontade antes de salvar. Modelo: {modeloSelecionado.nome}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TemplateEditor
+                  value={conteudoEditado}
+                  onChange={setConteudoEditado}
+                  variaveisDisponiveis={[]}
+                  placeholder="Conteúdo do contrato..."
+                />
+              </CardContent>
+            </Card>
+
+            <div className="flex gap-4">
+              <Button onClick={() => setPasso(2)} variant="outline">
                 Voltar
               </Button>
               <Button onClick={handleSalvar} disabled={loading} className="bg-primary">

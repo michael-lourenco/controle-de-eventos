@@ -23,6 +23,7 @@ export class ContratoSupabaseRepository extends BaseSupabaseRepository<Contrato>
       eventoId: row.evento_id || undefined,
       modeloContratoId: row.modelo_contrato_id,
       dadosPreenchidos: row.dados_preenchidos || {},
+      conteudoHtml: row.conteudo_html || undefined,
       status: row.status as Contrato['status'],
       pdfUrl: row.pdf_url || undefined,
       pdfPath: row.pdf_path || undefined,
@@ -44,6 +45,7 @@ export class ContratoSupabaseRepository extends BaseSupabaseRepository<Contrato>
     if (entity.eventoId !== undefined) data.evento_id = entity.eventoId || null;
     if (entity.modeloContratoId !== undefined) data.modelo_contrato_id = entity.modeloContratoId;
     if (entity.dadosPreenchidos !== undefined) data.dados_preenchidos = entity.dadosPreenchidos || {};
+    if (entity.conteudoHtml !== undefined) data.conteudo_html = entity.conteudoHtml || null;
     if (entity.status !== undefined) data.status = entity.status;
     if (entity.pdfUrl !== undefined) data.pdf_url = entity.pdfUrl || null;
     if (entity.pdfPath !== undefined) data.pdf_path = entity.pdfPath || null;

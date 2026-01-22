@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
     const body = await getRequestBody(request);
-    const { eventoId, modeloContratoId, dadosPreenchidos, status = 'rascunho' } = body;
+    const { eventoId, modeloContratoId, dadosPreenchidos, conteudoHtml, status = 'rascunho' } = body;
 
     if (!modeloContratoId || !dadosPreenchidos) {
       return createErrorResponse('modeloContratoId e dadosPreenchidos são obrigatórios', 400);
@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       eventoId: eventoId || undefined,
       modeloContratoId,
       dadosPreenchidos: dadosPreenchidosComNumero,
+      conteudoHtml: conteudoHtml || undefined,
       status,
       numeroContrato,
       dataGeracao: new Date(),
