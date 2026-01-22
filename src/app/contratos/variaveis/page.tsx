@@ -380,11 +380,14 @@ export default function VariaveisContratoPage() {
         )}
 
         <ConfirmationDialog
-          isOpen={showDeleteDialog}
-          onClose={() => setShowDeleteDialog(false)}
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
           onConfirm={handleConfirmarExclusao}
           title="Excluir Variável"
-          message={`Tem certeza que deseja excluir a variável "${variavelParaExcluir?.label}"?`}
+          description={`Tem certeza que deseja excluir a variável "${variavelParaExcluir?.label}"? Esta ação não pode ser desfeita.`}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
         />
       </div>
     </Layout>

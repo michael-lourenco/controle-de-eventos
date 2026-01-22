@@ -209,11 +209,14 @@ export default function TemplatesContratoPage() {
         )}
 
         <ConfirmationDialog
-          isOpen={showDeleteDialog}
-          onClose={() => setShowDeleteDialog(false)}
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
           onConfirm={handleConfirmarExclusao}
           title="Excluir Template"
-          message={`Tem certeza que deseja excluir o template "${templateParaExcluir?.nome}"?`}
+          description={`Tem certeza que deseja excluir o template "${templateParaExcluir?.nome}"? Esta ação não pode ser desfeita.`}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="destructive"
         />
       </div>
     </Layout>
