@@ -11,6 +11,7 @@ import { GoogleCalendarTokenRepository } from './google-calendar-token-repositor
 import { ModeloContratoRepository } from './modelo-contrato-repository';
 import { ConfiguracaoContratoRepository } from './configuracao-contrato-repository';
 import { ContratoRepository } from './contrato-repository';
+import { VariavelContratoRepository } from './variavel-contrato-repository';
 import { RelatoriosDiariosRepository } from './relatorios-diarios-repository';
 import { RelatorioCacheRepository } from './relatorio-cache-repository';
 import { PlanoRepository } from './plano-repository';
@@ -34,6 +35,7 @@ import { ServicoEventoSupabaseRepository } from './supabase/servico-evento-supab
 import { ContratoSupabaseRepository } from './supabase/contrato-supabase-repository';
 import { ModeloContratoSupabaseRepository } from './supabase/modelo-contrato-supabase-repository';
 import { ConfiguracaoContratoSupabaseRepository } from './supabase/configuracao-contrato-supabase-repository';
+import { VariavelContratoSupabaseRepository } from './supabase/variavel-contrato-supabase-repository';
 import { RelatoriosDiariosSupabaseRepository } from './supabase/relatorios-diarios-supabase-repository';
 import { RelatorioCacheSupabaseRepository } from './supabase/relatorio-cache-supabase-repository';
 import { AnexoEventoSupabaseRepository } from './supabase/anexo-evento-supabase-repository';
@@ -62,6 +64,7 @@ export class RepositoryFactory {
   private contratoRepository: ContratoSupabaseRepository;
   private modeloContratoRepository: ModeloContratoSupabaseRepository;
   private configuracaoContratoRepository: ConfiguracaoContratoSupabaseRepository;
+  private variavelContratoRepository: VariavelContratoSupabaseRepository;
   private relatoriosDiariosRepository: RelatoriosDiariosSupabaseRepository;
   private relatorioCacheRepository: RelatorioCacheSupabaseRepository;
   private anexoEventoRepository: AnexoEventoSupabaseRepository;
@@ -98,6 +101,7 @@ export class RepositoryFactory {
     this.contratoRepository = new ContratoSupabaseRepository();
     this.modeloContratoRepository = new ModeloContratoSupabaseRepository();
     this.configuracaoContratoRepository = new ConfiguracaoContratoSupabaseRepository();
+    this.variavelContratoRepository = new VariavelContratoSupabaseRepository();
     this.relatoriosDiariosRepository = new RelatoriosDiariosSupabaseRepository();
     this.relatorioCacheRepository = new RelatorioCacheSupabaseRepository();
     this.anexoEventoRepository = new AnexoEventoSupabaseRepository();
@@ -174,6 +178,10 @@ export class RepositoryFactory {
 
   public getConfiguracaoContratoRepository(): ConfiguracaoContratoSupabaseRepository {
     return this.configuracaoContratoRepository;
+  }
+
+  public getVariavelContratoRepository(): VariavelContratoSupabaseRepository {
+    return this.variavelContratoRepository;
   }
 
   public getRelatoriosDiariosRepository(): RelatoriosDiariosSupabaseRepository {

@@ -341,11 +341,34 @@ CREATE TABLE IF NOT EXISTS modelos_contrato (
     template TEXT NOT NULL,
     campos JSONB NOT NULL, -- Array de CampoContrato
     ativo BOOLEAN NOT NULL DEFAULT true,
+    user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE, -- NULL = modelo global, preenchido = template privado do usuário
     data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     data_atualizacao TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_modelos_contrato_ativo ON modelos_contrato(ativo) WHERE ativo = true;
+CREATE INDEX IF NOT EXISTS idx_modelos_contrato_user_id ON modelos_contrato(user_id);
+CREATE INDEX IF NOT EXISTS idx_modelos_contrato_user_ativo ON modelos_contrato(user_id, ativo) WHERE ativo = true;
+
+-- Variáveis customizáveis de contratos (por usuário)
+CREATE TABLE IF NOT EXISTS variaveis_contrato (
+    id VARCHAR(255) PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    chave VARCHAR(100) NOT NULL, -- Ex: "nome_empresa", "telefone_comercial"
+    label VARCHAR(255) NOT NULL, -- Ex: "Nome da Empresa", "Telefone Comercial"
+    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('unica', 'multipla')), -- 'unica' = {{}}, 'multipla' = []
+    valor_padrao TEXT, -- Valor padrão (opcional)
+    descricao TEXT, -- Descrição da variável
+    ordem INTEGER NOT NULL DEFAULT 0,
+    ativo BOOLEAN NOT NULL DEFAULT true,
+    data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    data_atualizacao TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    
+    UNIQUE(user_id, chave) -- Não pode ter duas variáveis com mesma chave por usuário
+);
+
+CREATE INDEX IF NOT EXISTS idx_variaveis_contrato_user_id ON variaveis_contrato(user_id);
+CREATE INDEX IF NOT EXISTS idx_variaveis_contrato_user_ativo ON variaveis_contrato(user_id, ativo) WHERE ativo = true;
 
 -- Configuração de contrato (por usuário)
 CREATE TABLE IF NOT EXISTS configuracao_contrato (

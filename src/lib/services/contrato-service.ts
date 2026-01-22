@@ -1,6 +1,7 @@
 import { Evento, ModeloContrato, CampoContrato, ServicoEvento } from '@/types';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { TemplateService } from './template-service';
+import { VariavelContratoService } from './variavel-contrato-service';
 
 export class ContratoService {
   static async preencherDadosDoEvento(evento: Evento, modelo: ModeloContrato, servicosEvento?: ServicoEvento[]): Promise<Record<string, any>> {
@@ -78,6 +79,17 @@ export class ContratoService {
     // Preencher servicos_incluidos (mesmo conteúdo de tipo_servico para o modelo "Contrato Click-se fotos instantâneas")
     dados.servicos_incluidos = tiposServicoTexto;
     console.log('ContratoService: servicos_incluidos preenchido:', dados.servicos_incluidos);
+    
+    // Adicionar tipos_servico como array para variável múltipla [tipos_servico]
+    if (servicosEvento && servicosEvento.length > 0) {
+      const tiposServicoArray = servicosEvento
+        .filter(servico => !servico.removido && servico.tipoServico)
+        .map(servico => servico.tipoServico.nome)
+        .filter((nome, index, array) => array.indexOf(nome) === index);
+      dados.tipos_servico = tiposServicoArray; // Array para processamento como variável múltipla
+    } else {
+      dados.tipos_servico = []; // Array vazio
+    }
 
     // Preencher data_contrato com a data atual (formato YYYY-MM-DD)
     const hoje = new Date();
@@ -122,6 +134,17 @@ export class ContratoService {
   static async gerarNumeroContrato(userId: string): Promise<string> {
     const contratoRepo = repositoryFactory.getContratoRepository();
     return await contratoRepo.gerarNumeroContrato(userId);
+  }
+
+  /**
+   * Obtém todas as variáveis disponíveis para processar um template
+   * Combina: configuração do cliente + variáveis customizadas + dados do evento (se fornecido)
+   */
+  static async obterVariaveisParaTemplate(
+    userId: string, 
+    eventoId?: string
+  ): Promise<Record<string, any>> {
+    return await VariavelContratoService.obterTodasVariaveisDisponiveis(userId, eventoId);
   }
 }
 

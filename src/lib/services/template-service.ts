@@ -45,10 +45,29 @@ export class TemplateService {
     // Processa as condicionais mais internas primeiro
     resultado = this.processarCondicionaisRecursivo(resultado, dados);
     
+    // Processar variáveis múltiplas [variavel] primeiro (antes das únicas)
+    // Formato: [variavel] → "item1, item2, item3"
+    Object.keys(dados).forEach(chave => {
+      const valor = dados[chave];
+      
+      // Se for array, formatar como string separada por vírgula
+      if (Array.isArray(valor)) {
+        const { VariavelContratoService } = require('./variavel-contrato-service');
+        const valorFormatado = VariavelContratoService.formatarVariavelMultipla(valor);
+        const placeholder = new RegExp(`\\[${chave}\\]`, 'g');
+        resultado = resultado.replace(placeholder, valorFormatado);
+      }
+    });
+    
     // Processar placeholders simples {{variavel}}
     Object.keys(dados).forEach(chave => {
       const valor = dados[chave];
       let valorString: string;
+      
+      // Se for array, já foi processado acima, pular
+      if (Array.isArray(valor)) {
+        return;
+      }
       
       // Formatar automaticamente campos de data para formato extenso
       if (chave === 'data_evento' || chave === 'data_contrato') {
@@ -132,16 +151,58 @@ export class TemplateService {
     return resultado;
   }
 
-  static extrairPlaceholders(template: string): string[] {
-    const matches = template.match(/\{\{(\w+)\}\}/g) || [];
-    return matches.map(m => m.replace(/\{\{|\}\}/g, ''));
+  /**
+   * Extrai placeholders do template
+   * Retorna objeto com variáveis únicas e múltiplas
+   */
+  static extrairPlaceholders(template: string): { unicas: string[]; multiplas: string[] } {
+    // Variáveis únicas: {{variavel}}
+    const matchesUnicas = template.match(/\{\{(\w+)\}\}/g) || [];
+    const unicas = matchesUnicas.map(m => m.replace(/\{\{|\}\}/g, ''));
+    
+    // Variáveis múltiplas: [variavel]
+    const matchesMultiplas = template.match(/\[(\w+)\]/g) || [];
+    const multiplas = matchesMultiplas.map(m => m.replace(/\[|\]/g, ''));
+    
+    return { unicas, multiplas };
   }
 
-  static validarPlaceholders(template: string, campos: { chave: string }[]): boolean {
-    const placeholders = this.extrairPlaceholders(template);
-    const chavesCampos = new Set(campos.map(c => c.chave));
+  /**
+   * Valida se todos os placeholders do template estão disponíveis nas variáveis
+   */
+  static validarPlaceholders(
+    template: string, 
+    variaveisDisponiveis: string[]
+  ): { valido: boolean; erros: string[] } {
+    const { unicas, multiplas } = this.extrairPlaceholders(template);
+    const chavesDisponiveis = new Set(variaveisDisponiveis);
+    const erros: string[] = [];
     
-    return placeholders.every(p => chavesCampos.has(p));
+    unicas.forEach(chave => {
+      if (!chavesDisponiveis.has(chave)) {
+        erros.push(`Variável única '{{${chave}}}' não encontrada nas variáveis disponíveis`);
+      }
+    });
+    
+    multiplas.forEach(chave => {
+      if (!chavesDisponiveis.has(chave)) {
+        erros.push(`Variável múltipla '[${chave}]' não encontrada nas variáveis disponíveis`);
+      }
+    });
+    
+    return {
+      valido: erros.length === 0,
+      erros
+    };
+  }
+
+  /**
+   * Método legado para compatibilidade (mantido para não quebrar código existente)
+   */
+  static validarPlaceholdersLegado(template: string, campos: { chave: string }[]): boolean {
+    const { unicas } = this.extrairPlaceholders(template);
+    const chavesCampos = new Set(campos.map(c => c.chave));
+    return unicas.every(p => chavesCampos.has(p));
   }
 }
 

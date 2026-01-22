@@ -16,6 +16,7 @@ export class ModeloContratoSupabaseRepository extends BaseSupabaseRepository<Mod
       template: row.template,
       campos: (row.campos || []) as CampoContrato[],
       ativo: row.ativo || true,
+      userId: row.user_id || undefined, // NULL = modelo global, preenchido = template privado
       dataCadastro: new Date(row.data_cadastro),
       dataAtualizacao: new Date(row.data_atualizacao),
     };
@@ -29,18 +30,34 @@ export class ModeloContratoSupabaseRepository extends BaseSupabaseRepository<Mod
     if (entity.template !== undefined) data.template = entity.template;
     if (entity.campos !== undefined) data.campos = entity.campos || [];
     if (entity.ativo !== undefined) data.ativo = entity.ativo;
+    if (entity.userId !== undefined) data.user_id = entity.userId || null; // NULL = global, preenchido = privado
     if (entity.dataCadastro !== undefined) data.data_cadastro = entity.dataCadastro instanceof Date ? entity.dataCadastro.toISOString() : entity.dataCadastro;
     if (entity.dataAtualizacao !== undefined) data.data_atualizacao = entity.dataAtualizacao instanceof Date ? entity.dataAtualizacao.toISOString() : entity.dataAtualizacao;
     
     return data;
   }
 
-  async findAtivos(): Promise<ModeloContrato[]> {
-    const { data, error } = await this.supabase
+  /**
+   * Busca modelos ativos: globais (user_id IS NULL) + modelos do usuário especificado
+   * @param userId - ID do usuário. Se fornecido, retorna modelos globais + modelos do usuário
+   */
+  async findAtivos(userId?: string): Promise<ModeloContrato[]> {
+    let query = this.supabase
       .from(this.tableName)
       .select('*')
-      .eq('ativo', true)
-      .order('nome', { ascending: true });
+      .eq('ativo', true);
+
+    if (userId) {
+      // Retornar modelos globais (user_id IS NULL) + modelos do usuário
+      query = query.or(`user_id.is.null,user_id.eq.${userId}`);
+    } else {
+      // Se não fornecer userId, retornar apenas modelos globais
+      query = query.is('user_id', null);
+    }
+
+    query = query.order('nome', { ascending: true });
+
+    const { data, error } = await query;
 
     if (error) {
       throw new Error(`Erro ao buscar modelos de contrato ativos: ${error.message}`);
@@ -49,14 +66,46 @@ export class ModeloContratoSupabaseRepository extends BaseSupabaseRepository<Mod
     return (data || []).map(row => this.convertFromSupabase(row));
   }
 
-  async findAll(): Promise<ModeloContrato[]> {
-    const { data, error } = await this.supabase
+  /**
+   * Busca todos os modelos: globais (user_id IS NULL) + modelos do usuário especificado
+   * @param userId - ID do usuário. Se fornecido, retorna modelos globais + modelos do usuário
+   */
+  async findAll(userId?: string): Promise<ModeloContrato[]> {
+    let query = this.supabase
       .from(this.tableName)
-      .select('*')
-      .order('nome', { ascending: true });
+      .select('*');
+
+    if (userId) {
+      // Retornar modelos globais (user_id IS NULL) + modelos do usuário
+      query = query.or(`user_id.is.null,user_id.eq.${userId}`);
+    } else {
+      // Se não fornecer userId, retornar apenas modelos globais
+      query = query.is('user_id', null);
+    }
+
+    query = query.order('nome', { ascending: true });
+
+    const { data, error } = await query;
 
     if (error) {
       throw new Error(`Erro ao buscar modelos de contrato: ${error.message}`);
+    }
+
+    return (data || []).map(row => this.convertFromSupabase(row));
+  }
+
+  /**
+   * Busca apenas templates privados do usuário (não inclui globais)
+   */
+  async findByUserId(userId: string): Promise<ModeloContrato[]> {
+    const { data, error } = await this.supabase
+      .from(this.tableName)
+      .select('*')
+      .eq('user_id', userId)
+      .order('nome', { ascending: true });
+
+    if (error) {
+      throw new Error(`Erro ao buscar templates do usuário: ${error.message}`);
     }
 
     return (data || []).map(row => this.convertFromSupabase(row));

@@ -96,7 +96,7 @@ export default function ContratosPage() {
             <h1 className="text-3xl font-bold text-text-primary">Contratos</h1>
             <p className="text-text-secondary mt-2">Gerencie seus contratos</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button 
               variant="outline" 
               onClick={() => router.push('/contratos/configuracao')}
@@ -104,6 +104,20 @@ export default function ContratosPage() {
             >
               <Cog6ToothIcon className="h-5 w-5 mr-2" />
               Configurar Dados
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => router.push('/contratos/variaveis')}
+              title="Gerenciar variáveis customizadas"
+            >
+              Variáveis
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => router.push('/contratos/templates')}
+              title="Gerenciar templates personalizados"
+            >
+              Templates
             </Button>
             <Button onClick={() => router.push('/contratos/novo')} className="btn-add">
               <PlusIcon className="h-5 w-5 mr-2" />

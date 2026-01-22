@@ -163,6 +163,21 @@ export interface ModeloContrato {
   template: string;
   campos: CampoContrato[];
   ativo: boolean;
+  userId?: string; // NULL = modelo global (padrão), preenchido = template privado do usuário
+  dataCadastro: Date;
+  dataAtualizacao: Date;
+}
+
+export interface VariavelContrato {
+  id: string;
+  userId: string;
+  chave: string; // Ex: "nome_empresa"
+  label: string; // Ex: "Nome da Empresa"
+  tipo: 'unica' | 'multipla'; // 'unica' = {{variavel}}, 'multipla' = [variavel]
+  valorPadrao?: string;
+  descricao?: string;
+  ordem: number;
+  ativo: boolean;
   dataCadastro: Date;
   dataAtualizacao: Date;
 }
