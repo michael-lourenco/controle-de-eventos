@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '@/lib/data-service';
-import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData, TipoEvento, PreCadastroEvento } from '@/types';
+import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData, TipoEvento, PreCadastroEvento, Contrato } from '@/types';
 import { useCurrentUser } from './useAuth';
 
 export interface UseDataResult<T> {
@@ -619,6 +619,56 @@ export function useDashboardData(): UseDataResult<DashboardData> {
   const refetch = useCallback(() => fetchData({ forceRefresh: true, skipLoadingState: true }), [fetchData]);
 
   return { data, loading, error, refetch };
+}
+
+// Hook para contratos por evento
+export function useContratosPorEvento(eventoId: string): UseDataResult<Contrato[]> {
+  const [data, setData] = useState<Contrato[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId || !eventoId) {
+      setError('Usuário não autenticado ou ID do evento não fornecido');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`/api/contratos?eventoId=${eventoId}`);
+      if (!response.ok) {
+        throw new Error('Erro ao carregar contratos');
+      }
+      
+      const result = await response.json();
+      const contratos = result.data || result || [];
+      
+      // Converter datas de string para Date se necessário
+      const contratosConvertidos = contratos.map((c: any) => ({
+        ...c,
+        dataGeracao: c.dataGeracao ? new Date(c.dataGeracao) : new Date(),
+        dataAssinatura: c.dataAssinatura ? new Date(c.dataAssinatura) : undefined,
+        dataCadastro: c.dataCadastro ? new Date(c.dataCadastro) : new Date(),
+        dataAtualizacao: c.dataAtualizacao ? new Date(c.dataAtualizacao) : new Date(),
+      }));
+      
+      setData(contratosConvertidos);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar contratos');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, eventoId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
 }
 
 // Hook para pré-cadastros de eventos

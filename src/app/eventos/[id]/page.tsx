@@ -25,14 +25,16 @@ import {
   CheckIcon,
   DocumentTextIcon,
   LockClosedIcon,
-  XMarkIcon
+  XMarkIcon,
+  ArrowDownTrayIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
-import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento } from '@/hooks/useData';
+import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento, useContratosPorEvento } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { usePlano } from '@/lib/hooks/usePlano';
 import { dataService } from '@/lib/data-service';
-import { AnexoEvento, Evento, StatusEvento } from '@/types';
+import { AnexoEvento, Evento, StatusEvento, Contrato } from '@/types';
 import EventoStatusSelect from '@/components/EventoStatusSelect';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
 import CustosEvento from '@/components/CustosEvento';
@@ -68,8 +70,9 @@ export default function EventoViewPage() {
   const { data: custos, loading: loadingCustos, refetch: refetchCustos } = useCustosPorEvento(params.id as string);
   const { data: servicos, loading: loadingServicos, refetch: refetchServicos } = useServicosPorEvento(params.id as string);
   const { anexos, loading: loadingAnexos, refetch: refetchAnexos } = useAnexos(params.id as string);
+  const { data: contratos, loading: loadingContratos, refetch: refetchContratos } = useContratosPorEvento(params.id as string);
   
-  const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingServicos || loadingAnexos;
+  const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingServicos || loadingAnexos || loadingContratos;
 
   // Verificar acesso ao botão copiar - chamado antes dos early returns
   useEffect(() => {
@@ -681,6 +684,21 @@ export default function EventoViewPage() {
             >
               ANEXOS
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const element = document.getElementById('contratos');
+                if (element) {
+                  const offset = 120; // Altura do submenu + margem
+                  const elementPosition = element.offsetTop - offset;
+                  window.scrollTo({ top: elementPosition, behavior: 'smooth' });
+                }
+              }}
+              className="text-text-primary hover:bg-surface-hover whitespace-nowrap flex-shrink-0"
+            >
+              CONTRATOS
+            </Button>
             </div>
           </div>
         </div>
@@ -1025,6 +1043,153 @@ export default function EventoViewPage() {
           anexos={anexos || []}
           onAnexosChange={handleAnexosChange}
         />
+        </div>
+
+        {/* Contratos do Evento */}
+        <div id="contratos" className="pt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Contratos</CardTitle>
+                  <CardDescription>Gerencie os contratos deste evento</CardDescription>
+                </div>
+                {temAcessoContrato === true && (
+                  <Button
+                    onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
+                    className="bg-primary"
+                  >
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Novo Contrato
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingContratos ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingHotmart size="sm" />
+                  <span className="ml-2 text-text-secondary">Carregando contratos...</span>
+                </div>
+              ) : contratos && contratos.length > 0 ? (
+                <div className="space-y-3">
+                  {contratos.map((contrato) => (
+                    <div
+                      key={contrato.id}
+                      className="flex items-center justify-between p-4 border rounded-lg bg-surface hover:bg-surface-hover transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <DocumentTextIcon className="h-5 w-5 text-text-muted" />
+                          <div>
+                            <div className="font-medium text-text-primary">
+                              {contrato.modeloContrato?.nome || 'Contrato sem modelo'}
+                            </div>
+                            <div className="text-sm text-text-secondary">
+                              {contrato.numeroContrato && `Nº ${contrato.numeroContrato} • `}
+                              Status: <span className="capitalize">{contrato.status}</span>
+                              {contrato.dataGeracao && ` • ${format(new Date(contrato.dataGeracao), 'dd/MM/yyyy', { locale: ptBR })}`}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push(`/contratos/${contrato.id}`)}
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Editar Contrato</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        {contrato.status === 'gerado' && contrato.pdfUrl ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(contrato.pdfUrl, '_blank')}
+                                >
+                                  <ArrowDownTrayIcon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Baixar PDF</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : contrato.status === 'rascunho' ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={async () => {
+                                    try {
+                                      const response = await fetch(`/api/contratos/${contrato.id}/gerar-pdf`, {
+                                        method: 'POST'
+                                      });
+                                      if (response.ok) {
+                                        const result = await response.json();
+                                        const pdfData = result.data || result;
+                                        showToast('PDF gerado com sucesso', 'success');
+                                        if (pdfData.pdfUrl) {
+                                          window.open(pdfData.pdfUrl, '_blank');
+                                        }
+                                        refetchContratos();
+                                      } else {
+                                        const errorData = await response.json();
+                                        showToast(errorData.error || 'Erro ao gerar PDF', 'error');
+                                      }
+                                    } catch (error) {
+                                      showToast('Erro ao gerar PDF', 'error');
+                                    }
+                                  }}
+                                >
+                                  <PrinterIcon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Gerar PDF</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-text-secondary">
+                  <DocumentTextIcon className="h-12 w-12 mx-auto mb-4 text-text-muted opacity-50" />
+                  <p className="mb-4">Nenhum contrato encontrado para este evento</p>
+                  {temAcessoContrato === true ? (
+                    <Button
+                      onClick={() => router.push(`/contratos/novo?eventoId=${evento.id}`)}
+                      variant="outline"
+                    >
+                      <PlusIcon className="h-4 w-4 mr-2" />
+                      Criar Primeiro Contrato
+                    </Button>
+                  ) : (
+                    <p className="text-sm text-text-muted">
+                      Contratos automatizados estão disponíveis apenas no plano Premium
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Modal de Confirmação de Arquivamento */}
