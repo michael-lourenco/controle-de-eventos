@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,43 +29,78 @@ export default function ContratoViewPage() {
   const [temAlteracoes, setTemAlteracoes] = useState(false);
   const editorRef = useRef<TemplateEditorRef>(null);
 
-  useEffect(() => {
-    loadContrato();
-  }, [params.id]);
+  const carregarHtmlParaPreview = useCallback(async () => {
+    if (!contrato || !contrato.modeloContratoId) return;
 
-  // Carregar HTML quando o contrato for carregado
-  useEffect(() => {
-    if (contrato) {
-      // Se tem conteudoHtml, usar diretamente
+    try {
+      const response = await fetch('/api/contratos/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modeloContratoId: contrato.modeloContratoId,
+          dadosPreenchidos: contrato.dadosPreenchidos,
+          eventoId: contrato.eventoId || undefined
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const previewData = result.data || result;
+        const html = previewData.html || '';
+        setHtmlPreview(html);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar preview:', error);
+    }
+  }, [contrato]);
+
+  const carregarHtmlContrato = useCallback(async () => {
+    if (!contrato) return;
+
+    try {
+      setCarregandoHtml(true);
+      
+      // Se já tem conteudoHtml, usar ele
       if (contrato.conteudoHtml && contrato.conteudoHtml.trim()) {
         const html = contrato.conteudoHtml;
         setConteudoHtml(html);
         setConteudoEditado(html);
         setHtmlPreview(html);
-      } else {
-        // Carregar HTML processando template para preview
-        carregarHtmlParaPreview();
+        return;
       }
-    }
-  }, [contrato]);
 
-  // Carregar HTML quando mudar para aba editar (se ainda não foi carregado)
-  useEffect(() => {
-    if (contrato && abaAtiva === 'editar' && !conteudoHtml) {
-      carregarHtmlContrato();
-    }
-  }, [abaAtiva, contrato, conteudoHtml]);
+      // Caso contrário, gerar HTML processando o template
+      if (contrato.modeloContratoId) {
+        const response = await fetch('/api/contratos/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            modeloContratoId: contrato.modeloContratoId,
+            dadosPreenchidos: contrato.dadosPreenchidos,
+            eventoId: contrato.eventoId || undefined
+          })
+        });
 
-  // Detectar alterações no conteúdo editado
-  useEffect(() => {
-    if (conteudoEditado && conteudoEditado !== conteudoHtml) {
-      setTemAlteracoes(true);
-    } else {
-      setTemAlteracoes(false);
+        if (response.ok) {
+          const result = await response.json();
+          const previewData = result.data || result;
+          const html = previewData.html || '';
+          setConteudoHtml(html);
+          setConteudoEditado(html);
+          setHtmlPreview(html);
+        } else {
+          showToast('Erro ao carregar conteúdo do contrato', 'error');
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar HTML do contrato:', error);
+      showToast('Erro ao carregar conteúdo do contrato', 'error');
+    } finally {
+      setCarregandoHtml(false);
     }
-  }, [conteudoEditado, conteudoHtml]);
+  }, [contrato, showToast]);
 
-  const loadContrato = async () => {
+  const loadContrato = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/contratos/${params.id}`);
@@ -84,8 +119,43 @@ export default function ContratoViewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, showToast]);
 
+  useEffect(() => {
+    loadContrato();
+  }, [loadContrato]);
+
+  // Carregar HTML quando o contrato for carregado
+  useEffect(() => {
+    if (contrato) {
+      // Se tem conteudoHtml, usar diretamente
+      if (contrato.conteudoHtml && contrato.conteudoHtml.trim()) {
+        const html = contrato.conteudoHtml;
+        setConteudoHtml(html);
+        setConteudoEditado(html);
+        setHtmlPreview(html);
+      } else {
+        // Carregar HTML processando template para preview
+        carregarHtmlParaPreview();
+      }
+    }
+  }, [contrato, carregarHtmlParaPreview]);
+
+  // Carregar HTML quando mudar para aba editar (se ainda não foi carregado)
+  useEffect(() => {
+    if (contrato && abaAtiva === 'editar' && !conteudoHtml) {
+      carregarHtmlContrato();
+    }
+  }, [abaAtiva, contrato, conteudoHtml, carregarHtmlContrato]);
+
+  // Detectar alterações no conteúdo editado
+  useEffect(() => {
+    if (conteudoEditado && conteudoEditado !== conteudoHtml) {
+      setTemAlteracoes(true);
+    } else {
+      setTemAlteracoes(false);
+    }
+  }, [conteudoEditado, conteudoHtml]);
 
   const handleSalvarAlteracoes = async () => {
     if (!contrato || !conteudoEditado.trim()) {
