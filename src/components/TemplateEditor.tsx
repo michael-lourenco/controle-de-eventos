@@ -81,7 +81,7 @@ const TemplateEditor = forwardRef<TemplateEditorRef, TemplateEditorProps>(({
       ? `{{${variavel.chave}}}`
       : `[${variavel.chave}]`;
 
-    // Inserir no cursor atual ou no final
+    // Inserir no cursor atual ou no final (como texto simples)
     editor.chain().focus().insertContent(placeholder).run();
   }, [editor]);
 
@@ -314,7 +314,13 @@ const TemplateEditor = forwardRef<TemplateEditorRef, TemplateEditorProps>(({
               }}
               title={`Inserir ${v.chave}`}
             >
-              {v.tipo === 'unica' ? '{{' : '['}{v.chave}{v.tipo === 'unica' ? '}}' : ']'}
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
+                v.tipo === 'unica'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-purple-100 text-purple-700'
+              }`}>
+                {v.label || v.chave.replace(/_/g, ' ')}
+              </span>
             </button>
           ))}
           {variaveisDisponiveis.length > 5 && (

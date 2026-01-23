@@ -187,9 +187,15 @@ export default function NovoTemplatePage() {
                         <button
                           key={v.chave}
                           onClick={() => inserirVariavel(v)}
-                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors"
+                          className={`w-full flex items-center px-3 py-1.5 rounded-md text-xs font-medium transition-all hover:scale-[1.02] ${
+                            v.tipo === 'unica'
+                              ? 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 hover:border-blue-400'
+                              : 'bg-purple-100 text-purple-700 border border-purple-300 hover:bg-purple-200 hover:border-purple-400'
+                          }`}
+                          title={`Clique para inserir ${v.label || v.chave.replace(/_/g, ' ')}`}
                         >
-                          {v.tipo === 'unica' ? '{{' : '['}{v.chave}{v.tipo === 'unica' ? '}}' : ']'}
+                          <span className="mr-1">{v.tipo === 'unica' ? '📝' : '📋'}</span>
+                          {v.label || v.chave.replace(/_/g, ' ')}
                         </button>
                       ))}
                     </div>
@@ -204,9 +210,15 @@ export default function NovoTemplatePage() {
                         <button
                           key={v.chave}
                           onClick={() => inserirVariavel(v)}
-                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors"
+                          className={`w-full flex items-center px-3 py-1.5 rounded-md text-xs font-medium transition-all hover:scale-[1.02] ${
+                            v.tipo === 'unica'
+                              ? 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 hover:border-blue-400'
+                              : 'bg-purple-100 text-purple-700 border border-purple-300 hover:bg-purple-200 hover:border-purple-400'
+                          }`}
+                          title={`Clique para inserir ${v.label || v.chave.replace(/_/g, ' ')}`}
                         >
-                          {v.tipo === 'unica' ? '{{' : '['}{v.chave}{v.tipo === 'unica' ? '}}' : ']'}
+                          <span className="mr-1">{v.tipo === 'unica' ? '📝' : '📋'}</span>
+                          {v.label || v.chave.replace(/_/g, ' ')}
                         </button>
                       ))}
                     </div>
@@ -221,9 +233,15 @@ export default function NovoTemplatePage() {
                         <button
                           key={v.chave}
                           onClick={() => inserirVariavel(v)}
-                          className="w-full text-left px-2 py-1 text-sm rounded hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors"
+                          className={`w-full flex items-center px-3 py-1.5 rounded-md text-xs font-medium transition-all hover:scale-[1.02] ${
+                            v.tipo === 'unica'
+                              ? 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 hover:border-blue-400'
+                              : 'bg-purple-100 text-purple-700 border border-purple-300 hover:bg-purple-200 hover:border-purple-400'
+                          }`}
+                          title={`Clique para inserir ${v.label || v.chave.replace(/_/g, ' ')}`}
                         >
-                          {v.tipo === 'unica' ? '{{' : '['}{v.chave}{v.tipo === 'unica' ? '}}' : ']'}
+                          <span className="mr-1">{v.tipo === 'unica' ? '📝' : '📋'}</span>
+                          {v.label || v.chave.replace(/_/g, ' ')}
                         </button>
                       ))}
                     </div>

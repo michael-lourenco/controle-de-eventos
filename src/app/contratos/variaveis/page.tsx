@@ -208,14 +208,15 @@ export default function VariaveisContratoPage() {
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <h3 className="font-semibold text-text-primary">{variavel.label}</h3>
-                            <span className={`px-2 py-1 text-xs rounded ${
-                              variavel.tipo === 'unica' 
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                                : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium border ${
+                              variavel.tipo === 'unica'
+                                ? 'bg-blue-100 text-blue-700 border-blue-300'
+                                : 'bg-purple-100 text-purple-700 border-purple-300'
                             }`}>
-                              {variavel.tipo === 'unica' ? '{{' : '['}{variavel.chave}{variavel.tipo === 'unica' ? '}}' : ']'}
+                              <span className="mr-1">{variavel.tipo === 'unica' ? '📝' : '📋'}</span>
+                              {variavel.label || variavel.chave.replace(/_/g, ' ')}
                             </span>
                             {!variavel.ativo && (
                               <span className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
