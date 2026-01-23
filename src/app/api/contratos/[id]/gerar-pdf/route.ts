@@ -1,12 +1,15 @@
 import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
-import { 
+import {
   getAuthenticatedUser,
   handleApiError,
   createApiResponse,
   createErrorResponse,
   getRouteParams
 } from '@/lib/api/route-helpers';
+
+/** Timeout maior para descompressão do Chromium + renderização do PDF (Vercel). */
+export const maxDuration = 60;
 
 export async function POST(
   request: NextRequest,

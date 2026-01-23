@@ -2,14 +2,30 @@ import { s3Service } from '@/lib/s3-service';
 import { Contrato } from '@/types';
 import { ContratoService } from './contrato-service';
 
+/** URL base usada na geração do PDF (links, referências no HTML do contrato). */
+const PDF_BASE_URL = 'https://controle-de-eventos.vercel.app';
+
+/** Detecta se está em ambiente serverless (Vercel, AWS Lambda). */
+function isServerless(): boolean {
+  return process.env.VERCEL === '1' || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+}
+
+/** Substitui clicksehub.com por PDF_BASE_URL no HTML do contrato. */
+function normalizarUrlsNoHtml(html: string): string {
+  return html.replace(
+    /https:\/\/clicksehub\.com/gi,
+    PDF_BASE_URL
+  );
+}
+
 export class PDFService {
   static async gerarPDFContrato(contrato: Contrato, html: string): Promise<{ url: string; path: string }> {
     try {
       const pdfBuffer = await this.gerarPDF(html);
       const fileName = `contratos/${contrato.userId}/${contrato.id}.pdf`;
-      
+
       const uploadResult = await s3Service.uploadBuffer(pdfBuffer, fileName, 'application/pdf');
-      
+
       if (!uploadResult.success || !uploadResult.url) {
         throw new Error('Erro ao fazer upload do PDF');
       }
@@ -18,62 +34,26 @@ export class PDFService {
         url: uploadResult.url,
         path: fileName
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       console.error('Erro ao gerar PDF:', error);
-      throw new Error(`Erro ao gerar PDF: ${error.message}`);
+      throw new Error(`Erro ao gerar PDF: ${msg}`);
     }
   }
 
   static async gerarPDF(html: string): Promise<Buffer> {
-    if (!html || !html.trim()) {
+    if (!html?.trim()) {
       throw new Error('HTML não pode estar vazio');
     }
 
-    // Detectar se estamos em ambiente serverless (Vercel, etc)
-    // VERCEL é definido automaticamente pela Vercel em produção
-    const isVercel = process.env.VERCEL === '1';
-    const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
-    const isServerless = isVercel || isLambda;
-    
-    let puppeteer: any;
-    let executablePath: string | undefined;
-    
-    try {
-      if (isServerless) {
-        // Em ambiente serverless, usar puppeteer-core com @sparticuz/chromium
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          puppeteer = require('puppeteer-core');
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          const chromium = require('@sparticuz/chromium');
-          
-          // Configurar o Chromium para ambiente serverless
-          chromium.setGraphicsMode(false);
-          executablePath = await chromium.executablePath();
-          
-          console.log('[PDF] Usando @sparticuz/chromium para ambiente serverless');
-        } catch (chromiumError: any) {
-          console.error('[PDF] Erro ao carregar @sparticuz/chromium, tentando puppeteer padrão:', chromiumError);
-          // Fallback para puppeteer padrão se @sparticuz/chromium não estiver disponível
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          puppeteer = require('puppeteer');
-        }
-      } else {
-        // Em desenvolvimento local, usar puppeteer completo
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        puppeteer = require('puppeteer');
-        console.log('[PDF] Usando puppeteer padrão para desenvolvimento local');
-      }
-    } catch (error: any) {
-      console.error('Erro ao carregar Puppeteer:', error);
-      throw new Error(`Puppeteer não está instalado ou não está disponível no ambiente: ${error.message}`);
-    }
+    const htmlNormalizado = normalizarUrlsNoHtml(html);
 
     const htmlCompleto = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
+  <base href="${PDF_BASE_URL}/">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -105,14 +85,58 @@ export class PDFService {
   </style>
 </head>
 <body>
-  ${html}
+  ${htmlNormalizado}
 </body>
 </html>`;
 
-    let browser;
-    try {
-      // Configurações otimizadas para ambientes serverless (Vercel, etc)
-      const launchOptions: any = {
+    const useChromium = isServerless();
+    let puppeteer: typeof import('puppeteer-core');
+    let launchOptions: Parameters<typeof import('puppeteer-core').launch>[0];
+
+    if (useChromium) {
+      // Ambiente serverless: puppeteer-core + @sparticuz/chromium (obrigatório, sem fallback)
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        puppeteer = require('puppeteer-core');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const chromium = require('@sparticuz/chromium') as typeof import('@sparticuz/chromium');
+
+        // Desabilitar WebGL (opcional, pode melhorar estabilidade)
+        chromium.setGraphicsMode = false;
+
+        const executablePath = await chromium.executablePath();
+        // headless "shell" é exigido pelo @sparticuz/chromium (headless_shell); tipos do Puppeteer não incluem "shell"
+        const headless = 'shell' as unknown as boolean | 'new';
+
+        launchOptions = {
+          args: puppeteer.defaultArgs({
+            args: chromium.args,
+            headless
+          }),
+          defaultViewport: null,
+          executablePath,
+          headless,
+          timeout: 60_000
+        };
+        console.log('[PDF] Usando @sparticuz/chromium (serverless)');
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error('[PDF] Falha ao carregar @sparticuz/chromium:', e);
+        throw new Error(
+          `Em ambiente serverless (Vercel/Lambda) é necessário @sparticuz/chromium. Não use fallback para Puppeteer. Detalhes: ${msg}`
+        );
+      }
+    } else {
+      // Desenvolvimento local: puppeteer com Chrome bundado
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        puppeteer = require('puppeteer');
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.error('Puppeteer não disponível:', e);
+        throw new Error(`Puppeteer não está instalado. Execute: npx puppeteer browsers install chrome. Detalhes: ${msg}`);
+      }
+      launchOptions = {
         headless: true,
         args: [
           '--no-sandbox',
@@ -124,63 +148,47 @@ export class PDFService {
           '--single-process',
           '--disable-gpu'
         ],
-        timeout: 30000 // 30 segundos de timeout
+        timeout: 60_000
       };
+      console.log('[PDF] Usando Puppeteer (local)');
+    }
 
-      // Se estiver em ambiente serverless, usar o executablePath do Chromium
-      if (isServerless && executablePath) {
-        launchOptions.executablePath = executablePath;
-      }
-
+    let browser: Awaited<ReturnType<typeof puppeteer.launch>> | undefined;
+    try {
       browser = await puppeteer.launch(launchOptions);
-      
       const page = await browser.newPage();
-      
-      // Configurar timeout para operações da página
-      page.setDefaultTimeout(30000);
-      
-      await page.setContent(htmlCompleto, { 
+      page.setDefaultTimeout(30_000);
+
+      await page.setContent(htmlCompleto, {
         waitUntil: 'networkidle0',
-        timeout: 30000
+        timeout: 30_000
       });
-      
+
       const pdfBuffer = await page.pdf({
         format: 'A4',
-        margin: {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm'
-        },
+        margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
         printBackground: true,
-        timeout: 30000
+        timeout: 30_000
       });
-      
+
       await browser.close();
-      
-      if (!pdfBuffer || pdfBuffer.length === 0) {
+      browser = undefined;
+
+      if (!pdfBuffer?.length) {
         throw new Error('PDF gerado está vazio');
       }
-      
       return Buffer.from(pdfBuffer);
-    } catch (error: any) {
-      // Garantir que o browser seja fechado mesmo em caso de erro
+    } catch (e) {
       if (browser) {
         try {
           await browser.close();
-        } catch (closeError) {
-          console.error('Erro ao fechar browser:', closeError);
+        } catch (closeErr) {
+          console.error('Erro ao fechar browser:', closeErr);
         }
       }
-      
-      console.error('Erro detalhado ao gerar PDF:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      
-      throw new Error(`Erro ao gerar PDF: ${error.message || 'Erro desconhecido'}`);
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('Erro ao gerar PDF:', { message: msg, stack: e instanceof Error ? e.stack : undefined });
+      throw new Error(`Erro ao gerar PDF: ${msg}`);
     }
   }
 }
-
