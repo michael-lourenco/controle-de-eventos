@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
     'puppeteer',
     'puppeteer-core',
     '@puppeteer/browsers',
+    '@sparticuz/chromium',
     'firebase-admin',
     '@aws-sdk/client-s3',
     '@aws-sdk/s3-request-presigner',
@@ -68,6 +69,7 @@ const nextConfig: NextConfig = {
         'puppeteer',
         'puppeteer-core',
         '@puppeteer/browsers',
+        '@sparticuz/chromium',
         'firebase-admin',
         '@aws-sdk/client-s3',
         '@aws-sdk/s3-request-presigner',
@@ -96,6 +98,7 @@ const nextConfig: NextConfig = {
         'puppeteer',
         'puppeteer-core',
         '@puppeteer/browsers',
+        '@sparticuz/chromium',
       ];
 
       config.externals = config.externals || [];

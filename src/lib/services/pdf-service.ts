@@ -29,14 +29,44 @@ export class PDFService {
       throw new Error('HTML não pode estar vazio');
     }
 
-    // Verificar se Puppeteer está disponível
-    let puppeteer;
+    // Detectar se estamos em ambiente serverless (Vercel, etc)
+    // VERCEL é definido automaticamente pela Vercel em produção
+    const isVercel = process.env.VERCEL === '1';
+    const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+    const isServerless = isVercel || isLambda;
+    
+    let puppeteer: any;
+    let executablePath: string | undefined;
+    
     try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      puppeteer = require('puppeteer');
+      if (isServerless) {
+        // Em ambiente serverless, usar puppeteer-core com @sparticuz/chromium
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          puppeteer = require('puppeteer-core');
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const chromium = require('@sparticuz/chromium');
+          
+          // Configurar o Chromium para ambiente serverless
+          chromium.setGraphicsMode(false);
+          executablePath = await chromium.executablePath();
+          
+          console.log('[PDF] Usando @sparticuz/chromium para ambiente serverless');
+        } catch (chromiumError: any) {
+          console.error('[PDF] Erro ao carregar @sparticuz/chromium, tentando puppeteer padrão:', chromiumError);
+          // Fallback para puppeteer padrão se @sparticuz/chromium não estiver disponível
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          puppeteer = require('puppeteer');
+        }
+      } else {
+        // Em desenvolvimento local, usar puppeteer completo
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        puppeteer = require('puppeteer');
+        console.log('[PDF] Usando puppeteer padrão para desenvolvimento local');
+      }
     } catch (error: any) {
-      console.error('Puppeteer não está disponível:', error);
-      throw new Error('Puppeteer não está instalado ou não está disponível no ambiente');
+      console.error('Erro ao carregar Puppeteer:', error);
+      throw new Error(`Puppeteer não está instalado ou não está disponível no ambiente: ${error.message}`);
     }
 
     const htmlCompleto = `
@@ -82,7 +112,7 @@ export class PDFService {
     let browser;
     try {
       // Configurações otimizadas para ambientes serverless (Vercel, etc)
-      browser = await puppeteer.launch({
+      const launchOptions: any = {
         headless: true,
         args: [
           '--no-sandbox',
@@ -95,7 +125,14 @@ export class PDFService {
           '--disable-gpu'
         ],
         timeout: 30000 // 30 segundos de timeout
-      });
+      };
+
+      // Se estiver em ambiente serverless, usar o executablePath do Chromium
+      if (isServerless && executablePath) {
+        launchOptions.executablePath = executablePath;
+      }
+
+      browser = await puppeteer.launch(launchOptions);
       
       const page = await browser.newPage();
       

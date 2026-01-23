@@ -41,6 +41,8 @@
     "next": "15.5.7",
     "next-auth": "^4.24.11",
     "puppeteer": "^21.0.0",
+    "puppeteer-core": "^21.0.0",
+    "@sparticuz/chromium": "^131.0.0",
     "react": "19.1.2",
     "react-dom": "19.1.2",
     "recharts": "2.15.4",
