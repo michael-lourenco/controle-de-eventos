@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PreCadastroEvento, StatusPreCadastro } from '@/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { dateToLocalMidnight } from '@/lib/utils/date-helpers';
 import {
   CalendarIcon,
   MapPinIcon,
@@ -141,10 +142,10 @@ export default function PreCadastroCard({
 
         {/* Informações do Evento */}
         {preCadastro.dataEvento && (
-          <div className="space-y-2">
+            <div className="space-y-2">
             <div className="flex items-center text-sm text-text-secondary">
               <CalendarIcon className="h-4 w-4 mr-2" />
-              {format(new Date(preCadastro.dataEvento), 'dd/MM/yyyy', { locale: ptBR })}
+              {format(dateToLocalMidnight(new Date(preCadastro.dataEvento)), 'dd/MM/yyyy', { locale: ptBR })}
             </div>
             {preCadastro.local && (
               <div className="flex items-center text-sm text-text-secondary">

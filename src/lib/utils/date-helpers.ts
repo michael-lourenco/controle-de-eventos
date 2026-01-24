@@ -37,6 +37,22 @@ export function parseLocalDate(dateString: string): Date {
 }
 
 /**
+ * Converte um Date armazenado em UTC (ex: "2025-01-25T00:00:00.000Z") para
+ * meia-noite no timezone local do mesmo dia civil.
+ * Usado quando a data foi salva como UTC midnight (dia do evento) e precisamos
+ * exibir ou usar corretamente no fuso local (evitar "um dia antes" em UTC-3).
+ *
+ * @param date - Date (geralmente UTC midnight)
+ * @returns Date à meia-noite no timezone local para o mesmo ano/mês/dia
+ */
+export function dateToLocalMidnight(date: Date): Date {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth();
+  const d = date.getUTCDate();
+  return new Date(y, m, d, 0, 0, 0, 0);
+}
+
+/**
  * Converte um objeto Date para string no formato "yyyy-MM-dd" no timezone local
  * 
  * @param date - Objeto Date

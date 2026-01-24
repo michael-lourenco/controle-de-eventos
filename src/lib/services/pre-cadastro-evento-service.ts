@@ -1,7 +1,7 @@
 import { PreCadastroEvento, PreCadastroServico, StatusPreCadastro, Evento, Cliente, ServicoEvento, StatusEvento } from '@/types';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { dataService } from '@/lib/data-service';
-import { getDiaSemana } from '@/lib/utils/date-helpers';
+import { getDiaSemana, dateToLocalMidnight } from '@/lib/utils/date-helpers';
 
 export class PreCadastroEventoService {
   /**
@@ -205,7 +205,7 @@ export class PreCadastroEventoService {
       throw new Error('Tipo de evento é obrigatório');
     }
     
-    const dataEvento = new Date(preCadastro.dataEvento);
+    const dataEvento = dateToLocalMidnight(new Date(preCadastro.dataEvento));
     const eventoData: Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'> = {
       nomeEvento: preCadastro.nomeEvento,
       clienteId: cliente.id,

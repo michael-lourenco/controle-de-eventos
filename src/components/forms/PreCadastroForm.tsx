@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import { TipoEvento, TipoServico, CanalEntrada, PreCadastroEvento } from '@/types';
 import { TagIcon } from '@heroicons/react/24/outline';
+import { dateToLocalMidnight, formatLocalDate } from '@/lib/utils/date-helpers';
 
 interface PreCadastroFormProps {
   preCadastroId: string;
@@ -104,7 +105,7 @@ export default function PreCadastroForm({ preCadastroId, preCadastro, onSuccess 
         clienteInstagram: preCadastro.clienteInstagram || '',
         clienteCanalEntradaId: preCadastro.clienteCanalEntradaId || '',
         nomeEvento: preCadastro.nomeEvento || '',
-        dataEvento: preCadastro.dataEvento ? new Date(preCadastro.dataEvento).toISOString().split('T')[0] : '',
+        dataEvento: preCadastro.dataEvento ? formatLocalDate(dateToLocalMidnight(new Date(preCadastro.dataEvento))) : '',
         local: preCadastro.local || '',
         endereco: preCadastro.endereco || '',
         tipoEvento: preCadastro.tipoEvento || '',
