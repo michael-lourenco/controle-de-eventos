@@ -42,6 +42,7 @@ import { AnexoEventoSupabaseRepository } from './supabase/anexo-evento-supabase-
 import { AnexoPagamentoSupabaseRepository } from './supabase/anexo-pagamento-supabase-repository';
 import { PreCadastroEventoSupabaseRepository } from './supabase/pre-cadastro-evento-supabase-repository';
 import { PreCadastroServicoSupabaseRepository } from './supabase/pre-cadastro-servico-supabase-repository';
+import { ValoresAtrasadosSupabaseRepository } from './supabase/valores-atrasados-supabase-repository';
 
 /**
  * Factory que inicializa repositórios com regras fixas:
@@ -71,6 +72,7 @@ export class RepositoryFactory {
   private anexoPagamentoRepository: AnexoPagamentoSupabaseRepository;
   private preCadastroEventoRepository: PreCadastroEventoSupabaseRepository;
   private preCadastroServicoRepository: PreCadastroServicoSupabaseRepository;
+  private valoresAtrasadosRepository: ValoresAtrasadosSupabaseRepository;
 
   // Repositórios Firestore (sempre)
   private userRepository: UserRepository;
@@ -108,6 +110,7 @@ export class RepositoryFactory {
     this.anexoPagamentoRepository = new AnexoPagamentoSupabaseRepository();
     this.preCadastroEventoRepository = new PreCadastroEventoSupabaseRepository();
     this.preCadastroServicoRepository = new PreCadastroServicoSupabaseRepository();
+    this.valoresAtrasadosRepository = new ValoresAtrasadosSupabaseRepository();
 
     // Inicializar repositórios Firestore
     this.userRepository = new UserRepository();
@@ -206,6 +209,10 @@ export class RepositoryFactory {
 
   public getPreCadastroServicoRepository(): PreCadastroServicoSupabaseRepository {
     return this.preCadastroServicoRepository;
+  }
+
+  public getValoresAtrasadosRepository(): ValoresAtrasadosSupabaseRepository {
+    return this.valoresAtrasadosRepository;
   }
 
   // Métodos getter - Repositórios Firestore

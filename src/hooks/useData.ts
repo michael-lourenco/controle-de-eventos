@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { dataService } from '@/lib/data-service';
-import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData, TipoEvento, PreCadastroEvento, Contrato } from '@/types';
+import { Cliente, Evento, Pagamento, CustoEvento, ServicoEvento, TipoServico, CanalEntrada, DashboardData, TipoEvento, PreCadastroEvento, Contrato, ValorAtrasado, ValoresAtrasadosFiltros } from '@/types';
 import { useCurrentUser } from './useAuth';
 
 export interface UseDataResult<T> {
@@ -726,4 +726,75 @@ export function usePreCadastros(status?: string): UseDataResult<PreCadastroEvent
   }, [fetchData]);
 
   return { data, loading, error, refetch: fetchData };
+}
+
+// Hook para valores atrasados
+export interface UseValoresAtrasadosResult {
+  valores: ValorAtrasado[];
+  resumo: {
+    totalEventos: number;
+    valorTotalAtrasado: number;
+    mediaDiasAtraso: number;
+    maiorValorAtrasado: number;
+  } | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useValoresAtrasados(
+  filtros?: ValoresAtrasadosFiltros
+): UseValoresAtrasadosResult {
+  const [valores, setValores] = useState<ValorAtrasado[]>([]);
+  const [resumo, setResumo] = useState<UseValoresAtrasadosResult['resumo']>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userId } = useCurrentUser();
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
+      setError('Usuário não autenticado');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = new URLSearchParams();
+      if (filtros?.clienteId) params.append('clienteId', filtros.clienteId);
+      if (filtros?.dataInicio) params.append('dataInicio', filtros.dataInicio.toISOString());
+      if (filtros?.dataFim) params.append('dataFim', filtros.dataFim.toISOString());
+      if (filtros?.diasAtrasoMin !== undefined) params.append('diasAtrasoMin', filtros.diasAtrasoMin.toString());
+      if (filtros?.diasAtrasoMax !== undefined) params.append('diasAtrasoMax', filtros.diasAtrasoMax.toString());
+      if (filtros?.valorMin !== undefined) params.append('valorMin', filtros.valorMin.toString());
+      if (filtros?.valorMax !== undefined) params.append('valorMax', filtros.valorMax.toString());
+      if (filtros?.ordenarPor) params.append('ordenarPor', filtros.ordenarPor);
+      if (filtros?.ordem) params.append('ordem', filtros.ordem);
+      if (filtros?.limite) params.append('limite', filtros.limite.toString());
+      if (filtros?.offset) params.append('offset', filtros.offset.toString());
+
+      const response = await fetch(`/api/valores-atrasados?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Erro ao carregar valores atrasados');
+      }
+
+      const result = await response.json();
+      const data = result.data || result;
+
+      setValores(data.valores || []);
+      setResumo(data.resumo || null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar valores atrasados');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, filtros]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { valores, resumo, loading, error, refetch: fetchData };
 }

@@ -90,8 +90,10 @@ export class PDFService {
 </html>`;
 
     const useChromium = isServerless();
-    let puppeteer: typeof import('puppeteer-core');
-    let launchOptions: Parameters<typeof import('puppeteer-core').launch>[0];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let puppeteer: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let launchOptions: any;
 
     if (useChromium) {
       // Ambiente serverless: puppeteer-core + @sparticuz/chromium (obrigatório, sem fallback)
@@ -99,7 +101,8 @@ export class PDFService {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         puppeteer = require('puppeteer-core');
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const chromium = require('@sparticuz/chromium') as typeof import('@sparticuz/chromium');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const chromium = require('@sparticuz/chromium') as any;
 
         // Desabilitar WebGL (opcional, pode melhorar estabilidade)
         chromium.setGraphicsMode = false;

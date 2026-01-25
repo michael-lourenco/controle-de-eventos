@@ -832,3 +832,36 @@ export interface RelatorioImpressoes {
     }>;
   }>;
 }
+
+// Valores Atrasados
+export interface ValorAtrasado {
+  eventoId: string;
+  nomeEvento: string;
+  dataEvento: Date;
+  diaFinalPagamento: Date;
+  valorTotal: number;
+  totalPago: number;
+  valorAtrasado: number;
+  diasAtraso: number;
+  cliente: {
+    id: string;
+    nome: string;
+    email?: string;
+    telefone?: string;
+  };
+  evento?: Evento; // Opcional, para detalhes completos
+}
+
+export interface ValoresAtrasadosFiltros {
+  clienteId?: string;
+  dataInicio?: Date;
+  dataFim?: Date;
+  diasAtrasoMin?: number;
+  diasAtrasoMax?: number;
+  valorMin?: number;
+  valorMax?: number;
+  ordenarPor?: 'valorAtrasado' | 'diasAtraso' | 'dataEvento' | 'diaFinalPagamento' | 'clienteNome';
+  ordem?: 'asc' | 'desc';
+  limite?: number;
+  offset?: number;
+}

@@ -290,7 +290,7 @@ export default function DashboardPage() {
 
           {/* Valores Atrasados */}
           <Card 
-            onClick={() => router.push('/relatorios')}
+            onClick={() => router.push('/valores-atrasados')}
             className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
           >
             <CardHeader>
