@@ -29,6 +29,7 @@ export default function AdminPlanosPage() {
     limiteUsuarios: undefined as number | undefined,
     limiteArmazenamento: undefined as number | undefined
   });
+  const [precoInput, setPrecoInput] = useState<string>('');
   const [message, setMessage] = useState('');
   const [planoParaExcluir, setPlanoParaExcluir] = useState<Plano | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -130,6 +131,7 @@ export default function AdminPlanosPage() {
       limiteUsuarios: undefined,
       limiteArmazenamento: undefined
     });
+    setPrecoInput('');
     setEditing(null);
   };
 
@@ -149,6 +151,7 @@ export default function AdminPlanosPage() {
       limiteUsuarios: plano.limiteUsuarios,
       limiteArmazenamento: plano.limiteArmazenamento
     });
+    setPrecoInput(plano.preco === 0 ? '' : String(plano.preco));
   };
 
   const handleDeleteClick = (plano: Plano) => {
@@ -255,9 +258,27 @@ export default function AdminPlanosPage() {
                   label="Preço (R$)"
                   type="number"
                   step="0.01"
-                  value={formData.preco}
-                  onChange={(e) => setFormData({ ...formData, preco: parseFloat(e.target.value) || 0 })}
+                  value={precoInput}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPrecoInput(value);
+                    // Converter para número apenas quando houver valor válido
+                    const numValue = value === '' ? 0 : (parseFloat(value) || 0);
+                    setFormData({ ...formData, preco: numValue });
+                  }}
+                  onBlur={(e) => {
+                    // Garantir que o valor seja atualizado quando o campo perde o foco
+                    const value = e.target.value;
+                    if (value === '') {
+                      setPrecoInput('');
+                    } else {
+                      const numValue = parseFloat(value) || 0;
+                      setPrecoInput(numValue === 0 ? '' : String(numValue));
+                      setFormData({ ...formData, preco: numValue });
+                    }
+                  }}
                   required
+                  hideSpinner
                 />
 
                 <div>

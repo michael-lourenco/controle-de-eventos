@@ -7,12 +7,28 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   label?: string
   error?: string
   helperText?: string
+  /** Esconde as setas de incremento/decremento em type="number" (campos monetários) */
+  hideSpinner?: boolean
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type = 'text', label, error, helperText, id, ...props }, ref) => {
+  ({ className, type = 'text', label, error, helperText, id, hideSpinner, onKeyDown, ...props }, ref) => {
     const generatedId = useId();
     const inputId = id || generatedId;
+    
+    // Handler para bloquear setas do teclado quando hideSpinner está ativo
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      // Bloquear ArrowUp e ArrowDown quando hideSpinner está ativo e type é number
+      if (hideSpinner && type === "number" && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        e.preventDefault();
+        return;
+      }
+      
+      // Chamar handler customizado se fornecido
+      if (onKeyDown) {
+        onKeyDown(e);
+      }
+    };
     
     return (
       <div className="w-full">
@@ -30,9 +46,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className={cn(
             "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
             error && "form-error",
+            hideSpinner && type === "number" && "input-no-spinner",
             className
           )}
           ref={ref}
+          onKeyDown={handleKeyDown}
           {...props}
         />
         {error && (

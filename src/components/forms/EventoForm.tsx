@@ -128,6 +128,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
   const [isNovoCliente, setIsNovoCliente] = useState(false);
   const [clienteSearch, setClienteSearch] = useState('');
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
+  const [valorTotalInput, setValorTotalInput] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [tiposEvento, setTiposEvento] = useState<TipoEvento[]>([]);
@@ -219,6 +220,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           ? new Date(evento.diaFinalPagamento.getTime() - evento.diaFinalPagamento.getTimezoneOffset() * 60000).toISOString().split('T')[0]
           : ''
       });
+      setValorTotalInput(evento.valorTotal === 0 ? '' : String(evento.valorTotal));
       
       // Definir o cliente selecionado para exibição
       setClienteSearch(evento.cliente.nome);
@@ -1068,9 +1070,27 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
               type="number"
               step="0.01"
               min="0"
-              value={formData.valorTotal}
-              onChange={(e) => handleInputChange('valorTotal', parseFloat(e.target.value) || 0)}
+              value={valorTotalInput}
+              onChange={(e) => {
+                const value = e.target.value;
+                setValorTotalInput(value);
+                // Converter para número apenas quando houver valor válido
+                const numValue = value === '' ? 0 : (parseFloat(value) || 0);
+                handleInputChange('valorTotal', numValue);
+              }}
+              onBlur={(e) => {
+                // Garantir que o valor seja atualizado quando o campo perde o foco
+                const value = e.target.value;
+                if (value === '') {
+                  setValorTotalInput('');
+                } else {
+                  const numValue = parseFloat(value) || 0;
+                  setValorTotalInput(numValue === 0 ? '' : String(numValue));
+                  handleInputChange('valorTotal', numValue);
+                }
+              }}
               error={errors.valorTotal}
+              hideSpinner
             />
             <Input
               label="Dia Final de Pagamento *"

@@ -37,6 +37,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     observacoes: ''
   });
 
+  const [valorInput, setValorInput] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [tiposCusto, setTiposCusto] = useState<Array<{
     id: string;
@@ -77,6 +78,9 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         quantidade: custo.quantidade || 1,
         observacoes: custo.observacoes || ''
       });
+      setValorInput(custo.valor === 0 ? '' : String(custo.valor));
+    } else {
+      setValorInput('');
     }
   }, [custo]);
 
@@ -237,9 +241,27 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
               type="number"
               step="0.01"
               min="0"
-              value={formData.valor}
-              onChange={(e) => handleInputChange('valor', parseFloat(e.target.value) || 0)}
+              value={valorInput}
+              onChange={(e) => {
+                const value = e.target.value;
+                setValorInput(value);
+                // Converter para número apenas quando houver valor válido
+                const numValue = value === '' ? 0 : (parseFloat(value) || 0);
+                handleInputChange('valor', numValue);
+              }}
+              onBlur={(e) => {
+                // Garantir que o valor seja atualizado quando o campo perde o foco
+                const value = e.target.value;
+                if (value === '') {
+                  setValorInput('');
+                } else {
+                  const numValue = parseFloat(value) || 0;
+                  setValorInput(numValue === 0 ? '' : String(numValue));
+                  handleInputChange('valor', numValue);
+                }
+              }}
               error={errors.valor}
+              hideSpinner
             />
             <Input
               label="Quantidade"

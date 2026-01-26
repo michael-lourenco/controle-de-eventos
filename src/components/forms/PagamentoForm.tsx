@@ -47,6 +47,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
     comprovante: ''
   });
 
+  const [valorInput, setValorInput] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
   const [anexos, setAnexos] = useState<AnexoPagamento[]>([]);
@@ -62,6 +63,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         observacoes: pagamento.observacoes || '',
         comprovante: pagamento.comprovante || ''
       });
+      setValorInput(pagamento.valor === 0 ? '' : String(pagamento.valor));
       
       // Carregar anexos existentes para pagamentos em edição
       carregarAnexosExistentes();
@@ -69,14 +71,16 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
       // Preencher dados sugeridos para novo pagamento
       const hoje = new Date();
       const valorSugerido = evento.valorTotal * 0.3; // Sugerir 30% do valor total
+      const valorArredondado = Math.round(valorSugerido * 100) / 100;
       
       setFormData({
-        valor: Math.round(valorSugerido * 100) / 100, // Arredondar para 2 casas decimais
+        valor: valorArredondado, // Arredondar para 2 casas decimais
         dataPagamento: format(hoje, 'yyyy-MM-dd'),
         formaPagamento: 'PIX', // PIX como padrão
         observacoes: `Pagamento parcial - ${format(hoje, 'dd/MM/yyyy', { locale: ptBR })}`,
         comprovante: ''
       });
+      setValorInput(valorArredondado === 0 ? '' : String(valorArredondado));
     }
   }, [pagamento, evento]);
 
@@ -325,9 +329,27 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
               type="number"
               step="0.01"
               min="0"
-              value={formData.valor}
-              onChange={(e) => handleInputChange('valor', parseFloat(e.target.value) || 0)}
+              value={valorInput}
+              onChange={(e) => {
+                const value = e.target.value;
+                setValorInput(value);
+                // Converter para número apenas quando houver valor válido
+                const numValue = value === '' ? 0 : (parseFloat(value) || 0);
+                handleInputChange('valor', numValue);
+              }}
+              onBlur={(e) => {
+                // Garantir que o valor seja atualizado quando o campo perde o foco
+                const value = e.target.value;
+                if (value === '') {
+                  setValorInput('');
+                } else {
+                  const numValue = parseFloat(value) || 0;
+                  setValorInput(numValue === 0 ? '' : String(numValue));
+                  handleInputChange('valor', numValue);
+                }
+              }}
               error={errors.valor}
+              hideSpinner
             />
             <Input
               label="Data do Pagamento *"
