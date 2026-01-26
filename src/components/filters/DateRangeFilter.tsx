@@ -11,7 +11,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
-import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval, parseISO, addDays } from 'date-fns';
+import { format, startOfDay, endOfDay, subDays, subWeeks, subMonths, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, isWithinInterval, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export interface DateRange {
@@ -33,7 +33,7 @@ interface DateRangeFilterProps {
 const QUICK_FILTERS: { key: string; label: string; description?: string }[] = [
   { key: 'today', label: 'Hoje', description: 'Eventos do dia' },
   { key: 'thisWeek', label: 'Esta semana', description: 'Seg - Dom' },
-  { key: 'next7Days', label: 'Próximos 7 dias', description: 'Planeje a semana' },
+  { key: 'thisYear', label: 'Este Ano', description: 'Eventos do ano atual' },
   { key: 'next30Days', label: 'Próximos 30 dias', description: 'Agenda do mês' },
   { key: 'thisMonth', label: 'Este mês', description: '1º ao último dia' },
   { key: 'lastMonth', label: 'Mês passado', description: 'Histórico recente' },
@@ -73,10 +73,11 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
           startDate: startOfWeek(now, { locale: ptBR }),
           endDate: endOfWeek(now, { locale: ptBR })
         };
-      case 'next7Days':
+      case 'thisYear':
+        // Filtro "Este Ano" - mostra eventos do ano atual (1º de janeiro a 31 de dezembro)
         return {
-          startDate: startOfDay(now),
-          endDate: endOfDay(addDays(now, 7))
+          startDate: startOfYear(now),
+          endDate: endOfYear(now)
         };
       case 'next30Days':
         return {
