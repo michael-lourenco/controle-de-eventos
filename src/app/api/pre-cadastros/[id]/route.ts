@@ -9,6 +9,7 @@ import {
   getRouteParams,
   getRequestBody
 } from '@/lib/api/route-helpers';
+import { parseLocalDate } from '@/lib/utils/date-helpers';
 
 /**
  * GET /api/pre-cadastros/[id]
@@ -100,8 +101,9 @@ export async function POST(
     }
     
     // Converter dataEvento de string para Date se necessário
+    // Usar parseLocalDate para evitar problemas de timezone
     if (dados.dataEvento && typeof dados.dataEvento === 'string') {
-      dados.dataEvento = new Date(dados.dataEvento);
+      dados.dataEvento = parseLocalDate(dados.dataEvento);
     }
     
     // Salvar pré-cadastro

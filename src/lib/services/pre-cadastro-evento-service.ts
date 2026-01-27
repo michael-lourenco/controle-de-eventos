@@ -1,7 +1,7 @@
 import { PreCadastroEvento, PreCadastroServico, StatusPreCadastro, Evento, Cliente, ServicoEvento, StatusEvento } from '@/types';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { dataService } from '@/lib/data-service';
-import { getDiaSemana, dateToLocalMidnight } from '@/lib/utils/date-helpers';
+import { getDiaSemana, dateToLocalMidnight, parseLocalDate } from '@/lib/utils/date-helpers';
 
 export class PreCadastroEventoService {
   /**
@@ -205,7 +205,17 @@ export class PreCadastroEventoService {
       throw new Error('Tipo de evento é obrigatório');
     }
     
-    const dataEvento = dateToLocalMidnight(new Date(preCadastro.dataEvento));
+    // Garantir que a data seja tratada corretamente no timezone local
+    // Se dataEvento já é um Date, usar dateToLocalMidnight para garantir timezone local
+    // Se for string, usar parseLocalDate
+    let dataEvento: Date;
+    if (preCadastro.dataEvento instanceof Date) {
+      dataEvento = dateToLocalMidnight(preCadastro.dataEvento);
+    } else if (typeof preCadastro.dataEvento === 'string') {
+      dataEvento = parseLocalDate(preCadastro.dataEvento);
+    } else {
+      throw new Error('Data do evento inválida');
+    }
     const eventoData: Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'> = {
       nomeEvento: preCadastro.nomeEvento,
       clienteId: cliente.id,
