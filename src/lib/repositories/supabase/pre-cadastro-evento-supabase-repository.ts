@@ -27,7 +27,21 @@ export class PreCadastroEventoSupabaseRepository extends BaseSupabaseRepository<
       // Dados do Evento
       nomeEvento: row.nome_evento,
       // Converter data do banco (UTC) para timezone local
-      dataEvento: row.data_evento ? dateToLocalMidnight(new Date(row.data_evento)) : undefined,
+      // O Supabase retorna como string ISO (ex: "2026-01-31T00:00:00.000Z")
+      // Precisamos extrair o ano, mês e dia UTC e criar uma data local
+      dataEvento: row.data_evento ? (() => {
+        let utcDate: Date;
+        if (row.data_evento instanceof Date) {
+          utcDate = row.data_evento;
+        } else if (typeof row.data_evento === 'string') {
+          // Se for string, criar Date a partir dela
+          utcDate = new Date(row.data_evento);
+        } else {
+          return undefined;
+        }
+        // Converter UTC para timezone local preservando o dia
+        return dateToLocalMidnight(utcDate);
+      })() : undefined,
       local: row.local,
       endereco: row.endereco,
       tipoEvento: row.tipo_evento,
@@ -75,11 +89,12 @@ export class PreCadastroEventoSupabaseRepository extends BaseSupabaseRepository<
     
     // Dados do Evento
     if (entity.nomeEvento !== undefined) data.nome_evento = entity.nomeEvento || null;
-    // Converter data para UTC midnight antes de salvar, garantindo que o dia seja preservado
+    // Salvar data usando toISOString() diretamente (igual ao formulário de eventos)
+    // Isso mantém consistência: parseLocalDate cria data local, toISOString() converte para UTC
+    // Exemplo: 2026-01-31T00:00:00-03:00 → 2026-01-31T03:00:00Z
     if (entity.dataEvento !== undefined) {
       if (entity.dataEvento instanceof Date) {
-        // Converter para UTC midnight do mesmo dia para preservar o dia correto
-        data.data_evento = dateToUTCMidnight(entity.dataEvento).toISOString();
+        data.data_evento = entity.dataEvento.toISOString();
       } else {
         data.data_evento = entity.dataEvento || null;
       }

@@ -1,7 +1,7 @@
 import { BaseSupabaseRepository } from './base-supabase-repository';
 import { Evento, StatusEvento } from '@/types';
 import { generateUUID } from '@/lib/utils/uuid';
-import { getDiaSemana } from '@/lib/utils/date-helpers';
+import { getDiaSemana, dateToUTCMidnight, dateToLocalMidnight } from '@/lib/utils/date-helpers';
 
 export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
   constructor() {
@@ -9,7 +9,8 @@ export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
   }
 
   protected convertFromSupabase(row: any): Evento {
-    const dataEvento = new Date(row.data_evento);
+    // Converter data do banco (UTC) para timezone local
+    const dataEvento = row.data_evento ? dateToLocalMidnight(new Date(row.data_evento)) : new Date();
     // Recalcular dia da semana para garantir que está correto (evita problemas de timezone)
     const diaSemanaCalculado = getDiaSemana(dataEvento);
     
@@ -55,7 +56,16 @@ export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
     
     if (entity.nomeEvento !== undefined) data.nome_evento = entity.nomeEvento || null;
     if (entity.clienteId !== undefined) data.cliente_id = entity.clienteId;
-    if (entity.dataEvento !== undefined) data.data_evento = entity.dataEvento instanceof Date ? entity.dataEvento.toISOString() : entity.dataEvento;
+    // Salvar data usando toISOString() diretamente (mantém consistência com parseLocalDate)
+    // parseLocalDate cria data local (ex: 2026-01-31T00:00:00-03:00)
+    // toISOString() converte para UTC (ex: 2026-01-31T03:00:00Z)
+    if (entity.dataEvento !== undefined) {
+      if (entity.dataEvento instanceof Date) {
+        data.data_evento = entity.dataEvento.toISOString();
+      } else {
+        data.data_evento = entity.dataEvento;
+      }
+    }
     if (entity.diaSemana !== undefined) data.dia_semana = entity.diaSemana || null;
     if (entity.local !== undefined) data.local = entity.local;
     if (entity.endereco !== undefined) data.endereco = entity.endereco || null;
