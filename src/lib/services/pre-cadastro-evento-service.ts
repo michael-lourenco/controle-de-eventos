@@ -205,17 +205,17 @@ export class PreCadastroEventoService {
       throw new Error('Tipo de evento é obrigatório');
     }
     
-    // Garantir que a data seja tratada corretamente no timezone local
-    // Se dataEvento já é um Date, usar dateToLocalMidnight para garantir timezone local
-    // Se for string, usar parseLocalDate
-    let dataEvento: Date;
-    if (preCadastro.dataEvento instanceof Date) {
-      dataEvento = dateToLocalMidnight(preCadastro.dataEvento);
-    } else if (typeof preCadastro.dataEvento === 'string') {
-      dataEvento = parseLocalDate(preCadastro.dataEvento);
-    } else {
+    // A data já vem correta do repositório (convertida para timezone local)
+    // Apenas garantir que seja um Date válido
+    if (!preCadastro.dataEvento) {
       throw new Error('Data do evento inválida');
     }
+    
+    // Se já é Date, usar diretamente (já foi convertido pelo repositório)
+    // Se for string, converter usando parseLocalDate
+    const dataEvento = preCadastro.dataEvento instanceof Date 
+      ? preCadastro.dataEvento 
+      : parseLocalDate(preCadastro.dataEvento);
     const eventoData: Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'> = {
       nomeEvento: preCadastro.nomeEvento,
       clienteId: cliente.id,

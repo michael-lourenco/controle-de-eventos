@@ -66,6 +66,26 @@ export function formatLocalDate(date: Date): string {
 }
 
 /**
+ * Converte uma data do timezone local para UTC midnight do mesmo dia civil.
+ * Usado para salvar datas no banco de dados garantindo que o dia seja preservado.
+ * 
+ * Exemplo:
+ * - Data local: 2025-01-31T00:00:00-03:00 (31 de janeiro no Brasil)
+ * - Retorna: 2025-01-31T00:00:00Z (31 de janeiro em UTC)
+ * 
+ * @param date - Date no timezone local
+ * @returns Date em UTC à meia-noite do mesmo dia
+ */
+export function dateToUTCMidnight(date: Date): Date {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  
+  // Criar data em UTC à meia-noite do mesmo dia
+  return new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+}
+
+/**
  * Calcula o dia da semana de uma data, usando apenas ano, mês e dia
  * para evitar problemas de timezone.
  * 

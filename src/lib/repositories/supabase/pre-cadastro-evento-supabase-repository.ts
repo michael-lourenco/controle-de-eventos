@@ -2,6 +2,7 @@ import { BaseSupabaseRepository } from './base-supabase-repository';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { PreCadastroEvento, StatusPreCadastro } from '@/types';
 import { generateUUID } from '@/lib/utils/uuid';
+import { dateToLocalMidnight, dateToUTCMidnight } from '@/lib/utils/date-helpers';
 
 export class PreCadastroEventoSupabaseRepository extends BaseSupabaseRepository<PreCadastroEvento> {
   constructor() {
@@ -25,7 +26,8 @@ export class PreCadastroEventoSupabaseRepository extends BaseSupabaseRepository<
       
       // Dados do Evento
       nomeEvento: row.nome_evento,
-      dataEvento: row.data_evento ? new Date(row.data_evento) : undefined,
+      // Converter data do banco (UTC) para timezone local
+      dataEvento: row.data_evento ? dateToLocalMidnight(new Date(row.data_evento)) : undefined,
       local: row.local,
       endereco: row.endereco,
       tipoEvento: row.tipo_evento,
@@ -73,7 +75,15 @@ export class PreCadastroEventoSupabaseRepository extends BaseSupabaseRepository<
     
     // Dados do Evento
     if (entity.nomeEvento !== undefined) data.nome_evento = entity.nomeEvento || null;
-    if (entity.dataEvento !== undefined) data.data_evento = entity.dataEvento instanceof Date ? entity.dataEvento.toISOString() : entity.dataEvento || null;
+    // Converter data para UTC midnight antes de salvar, garantindo que o dia seja preservado
+    if (entity.dataEvento !== undefined) {
+      if (entity.dataEvento instanceof Date) {
+        // Converter para UTC midnight do mesmo dia para preservar o dia correto
+        data.data_evento = dateToUTCMidnight(entity.dataEvento).toISOString();
+      } else {
+        data.data_evento = entity.dataEvento || null;
+      }
+    }
     if (entity.local !== undefined) data.local = entity.local || null;
     if (entity.endereco !== undefined) data.endereco = entity.endereco || null;
     if (entity.tipoEvento !== undefined) data.tipo_evento = entity.tipoEvento || null;
