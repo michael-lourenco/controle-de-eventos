@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { AdminPasswordResetTokenRepository } from '@/lib/repositories/admin-password-reset-token-repository';
 import { 
   handleApiError,
   createApiResponse,
@@ -7,9 +7,6 @@ import {
   getRequestBody
 } from '@/lib/api/route-helpers';
 
-/**
- * Converte um token curto no código do Firebase
- */
 export async function POST(request: NextRequest) {
   try {
     const body = await getRequestBody<{ token: string }>(request);
@@ -19,7 +16,7 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Token é obrigatório', 400);
     }
 
-    const tokenRepo = repositoryFactory.getPasswordResetTokenRepository();
+    const tokenRepo = new AdminPasswordResetTokenRepository();
     const tokenData = await tokenRepo.findByToken(token);
 
     if (!tokenData) {

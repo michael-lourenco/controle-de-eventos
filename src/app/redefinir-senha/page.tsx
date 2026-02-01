@@ -52,14 +52,15 @@ function RedefinirSenhaForm() {
         body: JSON.stringify({ token }),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
+      const data = responseData.data ?? responseData;
 
       if (response.ok && data.success) {
         setCode(data.code);
         setEmail(data.email);
         verifyCode(data.code);
       } else {
-        setError(data.error || 'Token inválido ou expirado');
+        setError(data.error || responseData.error || 'Token inválido ou expirado');
         setVerifying(false);
       }
     } catch (err) {
@@ -78,13 +79,14 @@ function RedefinirSenhaForm() {
         body: JSON.stringify({ code: resetCode }),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
+      const data = responseData.data ?? responseData;
 
       if (response.ok && data.success) {
-        setEmail(data.email);
+        setEmail(data.email ?? email);
         setVerifying(false);
       } else {
-        setError(data.error || 'Código de redefinição inválido ou expirado');
+        setError(data.error || responseData.error || 'Código de redefinição inválido ou expirado');
         setVerifying(false);
       }
     } catch (err) {
@@ -136,15 +138,16 @@ function RedefinirSenhaForm() {
         body: JSON.stringify({ code, newPassword: password }),
       });
 
-      const data = await response.json();
+      const responseData = await response.json();
+      const data = responseData.data ?? responseData;
 
-      if (response.ok && data.success) {
+      if (response.ok && data?.success) {
         setSuccess(true);
         setTimeout(() => {
           router.push('/painel');
         }, 3000);
       } else {
-        setError(data.error || 'Erro ao redefinir senha');
+        setError(data?.error || responseData.error || 'Erro ao redefinir senha');
       }
     } catch (err) {
       setError('Erro inesperado. Tente novamente.');
