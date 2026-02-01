@@ -11,6 +11,7 @@ import {
 } from '@/types';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { usePlano } from '@/lib/hooks/usePlano';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -43,6 +44,8 @@ export default function PagamentoHistorico({
   evento 
 }: PagamentoHistoricoProps) {
   const { userId } = useCurrentUser();
+  const { temPermissao } = usePlano();
+  const [temComprovantes, setTemComprovantes] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [pagamentoEditando, setPagamentoEditando] = useState<Pagamento | null>(null);
   const [pagamentoParaExcluir, setPagamentoParaExcluir] = useState<Pagamento | null>(null);
@@ -96,9 +99,12 @@ export default function PagamentoHistorico({
     }
   }, [eventoId, evento?.valorTotal, evento?.diaFinalPagamento, userId]);
 
-  // Carregar anexos dos pagamentos
+  useEffect(() => {
+    temPermissao('PAGAMENTOS_COMPROVANTES').then(setTemComprovantes);
+  }, [temPermissao]);
+
   const carregarAnexos = async (pagamentoId: string) => {
-    if (!userId) return;
+    if (!userId || !temComprovantes) return;
     
     try {
       // Primeiro, tentar migrar anexos da pasta temp se existirem
@@ -467,6 +473,7 @@ export default function PagamentoHistorico({
                     </div>
                     
                     <div className="flex space-x-1 flex-shrink-0 ml-2">
+                      {temComprovantes && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -489,6 +496,7 @@ export default function PagamentoHistorico({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      )}
                       <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -617,8 +625,7 @@ export default function PagamentoHistorico({
                     </div>
                   )}
 
-                  {/* Seção de Anexos Expandível */}
-                  {anexosExpandidos.has(pagamento.id) && (
+                  {temComprovantes && anexosExpandidos.has(pagamento.id) && (
                     <div className="mt-3 border-t pt-3">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-sm font-medium text-text-primary">Comprovantes</h4>
