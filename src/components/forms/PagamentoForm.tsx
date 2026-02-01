@@ -14,6 +14,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseLocalDate } from '@/lib/utils/date-helpers';
+import { usePlano } from '@/lib/hooks/usePlano';
 
 interface PagamentoFormProps {
   pagamento?: Pagamento;
@@ -39,6 +40,8 @@ const formaPagamentoOptions = [
 ];
 
 export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: PagamentoFormProps) {
+  const { temPermissao } = usePlano();
+  const [temComprovantes, setTemComprovantes] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     valor: 0,
     dataPagamento: '',
@@ -55,6 +58,10 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    temPermissao('PAGAMENTOS_COMPROVANTES').then(setTemComprovantes);
+  }, [temPermissao]);
+
+  useEffect(() => {
     if (pagamento) {
       setFormData({
         valor: pagamento.valor,
@@ -64,9 +71,9 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         comprovante: pagamento.comprovante || ''
       });
       setValorInput(pagamento.valor === 0 ? '' : String(pagamento.valor));
-      
-      // Carregar anexos existentes para pagamentos em edição
-      carregarAnexosExistentes();
+      if (temComprovantes) {
+        carregarAnexosExistentes();
+      }
     } else {
       // Preencher dados sugeridos para novo pagamento
       const hoje = new Date();
@@ -82,7 +89,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
       });
       setValorInput(valorArredondado === 0 ? '' : String(valorArredondado));
     }
-  }, [pagamento, evento]);
+  }, [pagamento, evento, temComprovantes]);
 
   const carregarAnexosExistentes = async () => {
     if (!pagamento?.id) return;
@@ -121,9 +128,8 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
   };
 
   const handleFileUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !temComprovantes) return;
 
-    // Para novos pagamentos, armazenar arquivos temporariamente
     if (!pagamento?.id) {
       const novosArquivos = Array.from(files);
       setAnexosTemporarios(prev => [...prev, ...novosArquivos]);
@@ -274,8 +280,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
       // Salvar pagamento
       const pagamentoSalvo = await onSave(pagamentoData as Pagamento);
       
-      // Se há anexos temporários, fazer upload após salvar
-      if (anexosTemporarios.length > 0 && pagamentoSalvo?.id) {
+      if (anexosTemporarios.length > 0 && pagamentoSalvo?.id && temComprovantes) {
         await uploadAnexosTemporarios(pagamentoSalvo.id);
       }
     } catch (error) {
@@ -376,7 +381,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
             placeholder="Número do comprovante ou referência"
           />
 
-          {/* Seção de Upload de Arquivos */}
+          {temComprovantes && (
           <div className="space-y-3">
             <label className="text-sm font-medium text-gray-700">
               Comprovantes (Arquivos)
@@ -475,6 +480,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
               <p className="text-sm text-red-600">{errors.upload}</p>
             )}
           </div>
+          )}
 
           <Textarea
             label="Observações"

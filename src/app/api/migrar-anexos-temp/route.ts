@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { s3Service } from '@/lib/s3-service';
 import { anexoPagamentoRepository } from '@/lib/repositories/anexo-pagamento-repository';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
+import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
+import { AdminFuncionalidadeRepository } from '@/lib/repositories/admin-funcionalidade-repository';
+import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
+import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
+import { getAuthenticatedUser, createErrorResponse } from '@/lib/api/route-helpers';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    const user = await getAuthenticatedUser();
+
+    const funcionalidadeRepo = new AdminFuncionalidadeRepository();
+    const assinaturaRepo = new AdminAssinaturaRepository();
+    const userRepo = new AdminUserRepository();
+    const funcionalidadeService = new FuncionalidadeService(funcionalidadeRepo, assinaturaRepo, userRepo);
+    const temPermissao = await funcionalidadeService.verificarPermissao(user.id, 'PAGAMENTOS_COMPROVANTES');
+    if (!temPermissao) {
+      return createErrorResponse(
+        'Esta funcionalidade está disponível apenas no plano Premium.',
+        403
+      );
     }
 
     const { eventoId, pagamentoIdTemp, pagamentoIdReal } = await request.json();
@@ -20,9 +30,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Buscar anexos da pasta temp
     const anexosTemp = await anexoPagamentoRepository.getAnexosPorPagamento(
-      session.user.id,
+      user.id,
       eventoId,
       pagamentoIdTemp
     );
@@ -42,7 +51,7 @@ export async function POST(request: NextRequest) {
       try {
         // Criar novo anexo com o ID correto do pagamento
         const novoAnexo = await anexoPagamentoRepository.createAnexo(
-          session.user.id,
+          user.id,
           eventoId,
           pagamentoIdReal,
           {
@@ -62,7 +71,7 @@ export async function POST(request: NextRequest) {
 
         // Deletar anexo da pasta temp
         await anexoPagamentoRepository.deleteAnexo(
-          session.user.id,
+          user.id,
           eventoId,
           pagamentoIdTemp,
           anexo.id

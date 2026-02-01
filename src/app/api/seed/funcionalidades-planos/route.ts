@@ -167,7 +167,6 @@ export async function POST(request: NextRequest) {
           funcionalidadesMap.get('EVENTOS_LIMITADOS')?.id,
           funcionalidadesMap.get('CLIENTES_LIMITADOS')?.id,
           funcionalidadesMap.get('PAGAMENTOS_REGISTRAR')?.id,
-          funcionalidadesMap.get('PAGAMENTOS_COMPROVANTES')?.id,
           funcionalidadesMap.get('PAGAMENTOS_CONTROLE_PERSONALIZADO')?.id,
           funcionalidadesMap.get('TIPOS_PERSONALIZADO')?.id,
           funcionalidadesMap.get('RELATORIOS_BASICOS')?.id,
