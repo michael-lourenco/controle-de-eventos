@@ -891,7 +891,8 @@ export class DataService {
           throw new Error(errorData.error || 'Erro ao criar custo');
         }
 
-        const data = await response.json();
+        const responseData = await response.json();
+        const data = responseData.data ?? responseData;
         return {
           id: data.id,
           eventoId: data.eventoId,
