@@ -40,6 +40,7 @@ import { RelatoriosDiariosSupabaseRepository } from './supabase/relatorios-diari
 import { RelatorioCacheSupabaseRepository } from './supabase/relatorio-cache-supabase-repository';
 import { AnexoEventoSupabaseRepository } from './supabase/anexo-evento-supabase-repository';
 import { AnexoPagamentoSupabaseRepository } from './supabase/anexo-pagamento-supabase-repository';
+import { AnexoCustoSupabaseRepository } from './supabase/anexo-custo-supabase-repository';
 import { PreCadastroEventoSupabaseRepository } from './supabase/pre-cadastro-evento-supabase-repository';
 import { PreCadastroServicoSupabaseRepository } from './supabase/pre-cadastro-servico-supabase-repository';
 import { ValoresAtrasadosSupabaseRepository } from './supabase/valores-atrasados-supabase-repository';
@@ -70,6 +71,7 @@ export class RepositoryFactory {
   private relatorioCacheRepository: RelatorioCacheSupabaseRepository;
   private anexoEventoRepository: AnexoEventoSupabaseRepository;
   private anexoPagamentoRepository: AnexoPagamentoSupabaseRepository;
+  private anexoCustoRepository: AnexoCustoSupabaseRepository;
   private preCadastroEventoRepository: PreCadastroEventoSupabaseRepository;
   private preCadastroServicoRepository: PreCadastroServicoSupabaseRepository;
   private valoresAtrasadosRepository: ValoresAtrasadosSupabaseRepository;
@@ -108,6 +110,7 @@ export class RepositoryFactory {
     this.relatorioCacheRepository = new RelatorioCacheSupabaseRepository();
     this.anexoEventoRepository = new AnexoEventoSupabaseRepository();
     this.anexoPagamentoRepository = new AnexoPagamentoSupabaseRepository();
+    this.anexoCustoRepository = new AnexoCustoSupabaseRepository();
     this.preCadastroEventoRepository = new PreCadastroEventoSupabaseRepository();
     this.preCadastroServicoRepository = new PreCadastroServicoSupabaseRepository();
     this.valoresAtrasadosRepository = new ValoresAtrasadosSupabaseRepository();
@@ -201,6 +204,10 @@ export class RepositoryFactory {
 
   public getAnexoPagamentoRepository(): AnexoPagamentoSupabaseRepository {
     return this.anexoPagamentoRepository;
+  }
+
+  public getAnexoCustoRepository(): AnexoCustoSupabaseRepository {
+    return this.anexoCustoRepository;
   }
 
   public getPreCadastroEventoRepository(): PreCadastroEventoSupabaseRepository {

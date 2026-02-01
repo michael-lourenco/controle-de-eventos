@@ -205,17 +205,28 @@ export class PreCadastroEventoService {
       throw new Error('Tipo de evento é obrigatório');
     }
     
-    // A data já vem correta do repositório (convertida para timezone local)
-    // Apenas garantir que seja um Date válido
+    // A data do pré-cadastro vem do banco como UTC (ex: 2026-01-31T00:00:00Z)
+    // Precisamos criar uma data local a partir dos componentes UTC para que,
+    // quando salva com toISOString(), resulte em 2026-01-31T03:00:00Z (igual ao formulário)
     if (!preCadastro.dataEvento) {
       throw new Error('Data do evento inválida');
     }
     
-    // Se já é Date, usar diretamente (já foi convertido pelo repositório)
-    // Se for string, converter usando parseLocalDate
-    const dataEvento = preCadastro.dataEvento instanceof Date 
-      ? preCadastro.dataEvento 
-      : parseLocalDate(preCadastro.dataEvento);
+    let dataEvento: Date;
+    if (preCadastro.dataEvento instanceof Date) {
+      // Extrair ano, mês e dia da data (que pode estar em UTC ou local)
+      // e criar uma nova data local à meia-noite
+      const year = preCadastro.dataEvento.getUTCFullYear();
+      const month = preCadastro.dataEvento.getUTCMonth();
+      const day = preCadastro.dataEvento.getUTCDate();
+      // Criar data local à meia-noite (igual ao parseLocalDate)
+      dataEvento = new Date(year, month, day, 0, 0, 0, 0);
+    } else if (typeof preCadastro.dataEvento === 'string') {
+      // Se for string, converter usando parseLocalDate
+      dataEvento = parseLocalDate(preCadastro.dataEvento);
+    } else {
+      throw new Error('Data do evento inválida');
+    }
     const eventoData: Omit<Evento, 'id' | 'dataCadastro' | 'dataAtualizacao'> = {
       nomeEvento: preCadastro.nomeEvento,
       clienteId: cliente.id,

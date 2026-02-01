@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import CustoForm from '@/components/forms/CustoForm';
 import { 
   CustoEvento, 
-  Evento
+  Evento,
+  AnexoCusto
 } from '@/types';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { usePlano } from '@/lib/hooks/usePlano';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -19,7 +21,12 @@ import {
   CalculatorIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
-  TagIcon
+  DocumentIcon,
+  TagIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  EyeIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -35,6 +42,10 @@ export default function CustosEvento({
   onCustosChange 
 }: CustosEventoProps) {
   const { userId } = useCurrentUser();
+  const { temPermissao } = usePlano();
+  const [temAnexosCusto, setTemAnexosCusto] = useState(false);
+  const [anexosPorCusto, setAnexosPorCusto] = useState<Record<string, AnexoCusto[]>>({});
+  const [anexosExpandidos, setAnexosExpandidos] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [custoEditando, setCustoEditando] = useState<CustoEvento | null>(null);
   const [custoParaExcluir, setCustoParaExcluir] = useState<CustoEvento | null>(null);
@@ -63,6 +74,57 @@ export default function CustosEvento({
       carregarResumoCustos();
     }
   }, [evento.id, custos, userId]);
+
+  useEffect(() => {
+    temPermissao('ANEXOS_CUSTO').then(setTemAnexosCusto);
+  }, [temPermissao]);
+
+  const carregarAnexos = async (custoId: string) => {
+    if (!userId || !temAnexosCusto) return;
+    try {
+      const response = await fetch(
+        `/api/anexos-custo?eventoId=${evento.id}&custoId=${custoId}`
+      );
+      if (response.ok) {
+        const result = await response.json();
+        const data = result.data || result;
+        const anexosList = data?.anexos || [];
+        setAnexosPorCusto(prev => ({ ...prev, [custoId]: anexosList }));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar anexos:', error);
+    }
+  };
+
+  const toggleAnexos = (custoId: string) => {
+    setAnexosExpandidos(prev => {
+      const next = new Set(prev);
+      if (next.has(custoId)) {
+        next.delete(custoId);
+      } else {
+        next.add(custoId);
+        carregarAnexos(custoId);
+      }
+      return next;
+    });
+  };
+
+  const deletarAnexo = async (custoId: string, anexoId: string) => {
+    try {
+      const response = await fetch(
+        `/api/anexos-custo?eventoId=${evento.id}&custoId=${custoId}&anexoId=${anexoId}`,
+        { method: 'DELETE' }
+      );
+      if (response.ok) {
+        setAnexosPorCusto(prev => ({
+          ...prev,
+          [custoId]: (prev[custoId] || []).filter(a => a.id !== anexoId)
+        }));
+      }
+    } catch (error) {
+      console.error('Erro ao deletar anexo:', error);
+    }
+  };
 
   const getTipoCustoColor = (nome: string) => {
     // Gera uma cor baseada no nome do tipo de custo
@@ -95,27 +157,26 @@ export default function CustosEvento({
     setCustoParaExcluir(custo);
   };
 
-  const handleSalvarCusto = async (custoData: CustoEvento) => {
+  const handleSalvarCusto = async (custoData: CustoEvento): Promise<CustoEvento | void> => {
     if (!userId) {
       return;
     }
-    
+
     try {
+      let custoSalvo: CustoEvento;
       if (custoEditando) {
-        await dataService.updateCustoEvento(userId, evento.id, custoEditando.id, custoData);
+        custoSalvo = await dataService.updateCustoEvento(userId, evento.id, custoEditando.id, custoData);
       } else {
-        await dataService.createCustoEvento(userId, evento.id, custoData);
+        custoSalvo = await dataService.createCustoEvento(userId, evento.id, custoData);
       }
-      
-      // Recarregar resumo de custos
+
       const resumo = await dataService.getResumoCustosPorEvento(userId, evento.id);
       setResumoCustos(resumo);
-      
       onCustosChange();
       setShowForm(false);
       setCustoEditando(null);
+      return custoSalvo;
     } catch (error) {
-      // Erro ao salvar custo
     }
   };
 
@@ -313,6 +374,30 @@ export default function CustosEvento({
                     </div>
                     
                     <div className="flex space-x-1 flex-shrink-0 ml-2">
+                      {temAnexosCusto && (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleAnexos(custo.id)}
+                                className="p-2 text-blue-600 hover:text-blue-700"
+                              >
+                                <DocumentIcon className="h-4 w-4" />
+                                {anexosExpandidos.has(custo.id) ? (
+                                  <ChevronDownIcon className="h-3 w-3 ml-1" />
+                                ) : (
+                                  <ChevronRightIcon className="h-3 w-3 ml-1" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                              <p>Ver anexos</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -359,6 +444,30 @@ export default function CustosEvento({
                         </div>
                       </div>
                       <div className="flex space-x-1 flex-shrink-0">
+                        {temAnexosCusto && (
+                          <TooltipProvider delayDuration={200}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => toggleAnexos(custo.id)}
+                                  className="p-2 text-blue-600 hover:text-blue-700"
+                                >
+                                  <DocumentIcon className="h-4 w-4" />
+                                  {anexosExpandidos.has(custo.id) ? (
+                                    <ChevronDownIcon className="h-3 w-3 ml-1" />
+                                  ) : (
+                                    <ChevronRightIcon className="h-3 w-3 ml-1" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p>Ver anexos</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                         <TooltipProvider delayDuration={200}>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -418,6 +527,58 @@ export default function CustosEvento({
                   {custo.observacoes && (
                     <div className="mt-2 text-sm text-text-secondary bg-surface/50 p-2 rounded border border-border">
                       <strong className="text-text-primary">Observações:</strong> {custo.observacoes}
+                    </div>
+                  )}
+
+                  {temAnexosCusto && anexosExpandidos.has(custo.id) && (
+                    <div className="mt-3 border-t pt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-text-primary">Anexos</h4>
+                        <span className="text-xs text-text-secondary">
+                          {anexosPorCusto[custo.id]?.length || 0} arquivo(s)
+                        </span>
+                      </div>
+                      {anexosPorCusto[custo.id]?.length > 0 ? (
+                        <div className="space-y-2">
+                          {anexosPorCusto[custo.id].map((anexo) => (
+                            <div key={anexo.id} className="flex items-center justify-between p-2 bg-surface rounded border border-border">
+                              <div className="flex items-center space-x-2">
+                                <DocumentIcon className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm text-text-primary">{anexo.nome}</span>
+                                <span className="text-xs text-text-secondary">
+                                  ({(anexo.tamanho / 1024 / 1024).toFixed(2)} MB)
+                                </span>
+                              </div>
+                              <div className="flex space-x-1">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => window.open(anexo.url, '_blank')}
+                                  title="Visualizar arquivo"
+                                  className="text-blue-600 hover:text-blue-700"
+                                >
+                                  <EyeIcon className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => deletarAnexo(custo.id, anexo.id)}
+                                  title="Remover arquivo"
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <XMarkIcon className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-text-secondary">
+                          <DocumentIcon className="h-8 w-8 mx-auto mb-2 text-text-muted" />
+                          <p className="text-sm">Nenhum anexo</p>
+                          <p className="text-xs mt-1">Edite o custo para adicionar anexos</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

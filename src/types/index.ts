@@ -271,6 +271,20 @@ export interface AnexoPagamento {
   dataCadastro: Date;
 }
 
+export interface AnexoCusto {
+  id: string;
+  userId: string;
+  eventoId: string;
+  custoId: string;
+  nome: string;
+  tipo: string;
+  tamanho: number;
+  s3Key: string;
+  url: string;
+  dataUpload: Date;
+  dataCadastro: Date;
+}
+
 export interface Promoter {
   id: string;
   nome: string;

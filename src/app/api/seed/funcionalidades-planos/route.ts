@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
-import { FuncionalidadeRepository } from '@/lib/repositories/funcionalidade-repository';
-import { PlanoRepository } from '@/lib/repositories/plano-repository';
+import { AdminFuncionalidadeRepository } from '@/lib/repositories/admin-funcionalidade-repository';
+import { AdminPlanoRepository } from '@/lib/repositories/admin-plano-repository';
 import { Funcionalidade, Plano } from '@/types/funcionalidades';
 
 const FUNCIONALIDADES_INICIAIS: Omit<Funcionalidade, 'id' | 'dataCadastro'>[] = [
@@ -32,6 +32,7 @@ const FUNCIONALIDADES_INICIAIS: Omit<Funcionalidade, 'id' | 'dataCadastro'>[] = 
   { codigo: 'UPLOAD_ANEXOS', nome: 'Upload de Anexos', descricao: 'Upload de anexos (comprovantes de pagamentos, contratos, molduras e arquivos de cada Evento)', categoria: 'EVENTOS', ativo: true, ordem: 40 },
   { codigo: 'BOTAO_COPIAR', nome: 'Botão Copiar', descricao: 'Copiar informações do evento para enviar para Colaboradores e Cerimonialistas', categoria: 'EVENTOS', ativo: true, ordem: 41 },
   { codigo: 'CONTRATO_AUTOMATIZADO', nome: 'Preenchimento Automatizado de Contrato', descricao: 'Preenchimento automatizado de contrato com dados do evento', categoria: 'EVENTOS', ativo: true, ordem: 42 },
+  { codigo: 'ANEXOS_CUSTO', nome: 'Anexos de Custo', descricao: 'Upload de anexos para custos', categoria: 'FINANCEIRO', ativo: true, ordem: 43 },
 ];
 
 export async function POST(request: NextRequest) {
@@ -65,8 +66,8 @@ export async function POST(request: NextRequest) {
       // Em desenvolvimento, permitir sem autenticação
     }
 
-    const funcionalidadeRepo = new FuncionalidadeRepository();
-    const planoRepo = new PlanoRepository();
+    const funcionalidadeRepo = new AdminFuncionalidadeRepository();
+    const planoRepo = new AdminPlanoRepository();
 
     // Se reset=true, limpar tudo primeiro
     if (reset) {
@@ -201,6 +202,7 @@ export async function POST(request: NextRequest) {
           funcionalidadesMap.get('UPLOAD_ANEXOS')?.id,
           funcionalidadesMap.get('BOTAO_COPIAR')?.id,
           funcionalidadesMap.get('CONTRATO_AUTOMATIZADO')?.id,
+          funcionalidadesMap.get('ANEXOS_CUSTO')?.id,
         ].filter(Boolean) as string[],
         preco: 149.90,
         intervalo: 'mensal',

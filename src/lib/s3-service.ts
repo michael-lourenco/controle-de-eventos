@@ -79,6 +79,29 @@ export class S3Service {
     return `users/${sanitizedUserId}/eventos/${sanitizedEventoId}/pagamentos/${sanitizedPagamentoId}/comprovantes/${timestamp}_${sanitizedFileName}`;
   }
 
+  private generateS3KeyCusto(
+    userId: string,
+    eventoId: string,
+    custoId: string,
+    fileName: string
+  ): string {
+    if (!userId || !eventoId || !custoId || !fileName) {
+      throw new Error('userId, eventoId, custoId e fileName são obrigatórios');
+    }
+
+    const timestamp = Date.now();
+    const sanitizedUserId = this.sanitizePathSegment(userId);
+    const sanitizedEventoId = this.sanitizePathSegment(eventoId);
+    const sanitizedCustoId = this.sanitizePathSegment(custoId);
+    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+
+    if (!sanitizedFileName || sanitizedFileName.trim() === '') {
+      throw new Error('Nome do arquivo inválido após sanitização');
+    }
+
+    return `users/${sanitizedUserId}/eventos/${sanitizedEventoId}/custos/${sanitizedCustoId}/anexos/${timestamp}_${sanitizedFileName}`;
+  }
+
   async uploadFile(
     file: File,
     userId: string,
@@ -236,6 +259,55 @@ export class S3Service {
       };
     } catch (error) {
       console.error('Erro ao fazer upload de comprovante para S3:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      };
+    }
+  }
+
+  async uploadFileCusto(
+    file: File,
+    userId: string,
+    eventoId: string,
+    custoId: string
+  ): Promise<UploadResult> {
+    try {
+      const s3Key = this.generateS3KeyCusto(userId, eventoId, custoId, file.name);
+
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const command = new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: s3Key,
+        Body: buffer,
+        ContentType: file.type,
+        Metadata: {
+          userId,
+          eventoId,
+          custoId,
+          originalName: file.name,
+          uploadedAt: new Date().toISOString(),
+        },
+      });
+
+      await s3Client.send(command);
+
+      const getCommand = new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: s3Key,
+      });
+
+      const url = await getSignedUrl(s3Client, getCommand, { expiresIn: 3600 * 24 * 7 });
+
+      return {
+        success: true,
+        url,
+        key: s3Key,
+      };
+    } catch (error) {
+      console.error('Erro ao fazer upload de anexo de custo para S3:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido',

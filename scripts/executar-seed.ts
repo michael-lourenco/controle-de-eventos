@@ -34,6 +34,7 @@ const FUNCIONALIDADES_INICIAIS: Omit<Funcionalidade, 'id' | 'dataCadastro'>[] = 
   { codigo: 'UPLOAD_ANEXOS', nome: 'Upload de Anexos', descricao: 'Upload de anexos (comprovantes de pagamentos, contratos, molduras e arquivos de cada Evento)', categoria: 'EVENTOS', ativo: true, ordem: 40 },
   { codigo: 'BOTAO_COPIAR', nome: 'Botão Copiar', descricao: 'Copiar informações do evento para enviar para Colaboradores e Cerimonialistas', categoria: 'EVENTOS', ativo: true, ordem: 41 },
   { codigo: 'CONTRATO_AUTOMATIZADO', nome: 'Preenchimento Automatizado de Contrato', descricao: 'Preenchimento automatizado de contrato com dados do evento', categoria: 'EVENTOS', ativo: true, ordem: 42 },
+  { codigo: 'ANEXOS_CUSTO', nome: 'Anexos de Custo', descricao: 'Upload de anexos para custos', categoria: 'FINANCEIRO', ativo: true, ordem: 43 },
 ];
 
 async function executarSeed() {
@@ -142,6 +143,7 @@ async function executarSeed() {
           funcionalidadesMap.get('UPLOAD_ANEXOS')?.id,
           funcionalidadesMap.get('BOTAO_COPIAR')?.id,
           funcionalidadesMap.get('CONTRATO_AUTOMATIZADO')?.id,
+          funcionalidadesMap.get('ANEXOS_CUSTO')?.id,
         ].filter(Boolean) as string[],
         preco: 149.90,
         intervalo: 'mensal',

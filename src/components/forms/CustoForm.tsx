@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,15 +8,17 @@ import { Textarea } from '@/components/ui/textarea';
 import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import { 
   CustoEvento, 
-  Evento
+  Evento,
+  AnexoCusto
 } from '@/types';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { usePlano } from '@/lib/hooks/usePlano';
 
 interface CustoFormProps {
   custo?: CustoEvento;
   evento: Evento;
-  onSave: (custo: CustoEvento) => void;
+  onSave: (custo: CustoEvento) => void | Promise<CustoEvento | void>;
   onCancel: () => void;
 }
 
@@ -30,6 +32,13 @@ interface FormData {
 
 export default function CustoForm({ custo, evento, onSave, onCancel }: CustoFormProps) {
   const { userId } = useCurrentUser();
+  const { temPermissao } = usePlano();
+  const [temAnexosCusto, setTemAnexosCusto] = useState(false);
+  const [anexos, setAnexos] = useState<AnexoCusto[]>([]);
+  const [anexosTemporarios, setAnexosTemporarios] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData>({
     tipoCustoId: '',
     valor: 0,
@@ -38,7 +47,6 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
   });
 
   const [valorInput, setValorInput] = useState<string>('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [tiposCusto, setTiposCusto] = useState<Array<{
     id: string;
     nome: string;
@@ -84,6 +92,116 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
     }
   }, [custo]);
 
+  useEffect(() => {
+    temPermissao('ANEXOS_CUSTO').then(setTemAnexosCusto);
+  }, [temPermissao]);
+
+  const carregarAnexosExistentes = async () => {
+    if (!custo?.id) return;
+    try {
+      const response = await fetch(
+        `/api/anexos-custo?eventoId=${evento.id}&custoId=${custo.id}`
+      );
+      if (response.ok) {
+        const result = await response.json();
+        const data = result.data || result;
+        const anexosList = data?.anexos || [];
+        setAnexos(anexosList);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar anexos existentes:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (custo?.id && temAnexosCusto) {
+      carregarAnexosExistentes();
+    }
+  }, [custo?.id, temAnexosCusto]);
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !temAnexosCusto) return;
+    if (!custo?.id) {
+      const novosArquivos = Array.from(files);
+      setAnexosTemporarios(prev => [...prev, ...novosArquivos]);
+      return;
+    }
+    setUploading(true);
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', file);
+        formDataUpload.append('eventoId', evento.id);
+        formDataUpload.append('custoId', custo.id);
+        const response = await fetch('/api/upload-anexo-custo', {
+          method: 'POST',
+          body: formDataUpload,
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+          throw new Error(errorData.error || 'Erro no upload');
+        }
+        const result = await response.json();
+        const data = result.data || result;
+        const anexo = data?.anexo || result.anexo;
+        if (!anexo) throw new Error('Anexo não retornado na resposta');
+        return anexo;
+      });
+      const uploadedAnexos = await Promise.all(uploadPromises);
+      setAnexos(prev => [...prev, ...uploadedAnexos]);
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      setErrors(prev => ({ ...prev, upload: 'Erro ao fazer upload dos arquivos' }));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteAnexo = async (anexoId: string) => {
+    try {
+      const response = await fetch(
+        `/api/anexos-custo?eventoId=${evento.id}&custoId=${custo?.id}&anexoId=${anexoId}`,
+        { method: 'DELETE' }
+      );
+      if (response.ok) {
+        setAnexos(prev => prev.filter(anexo => anexo.id !== anexoId));
+      }
+    } catch (error) {
+      console.error('Erro ao deletar anexo:', error);
+    }
+  };
+
+  const handleDeleteAnexoTemporario = (index: number) => {
+    setAnexosTemporarios(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadAnexosTemporarios = async (custoId: string) => {
+    if (anexosTemporarios.length === 0 || !temAnexosCusto) return;
+    setUploading(true);
+    try {
+      const uploadPromises = anexosTemporarios.map(async (file) => {
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', file);
+        formDataUpload.append('eventoId', evento.id);
+        formDataUpload.append('custoId', custoId);
+        const response = await fetch('/api/upload-anexo-custo', {
+          method: 'POST',
+          body: formDataUpload,
+        });
+        if (!response.ok) throw new Error('Erro no upload');
+        const result = await response.json();
+        return result.anexo;
+      });
+      const uploadedAnexos = await Promise.all(uploadPromises);
+      setAnexos(prev => [...prev, ...uploadedAnexos]);
+      setAnexosTemporarios([]);
+    } catch (error) {
+      console.error('Erro no upload de anexos temporários:', error);
+      setErrors(prev => ({ ...prev, upload: 'Erro ao fazer upload dos arquivos' }));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
@@ -175,7 +293,11 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         observacoes: formData.observacoes || undefined
       };
 
-      onSave(custoData as CustoEvento);
+      const resultado = await Promise.resolve(onSave(custoData as CustoEvento));
+      const custoSalvo = (resultado as CustoEvento | undefined) || custo;
+      if (anexosTemporarios.length > 0 && custoSalvo?.id && temAnexosCusto) {
+        await uploadAnexosTemporarios(custoSalvo.id);
+      }
     } catch (error) {
       console.error('Erro ao salvar custo:', error);
     }
@@ -280,6 +402,97 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
             rows={3}
             placeholder="Observações sobre este custo"
           />
+
+          {temAnexosCusto && (
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700">Anexos</label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                <div className="text-center">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.txt"
+                    onChange={(e) => handleFileUpload(e.target.files)}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="mb-2"
+                  >
+                    {uploading ? 'Enviando...' : 'Selecionar Arquivos'}
+                  </Button>
+                  <p className="text-xs text-text-secondary">
+                    Tipos aceitos: JPG, PNG, PDF, DOC, DOCX, TXT (máx. 5MB cada)
+                  </p>
+                </div>
+              </div>
+              {anexosTemporarios.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-text-primary">Arquivos selecionados (serão anexados após salvar)</h4>
+                  {anexosTemporarios.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-surface rounded border border-border">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-text-primary">{file.name}</span>
+                        <span className="text-xs text-text-muted">
+                          ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteAnexoTemporario(index)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        Remover
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {anexos.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-text-primary">Arquivos anexados</h4>
+                  {anexos.map((anexo) => (
+                    <div key={anexo.id} className="flex items-center justify-between p-2 bg-surface rounded border border-border">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-text-primary">{anexo.nome}</span>
+                        <span className="text-xs text-text-muted">
+                          ({(anexo.tamanho / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(anexo.url, '_blank')}
+                        >
+                          Ver
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteAnexo(anexo.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {errors.upload && (
+                <p className="text-sm text-red-600">{errors.upload}</p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
