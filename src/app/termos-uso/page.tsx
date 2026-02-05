@@ -462,14 +462,8 @@ export default function TermosUsoPage() {
               <p className="text-text-primary font-semibold mb-2">Clicksehub</p>
               <p className="text-text-secondary text-sm mb-1">
                 <strong>E-mail:</strong>{' '}
-                <a href="mailto:suporte@clicksehub.com" className="text-accent hover:text-accent-dark underline">
-                  suporte@clicksehub.com
-                </a>
-              </p>
-              <p className="text-text-secondary text-sm mb-1">
-                <strong>Assuntos Jurídicos:</strong>{' '}
-                <a href="mailto:juridico@clicksehub.com" className="text-accent hover:text-accent-dark underline">
-                  juridico@clicksehub.com
+                <a href="mailto:clicksehub@gmail.com" className="text-accent hover:text-accent-dark underline">
+                  clicksehub@gmail.com
                 </a>
               </p>
               <p className="text-text-secondary text-sm">

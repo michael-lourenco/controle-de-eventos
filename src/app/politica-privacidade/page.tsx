@@ -255,8 +255,8 @@ export default function PoliticaPrivacidadePage() {
             </div>
             <p className="text-text-secondary leading-relaxed mt-4">
               Para exercer seus direitos, entre em contato conosco através do e-mail: 
-              <a href="mailto:privacidade@clicksehub.com" className="text-accent hover:text-accent-dark underline ml-1">
-                privacidade@clicksehub.com
+              <a href="mailto:clicksehub@gmail.com" className="text-accent hover:text-accent-dark underline ml-1">
+                clicksehub@gmail.com
               </a>
             </p>
           </CardContent>
@@ -362,8 +362,8 @@ export default function PoliticaPrivacidadePage() {
               <p className="text-text-primary font-semibold mb-2">Clicksehub</p>
               <p className="text-text-secondary text-sm mb-1">
                 <strong>E-mail:</strong>{' '}
-                <a href="mailto:privacidade@clicksehub.com" className="text-accent hover:text-accent-dark underline">
-                  privacidade@clicksehub.com
+                <a href="mailto:clicksehub@gmail.com" className="text-accent hover:text-accent-dark underline">
+                  clicksehub@gmail.com
                 </a>
               </p>
               <p className="text-text-secondary text-sm mb-1">
