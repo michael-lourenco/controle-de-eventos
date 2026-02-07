@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { s3Service } from '@/lib/s3-service';
 import { 
   getAuthenticatedUser,
   handleApiError,
@@ -29,10 +30,19 @@ export async function GET(request: NextRequest) {
       contratos = contratos.filter(c => c.status === status);
     }
 
-    // Popular modeloContrato para cada contrato
+    // Popular modeloContrato e regenerar URLs de PDF para cada contrato
     const modeloRepo = repositoryFactory.getModeloContratoRepository();
     const contratosComModelo = await Promise.all(
       contratos.map(async (contrato) => {
+        // Regenerar URL pré-assinada do PDF se o arquivo existir no S3
+        if (contrato.pdfPath) {
+          try {
+            contrato.pdfUrl = await s3Service.getSignedUrl(contrato.pdfPath, 3600 * 24 * 7);
+          } catch (error) {
+            console.error(`Erro ao gerar URL assinada para PDF ${contrato.pdfPath}:`, error);
+          }
+        }
+
         if (contrato.modeloContratoId) {
           try {
             const modelo = await modeloRepo.findById(contrato.modeloContratoId);

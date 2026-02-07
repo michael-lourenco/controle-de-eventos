@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { s3Service } from '@/lib/s3-service';
 import { 
   getAuthenticatedUser,
   handleApiError,
@@ -21,6 +22,15 @@ export async function GET(
 
     if (!contrato) {
       return createErrorResponse('Contrato não encontrado', 404);
+    }
+
+    // Regenerar URL pré-assinada do PDF se o arquivo existir no S3
+    if (contrato.pdfPath) {
+      try {
+        contrato.pdfUrl = await s3Service.getSignedUrl(contrato.pdfPath, 3600 * 24 * 7); // 7 dias
+      } catch (error) {
+        console.error(`Erro ao gerar URL assinada para PDF ${contrato.pdfPath}:`, error);
+      }
     }
 
     // Popular modeloContrato
