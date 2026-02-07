@@ -22,18 +22,6 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('Nome é obrigatório', 400);
     }
 
-    // Validar permissão para criar tipos personalizados
-    const { getServiceFactory } = await import('@/lib/factories/service-factory');
-    const serviceFactory = getServiceFactory();
-    const funcionalidadeService = serviceFactory.getFuncionalidadeService();
-    const temPermissao = await funcionalidadeService.verificarPermissao(user.id, 'TIPOS_PERSONALIZADO');
-    if (!temPermissao) {
-      return createErrorResponse(
-        'Seu plano não permite criar tipos personalizados. Esta funcionalidade está disponível apenas nos planos Profissional e Premium.',
-        403
-      );
-    }
-
     const tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
     const tipoCriado = await tipoCustoRepo.createTipoCusto(
       {

@@ -52,9 +52,11 @@ export default function NovoTemplatePage() {
           variaveis.push({ chave, label: chave.replace(/_/g, ' '), tipo: 'unica', categoria: 'configuracao' });
         });
         
-        // Variáveis customizadas
-        (metadados.customizadas || []).forEach((chave: string) => {
-          variaveis.push({ chave, label: chave.replace(/_/g, ' '), tipo: 'unica', categoria: 'customizada' });
+        // Variáveis customizadas (com tipo vindo do banco de dados)
+        (metadados.customizadas || []).forEach((item: { chave: string; tipo: 'unica' | 'multipla' } | string) => {
+          const chave = typeof item === 'string' ? item : item.chave;
+          const tipo = typeof item === 'string' ? 'unica' : (item.tipo || 'unica');
+          variaveis.push({ chave, label: chave.replace(/_/g, ' '), tipo, categoria: 'customizada' });
         });
         
         // Variáveis de evento
