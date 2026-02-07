@@ -1,3 +1,5 @@
+import { FORMATADORES_VARIAVEIS } from '@/lib/utils/formatadores';
+
 export class TemplateService {
   /**
    * Formata uma data no formato "DD de mês de YYYY" (ex: "06 de janeiro de 2026")
@@ -72,7 +74,9 @@ export class TemplateService {
       // Formatar automaticamente campos de data para formato extenso
       if (chave === 'data_evento' || chave === 'data_contrato') {
         valorString = this.formatarDataExtenso(valor);
-        console.log(`TemplateService: ${chave} formatado de "${valor}" para "${valorString}"`);
+      } else if (FORMATADORES_VARIAVEIS[chave]) {
+        // Aplicar formatação automática (CPF, CNPJ, CEP, telefone, moeda)
+        valorString = FORMATADORES_VARIAVEIS[chave](valor);
       } else {
         valorString = valor !== undefined && valor !== null ? String(valor) : '';
       }
