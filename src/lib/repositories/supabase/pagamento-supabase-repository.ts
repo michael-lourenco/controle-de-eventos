@@ -99,11 +99,16 @@ export class PagamentoSupabaseRepository extends BaseSupabaseRepository<Pagament
   }
 
   async deletePagamento(userId: string, eventoId: string, pagamentoId: string): Promise<void> {
-    await this.updatePagamento(userId, eventoId, pagamentoId, {
-      cancelado: true,
-      dataCancelamento: new Date(),
-      status: 'Cancelado'
-    });
+    const { error } = await this.supabase
+      .from(this.tableName)
+      .delete()
+      .eq('id', pagamentoId)
+      .eq('user_id', userId)
+      .eq('evento_id', eventoId);
+
+    if (error) {
+      throw new Error(`Erro ao excluir pagamento: ${error.message}`);
+    }
   }
 
   async findByEventoId(userId: string, eventoId: string): Promise<Pagamento[]> {

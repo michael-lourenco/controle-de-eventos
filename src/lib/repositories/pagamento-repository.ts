@@ -66,13 +66,8 @@ export class PagamentoRepository extends SubcollectionRepository<Pagamento> {
   }
 
   async deletePagamento(userId: string, eventoId: string, pagamentoId: string): Promise<void> {
-    // Marcação como cancelado ao invés de exclusão física
     const pagamentoRef = doc(db, COLLECTIONS.USERS, userId, COLLECTIONS.EVENTOS, eventoId, COLLECTIONS.PAGAMENTOS, pagamentoId);
-    await updateDoc(pagamentoRef, {
-      cancelado: true,
-      dataCancelamento: new Date(),
-      status: 'Cancelado'
-    });
+    await deleteDoc(pagamentoRef);
   }
 
   async findByEventoId(userId: string, eventoId: string): Promise<Pagamento[]> {

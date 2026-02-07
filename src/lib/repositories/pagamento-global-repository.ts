@@ -4,6 +4,7 @@ import {
   getDocs, 
   doc, 
   updateDoc, 
+  deleteDoc,
   setDoc,
   query, 
   where, 
@@ -155,19 +156,14 @@ export class PagamentoGlobalRepository {
   }
 
   /**
-   * Marca um pagamento como cancelado na collection global
+   * Exclui um pagamento da collection global
    */
   async deletePagamento(userId: string, eventoId: string, pagamentoId: string): Promise<void> {
     const pagamentosCollection = this.getPagamentosGlobalCollection(userId);
     const documentId = this.generateDocumentId(pagamentoId, eventoId);
     const pagamentoRef = doc(pagamentosCollection, documentId);
     
-    await updateDoc(pagamentoRef, {
-      cancelado: true,
-      dataCancelamento: Timestamp.now(),
-      status: 'Cancelado',
-      dataAtualizacao: Timestamp.now()
-    });
+    await deleteDoc(pagamentoRef);
   }
 
   /**
