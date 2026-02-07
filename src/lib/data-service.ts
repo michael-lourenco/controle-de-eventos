@@ -790,14 +790,6 @@ export class DataService {
       throw new Error('userId é obrigatório para criar tipo de custo');
     }
 
-    // Validar permissão para criar tipos personalizados (disponível nos planos PROFISSIONAL e PREMIUM)
-    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'TIPOS_PERSONALIZADO');
-    if (!temPermissao) {
-      const erro = new Error('Seu plano não permite criar tipos personalizados. Esta funcionalidade está disponível apenas nos planos Profissional e Premium.');
-      (erro as any).status = 403;
-      throw erro;
-    }
-
     // Se estiver no cliente, usar API route para evitar problemas de RLS
     const isClient = typeof window !== 'undefined';
     
@@ -1010,14 +1002,6 @@ export class DataService {
   }
 
   async createTipoServico(tipoServico: Omit<TipoServico, 'id' | 'dataCadastro'>, userId: string): Promise<TipoServico> {
-    // Validar permissão para criar tipos personalizados (disponível nos planos PROFISSIONAL e PREMIUM)
-    const temPermissao = await this.funcionalidadeService.verificarPermissao(userId, 'TIPOS_PERSONALIZADO');
-    if (!temPermissao) {
-      const erro = new Error('Seu plano não permite criar tipos personalizados. Esta funcionalidade está disponível apenas nos planos Profissional e Premium.');
-      (erro as any).status = 403;
-      throw erro;
-    }
-
     return this.tipoServicoRepo.createTipoServico(tipoServico, userId);
   }
 

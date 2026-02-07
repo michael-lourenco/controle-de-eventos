@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Layout from '@/components/Layout';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { usePlano } from '@/lib/hooks/usePlano';
 import { dataService } from '@/lib/data-service';
 import { CanalEntrada } from '@/types';
 import {
@@ -19,18 +18,15 @@ import {
   CheckIcon,
   XMarkIcon,
   ArrowPathIcon,
-  LockClosedIcon
 } from '@heroicons/react/24/outline';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Lock } from 'lucide-react';
 
 export default function CanaisEntradaPage() {
   const router = useRouter();
   const { userId } = useCurrentUser();
-  const { temPermissao, statusPlano } = usePlano();
   const [canaisEntrada, setCanaisEntrada] = useState<CanalEntrada[]>([]);
   const [canaisInativos, setCanaisInativos] = useState<CanalEntrada[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,16 +46,6 @@ export default function CanaisEntradaPage() {
     ativo: true
   });
   const [mostrarFormNovo, setMostrarFormNovo] = useState(false);
-  const [temAcessoPersonalizado, setTemAcessoPersonalizado] = useState<boolean | null>(null);
-
-  // Verificar acesso a criação personalizada
-  useEffect(() => {
-    const verificarAcesso = async () => {
-      const acesso = await temPermissao('TIPOS_PERSONALIZADO');
-      setTemAcessoPersonalizado(acesso);
-    };
-    verificarAcesso();
-  }, [temPermissao]);
 
   // Carregar canais de entrada
   useEffect(() => {
@@ -220,78 +206,22 @@ export default function CanaisEntradaPage() {
               Gerencie os canais pelos quais os clientes chegam
             </p>
           </div>
-          {temAcessoPersonalizado === true ? (
-            <TooltipProvider delayDuration={200}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => setMostrarFormNovo(true)}
-                    className="btn-add"
-                    size="icon"
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="font-medium">
-                  <p>Novo canal de entrada</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ) : (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span>
-                    <Button
-                      variant="outline"
-                      disabled
-                      className="cursor-not-allowed flex items-center gap-2"
-                    >
-                      <LockClosedIcon className="h-4 w-4" />
-                      Novo Canal
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent 
-                  side="top" 
-                  sideOffset={8}
-                  className="max-w-sm border border-warning bg-warning-bg shadow-lg p-0 z-50 rounded-md"
-                  style={{
-                    backgroundColor: 'var(--warning-bg)',
-                    borderColor: 'var(--warning)',
-                    color: 'var(--warning-text)'
-                  }}
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={() => setMostrarFormNovo(true)}
+                  className="btn-add"
+                  size="icon"
                 >
-                  <div className="p-4 space-y-4" style={{ color: 'var(--warning-text)' }}>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Lock className="h-5 w-5 flex-shrink-0" style={{ color: 'var(--warning-text)' }} />
-                        <div className="font-semibold" style={{ color: 'var(--warning-text)' }}>
-                          Acesso Bloqueado
-                        </div>
-                      </div>
-                      <div className="text-sm" style={{ color: 'var(--warning-text)', opacity: 0.8 }}>
-                        Criar tipos personalizados está disponível apenas nos planos Profissional e Premium. No plano Básico você pode usar apenas os tipos padrão.
-                      </div>
-                    </div>
-                    {statusPlano?.plano && (
-                      <div className="text-sm" style={{ color: 'var(--warning-text)', opacity: 0.8 }}>
-                        Plano atual: <span className="font-semibold" style={{ color: 'var(--warning-text)' }}>{statusPlano.plano.nome}</span>
-                      </div>
-                    )}
-                    <Button
-                      size="sm"
-                      onClick={() => router.push('/assinatura')}
-                      className="w-full"
-                      variant="default"
-                    >
-                      Ver Planos Disponíveis
-                    </Button>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+                  <PlusIcon className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="font-medium">
+                <p>Novo canal de entrada</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Abas */}

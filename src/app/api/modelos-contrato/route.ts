@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const metadados = await VariavelContratoService.obterMetadadosVariaveis(user.id);
     const todasVariaveis = [
       ...metadados.configuracoes,
-      ...metadados.customizadas,
+      ...metadados.customizadas.map(c => c.chave),
       ...metadados.evento
     ];
     

@@ -110,7 +110,7 @@ export class VariavelContratoService {
    */
   static async obterMetadadosVariaveis(userId: string): Promise<{
     configuracoes: string[];
-    customizadas: string[];
+    customizadas: { chave: string; tipo: 'unica' | 'multipla' }[];
     evento: string[];
   }> {
     const configRepo = repositoryFactory.getConfiguracaoContratoRepository();
@@ -119,7 +119,10 @@ export class VariavelContratoService {
 
     const variavelRepo = repositoryFactory.getVariavelContratoRepository();
     const variaveisCustomizadas = await variavelRepo.findAtivasByUserId(userId);
-    const customizadas = variaveisCustomizadas.map(v => v.chave);
+    const customizadas = variaveisCustomizadas.map(v => ({ 
+      chave: v.chave, 
+      tipo: v.tipo as 'unica' | 'multipla' 
+    }));
 
     // Variáveis do evento (hardcoded baseado no que ContratoService.preencherDadosDoEvento retorna)
     const evento = [
