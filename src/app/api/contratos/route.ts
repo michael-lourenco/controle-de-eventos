@@ -30,8 +30,9 @@ export async function GET(request: NextRequest) {
       contratos = contratos.filter(c => c.status === status);
     }
 
-    // Popular modeloContrato e regenerar URLs de PDF para cada contrato
+    // Popular modeloContrato, evento e regenerar URLs de PDF para cada contrato
     const modeloRepo = repositoryFactory.getModeloContratoRepository();
+    const eventoRepo = repositoryFactory.getEventoRepository();
     const contratosComModelo = await Promise.all(
       contratos.map(async (contrato) => {
         // Regenerar URL pré-assinada do PDF se o arquivo existir no S3
@@ -43,15 +44,28 @@ export async function GET(request: NextRequest) {
           }
         }
 
+        // Popular modelo do contrato
         if (contrato.modeloContratoId) {
           try {
             const modelo = await modeloRepo.findById(contrato.modeloContratoId);
-            return { ...contrato, modeloContrato: modelo || undefined };
+            contrato = { ...contrato, modeloContrato: modelo || undefined };
           } catch (error) {
             console.error(`Erro ao buscar modelo ${contrato.modeloContratoId}:`, error);
-            return contrato;
           }
         }
+
+        // Popular evento (apenas dados básicos para exibição)
+        if (contrato.eventoId) {
+          try {
+            const evento = await eventoRepo.findById(contrato.eventoId, user.id);
+            if (evento) {
+              contrato = { ...contrato, evento: { id: evento.id, nomeEvento: evento.nomeEvento } as any };
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar evento ${contrato.eventoId}:`, error);
+          }
+        }
+
         return contrato;
       })
     );
