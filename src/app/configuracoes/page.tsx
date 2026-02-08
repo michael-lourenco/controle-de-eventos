@@ -26,7 +26,7 @@ export default function ConfiguracoesPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Configuração de Contratos */}
+          {/* Dados da Empresa para gerar Contratos */}
           <Card className="cursor-pointer hover:shadow-lg transition-shadow" 
                 onClick={() => router.push('/contratos/configuracao')}>
             <CardHeader>
@@ -36,7 +36,7 @@ export default function ConfiguracoesPage() {
                 </div>
                 <div>
                   <CardTitle>Dados da Empresa</CardTitle>
-                  <CardDescription>Configuração de contratos</CardDescription>
+                  <CardDescription>Dados da Empresa para gerar Contratos</CardDescription>
                 </div>
               </div>
             </CardHeader>

@@ -167,7 +167,7 @@ export default function ConfiguracaoContratoPage() {
           </Button>
         </div>
 
-        <h1 className="text-3xl font-bold text-text-primary mb-6">Configuração de Contratos</h1>
+        <h1 className="text-3xl font-bold text-text-primary mb-6">Dados da Empresa para gerar Contratos</h1>
         <p className="text-text-secondary mb-6">
           Configure os dados fixos da sua empresa que serão usados nos contratos.
         </p>

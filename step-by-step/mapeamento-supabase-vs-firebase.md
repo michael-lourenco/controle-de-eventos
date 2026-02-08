@@ -356,7 +356,7 @@ O sistema usa um `RepositoryFactory` que decide qual repositório usar baseado n
 2. Migrar ou remover collections globais do Firebase
 3. Criar repositório Supabase para `users`
 4. Implementar repositórios para anexos (pagamento e eventos)
-5. Implementar repositórios para modelos e configuração de contratos
+5. Implementar repositórios para modelos e Dados da Empresa para gerar Contratos
 6. Avaliar necessidade de migrar collections antigas do Firebase
 
 
