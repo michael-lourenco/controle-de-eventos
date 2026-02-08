@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/toast';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { VariavelContrato } from '@/types';
 import { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
 
 const FORMATO_UNICA = '{{variavel}}';
 const FORMATO_MULTIPLA = '[variavel]';
@@ -48,11 +49,11 @@ export default function VariaveisContratoPage() {
         setVariaveis(Array.isArray(data) ? data : []);
       } else {
         const error = await response.json();
-        showToast(error.error || 'Erro ao carregar variáveis', 'error');
+        showToast(error.error || 'Erro ao carregar campos', 'error');
       }
     } catch (error) {
-      console.error('Erro ao carregar variáveis:', error);
-      showToast('Erro ao carregar variáveis', 'error');
+      console.error('Erro ao carregar campos:', error);
+      showToast('Erro ao carregar campos', 'error');
     } finally {
       setLoading(false);
     }
@@ -107,7 +108,7 @@ export default function VariaveisContratoPage() {
 
       if (response.ok) {
         showToast(
-          editandoId ? 'Variável atualizada com sucesso' : 'Variável criada com sucesso',
+          editandoId ? 'Campo atualizado com sucesso' : 'Campo criado com sucesso',
           'success'
         );
         setMostrarForm(false);
@@ -115,11 +116,11 @@ export default function VariaveisContratoPage() {
         loadVariaveis();
       } else {
         const error = await response.json();
-        showToast(error.error || 'Erro ao salvar variável', 'error');
+        showToast(error.error || 'Erro ao salvar campo', 'error');
       }
     } catch (error) {
-      console.error('Erro ao salvar variável:', error);
-      showToast('Erro ao salvar variável', 'error');
+      console.error('Erro ao salvar campo:', error);
+      showToast('Erro ao salvar campo', 'error');
     }
   };
 
@@ -137,17 +138,17 @@ export default function VariaveisContratoPage() {
       });
 
       if (response.ok) {
-        showToast('Variável excluída com sucesso', 'success');
+        showToast('Campo excluído com sucesso', 'success');
         loadVariaveis();
         setVariavelParaExcluir(null);
         setShowDeleteDialog(false);
       } else {
         const error = await response.json();
-        showToast(error.error || 'Erro ao excluir variável', 'error');
+        showToast(error.error || 'Erro ao excluir campo', 'error');
       }
     } catch (error) {
-      console.error('Erro ao excluir variável:', error);
-      showToast('Erro ao excluir variável', 'error');
+      console.error('Erro ao excluir campo:', error);
+      showToast('Erro ao excluir campo', 'error');
     }
   };
 
@@ -169,9 +170,9 @@ export default function VariaveisContratoPage() {
             Voltar
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-text-primary">Variáveis de Contrato</h1>
+            <h1 className="text-3xl font-bold text-text-primary">Campos Personalizados</h1>
             <p className="text-text-secondary mt-2">
-              Crie variáveis customizadas para usar em seus templates de contrato
+              Crie campos personalizados com valores fixos para usar nos seus modelos de contrato
             </p>
           </div>
         </div>
@@ -181,7 +182,7 @@ export default function VariaveisContratoPage() {
             <div className="flex justify-end mb-4">
               <Button onClick={handleNovo}>
                 <PlusIcon className="h-5 w-5 mr-2" />
-                Nova Variável
+                Novo Campo
               </Button>
             </div>
 
@@ -194,10 +195,10 @@ export default function VariaveisContratoPage() {
             ) : variaveisOrdenadas.length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
-                  <p className="text-text-secondary mb-4">Nenhuma variável cadastrada</p>
+                  <p className="text-text-secondary mb-4">Nenhum campo personalizado cadastrado</p>
                   <Button onClick={handleNovo}>
                     <PlusIcon className="h-5 w-5 mr-2" />
-                    Criar Primeira Variável
+                    Criar Primeiro Campo
                   </Button>
                 </CardContent>
               </Card>
@@ -260,20 +261,30 @@ export default function VariaveisContratoPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {editandoId ? 'Editar Variável' : 'Nova Variável'}
+                {editandoId ? 'Editar Campo' : 'Novo Campo'}
               </CardTitle>
               <CardDescription>
                 {formData.tipo === 'unica' 
-                  ? `Variável única será usada como {{${formData.chave || 'chave'}}} no template`
-                  : `Variável múltipla será usada como [${formData.chave || 'chave'}] no template e retornará valores separados por vírgula`
+                  ? `Campo de valor único — insere como {{${formData.chave || 'chave'}}} no modelo`
+                  : `Campo com lista de valores — insere como [${formData.chave || 'chave'}] no modelo, exibindo itens separados por vírgula`
                 }
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Chave *
-                </label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="text-sm font-medium text-text-primary">
+                    Chave *
+                  </label>
+                  <InfoTooltip
+                    title="Chave"
+                    description="Identificador único do campo usado no modelo do contrato. Exemplo: se a chave for nome_empresa, use {{nome_empresa}} no modelo para inserir o valor automaticamente."
+                    calculation="Use apenas letras minúsculas, números e underscore (_). Exemplo: nome_empresa, cnpj_cliente, endereco_sede."
+                    calculationLabel="Como funciona:"
+                    className="w-5 h-5"
+                    iconClassName="h-4 w-4"
+                  />
+                </div>
                 <Input
                   value={formData.chave}
                   onChange={(e) => setFormData({ ...formData, chave: e.target.value })}
@@ -281,14 +292,24 @@ export default function VariaveisContratoPage() {
                   disabled={!!editandoId}
                 />
                 <p className="text-xs text-text-secondary mt-1">
-                  Apenas letras, números e underscore. Não pode ser alterada após criação.
+                  Apenas letras minúsculas, números e underscore (_). Não pode ser alterada após criação.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Label *
-                </label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="text-sm font-medium text-text-primary">
+                    Nome de exibição *
+                  </label>
+                  <InfoTooltip
+                    title="Nome de exibição"
+                    description="Nome amigável que aparecerá na lista de campos disponíveis ao criar ou editar um modelo de contrato."
+                    calculation="Exemplo: se a chave for nome_empresa, o nome de exibição pode ser 'Nome da Empresa'."
+                    calculationLabel="Como funciona:"
+                    className="w-5 h-5"
+                    iconClassName="h-4 w-4"
+                  />
+                </div>
                 <Input
                   value={formData.label}
                   onChange={(e) => setFormData({ ...formData, label: e.target.value })}
@@ -297,23 +318,45 @@ export default function VariaveisContratoPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Tipo *
-                </label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="text-sm font-medium text-text-primary">
+                    Tipo *
+                  </label>
+                  <InfoTooltip
+                    title="Tipo do campo"
+                    description="Define como o campo será inserido e exibido no modelo de contrato."
+                    calculation="Valor único: contém um só valor (ex: CNPJ, nome). Insere como {{chave}} no modelo. Lista de valores: contém vários itens separados por vírgula (ex: lista de serviços). Insere como [chave] no modelo."
+                    calculationLabel="Como funciona:"
+                    className="w-5 h-5"
+                    iconClassName="h-4 w-4"
+                  />
+                </div>
                 <select
                   value={formData.tipo}
                   onChange={(e) => setFormData({ ...formData, tipo: e.target.value as 'unica' | 'multipla' })}
                   className="w-full px-3 py-2 border border-border rounded-md bg-surface text-text-primary"
                 >
-                  <option value="unica">Única - formato: {FORMATO_UNICA}</option>
-                  <option value="multipla">Múltipla - formato: {FORMATO_MULTIPLA}</option>
+                  <option value="unica">Valor único — {FORMATO_UNICA}</option>
+                  <option value="multipla">Lista de valores — {FORMATO_MULTIPLA}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Valor Padrão
-                </label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="text-sm font-medium text-text-primary">
+                    Valor Padrão
+                  </label>
+                  <InfoTooltip
+                    title="Valor Padrão"
+                    description="Valor que será inserido automaticamente no contrato quando este campo for utilizado. Você pode alterar este valor a qualquer momento."
+                    calculation={formData.tipo === 'multipla' 
+                      ? "Para listas, separe os valores por vírgula. Exemplo: item1, item2, item3." 
+                      : "Preencha com o valor fixo que deseja exibir no contrato. Exemplo: 12.345.678/0001-99."}
+                    calculationLabel="Como funciona:"
+                    className="w-5 h-5"
+                    iconClassName="h-4 w-4"
+                  />
+                </div>
                 <Input
                   value={formData.valorPadrao}
                   onChange={(e) => setFormData({ ...formData, valorPadrao: e.target.value })}
@@ -321,27 +364,43 @@ export default function VariaveisContratoPage() {
                 />
                 {formData.tipo === 'multipla' && (
                   <p className="text-xs text-text-secondary mt-1">
-                    Para variáveis múltiplas, separe os valores por vírgula
+                    Para listas, separe os valores por vírgula
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Descrição
-                </label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="text-sm font-medium text-text-primary">
+                    Descrição
+                  </label>
+                  <InfoTooltip
+                    title="Descrição"
+                    description="Anotação interna para lembrar para que serve este campo. Visível apenas nesta página, não aparece no contrato."
+                    className="w-5 h-5"
+                    iconClassName="h-4 w-4"
+                  />
+                </div>
                 <Textarea
                   value={formData.descricao}
                   onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  placeholder="Descrição da variável"
+                  placeholder="Descrição do campo"
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">
-                  Ordem
-                </label>
+                <div className="flex items-center gap-2 mb-1">
+                  <label className="text-sm font-medium text-text-primary">
+                    Ordem
+                  </label>
+                  <InfoTooltip
+                    title="Ordem de exibição"
+                    description="Define a posição deste campo na lista. Campos com números menores aparecem primeiro na listagem."
+                    className="w-5 h-5"
+                    iconClassName="h-4 w-4"
+                  />
+                </div>
                 <Input
                   type="number"
                   value={formData.ordem}
@@ -358,8 +417,14 @@ export default function VariaveisContratoPage() {
                   className="rounded"
                 />
                 <label htmlFor="ativo" className="text-sm text-text-primary">
-                  Ativa
+                  Ativo
                 </label>
+                <InfoTooltip
+                  title="Campo ativo"
+                  description="Campos inativos não aparecem na lista de campos disponíveis ao criar ou editar um modelo de contrato."
+                  className="w-5 h-5"
+                  iconClassName="h-4 w-4"
+                />
               </div>
 
               <div className="flex gap-2 pt-4">
@@ -384,8 +449,8 @@ export default function VariaveisContratoPage() {
           open={showDeleteDialog}
           onOpenChange={setShowDeleteDialog}
           onConfirm={handleConfirmarExclusao}
-          title="Excluir Variável"
-          description={`Tem certeza que deseja excluir a variável "${variavelParaExcluir?.label}"? Esta ação não pode ser desfeita.`}
+          title="Excluir Campo"
+          description={`Tem certeza que deseja excluir o campo "${variavelParaExcluir?.label}"? Esta ação não pode ser desfeita.`}
           confirmText="Excluir"
           cancelText="Cancelar"
           variant="destructive"

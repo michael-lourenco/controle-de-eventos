@@ -175,15 +175,15 @@ export default function NovoTemplatePage() {
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Variáveis Disponíveis</CardTitle>
+                <CardTitle className="text-lg">Campos Disponíveis</CardTitle>
                 <CardDescription>
-                  Clique para inserir no template
+                  Clique para inserir no modelo
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 max-h-[600px] overflow-y-auto">
                 {variaveisPorCategoria.configuracao.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-sm text-text-primary mb-2">Configuração</h4>
+                    <h4 className="font-semibold text-sm text-text-primary mb-2">Dados da Empresa</h4>
                     <div className="space-y-1">
                       {variaveisPorCategoria.configuracao.map((v) => (
                         <button
@@ -206,7 +206,7 @@ export default function NovoTemplatePage() {
 
                 {variaveisPorCategoria.customizada.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-sm text-text-primary mb-2">Customizadas</h4>
+                    <h4 className="font-semibold text-sm text-text-primary mb-2">Seus Campos</h4>
                     <div className="space-y-1">
                       {variaveisPorCategoria.customizada.map((v) => (
                         <button
@@ -229,7 +229,7 @@ export default function NovoTemplatePage() {
 
                 {variaveisPorCategoria.evento.length > 0 && (
                   <div>
-                    <h4 className="font-semibold text-sm text-text-primary mb-2">Evento</h4>
+                    <h4 className="font-semibold text-sm text-text-primary mb-2">Dados do Evento</h4>
                     <div className="space-y-1">
                       {variaveisPorCategoria.evento.map((v) => (
                         <button
@@ -251,7 +251,7 @@ export default function NovoTemplatePage() {
                 )}
 
                 {variaveisDisponiveis.length === 0 && (
-                  <p className="text-sm text-text-secondary">Nenhuma variável disponível</p>
+                  <p className="text-sm text-text-secondary">Nenhum campo disponível</p>
                 )}
               </CardContent>
             </Card>
@@ -263,7 +263,7 @@ export default function NovoTemplatePage() {
               <CardHeader>
                 <CardTitle>Editor de Template</CardTitle>
                 <CardDescription>
-                  Use HTML e variáveis para criar seu template. Variáveis únicas: {'{{variavel}}'}, Variáveis múltiplas: {'[variavel]'}
+                  Use o editor para criar seu modelo. Valor único: {'{{campo}}'}, Lista de valores: {'[campo]'}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -298,7 +298,7 @@ export default function NovoTemplatePage() {
                     value={formData.template}
                     onChange={(html) => setFormData({ ...formData, template: html })}
                     variaveisDisponiveis={variaveisDisponiveis}
-                    placeholder="Digite seu template aqui... Use a barra de ferramentas para formatar e clique nas variáveis na sidebar para inserir."
+                    placeholder="Digite seu modelo aqui... Use a barra de ferramentas para formatar e clique nos campos na barra lateral para inserir."
                   />
                 </div>
 

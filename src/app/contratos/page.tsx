@@ -108,9 +108,9 @@ export default function ContratosPage() {
             <Button 
               variant="outline" 
               onClick={() => router.push('/contratos/variaveis')}
-              title="Gerenciar variáveis customizadas"
+              title="Gerenciar campos personalizados"
             >
-              Variáveis
+              Campos Personalizados
             </Button>
             <Button 
               variant="outline" 

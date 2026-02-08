@@ -9,6 +9,8 @@ interface InfoTooltipProps {
   title: string
   description: string
   calculation?: string
+  /** Rótulo exibido acima do texto de calculation. Padrão: "Como é calculado:" */
+  calculationLabel?: string
   className?: string
   iconClassName?: string
 }
@@ -19,6 +21,7 @@ interface InfoTooltipProps {
  * @param title - Título da informação
  * @param description - Descrição do que a métrica significa
  * @param calculation - (Opcional) Explicação de como o cálculo é feito
+ * @param calculationLabel - (Opcional) Rótulo do bloco de calculation (padrão: "Como é calculado:")
  * @param className - Classes CSS adicionais para o container
  * @param iconClassName - Classes CSS adicionais para o ícone
  */
@@ -26,6 +29,7 @@ export function InfoTooltip({
   title, 
   description, 
   calculation,
+  calculationLabel = "Como é calculado:",
   className,
   iconClassName 
 }: InfoTooltipProps) {
@@ -78,7 +82,7 @@ export function InfoTooltip({
             </div>
             {calculation && (
               <div className="pt-2 border-t border-border">
-                <p className="text-xs font-medium text-text-primary mb-1">Como é calculado:</p>
+                <p className="text-xs font-medium text-text-primary mb-1">{calculationLabel}</p>
                 <p className="text-xs text-text-secondary leading-relaxed">{calculation}</p>
               </div>
             )}

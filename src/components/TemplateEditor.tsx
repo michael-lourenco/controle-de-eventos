@@ -295,7 +295,7 @@ const TemplateEditor = forwardRef<TemplateEditorRef, TemplateEditorProps>(({
       {/* Botões de variáveis rápidas */}
       {variaveisDisponiveis.length > 0 && (
         <div className="flex flex-wrap gap-2 text-xs">
-          <span className="text-text-secondary self-center">Inserir variável:</span>
+          <span className="text-text-secondary self-center">Inserir campo:</span>
           {variaveisDisponiveis.slice(0, 5).map((v) => (
             <button
               key={v.chave}
@@ -312,7 +312,7 @@ const TemplateEditor = forwardRef<TemplateEditorRef, TemplateEditorProps>(({
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = '#f3f4f6';
               }}
-              title={`Inserir ${v.chave}`}
+              title={`Inserir campo ${v.chave}`}
             >
               <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
                 v.tipo === 'unica'
