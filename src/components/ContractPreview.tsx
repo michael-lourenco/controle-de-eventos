@@ -32,45 +32,68 @@ export default function ContractPreview({ html, className = '' }: ContractPrevie
                 }
                 body {
                   margin: 0;
-                  padding: 32px;
-                  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+                  padding: 0;
+                  font-family: Arial, sans-serif;
                   font-size: 14px;
                   line-height: 1.6;
                   color: #1f2937 !important;
+                  background-color: #f3f4f6 !important;
+                  white-space: pre-wrap;
+                }
+                .page-container {
+                  /* Simular página A4: 170mm de conteúdo (642px) + 20mm padding cada lado */
+                  max-width: 794px;
+                  margin: 20px auto;
+                  padding: 75px;
                   background-color: #ffffff !important;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
                 }
                 body * {
                   color: #1f2937 !important;
+                  font-family: Arial, sans-serif;
                 }
-                h1, h2, h3, h4, h5, h6 {
-                  display: block;
+                h1 {
+                  font-size: 2em;
+                  font-weight: bold;
                   margin-top: 1em;
                   margin-bottom: 0.5em;
+                }
+                h2 {
+                  font-size: 1.5em;
                   font-weight: bold;
-                  color: #1f2937 !important;
+                  margin-top: 1em;
+                  margin-bottom: 0.5em;
+                }
+                h3 {
+                  font-size: 1.25em;
+                  font-weight: bold;
+                  margin-top: 1em;
+                  margin-bottom: 0.5em;
                 }
                 p {
-                  display: block;
-                  margin-bottom: 1em;
-                  margin-top: 0;
-                  color: #1f2937 !important;
+                  margin: 0.5em 0;
                 }
-                div {
-                  display: block;
-                  color: #1f2937 !important;
+                ul, ol {
+                  padding-left: 1.5em;
+                  margin: 0.5em 0;
+                }
+                li {
+                  margin: 0.25em 0;
                 }
                 strong, b {
                   font-weight: bold;
-                  color: #1f2937 !important;
                 }
-                span {
-                  color: #1f2937 !important;
+                hr {
+                  margin: 1em 0;
+                  border: none;
+                  border-top: 1px solid #d1d5db;
                 }
-                /* Preservar todos os estilos inline do HTML original, mas forçar texto preto */
               </style>
             </head>
             <body>
-              ${html}
+              <div class="page-container">
+                ${html}
+              </div>
             </body>
           </html>
         `);

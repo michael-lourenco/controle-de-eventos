@@ -58,7 +58,7 @@ const TemplateEditor = forwardRef<TemplateEditorRef, TemplateEditorProps>(({
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[400px] p-4',
+        class: 'focus:outline-none min-h-[400px] contract-editor-content',
         style: 'color: #1f2937; background-color: #ffffff;',
       },
     },

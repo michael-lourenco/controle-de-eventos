@@ -57,30 +57,45 @@ export class PDFService {
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 40px;
+      font-size: 14px;
       line-height: 1.6;
+      margin: 0;
+      padding: 0;
       color: #333;
+      white-space: pre-wrap;
     }
     h1 {
-      color: #2c3e50;
-      border-bottom: 2px solid #3498db;
-      padding-bottom: 10px;
+      font-size: 2em;
+      font-weight: bold;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
     }
     h2 {
-      color: #34495e;
-      margin-top: 30px;
-      margin-bottom: 15px;
+      font-size: 1.5em;
+      font-weight: bold;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+    h3 {
+      font-size: 1.25em;
+      font-weight: bold;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
     }
     p {
-      margin: 10px 0;
+      margin: 0.5em 0;
     }
-    strong {
-      color: #2c3e50;
+    ul, ol {
+      padding-left: 1.5em;
+      margin: 0.5em 0;
     }
-    .signature {
-      margin-top: 50px;
+    li {
+      margin: 0.25em 0;
+    }
+    hr {
+      margin: 1em 0;
+      border: none;
       border-top: 1px solid #ccc;
-      padding-top: 20px;
     }
   </style>
 </head>

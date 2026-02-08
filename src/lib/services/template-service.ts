@@ -85,7 +85,50 @@ export class TemplateService {
       resultado = resultado.replace(placeholder, valorString);
     });
 
+    // Converter espaços consecutivos em &nbsp; no conteúdo de texto do HTML
+    // Isso garante que os espaços são preservados em qualquer renderização
+    resultado = this.preservarEspacosHtml(resultado);
+
     return resultado;
+  }
+
+  /**
+   * Converte sequências de 2+ espaços em &nbsp; apenas no conteúdo de texto do HTML
+   * (não altera espaços dentro de tags HTML)
+   */
+  private static preservarEspacosHtml(html: string): string {
+    let result = '';
+    let insideTag = false;
+
+    for (let i = 0; i < html.length; i++) {
+      if (html[i] === '<') {
+        insideTag = true;
+        result += '<';
+      } else if (html[i] === '>') {
+        insideTag = false;
+        result += '>';
+      } else if (!insideTag && html[i] === ' ') {
+        // Contar espaços consecutivos
+        let spaceCount = 0;
+        const start = i;
+        while (i < html.length && html[i] === ' ') {
+          spaceCount++;
+          i++;
+        }
+        i--; // Voltar um pois o for vai incrementar
+
+        if (spaceCount >= 2) {
+          // Converter cada espaço em &nbsp;
+          result += '&nbsp;'.repeat(spaceCount);
+        } else {
+          result += ' ';
+        }
+      } else {
+        result += html[i];
+      }
+    }
+
+    return result;
   }
 
   private static processarCondicionaisRecursivo(template: string, dados: Record<string, unknown>): string {

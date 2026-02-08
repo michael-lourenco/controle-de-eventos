@@ -16,6 +16,7 @@ import LoadingHotmart from '@/components/LoadingHotmart';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import TemplateEditor from '@/components/TemplateEditor';
+import ContractPreview from '@/components/ContractPreview';
 
 function NovoContratoPageContent() {
   const router = useRouter();
@@ -496,7 +497,7 @@ function NovoContratoPageContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded p-4 bg-white text-gray-900 [&_*]:text-gray-900 [&_*]:dark:text-gray-900 min-h-[200px]" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                <ContractPreview html={previewHtml} className="min-h-[200px]" />
               </CardContent>
             </Card>
 
