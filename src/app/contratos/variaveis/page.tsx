@@ -52,7 +52,6 @@ export default function VariaveisContratoPage() {
         showToast(error.error || 'Erro ao carregar campos', 'error');
       }
     } catch (error) {
-      console.error('Erro ao carregar campos:', error);
       showToast('Erro ao carregar campos', 'error');
     } finally {
       setLoading(false);
@@ -119,7 +118,6 @@ export default function VariaveisContratoPage() {
         showToast(error.error || 'Erro ao salvar campo', 'error');
       }
     } catch (error) {
-      console.error('Erro ao salvar campo:', error);
       showToast('Erro ao salvar campo', 'error');
     }
   };
@@ -147,7 +145,6 @@ export default function VariaveisContratoPage() {
         showToast(error.error || 'Erro ao excluir campo', 'error');
       }
     } catch (error) {
-      console.error('Erro ao excluir campo:', error);
       showToast('Erro ao excluir campo', 'error');
     }
   };

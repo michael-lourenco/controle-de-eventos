@@ -104,11 +104,10 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         // A API retorna { data: { success: true, anexos: [...] } } via createApiResponse
         const data = result.data || result;
         const anexos = data?.anexos || [];
-        console.log('[PagamentoForm] Anexos carregados:', anexos.length);
         setAnexos(anexos);
       }
     } catch (error) {
-      console.error('Erro ao carregar anexos existentes:', error);
+      // Erro silencioso
     }
   };
 
@@ -170,11 +169,9 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
       });
 
       const uploadedAnexos = await Promise.all(uploadPromises);
-      console.log('[PagamentoForm] Anexos enviados:', uploadedAnexos.length);
       setAnexos(prev => [...prev, ...uploadedAnexos]);
       
     } catch (error) {
-      console.error('Erro no upload:', error);
       setErrors(prev => ({
         ...prev,
         upload: 'Erro ao fazer upload dos arquivos'
@@ -195,7 +192,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         setAnexos(prev => prev.filter(anexo => anexo.id !== anexoId));
       }
     } catch (error) {
-      console.error('Erro ao deletar anexo:', error);
+      // Erro silencioso
     }
   };
 
@@ -233,7 +230,6 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
       setAnexosTemporarios([]); // Limpar arquivos temporários
       
     } catch (error) {
-      console.error('Erro no upload de anexos temporários:', error);
       setErrors(prev => ({
         ...prev,
         upload: 'Erro ao fazer upload dos arquivos'
@@ -284,7 +280,7 @@ export default function PagamentoForm({ pagamento, evento, onSave, onCancel }: P
         await uploadAnexosTemporarios(pagamentoSalvo.id);
       }
     } catch (error) {
-      console.error('Erro ao salvar pagamento:', error);
+      // Erro silencioso
     }
   };
 

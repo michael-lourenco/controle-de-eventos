@@ -50,19 +50,16 @@ export default function TiposServicosPage() {
   useEffect(() => {
     const carregarTiposServico = async () => {
       if (!userId) {
-        console.log('TiposServicosPage: userId não disponível ainda');
         return;
       }
 
       try {
-        console.log('TiposServicosPage: Carregando tipos de serviço');
         const tipos = await dataService.getTiposServicoAtivos(userId);
         const inativos = await dataService.getTiposServicoInativos(userId);
-        console.log('TiposServicosPage: Tipos carregados:', tipos);
         setTiposServico(tipos);
         setTiposInativos(inativos);
       } catch (error) {
-        console.error('Erro ao carregar tipos de serviço:', error);
+        // Erro silencioso
       } finally {
         setLoading(false);
       }
@@ -79,7 +76,7 @@ export default function TiposServicosPage() {
       setTiposServico(tipos);
       setTiposInativos(inativos);
     } catch (error) {
-      console.error('Erro ao recarregar tipos:', error);
+      // Erro silencioso
     }
   };
 
@@ -121,7 +118,6 @@ export default function TiposServicosPage() {
         await recarregarTipos();
         setTipoParaExcluir(null);
       } catch (error) {
-        console.error('Erro ao inativar tipo de serviço:', error);
         showToast('Erro ao inativar tipo de serviço', 'error');
       }
     }
@@ -135,7 +131,6 @@ export default function TiposServicosPage() {
       showToast('Tipo de serviço reativado com sucesso!', 'success');
       await recarregarTipos();
     } catch (error) {
-      console.error('Erro ao reativar tipo de serviço:', error);
       showToast('Erro ao reativar tipo de serviço', 'error');
     }
   };
@@ -178,8 +173,6 @@ export default function TiposServicosPage() {
       setTipoEditando(null);
       setFormData({ nome: '', descricao: '', ativo: true });
     } catch (error: any) {
-      console.error('Erro ao salvar tipo de serviço:', error);
-      
       // Tratar erros de plano
       const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
       

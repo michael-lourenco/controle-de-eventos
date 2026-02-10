@@ -24,19 +24,6 @@ const ServicosBadges = React.memo(function ServicosBadges({ servicos, className 
     return Array.from(new Set(nomes));
   }, [servicos]);
 
-  // Debug: verificar se há serviços mas não há nomes
-  React.useEffect(() => {
-    if (servicos.length > 0 && nomesServicos.length === 0) {
-      console.warn('[ServicosBadges] Há serviços mas nenhum nome válido:', {
-        totalServicos: servicos.length,
-        servicos: servicos.map(s => ({
-          removido: s.removido,
-          temTipoServico: !!s.tipoServico,
-          nome: s.tipoServico?.nome
-        }))
-      });
-    }
-  }, [servicos, nomesServicos]);
 
   if (nomesServicos.length === 0) {
     return null;

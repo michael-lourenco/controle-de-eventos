@@ -60,7 +60,6 @@ export default function EventoStatusSelect({
       await onStatusChange(eventoId, novoStatus);
     } catch (error) {
       // Erro já é tratado no componente pai (reversão otimista)
-      console.error('Erro ao atualizar status:', error);
     } finally {
       setLoading(false);
     }

@@ -47,14 +47,11 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
   useEffect(() => {
     const carregarTiposServico = async () => {
       if (!userId) {
-        console.log('ServicoForm: userId não disponível ainda');
         return;
       }
 
       try {
-        console.log('ServicoForm: Carregando tipos de serviço');
         const tipos = await dataService.getTiposServicoAtivos(userId);
-        console.log('ServicoForm: Tipos carregados:', tipos);
         
         const opcoes = tipos.map(tipo => ({
           id: tipo.id,
@@ -65,7 +62,7 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
         
         setTiposServico(opcoes);
       } catch (error) {
-        console.error('Erro ao carregar tipos de serviço:', error);
+        // Erro silencioso
       } finally {
         setLoading(false);
       }
@@ -118,7 +115,6 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
     }
 
     if (!userId) {
-      console.error('userId não disponível');
       return;
     }
 
@@ -127,7 +123,6 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
       const tipoServico = await dataService.getTipoServicoById(formData.tipoServicoId, userId);
       
       if (!tipoServico) {
-        console.error('Tipo de serviço não encontrado');
         return;
       }
 
@@ -142,26 +137,21 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
 
       onSave(servicoData);
     } catch (error) {
-      console.error('Erro ao salvar serviço:', error);
+      // Erro silencioso
     }
   };
 
   const handleCreateNewTipoServico = async (nome: string) => {
-    console.log('ServicoForm: Criando novo tipo de serviço:', nome);
     if (!userId) {
-      console.error('ServicoForm: userId não disponível');
       return null;
     }
 
     try {
-      console.log('ServicoForm: Chamando dataService.createTipoServico');
       const novoTipo = await dataService.createTipoServico({
         nome,
         descricao: '',
         ativo: true
       }, userId);
-
-      console.log('ServicoForm: Tipo criado com sucesso:', novoTipo);
 
       // Adicionar à lista de opções e ordenar
       setTiposServico(prev => [...prev, {
@@ -181,14 +171,12 @@ export default function ServicoForm({ servico, evento, onSave, onCancel }: Servi
       if (errors.tipoServicoId) {
         setErrors(prev => ({
           ...prev,
-          tipoServicoId: ''
-        }));
-      }
+        tipoServicoId: ''
+      }));
+    }
 
-      console.log('ServicoForm: Novo tipo selecionado:', novoTipo.id);
       return novoTipo.id;
     } catch (error) {
-      console.error('Erro ao criar tipo de serviço:', error);
       return null;
     }
   };

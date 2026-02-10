@@ -151,7 +151,7 @@ export default function PreCadastroForm({ preCadastroId, preCadastro, onSuccess 
           setCanaisEntrada(canais);
         }
       } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        // Erro silencioso
       } finally {
         setLoading(false);
       }
@@ -173,7 +173,7 @@ export default function PreCadastroForm({ preCadastroId, preCadastro, onSuccess 
           // Por enquanto, vamos deixar vazio
         }
       } catch (error) {
-        console.error('Erro ao carregar serviços:', error);
+        // Erro silencioso
       }
     };
 
@@ -365,7 +365,6 @@ export default function PreCadastroForm({ preCadastroId, preCadastro, onSuccess 
       const result = await response.json();
       onSuccess();
     } catch (error: any) {
-      console.error('Erro ao salvar pré-cadastro:', error);
       setErrors({
         general: error.message || 'Erro ao salvar pré-cadastro. Tente novamente.'
       });

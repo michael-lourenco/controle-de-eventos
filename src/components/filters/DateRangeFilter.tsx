@@ -138,15 +138,6 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
       const startDate = parseISO(customStartDate);
       const endDate = parseISO(customEndDate);
       
-      console.log('Aplicando filtro personalizado:', {
-        customStartDate,
-        customEndDate,
-        startDate,
-        endDate,
-        startDateFormatted: format(startDate, 'dd/MM/yyyy'),
-        endDateFormatted: format(endDate, 'dd/MM/yyyy')
-      });
-      
       if (startDate <= endDate) {
         setFilterType('custom');
         setIsFilterActive(true);

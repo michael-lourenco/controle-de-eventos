@@ -50,7 +50,7 @@ export default function ContratoViewPage() {
         setHtmlPreview(html);
       }
     } catch (error) {
-      console.error('Erro ao carregar preview:', error);
+      // Erro silencioso
     }
   }, [contrato]);
 
@@ -93,7 +93,6 @@ export default function ContratoViewPage() {
         }
       }
     } catch (error) {
-      console.error('Erro ao carregar HTML do contrato:', error);
       showToast('Erro ao carregar conteúdo do contrato', 'error');
     } finally {
       setCarregandoHtml(false);
@@ -114,7 +113,6 @@ export default function ContratoViewPage() {
         showToast(errorData.error || 'Erro ao carregar contrato', 'error');
       }
     } catch (error) {
-      console.error('Erro ao carregar contrato:', error);
       showToast('Erro ao carregar contrato', 'error');
     } finally {
       setLoading(false);
@@ -188,7 +186,6 @@ export default function ContratoViewPage() {
         showToast(errorData.error || 'Erro ao salvar alterações', 'error');
       }
     } catch (error) {
-      console.error('Erro ao salvar alterações:', error);
       showToast('Erro ao salvar alterações', 'error');
     } finally {
       setSalvando(false);

@@ -52,19 +52,16 @@ export default function TiposCustosPage() {
   useEffect(() => {
     const carregarTiposCusto = async () => {
       if (!userId) {
-        console.log('TiposCustosPage: userId não disponível ainda');
         return;
       }
 
       try {
-        console.log('TiposCustosPage: Carregando tipos de custo');
         const tipos = await dataService.getTiposCustoAtivos(userId);
         const inativos = await dataService.getTiposCustoInativos(userId);
-        console.log('TiposCustosPage: Tipos carregados:', tipos);
         setTiposCusto(tipos);
         setTiposInativos(inativos);
       } catch (error) {
-        console.error('TiposCustosPage: Erro ao carregar tipos de custo:', error);
+        // Erro silencioso
       } finally {
         setLoading(false);
       }
@@ -81,7 +78,7 @@ export default function TiposCustosPage() {
       setTiposCusto(tipos);
       setTiposInativos(inativos);
     } catch (error) {
-      console.error('Erro ao recarregar tipos:', error);
+      // Erro silencioso
     }
   };
 
@@ -107,8 +104,6 @@ export default function TiposCustosPage() {
       setNovoTipo({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
     } catch (error: any) {
-      console.error('Erro ao criar tipo de custo:', error);
-      
       // Tratar erros de plano
       const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
       
@@ -132,7 +127,7 @@ export default function TiposCustosPage() {
       await recarregarTipos();
       setEditandoId(null);
     } catch (error) {
-      console.error('Erro ao atualizar tipo de custo:', error);
+      // Erro silencioso
     }
   };
 
@@ -150,7 +145,6 @@ export default function TiposCustosPage() {
       await recarregarTipos();
       setTipoParaExcluir(null);
     } catch (error) {
-      console.error('Erro ao inativar tipo de custo:', error);
       showToast('Erro ao inativar tipo de custo', 'error');
     }
   };
@@ -163,7 +157,6 @@ export default function TiposCustosPage() {
       showToast('Tipo de custo reativado com sucesso!', 'success');
       await recarregarTipos();
     } catch (error) {
-      console.error('Erro ao reativar tipo de custo:', error);
       showToast('Erro ao reativar tipo de custo', 'error');
     }
   };

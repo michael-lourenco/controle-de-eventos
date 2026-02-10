@@ -46,7 +46,6 @@ export default function PreCadastroPage() {
           setSubmitted(true);
         }
       } catch (err) {
-        console.error('Erro ao carregar pré-cadastro:', err);
         setError('Erro ao carregar pré-cadastro. Tente novamente.');
       } finally {
         setLoading(false);

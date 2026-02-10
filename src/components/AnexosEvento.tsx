@@ -84,14 +84,8 @@ export default function AnexosEvento({
       let result;
       try {
         const text = await response.text();
-        console.log('[AnexosEvento] Resposta do servidor:', { 
-          status: response.status, 
-          statusText: response.statusText,
-          body: text 
-        });
         result = JSON.parse(text);
       } catch (parseError) {
-        console.error('[AnexosEvento] Erro ao parsear resposta:', parseError);
         throw new Error(`Erro ao processar resposta do servidor: ${response.status} ${response.statusText}`);
       }
 
@@ -114,7 +108,6 @@ export default function AnexosEvento({
         throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('Erro ao fazer upload:', error);
       setUploadError(error instanceof Error ? error.message : 'Erro desconhecido ao fazer upload');
     } finally {
       setIsUploading(false);
@@ -146,7 +139,6 @@ export default function AnexosEvento({
         throw new Error(result.error || 'Erro ao excluir arquivo');
       }
     } catch (error) {
-      console.error('Erro ao excluir arquivo:', error);
       setUploadError(error instanceof Error ? error.message : 'Erro ao excluir arquivo');
     }
   };

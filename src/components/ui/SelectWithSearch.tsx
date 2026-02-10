@@ -48,13 +48,6 @@ export default function SelectWithSearch({
     searchTerm.trim() && 
     !options.some(option => option.label.toLowerCase() === searchTerm.toLowerCase());
 
-  console.log('SelectWithSearch: showCreateOption =', showCreateOption, {
-    allowCreate,
-    onCreateNew: !!onCreateNew,
-    searchTerm: searchTerm.trim(),
-    hasMatchingOption: options.some(option => option.label.toLowerCase() === searchTerm.toLowerCase())
-  });
-
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -119,15 +112,11 @@ export default function SelectWithSearch({
   };
 
   const handleCreateNew = () => {
-    console.log('SelectWithSearch: handleCreateNew chamado com searchTerm:', searchTerm);
     if (onCreateNew && searchTerm.trim()) {
-      console.log('SelectWithSearch: Chamando onCreateNew');
       onCreateNew(searchTerm);
       setIsOpen(false);
       setSearchTerm('');
       setHighlightedIndex(-1);
-    } else {
-      console.log('SelectWithSearch: onCreateNew não disponível ou searchTerm vazio');
     }
   };
 

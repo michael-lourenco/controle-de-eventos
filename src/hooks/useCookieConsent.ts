@@ -45,7 +45,7 @@ export function useCookieConsent() {
         });
       }
     } catch (error) {
-      console.error('Erro ao ler consentimento de cookies:', error);
+      // Erro ao ler consentimento
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +74,7 @@ export function useCookieConsent() {
 
       setConsent(consentData);
     } catch (error) {
-      console.error('Erro ao salvar consentimento de cookies:', error);
+      // Erro ao salvar consentimento
     }
   };
 
@@ -95,7 +95,7 @@ export function useCookieConsent() {
         },
       });
     } catch (error) {
-      console.error('Erro ao rejeitar cookies:', error);
+      // Erro ao rejeitar cookies
     }
   };
 

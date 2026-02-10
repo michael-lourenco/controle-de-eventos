@@ -190,19 +190,6 @@ export default function EventosPage() {
   // Buscar serviços de todos os eventos filtrados de uma vez (otimização)
   const { servicosPorEvento, loading: loadingServicos, error: errorServicos } = useServicosPorEventos(eventoIds);
 
-  // Debug: verificar se os serviços estão sendo carregados
-  useEffect(() => {
-    if (!loadingServicos && eventoIds.length > 0) {
-      console.log('[EventosPage] Serviços carregados:', {
-        totalEventos: eventoIds.length,
-        servicosPorEvento: Array.from(servicosPorEvento.entries()).map(([id, servicos]) => ({
-          eventoId: id,
-          quantidade: servicos.length
-        })),
-        error: errorServicos
-      });
-    }
-  }, [loadingServicos, eventoIds.length, servicosPorEvento, errorServicos]);
 
   // Early returns após todos os hooks
   if (loading) {

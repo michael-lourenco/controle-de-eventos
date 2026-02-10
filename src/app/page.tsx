@@ -64,7 +64,7 @@ export default function LandingPage() {
               });
             }
           } catch (error) {
-            console.error(`Erro ao buscar funcionalidades do plano ${plano.id}:`, error);
+            // Erro silencioso
           }
         }
       }
@@ -87,7 +87,7 @@ export default function LandingPage() {
       }
       setPlanoComFuncionalidades(planoFuncMap);
     } catch (error) {
-      console.error('Erro ao carregar funcionalidades:', error);
+      // Erro silencioso
     }
   };
 
@@ -97,19 +97,15 @@ export default function LandingPage() {
       const res = await fetch('/api/planos?ativos=true');
       
       if (!res.ok) {
-        console.error('❌ [Landing] Erro na resposta da API:', res.status, res.statusText);
         const errorData = await res.json().catch(() => ({}));
-        console.error('❌ [Landing] Dados do erro:', errorData);
         setPlanos([]);
         return;
       }
       
       const responseData = await res.json();
-      console.log('[Landing] Resposta completa da API:', responseData);
       
       // A API retorna { data: { planos: [...] } } devido ao createApiResponse
       const planosArray = responseData.data?.planos || responseData.planos || [];
-      console.log('[Landing] Planos encontrados:', planosArray.length);
       
       if (Array.isArray(planosArray) && planosArray.length > 0) {
         const planosOrdenados = planosArray
@@ -121,13 +117,10 @@ export default function LandingPage() {
           });
         
         setPlanos(planosOrdenados);
-        console.log('[Landing] Planos ordenados e definidos:', planosOrdenados.length);
       } else {
-        console.warn('[Landing] Nenhum plano encontrado ou array vazio');
         setPlanos([]);
       }
     } catch (error) {
-      console.error('❌ [Landing] Erro ao carregar planos:', error);
       setPlanos([]);
     } finally {
       setLoadingPlanos(false);

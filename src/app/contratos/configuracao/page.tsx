@@ -62,11 +62,10 @@ export default function ConfiguracaoContratoPage() {
           setFormData(configData);
         }
       } else {
-        const errorData = await response.json();
-        console.error('Erro ao carregar configuração:', errorData);
+        // Configuração não encontrada
       }
     } catch (error) {
-      console.error('Erro ao carregar configuração:', error);
+      // Erro ao carregar configuração
     } finally {
       setLoading(false);
     }
@@ -115,11 +114,9 @@ export default function ConfiguracaoContratoPage() {
         router.push('/contratos');
       } else {
         const error = await response.json();
-        console.error('Erro ao salvar configuração:', error);
         showToast(error.error || 'Erro ao salvar configuração', 'error');
       }
     } catch (error) {
-      console.error('Erro ao salvar configuração:', error);
       showToast('Erro ao salvar configuração', 'error');
     } finally {
       setSaving(false);

@@ -51,19 +51,16 @@ export default function CanaisEntradaPage() {
   useEffect(() => {
     const carregarCanaisEntrada = async () => {
       if (!userId) {
-        console.log('CanaisEntradaPage: userId não disponível ainda');
         return;
       }
 
       try {
-        console.log('CanaisEntradaPage: Carregando canais de entrada');
         const canais = await dataService.getCanaisEntradaAtivos(userId);
         const inativos = await dataService.getCanaisEntradaInativos(userId);
-        console.log('CanaisEntradaPage: Canais carregados:', canais);
         setCanaisEntrada(canais);
         setCanaisInativos(inativos);
       } catch (error) {
-        console.error('CanaisEntradaPage: Erro ao carregar canais de entrada:', error);
+        // Erro silencioso
       } finally {
         setLoading(false);
       }
@@ -80,7 +77,7 @@ export default function CanaisEntradaPage() {
       setCanaisEntrada(canais);
       setCanaisInativos(inativos);
     } catch (error) {
-      console.error('Erro ao recarregar canais:', error);
+      // Erro silencioso
     }
   };
 
@@ -107,8 +104,6 @@ export default function CanaisEntradaPage() {
       setNovoCanal({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
     } catch (error: any) {
-      console.error('Erro ao criar canal de entrada:', error);
-      
       // Tratar erros de plano
       const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
       
@@ -132,7 +127,7 @@ export default function CanaisEntradaPage() {
       await recarregarCanais();
       setEditandoId(null);
     } catch (error) {
-      console.error('Erro ao atualizar canal de entrada:', error);
+      // Erro silencioso
     }
   };
 
@@ -150,7 +145,6 @@ export default function CanaisEntradaPage() {
       await recarregarCanais();
       setCanalParaExcluir(null);
     } catch (error) {
-      console.error('Erro ao inativar canal de entrada:', error);
       showToast('Erro ao inativar canal de entrada', 'error');
     }
   };
@@ -163,7 +157,6 @@ export default function CanaisEntradaPage() {
       showToast('Canal de entrada reativado com sucesso!', 'success');
       await recarregarCanais();
     } catch (error) {
-      console.error('Erro ao reativar canal de entrada:', error);
       showToast('Erro ao reativar canal de entrada', 'error');
     }
   };

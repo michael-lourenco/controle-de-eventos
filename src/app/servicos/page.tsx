@@ -44,19 +44,16 @@ export default function ServicosPage() {
   useEffect(() => {
     const carregarTiposServico = async () => {
       if (!userId) {
-        console.log('ServicosPage: userId não disponível ainda');
         return;
       }
 
       try {
-        console.log('ServicosPage: Carregando tipos de serviço');
         const tipos = await dataService.getTiposServicoAtivos(userId);
         const inativos = await dataService.getTiposServicoInativos(userId);
-        console.log('ServicosPage: Tipos carregados:', tipos);
         setTiposServico(tipos);
         setTiposInativos(inativos);
       } catch (error) {
-        console.error('Erro ao carregar tipos de serviço:', error);
+        // Erro silencioso
       } finally {
         setLoading(false);
       }
@@ -73,7 +70,7 @@ export default function ServicosPage() {
       setTiposServico(tipos);
       setTiposInativos(inativos);
     } catch (error) {
-      console.error('Erro ao recarregar tipos:', error);
+      // Erro silencioso
     }
   };
 
@@ -99,8 +96,6 @@ export default function ServicosPage() {
       setNovoTipo({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
     } catch (error: any) {
-      console.error('Erro ao criar tipo de serviço:', error);
-      
       // Tratar erros de plano
       const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
       
@@ -124,7 +119,6 @@ export default function ServicosPage() {
       await recarregarTipos();
       setEditandoId(null);
     } catch (error) {
-      console.error('Erro ao atualizar tipo de serviço:', error);
       showToast('Erro ao atualizar tipo de serviço', 'error');
     }
   };
@@ -143,7 +137,6 @@ export default function ServicosPage() {
       await recarregarTipos();
       setTipoParaExcluir(null);
     } catch (error) {
-      console.error('Erro ao inativar tipo de serviço:', error);
       showToast('Erro ao inativar tipo de serviço', 'error');
     }
   };
@@ -156,7 +149,6 @@ export default function ServicosPage() {
       showToast('Tipo de serviço reativado com sucesso!', 'success');
       await recarregarTipos();
     } catch (error) {
-      console.error('Erro ao reativar tipo de serviço:', error);
       showToast('Erro ao reativar tipo de serviço', 'error');
     }
   };

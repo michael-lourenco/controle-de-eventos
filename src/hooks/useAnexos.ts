@@ -33,15 +33,6 @@ export function useAnexos(eventoId: string): UseAnexosResult {
       const data = result.data || result;
       const arquivos = data?.arquivos || [];
       
-      console.log('[useAnexos] Resposta da API:', { 
-        hasData: !!result.data,
-        hasSuccess: !!(data?.success || result.success),
-        arquivosCount: arquivos.length,
-        eventoId,
-        resultKeys: Object.keys(result),
-        dataKeys: data ? Object.keys(data) : []
-      });
-      
       if (data?.success || result.success) {
         // Converter datas de string para Date se necessário
         const anexosConvertidos = arquivos.map((anexo: any) => ({
@@ -52,10 +43,8 @@ export function useAnexos(eventoId: string): UseAnexosResult {
               ? new Date(anexo.dataUpload) 
               : new Date()
         }));
-        console.log('[useAnexos] Anexos convertidos:', anexosConvertidos.length, 'anexos');
         setAnexos(anexosConvertidos);
       } else {
-        console.error('[useAnexos] Resposta sem success:', { data, result });
         throw new Error(data?.error || result.error || 'Erro ao carregar anexos');
       }
     } catch (err) {

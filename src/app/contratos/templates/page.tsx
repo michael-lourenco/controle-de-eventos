@@ -35,7 +35,6 @@ export default function TemplatesContratoPage() {
         showToast(error.error || 'Erro ao carregar templates', 'error');
       }
     } catch (error) {
-      console.error('Erro ao carregar templates:', error);
       showToast('Erro ao carregar templates', 'error');
     } finally {
       setLoading(false);
@@ -65,7 +64,6 @@ export default function TemplatesContratoPage() {
         showToast(error.error || 'Erro ao excluir template', 'error');
       }
     } catch (error) {
-      console.error('Erro ao excluir template:', error);
       showToast('Erro ao excluir template', 'error');
     }
   };

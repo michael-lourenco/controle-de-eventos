@@ -79,11 +79,9 @@ export default function ContratosPage() {
         setContratos(Array.isArray(contratos) ? contratos : []);
       } else {
         const error = await response.json();
-        console.error('Erro ao carregar contratos:', error);
         showToast(error.error || 'Erro ao carregar contratos', 'error');
       }
     } catch (error) {
-      console.error('Erro ao carregar contratos:', error);
       showToast('Erro ao carregar contratos', 'error');
     } finally {
       setLoading(false);

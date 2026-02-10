@@ -58,7 +58,6 @@ export default function AdminPlanosPage() {
         setMessage('ℹ️ Nenhum plano cadastrado. Execute o seed primeiro.');
       }
     } catch (error: any) {
-      console.error('Erro ao carregar planos:', error);
       setMessage(`❌ Erro ao carregar planos: ${error.message}`);
       setPlanos([]);
     } finally {
@@ -72,7 +71,7 @@ export default function AdminPlanosPage() {
       const data = await res.json();
       setFuncionalidades(data.funcionalidades || []);
     } catch (error) {
-      console.error('Erro ao carregar funcionalidades:', error);
+      // Erro silencioso
     }
   };
 

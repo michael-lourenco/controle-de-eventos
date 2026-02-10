@@ -53,23 +53,20 @@ function NovoContratoPageContent() {
   useEffect(() => {
     const atualizarDadosComServicos = async () => {
       if (evento && modeloSelecionado && servicosEvento.length > 0) {
-        console.log('Atualizando dados com serviços carregados:', servicosEvento);
         try {
           const configResponse = await fetch('/api/configuracao-contrato/campos-fixos');
           if (configResponse.ok) {
             const camposFixosResult = await configResponse.json();
             const camposFixos = camposFixosResult.data || camposFixosResult;
             const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modeloSelecionado, servicosEvento);
-            console.log('Dados do evento preenchidos:', dadosEvento);
             setDadosPreenchidos({ ...camposFixos, ...dadosEvento });
           } else {
             // Sem campos fixos, usar apenas dados do evento
             const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modeloSelecionado, servicosEvento);
-            console.log('Dados do evento preenchidos (sem campos fixos):', dadosEvento);
             setDadosPreenchidos(dadosEvento);
           }
         } catch (error) {
-          console.error('Erro ao atualizar dados com serviços:', error);
+          // Erro ao atualizar dados com serviços
         }
       }
     };
@@ -104,11 +101,9 @@ function NovoContratoPageContent() {
         }
       } else {
         const errorData = await response.json();
-        console.error('Erro ao carregar modelos:', errorData);
         showToast(errorData.error || 'Erro ao carregar modelos', 'error');
       }
     } catch (error) {
-      console.error('Erro ao carregar modelos:', error);
       showToast('Erro ao carregar modelos', 'error');
     }
   };
@@ -129,8 +124,7 @@ function NovoContratoPageContent() {
             servicos = await dataService.getServicosEvento(userId, eventoId);
             setServicosEvento(servicos);
           } catch (error) {
-            console.error('Erro ao carregar serviços do evento:', error);
-            // Não mostrar erro ao usuário, apenas log
+            // Erro ao carregar serviços do evento
           }
         }
         
@@ -144,7 +138,6 @@ function NovoContratoPageContent() {
         showToast(errorData.error || 'Erro ao carregar evento', 'error');
       }
     } catch (error) {
-      console.error('Erro ao carregar evento:', error);
       showToast('Erro ao carregar evento', 'error');
     }
   };
@@ -157,12 +150,10 @@ function NovoContratoPageContent() {
     let servicosParaUsar = servicosEvento;
     if (evento && eventoId && userId && servicosEvento.length === 0) {
       try {
-        console.log('handleSelecionarModelo: Serviços não carregados, carregando agora...');
         servicosParaUsar = await dataService.getServicosEvento(userId, eventoId);
         setServicosEvento(servicosParaUsar);
-        console.log('handleSelecionarModelo: Serviços carregados:', servicosParaUsar.length);
       } catch (error) {
-        console.error('Erro ao carregar serviços no handleSelecionarModelo:', error);
+        // Erro ao carregar serviços
       }
     }
 
@@ -185,19 +176,9 @@ function NovoContratoPageContent() {
             
           // Se houver evento, mesclar dados do evento com campos fixos
           if (evento) {
-            console.log('handleSelecionarModelo: Preenchendo dados com evento e', servicosParaUsar.length, 'serviços');
-            console.log('handleSelecionarModelo: Cliente do evento:', evento.cliente);
             const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
-            console.log('handleSelecionarModelo: Dados do evento:', dadosEvento);
-            console.log('handleSelecionarModelo: nome_cliente =', dadosEvento.nome_cliente);
-            console.log('handleSelecionarModelo: cpf_cliente =', dadosEvento.cpf_cliente);
-            console.log('handleSelecionarModelo: telefone_cliente =', dadosEvento.telefone_cliente);
             // Mesclar: campos fixos primeiro, depois dados do evento (evento sobrescreve campos fixos se houver conflito)
             const dadosMesclados = { ...camposFixos, ...dadosEvento };
-            console.log('handleSelecionarModelo: Dados mesclados:', dadosMesclados);
-            console.log('handleSelecionarModelo: data_evento =', dadosMesclados.data_evento);
-            console.log('handleSelecionarModelo: tipo_servico =', dadosMesclados.tipo_servico);
-            console.log('handleSelecionarModelo: data_contrato =', dadosMesclados.data_contrato);
             setDadosPreenchidos(dadosMesclados);
           } else {
             // Sem evento, usar apenas campos fixos e adicionar data_contrato
@@ -235,7 +216,6 @@ function NovoContratoPageContent() {
         showToast('Configure os dados da empresa antes de criar contratos', 'warning');
       }
     } catch (error) {
-      console.error('Erro ao carregar configuração:', error);
       setConfigExistente(false);
       // Se houver evento, ainda tentar preencher com dados do evento
       if (evento) {
@@ -264,7 +244,7 @@ function NovoContratoPageContent() {
         setPreviewHtml(previewData.html || '');
       }
     } catch (error) {
-      console.error('Erro ao gerar preview:', error);
+      // Erro ao gerar preview
     }
   };
 
@@ -339,11 +319,6 @@ function NovoContratoPageContent() {
 
   const renderCampo = (campo: CampoContrato) => {
     const valor = dadosPreenchidos[campo.chave] || campo.valorPadrao || '';
-    
-    // Log para debug dos campos problemáticos
-    if (campo.chave === 'data_evento' || campo.chave === 'tipo_servico' || campo.chave === 'data_contrato' || campo.chave === 'valor_total_formatado' || campo.chave === 'servicos_incluidos' || campo.chave === 'duracao_servico' || campo.chave === 'horario_termino') {
-      console.log(`Campo ${campo.chave} (${campo.label}): valor =`, valor, 'dadosPreenchidos =', dadosPreenchidos[campo.chave]);
-    }
 
     switch (campo.tipo) {
       case 'textarea':

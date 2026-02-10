@@ -42,7 +42,6 @@ export default function AdminFuncionalidadesPage() {
       
       if (!res.ok) {
         setMessage(`❌ Erro: ${data.error || 'Erro ao carregar funcionalidades'}`);
-        console.error('Erro na API:', data);
         setFuncionalidades([]);
         return;
       }
@@ -52,7 +51,6 @@ export default function AdminFuncionalidadesPage() {
         setMessage('ℹ️ Nenhuma funcionalidade cadastrada. Execute o seed primeiro.');
       }
     } catch (error: any) {
-      console.error('Erro ao carregar funcionalidades:', error);
       setMessage(`❌ Erro ao carregar funcionalidades: ${error.message}`);
       setFuncionalidades([]);
     } finally {

@@ -33,29 +33,20 @@ export default function AssinaturaPage() {
       const res = await fetch('/api/assinaturas');
       
       if (!res.ok) {
-        console.error('[AssinaturaPage] Erro na resposta da API:', res.status, res.statusText);
         const errorData = await res.json().catch(() => ({}));
-        console.error('[AssinaturaPage] Dados do erro:', errorData);
         setAssinatura(null);
         setTodasAssinaturas([]);
         return;
       }
       
       const responseData = await res.json();
-      console.log('[AssinaturaPage] Resposta completa da API:', responseData);
       
       // A API retorna { data: { assinatura, todasAssinaturas } } devido ao createApiResponse
       const apiData = responseData.data || responseData;
-      console.log('[AssinaturaPage] Dados extraídos:', {
-        hasAssinatura: !!apiData.assinatura,
-        hasTodasAssinaturas: !!apiData.todasAssinaturas,
-        todasAssinaturasCount: Array.isArray(apiData.todasAssinaturas) ? apiData.todasAssinaturas.length : 0
-      });
       
       // Armazenar todas as assinaturas
       const todasAssinaturasArray = apiData.todasAssinaturas || [];
       if (Array.isArray(todasAssinaturasArray) && todasAssinaturasArray.length > 0) {
-        console.log('[AssinaturaPage] Processando', todasAssinaturasArray.length, 'assinaturas');
         setTodasAssinaturas(todasAssinaturasArray);
         
         // Consolidar histórico de todas as assinaturas
@@ -89,9 +80,7 @@ export default function AssinaturaPage() {
         });
         
         setHistoricoConsolidado(historico);
-        console.log('[AssinaturaPage] Histórico consolidado:', historico.length, 'eventos');
       } else {
-        console.warn('[AssinaturaPage] Nenhuma assinatura encontrada no histórico');
         setTodasAssinaturas([]);
         setHistoricoConsolidado([]);
       }
@@ -99,12 +88,6 @@ export default function AssinaturaPage() {
       // Processar assinatura ativa
       const assinaturaAtiva = apiData.assinatura || null;
       if (assinaturaAtiva) {
-        console.log('[AssinaturaPage] Assinatura ativa encontrada:', {
-          id: assinaturaAtiva.id,
-          status: assinaturaAtiva.status,
-          planoId: assinaturaAtiva.planoId,
-          dataInicio: assinaturaAtiva.dataInicio
-        });
         setAssinatura(assinaturaAtiva);
         
         // Carregar detalhes do plano
@@ -113,30 +96,23 @@ export default function AssinaturaPage() {
             const planoRes = await fetch(`/api/planos/${assinaturaAtiva.planoId}`);
             if (planoRes.ok) {
               const planoResponseData = await planoRes.json();
-              console.log('[AssinaturaPage] Resposta do plano:', planoResponseData);
               
               // A API retorna { data: { plano } } devido ao createApiResponse
               const planoData = planoResponseData.data || planoResponseData;
               const planoObj = planoData.plano || planoData;
               
               if (planoObj) {
-                console.log('[AssinaturaPage] Plano carregado:', planoObj.nome);
                 setPlano(planoObj);
-              } else {
-                console.warn('[AssinaturaPage] Plano não encontrado na resposta');
               }
-            } else {
-              console.error('[AssinaturaPage] Erro ao buscar plano:', planoRes.status);
             }
           } catch (error) {
-            console.error('[AssinaturaPage] Erro ao carregar plano:', error);
+            // Erro silencioso
           }
         }
 
         // Carregar detalhes das funcionalidades habilitadas
         if (assinaturaAtiva.funcionalidadesHabilitadas && Array.isArray(assinaturaAtiva.funcionalidadesHabilitadas) && assinaturaAtiva.funcionalidadesHabilitadas.length > 0) {
           try {
-            console.log('[AssinaturaPage] Carregando', assinaturaAtiva.funcionalidadesHabilitadas.length, 'funcionalidades');
             const funcRes = await fetch('/api/funcionalidades/por-ids', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -145,37 +121,29 @@ export default function AssinaturaPage() {
             
             if (funcRes.ok) {
               const funcResponseData = await funcRes.json();
-              console.log('[AssinaturaPage] Resposta das funcionalidades:', funcResponseData);
               
               // A API retorna { data: { funcionalidades } } devido ao createApiResponse
               const funcData = funcResponseData.data || funcResponseData;
               const funcionalidadesArray = funcData.funcionalidades || funcData;
               
               if (Array.isArray(funcionalidadesArray) && funcionalidadesArray.length > 0) {
-                console.log('[AssinaturaPage] Funcionalidades carregadas:', funcionalidadesArray.length);
                 setFuncionalidades(funcionalidadesArray);
               } else {
-                console.warn('[AssinaturaPage] Nenhuma funcionalidade encontrada');
                 setFuncionalidades([]);
               }
-            } else {
-              console.error('[AssinaturaPage] Erro ao buscar funcionalidades:', funcRes.status);
             }
           } catch (error) {
-            console.error('[AssinaturaPage] Erro ao carregar funcionalidades:', error);
+            // Erro silencioso
           }
         } else {
-          console.log('[AssinaturaPage] Nenhuma funcionalidade habilitada na assinatura');
           setFuncionalidades([]);
         }
       } else {
-        console.warn('[AssinaturaPage] Nenhuma assinatura ativa encontrada');
         setAssinatura(null);
         setPlano(null);
         setFuncionalidades([]);
       }
     } catch (error) {
-      console.error('[AssinaturaPage] Erro ao carregar assinatura:', error);
       setAssinatura(null);
       setTodasAssinaturas([]);
     } finally {

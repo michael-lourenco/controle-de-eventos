@@ -23,7 +23,7 @@ export default function EditarEventoPage() {
       // O evento já foi atualizado no Firestore pela função updateEvento no EventoForm
       router.push(`/eventos/${eventoAtualizado.id}`);
     } catch (error) {
-      console.error('Erro ao salvar evento:', error);
+      // Erro silencioso
     }
   };
 

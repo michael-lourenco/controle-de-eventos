@@ -60,7 +60,7 @@ export default function TiposEventoPage() {
         const inativos = await dataService.getTiposEventoInativos(userId);
         setTiposInativos(inativos);
       } catch (error) {
-        console.error('TiposEventoPage: Erro ao carregar tipos de evento', error);
+        // Erro silencioso
       } finally {
         setLoading(false);
       }
@@ -77,7 +77,7 @@ export default function TiposEventoPage() {
       const inativos = await dataService.getTiposEventoInativos(userId);
       setTiposInativos(inativos);
     } catch (error) {
-      console.error('Erro ao recarregar tipos:', error);
+      // Erro silencioso
     }
   };
 
@@ -104,8 +104,6 @@ export default function TiposEventoPage() {
       setNovoTipo({ nome: '', descricao: '' });
       setMostrarFormNovo(false);
     } catch (error: any) {
-      console.error('Erro ao criar tipo de evento:', error);
-      
       // Tratar erros de plano
       const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
       
@@ -132,7 +130,7 @@ export default function TiposEventoPage() {
       await recarregarTipos();
       setEditandoId(null);
     } catch (error) {
-      console.error('Erro ao atualizar tipo de evento:', error);
+      // Erro silencioso
     }
   };
 
@@ -150,7 +148,6 @@ export default function TiposEventoPage() {
       await recarregarTipos();
       setTipoParaExcluir(null);
     } catch (error) {
-      console.error('Erro ao inativar tipo de evento:', error);
       showToast('Erro ao inativar tipo de evento', 'error');
     }
   };
@@ -163,7 +160,6 @@ export default function TiposEventoPage() {
       showToast('Tipo de evento reativado com sucesso!', 'success');
       await recarregarTipos();
     } catch (error) {
-      console.error('Erro ao reativar tipo de evento:', error);
       showToast('Erro ao reativar tipo de evento', 'error');
     }
   };

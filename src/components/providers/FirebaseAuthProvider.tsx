@@ -28,7 +28,6 @@ export function FirebaseAuthProvider({ children }: FirebaseAuthProviderProps) {
       process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
     if (!isFirebaseConfigured) {
-      console.warn('[FirebaseAuthProvider] Firebase não está configurado, pulando sincronização');
       return;
     }
 
@@ -44,9 +43,8 @@ export function FirebaseAuthProvider({ children }: FirebaseAuthProviderProps) {
         if (currentUser) {
           try {
             await firebaseSignOut(auth);
-            console.log('[FirebaseAuthProvider] Logout do Firebase Auth realizado');
           } catch (err) {
-            console.error('[FirebaseAuthProvider] Erro ao fazer logout do Firebase Auth:', err);
+            // Erro silencioso
           }
         }
         return;
@@ -55,7 +53,6 @@ export function FirebaseAuthProvider({ children }: FirebaseAuthProviderProps) {
       // Se já estiver autenticado no Firebase Auth com o mesmo usuário, não fazer nada
       const currentUser = auth.currentUser;
       if (currentUser && currentUser.uid === session.user.id) {
-        console.log('[FirebaseAuthProvider] Firebase Auth já está sincronizado');
         return;
       }
 
@@ -66,7 +63,7 @@ export function FirebaseAuthProvider({ children }: FirebaseAuthProviderProps) {
           try {
             await firebaseSignOut(auth);
           } catch (err) {
-            console.error('[FirebaseAuthProvider] Erro ao fazer logout antes de sincronizar:', err);
+            // Erro silencioso
           }
         }
 
@@ -86,9 +83,7 @@ export function FirebaseAuthProvider({ children }: FirebaseAuthProviderProps) {
 
           // Fazer login no Firebase Auth usando o custom token
           await signInWithCustomToken(auth, token);
-          console.log('[FirebaseAuthProvider] Firebase Auth sincronizado com sucesso');
         } catch (err: any) {
-          console.error('[FirebaseAuthProvider] Erro ao sincronizar Firebase Auth:', err);
           setError(err.message || 'Erro ao sincronizar Firebase Auth');
         } finally {
           setIsSyncing(false);
@@ -105,13 +100,7 @@ export function FirebaseAuthProvider({ children }: FirebaseAuthProviderProps) {
       const publicRoutes = ['/esqueci-senha', '/redefinir-senha', '/login', '/painel', '/'];
       const isPublicRoute = pathname && publicRoutes.some(route => pathname.startsWith(route));
       
-      if (!isPublicRoute) {
-        if (user) {
-          console.log('[FirebaseAuthProvider] Usuário autenticado no Firebase Auth:', user.uid);
-        } else {
-          console.log('[FirebaseAuthProvider] Usuário não autenticado no Firebase Auth');
-        }
-      }
+      // Estado de autenticação monitorado silenciosamente
     });
 
     return () => {

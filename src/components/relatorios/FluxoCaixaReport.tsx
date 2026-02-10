@@ -61,7 +61,6 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
         }
         return dataCusto >= inicio && dataCusto <= fim;
       } catch (error) {
-        console.warn('Erro ao processar dataCadastro do custo:', c.id, error);
         return false;
       }
     });

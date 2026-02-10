@@ -50,7 +50,7 @@ export default function PlanosPage() {
               });
             }
           } catch (error) {
-            console.error(`Erro ao buscar funcionalidades do plano ${plano.id}:`, error);
+            // Erro silencioso
           }
         }
       }
@@ -73,7 +73,7 @@ export default function PlanosPage() {
       }
       setPlanoComFuncionalidades(planoFuncMap);
     } catch (error) {
-      console.error('Erro ao carregar funcionalidades:', error);
+      // Erro silencioso
     }
   };
 
@@ -84,19 +84,15 @@ export default function PlanosPage() {
       const res = await fetch('/api/planos?ativos=true');
       
       if (!res.ok) {
-        console.error('[PlanosPage] Erro na resposta da API:', res.status, res.statusText);
         const errorData = await res.json().catch(() => ({}));
-        console.error('[PlanosPage] Dados do erro:', errorData);
         setPlanos([]);
         return;
       }
       
       const responseData = await res.json();
-      console.log('[PlanosPage] Resposta completa da API:', responseData);
       
       // A API retorna { data: { planos: [...] } } devido ao createApiResponse
       const planosArray = responseData.data?.planos || responseData.planos || [];
-      console.log('[PlanosPage] Planos encontrados:', planosArray.length);
       
       if (Array.isArray(planosArray) && planosArray.length > 0) {
         const planosOrdenados = planosArray.sort((a: Plano, b: Plano) => {
@@ -106,13 +102,10 @@ export default function PlanosPage() {
           return a.preco - b.preco;
         });
         setPlanos(planosOrdenados);
-        console.log('[PlanosPage] Planos ordenados e definidos:', planosOrdenados.length);
       } else {
-        console.warn('[PlanosPage] Nenhum plano encontrado ou array vazio');
         setPlanos([]);
       }
     } catch (error) {
-      console.error('[PlanosPage] Erro ao carregar planos:', error);
       setPlanos([]);
     } finally {
       setLoading(false);
@@ -167,7 +160,6 @@ export default function PlanosPage() {
         'error',
         8000
       );
-      console.error(`[PlanosPage] Link de pagamento não encontrado para código: ${plano.codigoHotmart}`);
       return;
     }
 

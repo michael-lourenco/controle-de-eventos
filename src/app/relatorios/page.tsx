@@ -47,7 +47,7 @@ export default function RelatoriosPage() {
           setLastUpdatedAt(cached.dataGeracao);
         }
       } catch (error) {
-        console.error('Erro ao buscar data de atualização:', error);
+        // Erro silencioso
       }
     };
     
@@ -111,8 +111,6 @@ export default function RelatoriosPage() {
         window.location.reload();
       }, 500);
     } catch (error: any) {
-      console.error('Erro ao atualizar relatórios:', error);
-      
       // Extrair mensagem de erro mais detalhada
       let errorMessage = 'Erro ao atualizar relatórios. Tente novamente.';
       
@@ -123,13 +121,6 @@ export default function RelatoriosPage() {
       } else if (error?.error?.message) {
         errorMessage = error.error.message;
       }
-      
-      // Log detalhado para debug
-      console.error('Detalhes do erro:', {
-        message: errorMessage,
-        error: error,
-        stack: error?.stack
-      });
       
       showToast(errorMessage, 'error');
     } finally {

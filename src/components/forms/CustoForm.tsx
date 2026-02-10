@@ -59,7 +59,6 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
   useEffect(() => {
     const carregarTiposCusto = async () => {
       if (!userId) {
-        console.log('CustoForm: userId não disponível ainda');
         return;
       }
       
@@ -67,9 +66,8 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         setLoading(true);
         const tipos = await dataService.getTiposCusto(userId);
         setTiposCusto(tipos);
-        console.log('CustoForm: Tipos de custo carregados:', tipos);
       } catch (error) {
-        console.error('Erro ao carregar tipos de custo:', error);
+        // Erro ao carregar tipos de custo
       } finally {
         setLoading(false);
       }
@@ -109,7 +107,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         setAnexos(anexosList);
       }
     } catch (error) {
-      console.error('Erro ao carregar anexos existentes:', error);
+      // Erro ao carregar anexos existentes
     }
   };
 
@@ -150,7 +148,6 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
       const uploadedAnexos = await Promise.all(uploadPromises);
       setAnexos(prev => [...prev, ...uploadedAnexos]);
     } catch (error) {
-      console.error('Erro no upload:', error);
       setErrors(prev => ({ ...prev, upload: 'Erro ao fazer upload dos arquivos' }));
     } finally {
       setUploading(false);
@@ -167,7 +164,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         setAnexos(prev => prev.filter(anexo => anexo.id !== anexoId));
       }
     } catch (error) {
-      console.error('Erro ao deletar anexo:', error);
+      // Erro ao deletar anexo
     }
   };
 
@@ -196,7 +193,6 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
       setAnexos(prev => [...prev, ...uploadedAnexos]);
       setAnexosTemporarios([]);
     } catch (error) {
-      console.error('Erro no upload de anexos temporários:', error);
       setErrors(prev => ({ ...prev, upload: 'Erro ao fazer upload dos arquivos' }));
     } finally {
       setUploading(false);
@@ -241,7 +237,6 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
 
   const handleCreateNewTipoCusto = async (nome: string) => {
     if (!userId) {
-      console.error('CustoForm: userId não disponível para criar tipo de custo');
       return;
     }
     
@@ -268,7 +263,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         }));
       }
     } catch (error) {
-      console.error('Erro ao criar novo tipo de custo:', error);
+      // Erro ao criar tipo de custo
     }
   };
 
@@ -299,7 +294,7 @@ export default function CustoForm({ custo, evento, onSave, onCancel }: CustoForm
         await uploadAnexosTemporarios(custoSalvo.id);
       }
     } catch (error) {
-      console.error('Erro ao salvar custo:', error);
+      // Erro ao salvar custo
     }
   };
 

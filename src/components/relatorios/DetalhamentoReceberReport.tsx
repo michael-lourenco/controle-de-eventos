@@ -118,7 +118,7 @@ export default function DetalhamentoReceberReport({
 
             return [evento.id, resumo] as const;
           } catch (error) {
-            console.error('Erro ao calcular resumo financeiro do evento', evento.id, error);
+            // Erro silencioso
             return [evento.id, null] as const;
           }
         });

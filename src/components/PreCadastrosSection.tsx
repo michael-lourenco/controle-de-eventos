@@ -110,7 +110,6 @@ export default function PreCadastrosSection() {
       // Recarregar lista
       await refetch();
     } catch (error: any) {
-      console.error('Erro ao gerar link:', error);
       showToast(error.message || 'Erro ao gerar link', 'error');
     } finally {
       setGeneratingLink(false);
@@ -161,7 +160,6 @@ export default function PreCadastrosSection() {
         router.push('/eventos');
       }
     } catch (error: any) {
-      console.error('Erro ao criar evento:', error);
       showToast(error.message || 'Erro ao criar evento', 'error');
     }
   };
@@ -179,7 +177,6 @@ export default function PreCadastrosSection() {
       showToast('Pré-cadastro ignorado com sucesso', 'success');
       await refetch();
     } catch (error: any) {
-      console.error('Erro ao ignorar pré-cadastro:', error);
       showToast(error.message || 'Erro ao ignorar pré-cadastro', 'error');
     }
   };
@@ -197,7 +194,6 @@ export default function PreCadastrosSection() {
       showToast('Link renovado com sucesso!', 'success');
       await refetch();
     } catch (error: any) {
-      console.error('Erro ao renovar link:', error);
       showToast(error.message || 'Erro ao renovar link', 'error');
     }
   };
@@ -231,7 +227,6 @@ export default function PreCadastrosSection() {
       await navigator.clipboard.writeText(link);
       showToast('Link copiado para a área de transferência!', 'success');
     } catch (error: any) {
-      console.error('Erro ao copiar link:', error);
       showToast(error.message || 'Erro ao copiar link', 'error');
     }
   };
@@ -258,7 +253,6 @@ export default function PreCadastrosSection() {
       setPreCadastroParaDeletar(null);
       await refetch();
     } catch (error: any) {
-      console.error('Erro ao deletar pré-cadastro:', error);
       showToast(error.message || 'Erro ao deletar pré-cadastro', 'error');
     }
   };

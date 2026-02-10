@@ -69,16 +69,11 @@ export default function PagamentoHistorico({
       }
       
       try {
-        console.log('PagamentoHistorico: Carregando resumo financeiro para evento:', eventoId);
         const valorTotal = evento?.valorTotal || 0;
         const dataFinalPagamento = evento?.diaFinalPagamento ? 
           (evento.diaFinalPagamento instanceof Date ? evento.diaFinalPagamento : new Date(evento.diaFinalPagamento)) : 
           undefined;
         const resumo = await dataService.getResumoFinanceiroPorEvento(userId, eventoId, valorTotal, dataFinalPagamento);
-        
-        console.log('PagamentoHistorico - Resumo do Firestore:', resumo);
-        console.log('PagamentoHistorico - Valor total do evento:', valorTotal);
-        console.log('PagamentoHistorico - Data final de pagamento:', dataFinalPagamento);
         
         setResumoFinanceiro({
           valorTotal: valorTotal,
@@ -90,7 +85,7 @@ export default function PagamentoHistorico({
           diaFinalPagamento: dataFinalPagamento || null || null
         });
       } catch (error) {
-        console.error('Erro ao carregar resumo financeiro:', error);
+        // Erro silencioso
       }
     };
 
@@ -121,23 +116,13 @@ export default function PagamentoHistorico({
         const data = result.data || result;
         const anexos = data?.anexos || [];
         
-        console.log('[PagamentoHistorico] Anexos carregados:', {
-          pagamentoId,
-          anexosCount: anexos.length,
-          result,
-          data
-        });
-        
         setAnexosPorPagamento(prev => ({
           ...prev,
           [pagamentoId]: anexos
         }));
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
-        console.error('[PagamentoHistorico] Erro ao carregar anexos:', errorData);
       }
     } catch (error) {
-      console.error('[PagamentoHistorico] Erro ao carregar anexos:', error);
+      // Erro silencioso
     }
   };
 
@@ -157,12 +142,9 @@ export default function PagamentoHistorico({
 
       if (response.ok) {
         const result = await response.json();
-        if (result.migrados > 0) {
-          console.log(`${result.migrados} anexos migrados da pasta temp`);
-        }
       }
     } catch (error) {
-      console.error('Erro ao migrar anexos temp:', error);
+      // Erro silencioso
     }
   };
 
@@ -193,7 +175,7 @@ export default function PagamentoHistorico({
         }));
       }
     } catch (error) {
-      console.error('Erro ao deletar anexo:', error);
+      // Erro silencioso
     }
   };
 
@@ -231,22 +213,16 @@ export default function PagamentoHistorico({
 
   const handleSalvarPagamento = async (pagamentoData: Pagamento): Promise<Pagamento> => {
     if (!userId) {
-      console.error('PagamentoHistorico: userId não disponível para salvar pagamento');
       throw new Error('UserId não disponível');
     }
     
     try {
-      console.log('PagamentoHistorico: Salvando pagamento:', pagamentoData);
-      
       let pagamentoSalvo: Pagamento;
       
       if (pagamentoEditando) {
-        console.log('PagamentoHistorico: Atualizando pagamento existente');
         pagamentoSalvo = await dataService.updatePagamento(userId, eventoId, pagamentoEditando.id, pagamentoData);
       } else {
-        console.log('PagamentoHistorico: Criando novo pagamento');
         pagamentoSalvo = await dataService.createPagamento(userId, eventoId, pagamentoData);
-        console.log('PagamentoHistorico: Pagamento criado:', pagamentoSalvo);
       }
       
       // Recarregar resumo financeiro após salvar
@@ -266,7 +242,6 @@ export default function PagamentoHistorico({
         diaFinalPagamento: dataFinalPagamento || null
       });
       
-      console.log('PagamentoHistorico: Chamando onPagamentosChange');
       onPagamentosChange();
       
       // Fechar formulário
@@ -275,14 +250,12 @@ export default function PagamentoHistorico({
       
       return pagamentoSalvo;
     } catch (error) {
-      console.error('Erro ao salvar pagamento:', error);
       throw error;
     }
   };
 
   const handleConfirmarExclusao = async () => {
     if (!userId) {
-      console.error('PagamentoHistorico: userId não disponível para excluir pagamento');
       return;
     }
     
@@ -310,7 +283,7 @@ export default function PagamentoHistorico({
         onPagamentosChange();
         setPagamentoParaExcluir(null);
       } catch (error) {
-        console.error('Erro ao excluir pagamento:', error);
+        // Erro silencioso
       }
     }
   };

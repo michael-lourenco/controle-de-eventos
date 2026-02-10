@@ -47,7 +47,7 @@ const EventoServicosSection: React.FC<EventoServicosSectionProps> = ({
       await onCreateTipo(novoServicoNome.trim());
       setNovoServicoNome('');
     } catch (error) {
-      console.error('EventoServicosSection: erro ao criar novo tipo de serviço', error);
+      // Erro silencioso
     }
   };
 

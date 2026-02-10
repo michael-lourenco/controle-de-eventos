@@ -69,7 +69,7 @@ export default function NovoTemplatePage() {
         setVariaveisDisponiveis(variaveis);
       }
     } catch (error) {
-      console.error('Erro ao carregar variáveis:', error);
+      // Erro ao carregar variáveis
     }
   };
 
@@ -103,7 +103,6 @@ export default function NovoTemplatePage() {
         showToast(error.error || 'Erro ao gerar preview', 'error');
       }
     } catch (error) {
-      console.error('Erro ao gerar preview:', error);
       showToast('Erro ao gerar preview', 'error');
     } finally {
       setLoading(false);
@@ -137,7 +136,6 @@ export default function NovoTemplatePage() {
         showToast(error.error || 'Erro ao salvar template', 'error');
       }
     } catch (error) {
-      console.error('Erro ao salvar template:', error);
       showToast('Erro ao salvar template', 'error');
     } finally {
       setSalvando(false);

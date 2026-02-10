@@ -172,15 +172,8 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
 
   useEffect(() => {
     if (evento) {
-      console.log('EventoForm: Inicializando formulário com evento:', evento);
-      console.log('EventoForm: Dados do cliente:', evento.cliente);
-      console.log('EventoForm: Status do evento:', evento.status, 'Tipo:', typeof evento.status);
-      
       // Usar o status do evento diretamente, como na página de detalhes
       const statusInicial = (evento.status as StatusEvento) || StatusEvento.AGENDADO;
-      
-      console.log('EventoForm: Status do evento:', evento.status);
-      console.log('EventoForm: Status inicial definido:', statusInicial);
       
       setFormData({
         nomeEvento: evento.nomeEvento || '',
@@ -274,7 +267,6 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           }
         }
       } catch (error) {
-        console.error('EventoForm: erro ao carregar tipos de evento', error);
         setErroTiposEvento('Não foi possível carregar os tipos de evento.');
       } finally {
         setLoadingTiposEvento(false);
@@ -316,7 +308,6 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           return validIds;
         });
       } catch (error) {
-        console.error('EventoForm: erro ao carregar tipos de serviço', error);
         setErroTiposServico('Não foi possível carregar os tipos de serviço.');
       } finally {
         setLoadingTiposServico(false);
@@ -337,7 +328,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         setServicosEventoOriginais(servicos);
         setSelectedTiposServicoIds(new Set(servicos.map(servico => servico.tipoServicoId)));
       } catch (error) {
-        console.error('EventoForm: erro ao carregar serviços do evento', error);
+        // Erro silencioso
       }
     };
 
@@ -456,7 +447,6 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         tipoEventoId: novoTipo.id
       }));
     } catch (error) {
-      console.error('EventoForm: erro ao criar novo tipo de evento', error);
       setErroTiposEvento('Não foi possível criar o novo tipo de evento.');
     } finally {
       setCriandoTipoEvento(false);
@@ -517,7 +507,6 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         return atualizado;
       });
     } catch (error) {
-      console.error('EventoForm: erro ao criar novo tipo de serviço', error);
       setErroTiposServico('Não foi possível criar o novo tipo de serviço.');
       throw error;
     } finally {
@@ -527,7 +516,6 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
 
   const sincronizarServicosEvento = async (eventoId: string) => {
     if (!userId) {
-      console.warn('EventoForm: usuário não autenticado para sincronizar serviços.');
       return;
     }
 
@@ -542,7 +530,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
           try {
             servicosAtuais = await dataService.getServicosEvento(userId, eventoId);
           } catch (erro) {
-            console.error('EventoForm: erro ao buscar serviços atuais do evento para sincronização', erro);
+            // Erro silencioso
           }
         }
 
@@ -605,7 +593,6 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         setServicosEventoOriginais(novosServicos);
       }
     } catch (error) {
-      console.error('EventoForm: erro ao sincronizar serviços do evento', error);
       throw error;
     }
   };
@@ -683,7 +670,7 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         }
       }));
     } catch (error) {
-      console.error('Erro ao criar canal de entrada:', error);
+      // Erro silencioso
     }
   };
 
@@ -715,29 +702,23 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('EventoForm: handleSubmit chamado');
     
     if (submitting) {
-      console.log('EventoForm: submissão em andamento, ignorando novo envio');
       return;
     }
     
     if (isLoading) {
-      console.log('EventoForm: sessão ainda carregando');
       return;
     }
     if (!userId) {
-      console.error('EventoForm: usuário não autenticado, abortando criação');
       setErrors({ general: 'Usuário não autenticado' });
       return;
     }
 
     if (!validateForm()) {
-      console.log('EventoForm: Validação falhou');
       return;
     }
     
-    console.log('EventoForm: Validação passou, processando...');
     setSubmitting(true);
 
     try {
@@ -792,15 +773,11 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
         await sincronizarServicosEvento(eventoAtualizado.id);
         onSave(eventoAtualizado);
       } else {
-        console.log('EventoForm: Criando novo evento com dados:', eventoData);
         const novoEvento = await dataService.createEvento(eventoData, userId);
-        console.log('EventoForm: Evento criado:', novoEvento);
         await sincronizarServicosEvento(novoEvento.id);
         onSave(novoEvento);
       }
     } catch (error: any) {
-      console.error('Erro ao salvar evento:', error);
-      
       // Tratar erros de plano
       const erroTratado = handlePlanoError(error, showToast, () => router.push('/planos'));
       

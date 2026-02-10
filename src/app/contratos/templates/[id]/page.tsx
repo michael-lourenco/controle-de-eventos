@@ -65,7 +65,6 @@ export default function EditarTemplatePage() {
         router.push('/contratos/templates');
       }
     } catch (error) {
-      console.error('Erro ao carregar template:', error);
       showToast('Erro ao carregar template', 'error');
       router.push('/contratos/templates');
     } finally {
@@ -102,7 +101,7 @@ export default function EditarTemplatePage() {
         setVariaveisDisponiveis(variaveis);
       }
     } catch (error) {
-      console.error('Erro ao carregar variáveis:', error);
+      // Erro ao carregar variáveis
     }
   };
 
@@ -136,7 +135,6 @@ export default function EditarTemplatePage() {
         showToast(error.error || 'Erro ao gerar preview', 'error');
       }
     } catch (error) {
-      console.error('Erro ao gerar preview:', error);
       showToast('Erro ao gerar preview', 'error');
     } finally {
       setLoading(false);
@@ -170,7 +168,6 @@ export default function EditarTemplatePage() {
         showToast(error.error || 'Erro ao salvar template', 'error');
       }
     } catch (error) {
-      console.error('Erro ao salvar template:', error);
       showToast('Erro ao salvar template', 'error');
     } finally {
       setSalvando(false);

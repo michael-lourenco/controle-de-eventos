@@ -142,26 +142,22 @@ export default function EventoViewPage() {
       showToast('Evento arquivado com sucesso!', 'success');
       router.push('/eventos');
     } catch (error) {
-      console.error('Erro ao arquivar evento:', error);
       showToast('Erro ao arquivar evento', 'error');
     }
   };
 
   const handlePagamentosChange = () => {
     // Função para recarregar pagamentos quando houver mudanças
-    console.log('Pagamentos foram alterados - recarregando dados');
     refetchPagamentos();
   };
 
   const handleCustosChange = () => {
     // Função para recarregar custos quando houver mudanças
-    console.log('Custos foram alterados - recarregando dados');
     refetchCustos();
   };
 
   const handleServicosChange = () => {
     // Função para recarregar serviços quando houver mudanças
-    console.log('Serviços foram alterados - recarregando dados');
     refetchServicos();
   };
 
@@ -211,7 +207,6 @@ export default function EventoViewPage() {
       showToast('Número de impressões atualizado com sucesso!', 'success');
       setEditandoImpressoes(false);
     } catch (error) {
-      console.error('Erro ao atualizar número de impressões:', error);
       // Reverter atualização otimista
       setEventoLocal(evento);
       showToast('Erro ao atualizar número de impressões', 'error');
@@ -320,7 +315,7 @@ export default function EventoViewPage() {
         }, 2000);
         return;
       } catch (error) {
-        console.error('Erro ao copiar texto:', error);
+        // Erro silencioso
       }
     }
     
@@ -350,11 +345,9 @@ export default function EventoViewPage() {
         setTimeout(() => {
           setCopied(false);
         }, 2000);
-      } else {
-        console.error('Falha ao copiar texto');
       }
     } catch (err) {
-      console.error('Erro ao copiar texto:', err);
+      // Erro silencioso
     }
   };
 
@@ -393,7 +386,6 @@ export default function EventoViewPage() {
       // Recarregar evento para garantir sincronização
       await refetchEvento();
     } catch (error) {
-      console.error('Erro ao atualizar status do evento:', error);
       showToast('Erro ao atualizar status do evento', 'error');
       // Reverter atualização otimista em caso de erro
       setEventoLocal(prev => prev ? { ...prev, status: statusAnterior } : null);
