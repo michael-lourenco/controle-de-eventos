@@ -60,7 +60,6 @@ export function usePlano(): UsePlanoReturn {
         });
       }
     } catch (err: any) {
-      console.error('Erro ao carregar dados do plano:', err);
       setError(err.message || 'Erro ao carregar dados do plano');
       // Em caso de erro, definir valores padrão
       setLimites({

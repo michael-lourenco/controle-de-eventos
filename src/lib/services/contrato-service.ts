@@ -35,10 +35,8 @@ export class ContratoService {
       const mes = String(dataEvento.getMonth() + 1).padStart(2, '0');
       const dia = String(dataEvento.getDate()).padStart(2, '0');
       dados.data_evento = `${ano}-${mes}-${dia}`;
-      console.log('ContratoService: data_evento formatada:', dados.data_evento, 'de', evento.dataEvento);
     } else {
       dados.data_evento = '';
-      console.log('ContratoService: evento.dataEvento não disponível');
     }
     
     dados.local_evento = evento.local || '';
@@ -46,8 +44,6 @@ export class ContratoService {
     dados.numero_convidados = evento.numeroConvidados || 0;
     dados.valor_total = evento.valorTotal || 0;
     dados.valor_total_formatado = evento.valorTotal ? `R$ ${evento.valorTotal.toFixed(2).replace('.', ',')}` : 'R$ 0,00';
-    console.log('ContratoService: valor_total preenchido:', dados.valor_total);
-    console.log('ContratoService: valor_total_formatado preenchido:', dados.valor_total_formatado);
     dados.horario_inicio = evento.horarioInicio || '';
     dados.horario_termino = evento.horarioDesmontagem || '';
     
@@ -66,8 +62,6 @@ export class ContratoService {
       dados.duracao_servico = '';
     }
     
-    console.log('ContratoService: horario_termino preenchido:', dados.horario_termino, 'de evento.horarioDesmontagem:', evento.horarioDesmontagem);
-    console.log('ContratoService: duracao_servico preenchido:', dados.duracao_servico, 'de evento.tempoEvento:', evento.tempoEvento);
     dados.observacoes_evento = evento.observacoes || '';
 
     // Preencher tipo_servico com os serviços do evento
@@ -81,15 +75,12 @@ export class ContratoService {
       
       tiposServicoTexto = tiposServicoNomes.join(', ') || '';
       dados.tipo_servico = tiposServicoTexto;
-      console.log('ContratoService: tipo_servico preenchido:', dados.tipo_servico, 'de', servicosEvento.length, 'serviços');
     } else {
       dados.tipo_servico = '';
-      console.log('ContratoService: Nenhum serviço fornecido para preencher tipo_servico');
     }
     
     // Preencher servicos_incluidos (mesmo conteúdo de tipo_servico para o modelo "Contrato Click-se fotos instantâneas")
     dados.servicos_incluidos = tiposServicoTexto;
-    console.log('ContratoService: servicos_incluidos preenchido:', dados.servicos_incluidos);
     
     // Adicionar tipos_servico como array para variável múltipla [tipos_servico]
     if (servicosEvento && servicosEvento.length > 0) {
@@ -108,7 +99,6 @@ export class ContratoService {
     const mes = String(hoje.getMonth() + 1).padStart(2, '0');
     const dia = String(hoje.getDate()).padStart(2, '0');
     dados.data_contrato = `${ano}-${mes}-${dia}`;
-    console.log('ContratoService: data_contrato preenchida:', dados.data_contrato);
 
     const configRepo = repositoryFactory.getConfiguracaoContratoRepository();
     const userId = (evento as any).userId || '';

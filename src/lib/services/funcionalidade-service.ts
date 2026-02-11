@@ -41,14 +41,12 @@ export class FuncionalidadeService {
       // Admin sempre tem todas as permissões
       const user = await this.userRepo.findById(userId);
       if (user?.role === 'admin') {
-        console.log(`[verificarPermissao] Usuário ${userId} é admin, permitindo ${codigoFuncionalidade}`);
         return true;
       }
 
       // Buscar funcionalidade
       const funcionalidade = await this.funcionalidadeRepo.findByCodigo(codigoFuncionalidade);
       if (!funcionalidade || !funcionalidade.ativo) {
-        console.log(`[verificarPermissao] Funcionalidade ${codigoFuncionalidade} não encontrada ou inativa`, { funcionalidade });
         return false;
       }
 
@@ -56,25 +54,16 @@ export class FuncionalidadeService {
       const assinatura = await this.assinaturaRepo.findByUserId(userId);
       
       if (!assinatura) {
-        console.log(`[verificarPermissao] Usuário ${userId} não tem assinatura`);
         return false;
       }
 
       if (assinatura.status !== 'active' && assinatura.status !== 'trial') {
-        console.log(`[verificarPermissao] Assinatura do usuário ${userId} não está ativa`, { status: assinatura.status });
         return false;
       }
 
       const temFuncionalidade = assinatura.funcionalidadesHabilitadas.includes(funcionalidade.id);
-      console.log(`[verificarPermissao] Usuário ${userId}, funcionalidade ${codigoFuncionalidade} (id: ${funcionalidade.id}): ${temFuncionalidade}`, {
-        funcionalidadesHabilitadas: assinatura.funcionalidadesHabilitadas,
-        funcionalidadeId: funcionalidade.id,
-        status: assinatura.status
-      });
-
       return temFuncionalidade;
     } catch (error) {
-      console.error('Erro ao verificar permissão:', error);
       return false;
     }
   }
@@ -101,7 +90,6 @@ export class FuncionalidadeService {
 
       return funcionalidades;
     } catch (error) {
-      console.error('Erro ao obter funcionalidades habilitadas:', error);
       return [];
     }
   }
@@ -162,7 +150,6 @@ export class FuncionalidadeService {
         armazenamentoLimite: limiteUsuarios ? undefined : undefined
       };
     } catch (error) {
-      console.error('Erro ao obter limites do usuário:', error);
       return {
         eventosMesAtual: 0,
         clientesTotal: 0,
@@ -288,10 +275,8 @@ export class FuncionalidadeService {
       return limiteEventos;
     } else {
       // Verificar se tem permissão para criar clientes limitados
-      console.log(`[verificarPodeCriar] Verificando permissão para criar clientes para usuário ${userId}`);
       const temPermissao = await this.verificarPermissao(userId, 'CLIENTES_LIMITADOS');
       if (!temPermissao) {
-        console.log(`[verificarPodeCriar] Usuário ${userId} não tem permissão CLIENTES_LIMITADOS`);
         return { 
           pode: false, 
           motivo: `Seu plano não permite criar ${tipo}` 
@@ -300,7 +285,6 @@ export class FuncionalidadeService {
 
       // Verificar limite anual de clientes
       const limiteClientes = await this.verificarLimiteClientes(userId);
-      console.log(`[verificarPodeCriar] Limite de clientes para usuário ${userId}:`, limiteClientes);
       if (!limiteClientes.pode) {
         return {
           pode: false,

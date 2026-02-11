@@ -46,7 +46,6 @@ export const authOptions: NextAuthOptions = {
               const { syncFirebaseUserToSupabase } = await import('./utils/sync-firebase-user-to-supabase');
               await syncFirebaseUserToSupabase(user.uid, user.email!, nome, role);
             } catch (error) {
-              console.warn('Erro ao sincronizar usuário com Supabase (continuando com Firebase):', error);
             }
             
             return {

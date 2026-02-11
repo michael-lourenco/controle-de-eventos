@@ -41,7 +41,6 @@ export const authService = {
 
       return { success: true, user: userData };
     } catch (error: any) {
-      console.error('Erro ao registrar usuário:', error);
       return { 
         success: false, 
         error: error.message || 'Erro ao registrar usuário' 
@@ -61,7 +60,6 @@ export const authService = {
 
       return { success: true, user: userData };
     } catch (error: any) {
-      console.error('Erro ao fazer login:', error);
       return { 
         success: false, 
         error: error.message || 'Erro ao fazer login' 
@@ -75,7 +73,6 @@ export const authService = {
       await signOut(auth);
       return { success: true };
     } catch (error: any) {
-      console.error('Erro ao fazer logout:', error);
       return { 
         success: false, 
         error: error.message || 'Erro ao fazer logout' 
@@ -92,7 +89,6 @@ export const authService = {
       const userDoc = await getDoc(doc(db, 'controle_users', user.uid));
       return userDoc.data() as UserData;
     } catch (error) {
-      console.error('Erro ao buscar usuário atual:', error);
       return null;
     }
   },
@@ -108,7 +104,6 @@ export const authService = {
       await setDoc(doc(db, 'controle_users', userId), userData, { merge: true });
       return { success: true };
     } catch (error: any) {
-      console.error('Erro ao atualizar usuário:', error);
       return { 
         success: false, 
         error: error.message || 'Erro ao atualizar usuário' 
@@ -127,8 +122,6 @@ export const authService = {
       await sendPasswordResetEmail(auth, email, actionCodeSettings);
       return { success: true };
     } catch (error: any) {
-      console.error('Erro ao enviar email de redefinição:', error);
-      // Não expor se o email existe ou não por segurança
       return { 
         success: false, 
         error: 'Se o email estiver cadastrado, você receberá instruções para redefinir sua senha.'
@@ -142,7 +135,6 @@ export const authService = {
       const email = await verifyPasswordResetCode(auth, code);
       return { success: true, email };
     } catch (error: any) {
-      console.error('Erro ao verificar código:', error);
       return { 
         success: false, 
         error: error.message || 'Código de redefinição inválido ou expirado'
@@ -156,7 +148,6 @@ export const authService = {
       await confirmPasswordReset(auth, code, newPassword);
       return { success: true };
     } catch (error: any) {
-      console.error('Erro ao confirmar redefinição:', error);
       return { 
         success: false, 
         error: error.message || 'Erro ao redefinir senha'

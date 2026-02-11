@@ -46,7 +46,6 @@ export class DataService {
           this._funcionalidadeService = new FuncionalidadeService();
         }
       } catch (error) {
-        console.error('[DataService] Erro ao inicializar FuncionalidadeService:', error);
         // Fallback: criar instância básica
         this._funcionalidadeService = new FuncionalidadeService();
       }
@@ -67,7 +66,6 @@ export class DataService {
         const { RelatoriosReportService } = require('./services/relatorios-report-service');
         this._relatoriosReportService = RelatoriosReportService.getInstance();
       } catch (error) {
-        console.error('[DataService] Erro ao inicializar RelatoriosReportService:', error);
         throw error;
       }
     }
@@ -78,10 +76,9 @@ export class DataService {
   private async ensureCollectionsInitialized(): Promise<void> {
     try {
       await initializeAllCollections();
-    } catch (error) {
-      console.error('Erro ao inicializar collections:', error);
-      // Não lançar erro para não quebrar a aplicação
-    }
+      } catch (error) {
+        // Não lançar erro para não quebrar a aplicação
+      }
   }
 
   private async ensureTiposEventoInitialized(userId: string): Promise<void> {
@@ -108,11 +105,9 @@ export class DataService {
               return; // Sucesso via API route
             } else {
               const errorData = await response.json();
-              console.warn('Erro na API route de inicialização:', errorData);
               // Continuar para tentar método direto
             }
           } catch (apiError) {
-            console.warn('Erro ao inicializar via API route, tentando método direto:', apiError);
             // Continuar para tentar método direto
           }
         }
@@ -145,10 +140,8 @@ export class DataService {
             return; // Sucesso via API route
           }
         } catch (apiError) {
-          console.error('Erro ao garantir tipos de evento padrões (tentativa via API também falhou):', apiError);
         }
       }
-      console.error('Erro ao garantir tipos de evento padrões:', error);
     }
   }
 
@@ -174,11 +167,9 @@ export class DataService {
               return; // Sucesso via API route
             } else {
               const errorData = await response.json();
-              console.warn('Erro na API route de inicialização:', errorData);
               // Continuar para tentar método direto
             }
           } catch (apiError) {
-            console.warn('Erro ao inicializar via API route, tentando método direto:', apiError);
             // Continuar para tentar método direto
           }
         }
@@ -212,10 +203,8 @@ export class DataService {
             return; // Sucesso via API route
           }
         } catch (apiError) {
-          console.error('Erro ao garantir canais de entrada padrões (tentativa via API também falhou):', apiError);
         }
       }
-      console.error('Erro ao garantir canais de entrada padrões:', error);
     }
   }
 
@@ -241,11 +230,9 @@ export class DataService {
               return; // Sucesso via API route
             } else {
               const errorData = await response.json();
-              console.warn('Erro na API route de inicialização:', errorData);
               // Continuar para tentar método direto
             }
           } catch (apiError) {
-            console.warn('Erro ao inicializar via API route, tentando método direto:', apiError);
             // Continuar para tentar método direto
           }
         }
@@ -278,10 +265,8 @@ export class DataService {
             return; // Sucesso via API route
           }
         } catch (apiError) {
-          console.error('Erro ao garantir tipos de serviço padrões (tentativa via API também falhou):', apiError);
         }
       }
-      console.error('Erro ao garantir tipos de serviço padrões:', error);
     }
   }
 
@@ -413,11 +398,8 @@ export class DataService {
       }
     }
 
-    console.log('DataService: Criando evento:', evento);
     try {
       const resultado = await this.eventoRepo.createEvento(evento, userId);
-      console.log('DataService: Evento criado com sucesso:', resultado);
-      
       // COMENTADO: Sincronização com Google Calendar desabilitada - Aguardando permissões diretas da Google
       /*
       // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
@@ -426,9 +408,7 @@ export class DataService {
         try {
           // Importação dinâmica que só funciona no servidor
           const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
-          syncModule.GoogleCalendarSyncService.syncAfterCreate(resultado, userId).catch((error: any) => {
-            console.error('DataService: Erro ao sincronizar evento com Google Calendar:', error);
-          });
+          syncModule.GoogleCalendarSyncService.syncAfterCreate(resultado, userId).catch(() => {});
         } catch (error) {
           // Ignorar erro silenciosamente (pode não estar disponível no cliente)
         }
@@ -437,7 +417,6 @@ export class DataService {
       
       return resultado;
     } catch (error) {
-      console.error('DataService: Erro ao criar evento:', error);
       throw error;
     }
   }
@@ -460,9 +439,7 @@ export class DataService {
       try {
         // Importação dinâmica que só funciona no servidor
         const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
-        syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch((error: any) => {
-          console.error('DataService: Erro ao sincronizar evento atualizado com Google Calendar:', error);
-        });
+        syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch(() => {});
       } catch (error) {
         // Ignorar erro silenciosamente (pode não estar disponível no cliente)
       }
@@ -486,9 +463,7 @@ export class DataService {
       try {
         // Importação dinâmica que só funciona no servidor
         const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
-        syncModule.GoogleCalendarSyncService.syncAfterDelete({ ...evento, arquivado: true }, userId).catch((error: any) => {
-          console.error('DataService: Erro ao sincronizar evento arquivado com Google Calendar:', error);
-        });
+        syncModule.GoogleCalendarSyncService.syncAfterDelete({ ...evento, arquivado: true }, userId).catch(() => {});
       } catch (error) {
         // Ignorar erro silenciosamente (pode não estar disponível no cliente)
       }
@@ -513,9 +488,7 @@ export class DataService {
       try {
         // Importação dinâmica que só funciona no servidor
         const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
-        syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch((error: any) => {
-          console.error('DataService: Erro ao sincronizar evento desarquivado com Google Calendar:', error);
-        });
+        syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch(() => {});
       } catch (error) {
         // Ignorar erro silenciosamente (pode não estar disponível no cliente)
       }
@@ -625,7 +598,6 @@ export class DataService {
           dataAtualizacao: new Date(data.dataAtualizacao),
         };
       } catch (apiError: any) {
-        console.warn('Erro ao criar pagamento via API route, tentando método direto:', apiError);
         // Continuar para tentar método direto
       }
     }
@@ -694,7 +666,6 @@ export class DataService {
       // Já vem ordenado por data de pagamento (mais recente primeiro) do repository
       return pagamentosComEvento;
     } catch (error) {
-      console.error('Erro ao buscar todos os pagamentos:', error);
       return [];
     }
   }
@@ -776,7 +747,6 @@ export class DataService {
       // Buscar apenas tipos ativos por padrão
       return this.tipoCustoRepo.getAtivos(userId);
     } catch (error) {
-      console.error('Erro ao carregar tipos de custo:', error);
       return [];
     }
   }
@@ -817,7 +787,6 @@ export class DataService {
           dataCadastro: new Date(data.dataCadastro),
         };
       } catch (apiError: any) {
-        console.warn('Erro ao criar tipo de custo via API route, tentando método direto:', apiError);
         // Continuar para tentar método direto
       }
     }
@@ -900,7 +869,6 @@ export class DataService {
           evento: data.evento || {} as any,
         };
       } catch (apiError: any) {
-        console.warn('Erro ao criar custo via API route, tentando método direto:', apiError);
         // Continuar para tentar método direto
       }
     }
@@ -961,7 +929,6 @@ export class DataService {
       // Já vem ordenado por data de cadastro (mais recente primeiro) do repository
       return custosComTipo;
     } catch (error) {
-      console.error('Erro ao buscar todos os custos:', error);
       return [];
     }
   }
@@ -977,7 +944,6 @@ export class DataService {
       // Buscar apenas tipos ativos por padrão
       return this.tipoServicoRepo.getAtivos(userId);
     } catch (error) {
-      console.error('Erro ao buscar tipos de serviço:', error);
       throw error;
     }
   }
@@ -992,7 +958,6 @@ export class DataService {
       // Retornar todos (incluindo inativos) - usado em relatórios
       return this.tipoServicoRepo.findAll(userId);
     } catch (error) {
-      console.error('Erro ao buscar tipos de serviço:', error);
       throw error;
     }
   }
@@ -1092,8 +1057,6 @@ export class DataService {
       await this.ensureCanaisEntradaInitialized(userId);
       return await this.canalEntradaRepo.findAll(userId);
     } catch (error) {
-      console.error('Erro ao buscar canais de entrada:', error);
-      // Retornar lista vazia se a subcollection não existe ainda
       return [];
     }
   }
@@ -1258,7 +1221,6 @@ export class DataService {
       // Já vem ordenado por data de cadastro (mais recente primeiro) do repository
       return todosServicos;
     } catch (error) {
-      console.error('Erro ao buscar todos os serviços:', error);
       return [];
     }
   }

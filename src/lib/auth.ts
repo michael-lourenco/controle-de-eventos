@@ -78,7 +78,6 @@ export const getCurrentUser = (): User | null => {
         currentUser = JSON.parse(stored);
         return currentUser;
       } catch (error) {
-        console.error('Erro ao recuperar usuário do localStorage:', error);
         localStorage.removeItem('clickse_user');
       }
     }

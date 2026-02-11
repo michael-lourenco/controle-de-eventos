@@ -14,7 +14,6 @@ export function getInitialSidebarState(): boolean {
     }
     return stored === 'true';
   } catch (error) {
-    console.error('Erro ao ler estado do sidebar:', error);
     return false; // Default: expanded
   }
 }
@@ -23,7 +22,6 @@ export function saveSidebarState(collapsed: boolean): void {
   try {
     localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed.toString());
   } catch (error) {
-    console.error('Erro ao salvar estado do sidebar:', error);
   }
 }
 
