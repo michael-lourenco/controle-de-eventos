@@ -11,6 +11,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { ModeloContrato } from '@/types';
 import ContractPreview from '@/components/ContractPreview';
 import TemplateEditor, { TemplateEditorRef } from '@/components/TemplateEditor';
+import { gerarCamposDoTemplate } from '@/lib/utils/template-variables';
 
 interface VariavelDisponivel {
   chave: string;
@@ -149,6 +150,7 @@ export default function EditarTemplatePage() {
 
     try {
       setSalvando(true);
+      const camposGerados = gerarCamposDoTemplate(formData.template);
       const response = await fetch(`/api/modelos-contrato/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -156,6 +158,7 @@ export default function EditarTemplatePage() {
           nome: formData.nome,
           descricao: formData.descricao,
           template: formData.template,
+          campos: camposGerados,
           ativo: formData.ativo
         })
       });

@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/toast';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import ContractPreview from '@/components/ContractPreview';
 import TemplateEditor, { TemplateEditorRef } from '@/components/TemplateEditor';
+import { gerarCamposDoTemplate } from '@/lib/utils/template-variables';
 
 interface VariavelDisponivel {
   chave: string;
@@ -117,6 +118,7 @@ export default function NovoTemplatePage() {
 
     try {
       setSalvando(true);
+      const camposGerados = gerarCamposDoTemplate(formData.template);
       const response = await fetch('/api/modelos-contrato', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -124,6 +126,7 @@ export default function NovoTemplatePage() {
           nome: formData.nome,
           descricao: formData.descricao,
           template: formData.template,
+          campos: camposGerados,
           ativo: true
         })
       });

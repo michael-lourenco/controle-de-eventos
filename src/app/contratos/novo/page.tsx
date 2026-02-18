@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,33 +8,116 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
-import { ModeloContrato, CampoContrato, Evento, ServicoEvento } from '@/types';
+import { ModeloContrato, Evento } from '@/types';
 import { ContratoService } from '@/lib/services/contrato-service';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { ArrowLeftIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import LoadingHotmart from '@/components/LoadingHotmart';
-import { useCurrentUser } from '@/hooks/useAuth';
-import { dataService } from '@/lib/data-service';
 import TemplateEditor from '@/components/TemplateEditor';
 import ContractPreview from '@/components/ContractPreview';
+import {
+  extrairPlaceholdersDoTemplate,
+  inferirTipoCampo,
+  gerarLabelVariavel,
+} from '@/lib/utils/template-variables';
+
+interface CampoDinamico {
+  chave: string;
+  label: string;
+  tipo: 'text' | 'number' | 'date' | 'currency' | 'textarea' | 'select';
+  tipoVariavel: 'unica' | 'multipla';
+  categoria: 'configuracao' | 'evento' | 'customizada' | 'outro';
+  obrigatorio: boolean;
+  opcoes?: string[];
+}
+
+interface MetadadosVariaveis {
+  configuracoes: string[];
+  customizadas: { chave: string; tipo: 'unica' | 'multipla' }[];
+  evento: string[];
+}
+
+function gerarCamposDinamicos(
+  modelo: ModeloContrato,
+  metadados: MetadadosVariaveis | null
+): CampoDinamico[] {
+  const { unicas, multiplas } = extrairPlaceholdersDoTemplate(modelo.template);
+
+  const chavesVistas = new Set<string>();
+  const chavesOrdenadas: { chave: string; isMultipla: boolean }[] = [];
+
+  for (const chave of unicas) {
+    if (chave.startsWith('#') || chave === 'if') continue;
+    if (!chavesVistas.has(chave)) {
+      chavesVistas.add(chave);
+      chavesOrdenadas.push({ chave, isMultipla: false });
+    }
+  }
+  for (const chave of multiplas) {
+    if (!chavesVistas.has(chave)) {
+      chavesVistas.add(chave);
+      chavesOrdenadas.push({ chave, isMultipla: true });
+    }
+  }
+
+  const configSet = new Set(metadados?.configuracoes || []);
+  const eventoSet = new Set(metadados?.evento || []);
+  const customMap = new Map((metadados?.customizadas || []).map(c => [c.chave, c.tipo]));
+  const camposMap = new Map(modelo.campos.map(c => [c.chave, c]));
+
+  return chavesOrdenadas.map(({ chave, isMultipla }) => {
+    const campoModelo = camposMap.get(chave);
+    const customTipo = customMap.get(chave);
+
+    let categoria: CampoDinamico['categoria'] = 'outro';
+    if (configSet.has(chave)) categoria = 'configuracao';
+    else if (eventoSet.has(chave)) categoria = 'evento';
+    else if (customMap.has(chave)) categoria = 'customizada';
+
+    const efetivamenteMultipla = isMultipla || customTipo === 'multipla';
+    const tipo = campoModelo?.tipo ?? inferirTipoCampo(chave, efetivamenteMultipla);
+
+    return {
+      chave,
+      label: campoModelo?.label || gerarLabelVariavel(chave),
+      tipo,
+      tipoVariavel: efetivamenteMultipla ? 'multipla' as const : 'unica' as const,
+      categoria,
+      obrigatorio: campoModelo?.obrigatorio ?? false,
+      opcoes: campoModelo?.opcoes,
+    };
+  });
+}
+
+const CATEGORIA_LABELS: Record<CampoDinamico['categoria'], string> = {
+  configuracao: 'Dados da Empresa',
+  evento: 'Dados do Evento / Cliente',
+  customizada: 'Campos Personalizados',
+  outro: 'Outras Variáveis',
+};
+
+const CATEGORIA_ORDEM: CampoDinamico['categoria'][] = ['evento', 'configuracao', 'customizada', 'outro'];
 
 function NovoContratoPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
-  const { userId } = useCurrentUser();
   const eventoId = searchParams.get('eventoId');
 
   const [passo, setPasso] = useState(1);
   const [modelos, setModelos] = useState<ModeloContrato[]>([]);
   const [modeloSelecionado, setModeloSelecionado] = useState<ModeloContrato | null>(null);
   const [evento, setEvento] = useState<Evento | null>(null);
-  const [servicosEvento, setServicosEvento] = useState<ServicoEvento[]>([]);
   const [dadosPreenchidos, setDadosPreenchidos] = useState<Record<string, any>>({});
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [conteudoEditado, setConteudoEditado] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [configExistente, setConfigExistente] = useState<boolean | null>(null);
+  const [metadadosVariaveis, setMetadadosVariaveis] = useState<MetadadosVariaveis | null>(null);
+
+  const camposDinamicos = useMemo(() => {
+    if (!modeloSelecionado) return [];
+    return gerarCamposDinamicos(modeloSelecionado, metadadosVariaveis);
+  }, [modeloSelecionado, metadadosVariaveis]);
 
   useEffect(() => {
     loadModelos();
@@ -48,31 +131,6 @@ function NovoContratoPageContent() {
       gerarPreview();
     }
   }, [modeloSelecionado, dadosPreenchidos]);
-
-  // Atualizar dados quando serviços do evento forem carregados e modelo já estiver selecionado
-  useEffect(() => {
-    const atualizarDadosComServicos = async () => {
-      if (evento && modeloSelecionado && servicosEvento.length > 0) {
-        try {
-          const configResponse = await fetch('/api/configuracao-contrato/campos-fixos');
-          if (configResponse.ok) {
-            const camposFixosResult = await configResponse.json();
-            const camposFixos = camposFixosResult.data || camposFixosResult;
-            const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modeloSelecionado, servicosEvento);
-            setDadosPreenchidos({ ...camposFixos, ...dadosEvento });
-          } else {
-            // Sem campos fixos, usar apenas dados do evento
-            const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modeloSelecionado, servicosEvento);
-            setDadosPreenchidos(dadosEvento);
-          }
-        } catch (error) {
-          // Erro ao atualizar dados com serviços
-        }
-      }
-    };
-
-    atualizarDadosComServicos();
-  }, [servicosEvento, evento, modeloSelecionado]);
 
   const loadModelos = async () => {
     try {
@@ -113,26 +171,8 @@ function NovoContratoPageContent() {
       const response = await fetch(`/api/eventos/${eventoId}`);
       if (response.ok) {
         const result = await response.json();
-        // createApiResponse retorna { data: evento }
         const eventoData = result.data || result;
         setEvento(eventoData);
-        
-        // Buscar serviços do evento
-        let servicos: ServicoEvento[] = [];
-        if (userId && eventoId) {
-          try {
-            servicos = await dataService.getServicosEvento(userId, eventoId);
-            setServicosEvento(servicos);
-          } catch (error) {
-            // Erro ao carregar serviços do evento
-          }
-        }
-        
-        // Se já houver modelo selecionado, preencher dados com os serviços carregados
-        if (eventoData && modeloSelecionado) {
-          const dados = await ContratoService.preencherDadosDoEvento(eventoData, modeloSelecionado, servicos);
-          setDadosPreenchidos(dados);
-        }
       } else {
         const errorData = await response.json();
         showToast(errorData.error || 'Erro ao carregar evento', 'error');
@@ -146,82 +186,45 @@ function NovoContratoPageContent() {
     setModeloSelecionado(modelo);
     setPasso(2);
 
-    // Se houver evento mas serviços ainda não foram carregados, tentar carregar agora
-    let servicosParaUsar = servicosEvento;
-    if (evento && eventoId && userId && servicosEvento.length === 0) {
-      try {
-        servicosParaUsar = await dataService.getServicosEvento(userId, eventoId);
-        setServicosEvento(servicosParaUsar);
-      } catch (error) {
-        // Erro ao carregar serviços
-      }
-    }
+    // Buscar todas as variáveis com valores + metadados numa única chamada server-side.
+    // O endpoint resolve config + custom + evento (se eventoId) sem depender de repositoryFactory no client.
+    const apiUrl = eventoId
+      ? `/api/variaveis-contrato/disponiveis?eventoId=${eventoId}`
+      : '/api/variaveis-contrato/disponiveis';
 
-    // Sempre buscar campos fixos via API (mesmo quando há evento)
     try {
-      const configResponse = await fetch('/api/configuracao-contrato');
-      
-      if (configResponse.ok) {
-        const configResult = await configResponse.json();
-        // createApiResponse retorna { data: config }
-        const config = configResult.data || configResult;
-        if (config && config.id) {
-          setConfigExistente(true);
-          // Buscar campos fixos formatados
-          const camposFixosResponse = await fetch('/api/configuracao-contrato/campos-fixos');
-          if (camposFixosResponse.ok) {
-            const camposFixosResult = await camposFixosResponse.json();
-            // createApiResponse retorna { data: camposFixos }
-            const camposFixos = camposFixosResult.data || camposFixosResult;
-            
-          // Se houver evento, mesclar dados do evento com campos fixos
-          if (evento) {
-            const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
-            // Mesclar: campos fixos primeiro, depois dados do evento (evento sobrescreve campos fixos se houver conflito)
-            const dadosMesclados = { ...camposFixos, ...dadosEvento };
-            setDadosPreenchidos(dadosMesclados);
-          } else {
-            // Sem evento, usar apenas campos fixos e adicionar data_contrato
-            const hoje = new Date();
-            const ano = hoje.getFullYear();
-            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-            const dia = String(hoje.getDate()).padStart(2, '0');
-            const dataContrato = `${ano}-${mes}-${dia}`;
-            setDadosPreenchidos({ ...camposFixos, data_contrato: dataContrato });
-          }
-          } else {
-            setConfigExistente(false);
-            // Se houver evento, ainda tentar preencher com dados do evento
-            if (evento) {
-              const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
-              setDadosPreenchidos(dadosEvento);
-            }
-          }
-        } else {
-          setConfigExistente(false);
-          // Se houver evento, ainda tentar preencher com dados do evento
-          if (evento) {
-            const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
-            setDadosPreenchidos(dadosEvento);
-          }
+      const response = await fetch(apiUrl);
+      if (response.ok) {
+        const result = await response.json();
+        const data = result.data || result;
+
+        setMetadadosVariaveis(data.metadados || null);
+
+        const variaveis: Record<string, any> = data.variaveis || {};
+
+        // Garantir data_contrato preenchida
+        if (!variaveis.data_contrato) {
+          const hoje = new Date();
+          const ano = hoje.getFullYear();
+          const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+          const dia = String(hoje.getDate()).padStart(2, '0');
+          variaveis.data_contrato = `${ano}-${mes}-${dia}`;
+        }
+
+        setDadosPreenchidos(variaveis);
+
+        // Verificar se configuração da empresa existe
+        const temConfig = !!(variaveis.razao_social || variaveis.cnpj);
+        setConfigExistente(temConfig);
+        if (!temConfig && !eventoId) {
           showToast('Configure os dados da empresa antes de criar contratos', 'warning');
         }
       } else {
         setConfigExistente(false);
-        // Se houver evento, ainda tentar preencher com dados do evento
-        if (evento) {
-          const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
-          setDadosPreenchidos(dadosEvento);
-        }
-        showToast('Configure os dados da empresa antes de criar contratos', 'warning');
+        showToast('Erro ao carregar variáveis do contrato', 'error');
       }
-    } catch (error) {
+    } catch {
       setConfigExistente(false);
-      // Se houver evento, ainda tentar preencher com dados do evento
-      if (evento) {
-        const dadosEvento = await ContratoService.preencherDadosDoEvento(evento, modelo, servicosParaUsar);
-        setDadosPreenchidos(dadosEvento);
-      }
     }
   };
 
@@ -317,60 +320,128 @@ function NovoContratoPageContent() {
     }
   };
 
-  const renderCampo = (campo: CampoContrato) => {
-    const valor = dadosPreenchidos[campo.chave] || campo.valorPadrao || '';
+  const getValorExibicao = (campo: CampoDinamico): string => {
+    const raw = dadosPreenchidos[campo.chave];
+    if (raw === undefined || raw === null) return '';
+    if (Array.isArray(raw)) return raw.join(', ');
+    return String(raw);
+  };
 
-    switch (campo.tipo) {
-      case 'textarea':
-        return (
-          <div key={campo.id} className="mb-4">
-            <label className="block text-sm font-medium mb-1">{campo.label}{campo.obrigatorio && ' *'}</label>
-            <Textarea
-              value={valor}
-              onChange={(e) => setDadosPreenchidos({ ...dadosPreenchidos, [campo.chave]: e.target.value })}
-              required={campo.obrigatorio}
-            />
-          </div>
-        );
-      case 'select':
-        return (
-          <div key={campo.id} className="mb-4">
-            <label className="block text-sm font-medium mb-1">{campo.label}{campo.obrigatorio && ' *'}</label>
-            <select
-              value={valor}
-              onChange={(e) => setDadosPreenchidos({ ...dadosPreenchidos, [campo.chave]: e.target.value })}
-              className="w-full px-3 py-2 border rounded"
-              required={campo.obrigatorio}
-            >
-              <option value="">Selecione...</option>
-              {campo.opcoes?.map(op => (
-                <option key={op} value={op}>{op}</option>
-              ))}
-            </select>
-          </div>
-        );
-      default:
-        // Para campos currency, usar text para aceitar valor formatado
-        const inputType = campo.tipo === 'date' 
-          ? 'date' 
-          : campo.tipo === 'currency' 
-            ? 'text' 
-            : campo.tipo === 'number' 
-              ? 'number' 
-              : 'text';
-        
-        return (
-          <div key={campo.id} className="mb-4">
-            <Input
-              label={campo.label}
-              type={inputType}
-              value={valor}
-              onChange={(e) => setDadosPreenchidos({ ...dadosPreenchidos, [campo.chave]: e.target.value })}
-              required={campo.obrigatorio}
-            />
-          </div>
-        );
+  const handleCampoChange = (campo: CampoDinamico, valor: string) => {
+    if (campo.tipoVariavel === 'multipla') {
+      const arrayVal = valor.split(',').map(v => v.trim()).filter(Boolean);
+      setDadosPreenchidos(prev => ({ ...prev, [campo.chave]: arrayVal }));
+    } else {
+      setDadosPreenchidos(prev => ({ ...prev, [campo.chave]: valor }));
     }
+  };
+
+  const renderCampoDinamico = (campo: CampoDinamico) => {
+    const valor = getValorExibicao(campo);
+    const temValor = valor !== '';
+    const borderClass = !temValor && !campo.obrigatorio
+      ? 'border-amber-300 dark:border-amber-600'
+      : '';
+
+    if (campo.tipoVariavel === 'multipla') {
+      return (
+        <div key={campo.chave} className="mb-3">
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            {campo.label}{campo.obrigatorio && ' *'}
+            <span className="ml-2 text-xs text-purple-600 dark:text-purple-400 font-normal">(lista)</span>
+          </label>
+          <Textarea
+            value={valor}
+            onChange={(e) => handleCampoChange(campo, e.target.value)}
+            placeholder="Separe os itens por vírgula"
+            className={borderClass}
+            required={campo.obrigatorio}
+          />
+        </div>
+      );
+    }
+
+    if (campo.tipo === 'textarea') {
+      return (
+        <div key={campo.chave} className="mb-3">
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            {campo.label}{campo.obrigatorio && ' *'}
+          </label>
+          <Textarea
+            value={valor}
+            onChange={(e) => handleCampoChange(campo, e.target.value)}
+            className={borderClass}
+            required={campo.obrigatorio}
+          />
+        </div>
+      );
+    }
+
+    if (campo.tipo === 'select' && campo.opcoes) {
+      return (
+        <div key={campo.chave} className="mb-3">
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            {campo.label}{campo.obrigatorio && ' *'}
+          </label>
+          <select
+            value={valor}
+            onChange={(e) => handleCampoChange(campo, e.target.value)}
+            className={`w-full px-3 py-2 border rounded-md bg-input text-text-primary ${borderClass}`}
+            required={campo.obrigatorio}
+          >
+            <option value="">Selecione...</option>
+            {campo.opcoes.map(op => (
+              <option key={op} value={op}>{op}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    const inputType = campo.tipo === 'date'
+      ? 'date'
+      : campo.tipo === 'number'
+        ? 'number'
+        : 'text';
+
+    return (
+      <div key={campo.chave} className="mb-3">
+        <Input
+          label={`${campo.label}${campo.obrigatorio ? ' *' : ''}`}
+          type={inputType}
+          value={valor}
+          onChange={(e) => handleCampoChange(campo, e.target.value)}
+          className={borderClass}
+          required={campo.obrigatorio}
+        />
+      </div>
+    );
+  };
+
+  const renderCategoria = (categoria: CampoDinamico['categoria']) => {
+    const campos = camposDinamicos.filter(c => c.categoria === categoria);
+    if (campos.length === 0) return null;
+
+    const preenchidos = campos.filter(c => {
+      const val = dadosPreenchidos[c.chave];
+      return val !== undefined && val !== null && val !== '' && !(Array.isArray(val) && val.length === 0);
+    }).length;
+
+    return (
+      <div key={categoria} className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-text-primary uppercase tracking-wide">
+            {CATEGORIA_LABELS[categoria]}
+          </h3>
+          <span className="text-xs text-text-secondary">
+            {preenchidos}/{campos.length} preenchidos
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+          {campos.map(renderCampoDinamico)}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -453,14 +524,25 @@ function NovoContratoPageContent() {
             <Card className="mb-4">
               <CardHeader>
                 <CardTitle>Preencher Dados do Contrato</CardTitle>
-                <CardDescription>Modelo: {modeloSelecionado.nome}</CardDescription>
+                <CardDescription>
+                  Modelo: {modeloSelecionado.nome}
+                  {camposDinamicos.length > 0 && (
+                    <span className="ml-2 text-xs">
+                      — {camposDinamicos.length} {camposDinamicos.length === 1 ? 'variável encontrada' : 'variáveis encontradas'} no template
+                    </span>
+                  )}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {modeloSelecionado.campos
-                    .sort((a, b) => a.ordem - b.ordem)
-                    .map(campo => renderCampo(campo))}
-                </div>
+                {camposDinamicos.length > 0 ? (
+                  <div>
+                    {CATEGORIA_ORDEM.map(cat => renderCategoria(cat))}
+                  </div>
+                ) : (
+                  <p className="text-text-secondary text-sm py-4">
+                    Nenhuma variável encontrada no template. Verifique se o template utiliza o formato {'{{variável}}'} ou {'[variável]'}.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
