@@ -111,29 +111,19 @@ export class PDFService {
     let launchOptions: any;
 
     if (useChromium) {
-      // Ambiente serverless: puppeteer-core + @sparticuz/chromium (obrigatório, sem fallback)
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         puppeteer = require('puppeteer-core');
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
         const chromium = require('@sparticuz/chromium') as any;
 
-        // Desabilitar WebGL (opcional, pode melhorar estabilidade)
         chromium.setGraphicsMode = false;
 
-        const executablePath = await chromium.executablePath();
-        // headless "shell" é exigido pelo @sparticuz/chromium (headless_shell); tipos do Puppeteer não incluem "shell"
-        const headless = 'shell' as unknown as boolean | 'new';
-
         launchOptions = {
-          args: puppeteer.defaultArgs({
-            args: chromium.args,
-            headless
-          }),
-          defaultViewport: null,
-          executablePath,
-          headless,
+          args: chromium.args,
+          defaultViewport: chromium.defaultViewport,
+          executablePath: await chromium.executablePath(),
+          headless: chromium.headless,
           timeout: 60_000
         };
         console.log('[PDF] Usando @sparticuz/chromium (serverless)');
@@ -141,7 +131,7 @@ export class PDFService {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[PDF] Falha ao carregar @sparticuz/chromium:', e);
         throw new Error(
-          `Em ambiente serverless (Vercel/Lambda) é necessário @sparticuz/chromium. Não use fallback para Puppeteer. Detalhes: ${msg}`
+          `Em ambiente serverless (Vercel/Lambda) é necessário @sparticuz/chromium. Detalhes: ${msg}`
         );
       }
     } else {
