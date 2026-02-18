@@ -119,14 +119,19 @@ export class PDFService {
 
         chromium.setGraphicsMode = false;
 
+        const executablePath = await chromium.executablePath();
+
         launchOptions = {
-          args: chromium.args,
+          args: puppeteer.defaultArgs({
+            args: chromium.args,
+            headless: 'shell'
+          }),
           defaultViewport: chromium.defaultViewport,
-          executablePath: await chromium.executablePath(),
-          headless: chromium.headless,
+          executablePath,
+          headless: 'shell' as unknown as boolean,
           timeout: 60_000
         };
-        console.log('[PDF] Usando @sparticuz/chromium (serverless)');
+        console.log('[PDF] Usando @sparticuz/chromium (serverless), executablePath:', executablePath);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         console.error('[PDF] Falha ao carregar @sparticuz/chromium:', e);
