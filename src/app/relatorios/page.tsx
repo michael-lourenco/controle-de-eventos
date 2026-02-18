@@ -13,6 +13,7 @@ import ImpressoesReport from '@/components/relatorios/ImpressoesReport';
 import ReceitaMensalReport from '@/components/relatorios/ReceitaMensalReport';
 import DetalhamentoReceberReport from '@/components/relatorios/DetalhamentoReceberReport';
 import PlanoBloqueio from '@/components/PlanoBloqueio';
+import PlanOverlay from '@/components/PlanOverlay';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
@@ -150,6 +151,7 @@ export default function RelatoriosPage() {
 
   return (
     <Layout>
+      <PlanOverlay>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
@@ -449,6 +451,7 @@ export default function RelatoriosPage() {
           </PlanoBloqueio>
         </div>
       </div>
+      </PlanOverlay>
     </Layout>
   );
 }

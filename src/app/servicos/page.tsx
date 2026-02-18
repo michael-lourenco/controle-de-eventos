@@ -21,6 +21,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import PlanOverlay from '@/components/PlanOverlay';
 import { useToast } from '@/components/ui/toast';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
 
@@ -194,6 +195,7 @@ export default function ServicosPage() {
 
   return (
     <Layout>
+      <PlanOverlay>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -487,6 +489,7 @@ export default function ServicosPage() {
           onConfirm={handleConfirmarExclusao}
         />
       </div>
+      </PlanOverlay>
     </Layout>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
@@ -11,14 +11,134 @@ import {
   ExclamationTriangleIcon,
   ClockIcon,
   EyeIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  UserIcon,
+  DocumentTextIcon,
+  ChartBarIcon,
+  BanknotesIcon,
+  LockClosedIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { useDashboardData } from '@/hooks/useData';
+import { usePlano } from '@/lib/hooks/usePlano';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 
-export default function DashboardPage() {
+const FEATURE_CARDS = [
+  {
+    title: 'Eventos',
+    description: 'Gerencie todos os seus eventos em um só lugar',
+    icon: CalendarIcon
+  },
+  {
+    title: 'Clientes',
+    description: 'Cadastre e organize seus clientes',
+    icon: UserIcon
+  },
+  {
+    title: 'Contratos',
+    description: 'Crie contratos profissionais automaticamente',
+    icon: DocumentTextIcon
+  },
+  {
+    title: 'Relatórios',
+    description: 'Acompanhe suas finanças com relatórios detalhados',
+    icon: ChartBarIcon
+  },
+  {
+    title: 'Pagamentos',
+    description: 'Controle pagamentos e valores a receber',
+    icon: BanknotesIcon
+  }
+];
+
+function OnboardingScreen({ bemVindo }: { bemVindo: boolean }) {
+  const router = useRouter();
+  return (
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <div className="text-center space-y-3">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-2">
+          <SparklesIcon className="h-8 w-8" />
+        </div>
+        <h1 className="text-3xl font-bold text-text-primary sm:text-4xl">
+          Bem-vindo ao Clicksehub!
+        </h1>
+        <p className="text-text-secondary text-lg">
+          Tudo que você precisa para gerenciar eventos, clientes e finanças em um só lugar.
+        </p>
+        {bemVindo && (
+          <div className="rounded-lg bg-success-bg border border-success/20 px-4 py-3 text-success-text text-sm font-medium inline-block">
+            Conta criada com sucesso! Agora escolha seu plano para começar a usar o sistema.
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {FEATURE_CARDS.map((feature) => {
+          const Icon = feature.icon;
+          return (
+            <Card
+              key={feature.title}
+              className="opacity-90 transition-all hover:opacity-100 hover:shadow-md border-border bg-surface/80 cursor-default"
+            >
+              <CardContent className="p-5 flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-shrink-0 rounded-lg bg-primary/10 p-2.5 text-primary">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <LockClosedIcon className="h-5 w-5 text-text-muted flex-shrink-0" aria-hidden />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-text-primary">{feature.title}</h3>
+                  <p className="text-sm text-text-secondary mt-0.5">{feature.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <div className="text-center pt-4">
+        <Button
+          size="lg"
+          className="text-base px-8 py-6 font-semibold shadow-lg hover:shadow-xl transition-shadow"
+          onClick={() => router.push('/planos')}
+        >
+          Escolha seu plano para começar
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function DashboardContentInner() {
+  const searchParams = useSearchParams();
+  const { statusPlano, loading: loadingPlano } = usePlano();
+  const bemVindo = searchParams.get('bemVindo') === 'true';
+
+  if (loadingPlano) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-text-secondary">Carregando...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!statusPlano?.ativo) {
+    return (
+      <Layout>
+        <OnboardingScreen bemVindo={bemVindo} />
+      </Layout>
+    );
+  }
+
+  return <DashboardWithData />;
+}
+
+function DashboardWithData() {
   const router = useRouter();
   const { data: dashboardData, loading, error, refetch } = useDashboardData();
   const [refreshing, setRefreshing] = useState(false);
@@ -32,7 +152,7 @@ export default function DashboardPage() {
       setRefreshing(false);
     }
   };
-  
+
   if (loading) {
     return (
       <Layout>
@@ -42,7 +162,7 @@ export default function DashboardPage() {
       </Layout>
     );
   }
-  
+
   if (error) {
     return (
       <Layout>
@@ -52,7 +172,7 @@ export default function DashboardPage() {
       </Layout>
     );
   }
-  
+
   if (!dashboardData) {
     return (
       <Layout>
@@ -523,5 +643,21 @@ export default function DashboardPage() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <Layout>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-text-secondary">Carregando...</div>
+          </div>
+        </Layout>
+      }
+    >
+      <DashboardContentInner />
+    </Suspense>
   );
 }

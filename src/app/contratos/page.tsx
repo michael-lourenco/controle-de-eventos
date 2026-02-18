@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
+import PlanOverlay from '@/components/PlanOverlay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -217,6 +218,7 @@ export default function ContratosPage() {
 
   return (
     <Layout>
+      <PlanOverlay>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -562,6 +564,7 @@ export default function ContratosPage() {
           onConfirm={handleConfirmarExclusao}
         />
       </div>
+      </PlanOverlay>
     </Layout>
   );
 }

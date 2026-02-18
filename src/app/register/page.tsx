@@ -66,7 +66,13 @@ export default function RegisterPage() {
       );
 
       if (result.success) {
-        router.push('/painel');
+        // Notificar admin (fire-and-forget)
+        fetch('/api/notificacao-admin/novo-cadastro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome: formData.nome, email: formData.email })
+        }).catch(() => {});
+        router.push('/planos?bemVindo=true');
       } else {
         setError(result.error || 'Erro ao criar conta');
       }

@@ -30,7 +30,8 @@ import {
   BanknotesIcon,
   CalculatorIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  BellIcon
 } from '@heroicons/react/24/outline';
 
 interface LayoutProps {
@@ -55,11 +56,12 @@ const navigation = [
 const adminNavigation = [
   { name: 'Funcionalidades', href: '/admin/funcionalidades', icon: CogIcon },
   { name: 'Planos', href: '/admin/planos', icon: CogIcon },
+  { name: 'Atividades', href: '/admin/atividades', icon: BellIcon },
 ];
 
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showPlanoBanner, setShowPlanoBanner] = useState(true);
+  // Banner de plano não é dismissível - sempre visível até adquirir plano
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -411,43 +413,36 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Main content */}
       <div className={`transition-all duration-300 ${isCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
-        {/* Banner de Oferta de Plano */}
-        {!loadingPlano && !temPlanoAtivo && showPlanoBanner && (
-          <div className="sticky top-0 z-50 bg-gradient-to-r from-primary/10 to-accent/10 border-b border-primary/20 px-4 py-3 sm:px-6 lg:px-8">
+        {/* Banner de Plano - Não dismissível, sempre visível até ter plano */}
+        {!loadingPlano && !temPlanoAtivo && (
+          <div className="sticky top-0 z-50 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-red-500/10 border-b-2 border-amber-500/40 px-4 py-3 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1">
-                <CreditCardIcon className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="flex-shrink-0 p-1.5 bg-amber-500/20 rounded-full">
+                  <CreditCardIcon className="h-5 w-5 text-amber-600" />
+                </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-text-primary">
-                    Assine um plano para desbloquear todas as funcionalidades
+                  <p className="text-sm font-semibold text-text-primary">
+                    Você ainda não possui um plano ativo
                   </p>
                   <p className="text-xs text-text-secondary mt-0.5">
-                    Acesse as configurações para ver os planos disponíveis
+                    Adquira um plano para desbloquear todas as funcionalidades do sistema
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => router.push('/configuracoes')}
-                  className="bg-primary hover:bg-accent text-white"
-                >
-                  Ver Planos
-                </Button>
-                <button
-                  onClick={() => setShowPlanoBanner(false)}
-                  className="p-1 text-text-muted hover:text-text-primary transition-colors cursor-pointer"
-                  aria-label="Fechar banner"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
+              <Button
+                size="sm"
+                onClick={() => router.push('/planos')}
+                className="bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-sm"
+              >
+                Ver Planos Disponíveis
+              </Button>
             </div>
           </div>
         )}
 
         {/* Top bar */}
-        <div className={`sticky ${!loadingPlano && !temPlanoAtivo && showPlanoBanner ? 'top-[73px]' : 'top-0'} z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-surface/80 backdrop-blur-md px-4 shadow-lg sm:gap-x-6 sm:px-6 lg:px-8`}>
+        <div className={`sticky ${!loadingPlano && !temPlanoAtivo ? 'top-[73px]' : 'top-0'} z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-surface/80 backdrop-blur-md px-4 shadow-lg sm:gap-x-6 sm:px-6 lg:px-8`}>
           <button
             type="button"
             className="-m-2.5 p-2.5 text-text-primary lg:hidden cursor-pointer"

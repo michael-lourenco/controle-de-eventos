@@ -22,6 +22,7 @@ import { useCurrentUser } from '@/hooks/useAuth';
 import { dataService } from '@/lib/data-service';
 import { usePlano } from '@/lib/hooks/usePlano';
 import LimiteUsoCompacto from '@/components/LimiteUsoCompacto';
+import PlanOverlay from '@/components/PlanOverlay';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
@@ -317,6 +318,7 @@ export default function EventosPage() {
 
   return (
     <Layout>
+      <PlanOverlay>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-3 sm:gap-4">
@@ -820,6 +822,7 @@ export default function EventosPage() {
           onConfirm={handleConfirmarArquivamento}
         />
       </div>
+      </PlanOverlay>
     </Layout>
   );
 }

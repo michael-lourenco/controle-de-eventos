@@ -11,6 +11,7 @@ import { dataService } from '@/lib/data-service';
 import { Cliente, CanalEntrada } from '@/types';
 import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import PlanoBloqueio from '@/components/PlanoBloqueio';
+import PlanOverlay from '@/components/PlanOverlay';
 import { usePlano } from '@/lib/hooks/usePlano';
 import LimiteUsoCompacto from '@/components/LimiteUsoCompacto';
 import {
@@ -307,6 +308,7 @@ export default function ClientesPage() {
 
   return (
     <Layout>
+      <PlanOverlay>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-3 sm:gap-4">
@@ -844,6 +846,7 @@ export default function ClientesPage() {
           onConfirm={handleConfirmarArquivamento}
         />
       </div>
+      </PlanOverlay>
     </Layout>
   );
 }

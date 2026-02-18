@@ -14,6 +14,7 @@ import { syncFirebaseUserToSupabase } from '@/lib/utils/sync-firebase-user-to-su
 import { createPasswordResetLink } from './password-link-service';
 import { generateFirstAccessEmailTemplate } from './email-service';
 import { sendEmail, isEmailServiceConfigured } from './resend-email-service';
+import { notificarNovaAquisicaoPlano, notificarCancelamentoPlano } from './admin-notification-service';
 
 export interface HotmartWebhookPayload {
   event: string;
@@ -370,6 +371,16 @@ export class HotmartWebhookService {
               console.error('[HotmartWebhook] Stack:', err?.stack);
             }
           }
+          try {
+            await notificarNovaAquisicaoPlano({
+              nomeUsuario: user.nome || 'Cliente',
+              emailUsuario: user.email,
+              nomePlano: plano.nome,
+              dataAquisicao: new Date(),
+            });
+          } catch (err: any) {
+            console.error('[HotmartWebhook] Erro ao notificar admin (nova aquisição):', err?.message);
+          }
           break;
         case 'activated':
           result = await this.processarAtivacao(hotmartSubscriptionId, subscription);
@@ -518,6 +529,21 @@ export class HotmartWebhookService {
 
     // Cancelar mas manter ativa até o fim do período
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'cancelled');
+
+    try {
+      const userCancel = await this.userRepo.findById(assinatura.userId);
+      const planoCancel = assinatura.planoId ? await this.planoRepo.findById(assinatura.planoId) : null;
+      if (userCancel && planoCancel?.nome) {
+        await notificarCancelamentoPlano({
+          nomeUsuario: userCancel.nome || 'Cliente',
+          emailUsuario: userCancel.email,
+          nomePlano: planoCancel.nome,
+          dataCancelamento,
+        });
+      }
+    } catch (err: any) {
+      console.error('[HotmartWebhook] Erro ao notificar admin (cancelamento):', err?.message);
+    }
 
     return { success: true, message: 'Assinatura cancelada (mantida ativa até fim do período)' };
   }

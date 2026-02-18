@@ -21,6 +21,7 @@ import {
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
+import PlanOverlay from '@/components/PlanOverlay';
 import { useToast } from '@/components/ui/toast';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -190,6 +191,7 @@ export default function TiposEventoPage() {
 
   return (
     <Layout>
+      <PlanOverlay>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -461,6 +463,7 @@ export default function TiposEventoPage() {
           onConfirm={confirmarExclusao}
         />
       </div>
+      </PlanOverlay>
     </Layout>
   );
 }

@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Layout from '@/components/Layout';
+import PlanOverlay from '@/components/PlanOverlay';
 import { useAllPagamentos } from '@/hooks/useData';
 import { Pagamento, Evento } from '@/types';
 
@@ -118,6 +119,7 @@ export default function PagamentosPage() {
 
   return (
     <Layout>
+      <PlanOverlay>
       <div className="space-y-6">
         {/* Cabeçalho */}
         <div className="flex items-center justify-between">
@@ -364,6 +366,7 @@ export default function PagamentosPage() {
           </CardContent>
         </Card>
       </div>
+      </PlanOverlay>
     </Layout>
   );
 }
