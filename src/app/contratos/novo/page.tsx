@@ -111,6 +111,7 @@ function NovoContratoPageContent() {
   const [previewHtml, setPreviewHtml] = useState<string>('');
   const [conteudoEditado, setConteudoEditado] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [loadingModelos, setLoadingModelos] = useState(true);
   const [configExistente, setConfigExistente] = useState<boolean | null>(null);
   const [metadadosVariaveis, setMetadadosVariaveis] = useState<MetadadosVariaveis | null>(null);
 
@@ -134,10 +135,10 @@ function NovoContratoPageContent() {
 
   const loadModelos = async () => {
     try {
+      setLoadingModelos(true);
       const response = await fetch('/api/modelos-contrato');
       if (response.ok) {
         const result = await response.json();
-        // createApiResponse retorna { data: modelos[] }
         const modelosData = result.data || result;
         const modelosArray = Array.isArray(modelosData) ? modelosData : [];
         setModelos(modelosArray);
@@ -163,6 +164,8 @@ function NovoContratoPageContent() {
       }
     } catch (error) {
       showToast('Erro ao carregar modelos', 'error');
+    } finally {
+      setLoadingModelos(false);
     }
   };
 
@@ -460,7 +463,12 @@ function NovoContratoPageContent() {
               <CardTitle>Selecione o Modelo de Contrato</CardTitle>
             </CardHeader>
             <CardContent>
-              {modelos.length === 0 ? (
+              {loadingModelos ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <LoadingHotmart size="md" />
+                  <p className="mt-4 text-text-secondary">Carregando modelos...</p>
+                </div>
+              ) : modelos.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-text-secondary mb-4">Nenhum modelo disponível</p>
                   <Button onClick={handleInicializarModelos} variant="outline" disabled={loading}>
@@ -468,20 +476,8 @@ function NovoContratoPageContent() {
                   </Button>
                 </div>
               ) : (
-                <>
-                  <div className="mb-4 flex justify-end">
-                    <Button 
-                      onClick={handleInicializarModelos} 
-                      variant="outline" 
-                      size="sm"
-                      disabled={loading}
-                      title="Clique para sincronizar/atualizar modelos de contrato"
-                    >
-                      {loading ? 'Sincronizando...' : '🔄 Sincronizar Modelos'}
-                    </Button>
-                  </div>
-                  <div className="space-y-4">
-                    {modelos.map((modelo) => (
+                <div className="space-y-4">
+                  {modelos.map((modelo) => (
                     <div
                       key={modelo.id}
                       className="border border-border rounded-lg p-4 cursor-pointer bg-surface hover:bg-surface-hover hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
@@ -491,8 +487,7 @@ function NovoContratoPageContent() {
                       {modelo.descricao && <p className="text-sm text-text-secondary">{modelo.descricao}</p>}
                     </div>
                   ))}
-                  </div>
-                </>
+                </div>
               )}
             </CardContent>
           </Card>
