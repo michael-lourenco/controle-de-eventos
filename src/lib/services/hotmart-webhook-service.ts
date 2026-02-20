@@ -17,12 +17,32 @@ import { sendEmail, isEmailServiceConfigured } from './resend-email-service';
 import { notificarNovaAquisicaoPlano, notificarCancelamentoPlano } from './admin-notification-service';
 
 export interface HotmartWebhookPayload {
+  id?: string;
+  creation_date?: number;
   event: string;
+  version?: string;
   data?: {
+    product?: {
+      id?: number;
+      name?: string;
+    };
+    subscriber?: {
+      code?: string;
+      name?: string;
+      email?: string;
+      phone?: {
+        dddPhone?: string;
+        phone?: string;
+        dddCell?: string;
+        cell?: string;
+      };
+    };
     subscription?: {
+      id?: number;
       code?: string;
       subscription_code?: string;
       plan?: {
+        id?: number;
         code?: string;
         plan_code?: string;
         name?: string;
@@ -34,6 +54,7 @@ export interface HotmartWebhookPayload {
       subscriber?: {
         email?: string;
         name?: string;
+        code?: string;
       };
       status?: string;
       trial?: {
@@ -45,6 +66,25 @@ export interface HotmartWebhookPayload {
       cancellation_date?: string;
       expiration_date?: string;
     };
+    buyer?: {
+      email?: string;
+      name?: string;
+    };
+    user?: {
+      email?: string;
+      name?: string;
+    };
+    actual_recurrence_value?: number;
+    cancellation_date?: number;
+    date_next_charge?: number;
+    plans?: Array<{
+      id?: number;
+      name?: string;
+      current?: boolean;
+      plan_code?: string;
+      code?: string;
+    }>;
+    switch_plan_date?: string;
   };
   subscription?: {
     code?: string;
@@ -61,6 +101,7 @@ export interface HotmartWebhookPayload {
     subscriber?: {
       email?: string;
       name?: string;
+      code?: string;
     };
     status?: string;
     trial?: {
@@ -491,22 +532,34 @@ export class HotmartWebhookService {
     hotmartSubscriptionId: string,
     email: string
   ): Promise<{ success: boolean; message: string }> {
+    console.log(`[HotmartWebhook] 🔄 Processando cancelamento - email: ${email}, hotmartId: ${hotmartSubscriptionId}`);
+
     // Buscar assinatura primeiro pelo email do usuário
     let assinatura = null;
     
     if (email) {
       const user = await this.userRepo.findByEmail(email.toLowerCase().trim());
       if (user) {
+        console.log(`[HotmartWebhook] ✅ Usuário encontrado: ${user.id} (${user.email})`);
         assinatura = await this.assinaturaRepo.findByUserId(user.id);
+        if (assinatura) {
+          console.log(`[HotmartWebhook] ✅ Assinatura encontrada por userId: ${assinatura.id} (status: ${assinatura.status})`);
+        }
+      } else {
+        console.warn(`[HotmartWebhook] ⚠️ Usuário não encontrado para email: ${email}`);
       }
     }
     
     // Se não encontrou pelo email, tentar pelo hotmartSubscriptionId como fallback
     if (!assinatura && hotmartSubscriptionId) {
       assinatura = await this.assinaturaRepo.findByHotmartId(hotmartSubscriptionId);
+      if (assinatura) {
+        console.log(`[HotmartWebhook] ✅ Assinatura encontrada por hotmartId: ${assinatura.id} (status: ${assinatura.status})`);
+      }
     }
     
     if (!assinatura) {
+      console.error(`[HotmartWebhook] ❌ Assinatura não encontrada - email: ${email}, hotmartId: ${hotmartSubscriptionId}`);
       return { success: false, message: 'Assinatura não encontrada' };
     }
 
@@ -530,6 +583,10 @@ export class HotmartWebhookService {
     // Cancelar mas manter ativa até o fim do período
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'cancelled');
 
+    // Sincronizar status no documento do usuário (controle_users)
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
+    console.log(`[HotmartWebhook] ✅ Cancelamento sincronizado no documento do usuário: ${assinatura.userId}`);
+
     try {
       const userCancel = await this.userRepo.findById(assinatura.userId);
       const planoCancel = assinatura.planoId ? await this.planoRepo.findById(assinatura.planoId) : null;
@@ -545,6 +602,7 @@ export class HotmartWebhookService {
       console.error('[HotmartWebhook] Erro ao notificar admin (cancelamento):', err?.message);
     }
 
+    console.log(`[HotmartWebhook] ✅ Cancelamento processado com sucesso - assinatura: ${assinatura.id}, userId: ${assinatura.userId}`);
     return { success: true, message: 'Assinatura cancelada (mantida ativa até fim do período)' };
   }
 
@@ -612,6 +670,9 @@ export class HotmartWebhookService {
     await this.assinaturaRepo.atualizarStatus(assinatura.id, 'active', {
       dataRenovacao: nextCharge ? new Date(nextCharge) : undefined
     });
+
+    // Sincronizar status no documento do usuário (controle_users)
+    await this.assinaturaService.sincronizarPlanoUsuario(assinatura.userId);
 
     return { success: true, message: 'Assinatura renovada com sucesso' };
   }

@@ -176,9 +176,14 @@ export class AssinaturaService {
       return user;
     }
 
-    const assinatura = await this.assinaturaRepo.findByUserId(userId);
+    // Buscar assinatura ativa primeiro; se não houver, buscar a mais recente (qualquer status)
+    let assinatura = await this.assinaturaRepo.findByUserId(userId);
+    if (!assinatura) {
+      const todas = await this.assinaturaRepo.findAllByUserId(userId);
+      assinatura = todas.length > 0 ? todas[0] : null;
+    }
     
-    // Se não houver assinatura, limpar o objeto assinatura
+    // Se não houver nenhuma assinatura, limpar o objeto assinatura
     if (!assinatura) {
       const dadosAtualizacao: Partial<User> = {
         assinatura: undefined,
