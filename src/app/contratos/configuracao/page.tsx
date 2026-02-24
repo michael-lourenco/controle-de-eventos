@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,13 +9,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { ConfiguracaoContrato } from '@/types';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { ArrowLeftIcon, PhotoIcon } from '@heroicons/react/24/outline';
 
 export default function ConfiguracaoContratoPage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingMarcaDagua, setUploadingMarcaDagua] = useState(false);
   const [formData, setFormData] = useState<Partial<ConfiguracaoContrato>>({
     razaoSocial: '',
     nomeFantasia: '',
@@ -42,6 +45,9 @@ export default function ConfiguracaoContratoPage() {
       tipo: 'corrente',
       pix: ''
     },
+    marcaDaguaUrl: '',
+    marcaDaguaS3Key: '',
+    marcaDaguaTamanhoPercentual: 70,
     foro: '',
     cidade: ''
   });
@@ -99,7 +105,12 @@ export default function ConfiguracaoContratoPage() {
           conta: '',
           tipo: 'corrente',
           pix: ''
-        }
+        },
+        marcaDaguaTamanhoPercentual: (() => {
+          const valor = Number(formData.marcaDaguaTamanhoPercentual || 70);
+          if (!Number.isFinite(valor)) return 70;
+          return Math.max(20, Math.min(120, Math.round(valor)));
+        })()
       };
       
       const response = await fetch('/api/configuracao-contrato', {
@@ -138,6 +149,62 @@ export default function ConfiguracaoContratoPage() {
       });
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
+    }
+  };
+
+  const handleSelecionarMarcaDagua = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleUploadMarcaDagua = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Formato inválido. Envie PNG, JPG ou WEBP.', 'error');
+      event.target.value = '';
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      showToast('Arquivo muito grande. O limite é 5MB.', 'error');
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      setUploadingMarcaDagua(true);
+      const payload = new FormData();
+      payload.append('file', file);
+
+      const response = await fetch('/api/configuracao-contrato/upload-marca-dagua', {
+        method: 'POST',
+        body: payload
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        showToast(error.error || 'Erro ao enviar imagem', 'error');
+        return;
+      }
+
+      const result = await response.json();
+      const data = result.data || result;
+
+      setFormData(prev => ({
+        ...prev,
+        marcaDaguaUrl: data.url,
+        marcaDaguaS3Key: data.s3Key
+      }));
+
+      showToast('Marca d\'agua enviada com sucesso!', 'success');
+    } catch (error) {
+      showToast('Erro ao enviar marca d\'agua', 'error');
+    } finally {
+      setUploadingMarcaDagua(false);
+      event.target.value = '';
     }
   };
 
@@ -332,6 +399,65 @@ export default function ConfiguracaoContratoPage() {
                   placeholder="Chave PIX"
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Dados do Contrato */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Marca d&apos;agua do Contrato
+                <InfoTooltip
+                  title="Dicas para marca d'agua"
+                  description="A variável {{marca_dagua_url}} aplica automaticamente o HTML da marca d'agua no contrato. Basta inserir a variável no template."
+                  calculation="Tamanho ideal: imagem PNG com fundo transparente, proporção quadrada, resolução entre 1200x1200 e 2000x2000, até 5MB."
+                  calculationLabel="Tamanho ideal da imagem:"
+                />
+              </CardTitle>
+              <CardDescription>
+                Envie a imagem da sua marca d&apos;agua (upload em S3) e ajuste o tamanho de exibição no contrato.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button type="button" variant="outline" onClick={handleSelecionarMarcaDagua} disabled={uploadingMarcaDagua}>
+                  <PhotoIcon className="h-4 w-4 mr-2" />
+                  {uploadingMarcaDagua ? 'Enviando imagem...' : 'Enviar marca d\'agua'}
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  className="hidden"
+                  onChange={handleUploadMarcaDagua}
+                />
+                <p className="text-sm text-text-secondary">
+                  Formatos aceitos: PNG, JPG e WEBP (máx. 5MB).
+                </p>
+              </div>
+
+              {formData.marcaDaguaUrl && (
+                <div className="rounded-md border border-border p-4 bg-surface">
+                  <p className="text-sm font-medium text-text-primary mb-2">Pré-visualização da marca d&apos;agua</p>
+                  <div className="flex items-center justify-center h-40 bg-background border border-dashed border-border rounded">
+                    <img
+                      src={formData.marcaDaguaUrl}
+                      alt="Marca d'agua"
+                      className="max-h-32 max-w-full object-contain opacity-80"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <Input
+                label="Tamanho da marca d'agua no contrato (%)"
+                type="number"
+                min={20}
+                max={120}
+                value={Number.isFinite(formData.marcaDaguaTamanhoPercentual) ? formData.marcaDaguaTamanhoPercentual : 70}
+                onChange={(e) => handleInputChange('marcaDaguaTamanhoPercentual', Number(e.target.value))}
+                helperText="Use entre 20% e 120%. Recomendado: 60% a 80%."
+              />
             </CardContent>
           </Card>
 

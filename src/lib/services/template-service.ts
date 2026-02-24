@@ -1,6 +1,42 @@
 import { FORMATADORES_VARIAVEIS } from '@/lib/utils/formatadores';
 
 export class TemplateService {
+  private static normalizarTamanhoMarcaDagua(valor: unknown): number {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return 70;
+    return Math.max(20, Math.min(120, Math.round(numero)));
+  }
+
+  private static processarMarcaDagua(template: string, dados: Record<string, unknown>): string {
+    const placeholder = /\{\{marca_dagua_url\}\}/g;
+    if (!template.includes('{{marca_dagua_url}}')) {
+      return template;
+    }
+
+    const url = String(dados.marca_dagua_url || '').trim();
+    const tamanho = this.normalizarTamanhoMarcaDagua(dados.marca_dagua_tamanho_percentual);
+
+    // Remove o placeholder de posição; a marca d'agua é injetada automaticamente no topo do documento.
+    let resultado = template.replace(placeholder, '');
+
+    if (!url) {
+      return resultado;
+    }
+
+    if (resultado.includes('data-marca-dagua-auto="true"')) {
+      return resultado;
+    }
+
+    const urlSegura = url.replace(/"/g, '&quot;');
+    const blocoMarcaDagua = `
+<div data-marca-dagua-auto="true" style="position: fixed; inset: 0; pointer-events: none; z-index: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+  <img src="${urlSegura}" alt="Marca d'agua" style="max-width: ${tamanho}%; max-height: ${tamanho}%; opacity: 0.08; transform: rotate(-25deg);" />
+</div>
+`;
+
+    return `${blocoMarcaDagua}${resultado}`;
+  }
+
   /**
    * Formata uma data no formato "DD de mês de YYYY" (ex: "06 de janeiro de 2026")
    */
@@ -60,6 +96,9 @@ export class TemplateService {
         resultado = resultado.replace(placeholder, valorFormatado);
       }
     });
+
+    // Tratamento especial: ao usar {{marca_dagua_url}}, injeta automaticamente o HTML da marca d'agua.
+    resultado = this.processarMarcaDagua(resultado, dados);
     
     // Processar placeholders simples {{variavel}}
     Object.keys(dados).forEach(chave => {

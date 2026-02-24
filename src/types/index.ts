@@ -210,6 +210,9 @@ export interface ConfiguracaoContrato {
     tipo: 'corrente' | 'poupanca';
     pix?: string;
   };
+  marcaDaguaUrl?: string;
+  marcaDaguaS3Key?: string;
+  marcaDaguaTamanhoPercentual?: number;
   foro?: string;
   cidade?: string;
   dataCadastro: Date;

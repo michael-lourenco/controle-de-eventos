@@ -27,6 +27,9 @@ export class ConfiguracaoContratoSupabaseRepository extends BaseSupabaseReposito
       endereco: row.endereco || {},
       contato: row.contato || {},
       dadosBancarios: row.dados_bancarios || undefined,
+      marcaDaguaUrl: row.marca_dagua_url || undefined,
+      marcaDaguaS3Key: row.marca_dagua_s3_key || undefined,
+      marcaDaguaTamanhoPercentual: row.marca_dagua_tamanho_percentual || undefined,
       foro: row.foro || undefined,
       cidade: row.cidade || undefined,
       dataCadastro: parseDate(row.data_cadastro),
@@ -50,6 +53,9 @@ export class ConfiguracaoContratoSupabaseRepository extends BaseSupabaseReposito
       data.contato = entity.contato && typeof entity.contato === 'object' ? entity.contato : {};
     }
     if (entity.dadosBancarios !== undefined) data.dados_bancarios = entity.dadosBancarios || null;
+    if (entity.marcaDaguaUrl !== undefined) data.marca_dagua_url = entity.marcaDaguaUrl || null;
+    if (entity.marcaDaguaS3Key !== undefined) data.marca_dagua_s3_key = entity.marcaDaguaS3Key || null;
+    if (entity.marcaDaguaTamanhoPercentual !== undefined) data.marca_dagua_tamanho_percentual = entity.marcaDaguaTamanhoPercentual || null;
     if (entity.foro !== undefined) data.foro = entity.foro || null;
     if (entity.cidade !== undefined) data.cidade = entity.cidade || null;
     if (entity.dataCadastro !== undefined) data.data_cadastro = entity.dataCadastro instanceof Date ? entity.dataCadastro.toISOString() : entity.dataCadastro;
@@ -193,6 +199,8 @@ export class ConfiguracaoContratoSupabaseRepository extends BaseSupabaseReposito
       conta: config.dadosBancarios?.conta || '',
       tipo_conta: config.dadosBancarios?.tipo || '',
       pix: config.dadosBancarios?.pix || '',
+      marca_dagua_url: config.marcaDaguaUrl || '',
+      marca_dagua_tamanho_percentual: config.marcaDaguaTamanhoPercentual || 70,
       foro_eleito: config.foro || ''
     };
   }

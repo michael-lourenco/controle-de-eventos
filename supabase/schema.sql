@@ -399,6 +399,9 @@ CREATE TABLE IF NOT EXISTS configuracao_contrato (
     endereco JSONB NOT NULL, -- { logradouro, numero, complemento, bairro, cidade, estado, cep }
     contato JSONB NOT NULL, -- { telefone, email, site }
     dados_bancarios JSONB, -- { banco, agencia, conta, tipo, pix }
+    marca_dagua_url TEXT,
+    marca_dagua_s3_key VARCHAR(500),
+    marca_dagua_tamanho_percentual INTEGER DEFAULT 70,
     foro VARCHAR(255),
     cidade VARCHAR(255),
     data_cadastro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -408,6 +411,11 @@ CREATE TABLE IF NOT EXISTS configuracao_contrato (
 );
 
 CREATE INDEX IF NOT EXISTS idx_configuracao_contrato_user_id ON configuracao_contrato(user_id);
+
+-- Compatibilidade para bancos já existentes
+ALTER TABLE configuracao_contrato ADD COLUMN IF NOT EXISTS marca_dagua_url TEXT;
+ALTER TABLE configuracao_contrato ADD COLUMN IF NOT EXISTS marca_dagua_s3_key VARCHAR(500);
+ALTER TABLE configuracao_contrato ADD COLUMN IF NOT EXISTS marca_dagua_tamanho_percentual INTEGER DEFAULT 70;
 
 -- Contratos
 CREATE TABLE IF NOT EXISTS contratos (

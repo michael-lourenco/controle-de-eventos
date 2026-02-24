@@ -68,6 +68,8 @@ export class ConfiguracaoContratoRepository extends SubcollectionRepository<Conf
       conta: config.dadosBancarios?.conta || '',
       tipo_conta: config.dadosBancarios?.tipo || '',
       pix: config.dadosBancarios?.pix || '',
+      marca_dagua_url: config.marcaDaguaUrl || '',
+      marca_dagua_tamanho_percentual: config.marcaDaguaTamanhoPercentual || 70,
       foro_eleito: config.foro || ''
     };
   }

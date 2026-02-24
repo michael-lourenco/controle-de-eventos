@@ -47,6 +47,8 @@ export const LABELS_VARIAVEIS: Record<string, string> = {
   conta: 'Conta',
   tipo_conta: 'Tipo de Conta',
   pix: 'PIX',
+  marca_dagua_url: 'Marca d\'agua (Imagem)',
+  marca_dagua_tamanho_percentual: 'Tamanho da Marca d\'agua (%)',
   foro_eleito: 'Foro Eleito',
   numero_contrato: 'Número do Contrato',
   hashtag: 'Hashtag',
