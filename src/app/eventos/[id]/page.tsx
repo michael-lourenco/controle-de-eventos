@@ -29,7 +29,7 @@ import {
   ArrowDownTrayIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
-import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento, useContratosPorEvento } from '@/hooks/useData';
+import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento, useContratosPorEvento, useCanaisEntrada } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { usePlano } from '@/lib/hooks/usePlano';
@@ -71,6 +71,7 @@ export default function EventoViewPage() {
   const { data: servicos, loading: loadingServicos, refetch: refetchServicos } = useServicosPorEvento(params.id as string);
   const { anexos, loading: loadingAnexos, refetch: refetchAnexos } = useAnexos(params.id as string);
   const { data: contratos, loading: loadingContratos, refetch: refetchContratos } = useContratosPorEvento(params.id as string);
+  const { data: canaisEntrada } = useCanaisEntrada();
   
   const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingServicos || loadingAnexos || loadingContratos;
 
@@ -367,6 +368,11 @@ export default function EventoViewPage() {
         return 'bg-surface text-text-secondary';
     }
   };
+
+  const canalEntradaNomeCliente =
+    evento.cliente.canalEntrada?.nome ||
+    canaisEntrada?.find((canal) => canal.id === evento.cliente.canalEntradaId)?.nome ||
+    null;
 
   const handleStatusChange = async (eventoId: string, novoStatus: string) => {
     if (!userId || !eventoLocal) {
@@ -768,9 +774,10 @@ export default function EventoViewPage() {
                   </a>
                 </div>
               )}
-              {evento.cliente.canalEntrada && (
-                <div className="text-sm text-text-secondary">
-                  <span className="font-medium">Canal de Entrada:</span> {evento.cliente.canalEntrada.nome}
+              {canalEntradaNomeCliente && (
+                <div className="flex items-center text-sm text-text-secondary">
+                  <BriefcaseIcon className="h-4 w-4 mr-2 text-text-muted" />
+                  <span className="font-medium mr-1">Canal de Entrada:</span> {canalEntradaNomeCliente}
                 </div>
               )}
             </CardContent>
