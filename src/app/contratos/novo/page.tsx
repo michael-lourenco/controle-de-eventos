@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/toast';
 import { ModeloContrato, Evento } from '@/types';
 import { ContratoService } from '@/lib/services/contrato-service';
+import { TemplateService } from '@/lib/services/template-service';
 import { ArrowLeftIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import LoadingHotmart from '@/components/LoadingHotmart';
 import TemplateEditor from '@/components/TemplateEditor';
@@ -114,6 +115,7 @@ function NovoContratoPageContent() {
   const [loadingModelos, setLoadingModelos] = useState(true);
   const [configExistente, setConfigExistente] = useState<boolean | null>(null);
   const [metadadosVariaveis, setMetadadosVariaveis] = useState<MetadadosVariaveis | null>(null);
+  const marcaDaguaAtiva = conteudoEditado.includes('{{marca_dagua_url}}');
 
   const camposDinamicos = useMemo(() => {
     if (!modeloSelecionado) return [];
@@ -273,7 +275,8 @@ function NovoContratoPageContent() {
   };
 
   const irParaEdicao = () => {
-    setConteudoEditado(previewHtml);
+    const conteudoParaEdicao = TemplateService.normalizarConteudoParaEdicao(previewHtml);
+    setConteudoEditado(conteudoParaEdicao);
     setPasso(3);
   };
 
@@ -286,7 +289,9 @@ function NovoContratoPageContent() {
       return;
     }
 
-    const htmlParaSalvar = passo === 3 ? conteudoEditado : previewHtml;
+    const htmlParaSalvar = passo === 3
+      ? TemplateService.normalizarConteudoParaEdicao(conteudoEditado)
+      : previewHtml;
     if (passo === 3 && (!htmlParaSalvar || !htmlParaSalvar.trim())) {
       showToast('O conteúdo do contrato não pode estar vazio.', 'error');
       return;
@@ -577,6 +582,19 @@ function NovoContratoPageContent() {
                 <CardDescription>
                   Edite o contrato à vontade antes de salvar. Modelo: {modeloSelecionado.nome}
                 </CardDescription>
+                <div className="pt-2">
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+                      marcaDaguaAtiva
+                        ? 'bg-success-bg text-success-text'
+                        : 'bg-surface text-text-secondary border border-border'
+                    }`}
+                  >
+                    {marcaDaguaAtiva
+                      ? "Marca d'agua ativa via {{marca_dagua_url}}"
+                      : "Marca d'agua inativa (adicione {{marca_dagua_url}} para ativar)"}
+                  </span>
+                </div>
               </CardHeader>
               <CardContent>
                 <TemplateEditor

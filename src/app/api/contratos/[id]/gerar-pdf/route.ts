@@ -41,17 +41,29 @@ export async function POST(
     const { ContratoService } = await import('@/lib/services/contrato-service');
     const { PDFService } = await import('@/lib/services/pdf-service');
     
-    // Usar HTML editado pelo usuário, se houver; senão, processar o template
+    // Sempre processar placeholders no HTML final (inclusive quando houver conteúdo editado),
+    // para garantir que marca d'agua e demais variáveis sejam aplicadas corretamente no PDF.
     let html: string;
     try {
+      const dadosPreenchidosComNumero = {
+        ...contrato.dadosPreenchidos,
+        numero_contrato: contrato.numeroContrato || ''
+      };
+
+      // Base de variáveis (configuração + customizadas + evento) para processar placeholders
+      const variaveisBase = await ContratoService.obterVariaveisParaTemplate(
+        user.id,
+        contrato.eventoId || undefined
+      );
+      const dadosProcessamento = {
+        ...variaveisBase,
+        ...dadosPreenchidosComNumero
+      };
+
       if (contrato.conteudoHtml && contrato.conteudoHtml.trim()) {
-        html = contrato.conteudoHtml;
+        html = ContratoService.processarTemplate(contrato.conteudoHtml, dadosProcessamento);
       } else {
-        const dadosPreenchidosComNumero = {
-          ...contrato.dadosPreenchidos,
-          numero_contrato: contrato.numeroContrato || ''
-        };
-        html = ContratoService.processarTemplate(modelo.template, dadosPreenchidosComNumero);
+        html = ContratoService.processarTemplate(modelo.template, dadosProcessamento);
       }
 
       if (!html || !html.trim()) {

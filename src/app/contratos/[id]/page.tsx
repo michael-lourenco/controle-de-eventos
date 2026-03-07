@@ -10,6 +10,7 @@ import { Contrato } from '@/types';
 import { ArrowLeftIcon, DocumentTextIcon, ArrowDownTrayIcon, PencilIcon, EyeIcon } from '@heroicons/react/24/outline';
 import ContractPreview from '@/components/ContractPreview';
 import TemplateEditor, { TemplateEditorRef } from '@/components/TemplateEditor';
+import { TemplateService } from '@/lib/services/template-service';
 
 type AbaAtiva = 'visualizar' | 'editar';
 
@@ -28,6 +29,33 @@ export default function ContratoViewPage() {
   const [salvando, setSalvando] = useState(false);
   const [temAlteracoes, setTemAlteracoes] = useState(false);
   const editorRef = useRef<TemplateEditorRef>(null);
+  const marcaDaguaAtiva = conteudoEditado.includes('{{marca_dagua_url}}');
+
+  const renderizarHtmlParaPreview = useCallback(async (htmlBase: string) => {
+    if (!contrato || !htmlBase?.trim()) return;
+
+    try {
+      const response = await fetch('/api/contratos/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template: htmlBase,
+          dadosPreenchidos: contrato.dadosPreenchidos || {},
+          eventoId: contrato.eventoId || undefined
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const data = result.data || result;
+        setHtmlPreview(data.html || htmlBase);
+      } else {
+        setHtmlPreview(htmlBase);
+      }
+    } catch (error) {
+      setHtmlPreview(htmlBase);
+    }
+  }, [contrato]);
 
   const carregarHtmlParaPreview = useCallback(async () => {
     if (!contrato || !contrato.modeloContratoId) return;
@@ -62,10 +90,10 @@ export default function ContratoViewPage() {
       
       // Se já tem conteudoHtml, usar ele
       if (contrato.conteudoHtml && contrato.conteudoHtml.trim()) {
-        const html = contrato.conteudoHtml;
-        setConteudoHtml(html);
-        setConteudoEditado(html);
-        setHtmlPreview(html);
+        const htmlEdicao = TemplateService.normalizarConteudoParaEdicao(contrato.conteudoHtml);
+        setConteudoHtml(htmlEdicao);
+        setConteudoEditado(htmlEdicao);
+        await renderizarHtmlParaPreview(htmlEdicao);
         return;
       }
 
@@ -85,9 +113,10 @@ export default function ContratoViewPage() {
           const result = await response.json();
           const previewData = result.data || result;
           const html = previewData.html || '';
-          setConteudoHtml(html);
-          setConteudoEditado(html);
-          setHtmlPreview(html);
+          const htmlEdicao = TemplateService.normalizarConteudoParaEdicao(html);
+          setConteudoHtml(htmlEdicao);
+          setConteudoEditado(htmlEdicao);
+          await renderizarHtmlParaPreview(htmlEdicao);
         } else {
           showToast('Erro ao carregar conteúdo do contrato', 'error');
         }
@@ -97,7 +126,7 @@ export default function ContratoViewPage() {
     } finally {
       setCarregandoHtml(false);
     }
-  }, [contrato, showToast]);
+  }, [contrato, showToast, renderizarHtmlParaPreview]);
 
   const loadContrato = useCallback(async () => {
     try {
@@ -128,16 +157,16 @@ export default function ContratoViewPage() {
     if (contrato) {
       // Se tem conteudoHtml, usar diretamente
       if (contrato.conteudoHtml && contrato.conteudoHtml.trim()) {
-        const html = contrato.conteudoHtml;
-        setConteudoHtml(html);
-        setConteudoEditado(html);
-        setHtmlPreview(html);
+        const htmlEdicao = TemplateService.normalizarConteudoParaEdicao(contrato.conteudoHtml);
+        setConteudoHtml(htmlEdicao);
+        setConteudoEditado(htmlEdicao);
+        renderizarHtmlParaPreview(htmlEdicao);
       } else {
         // Carregar HTML processando template para preview
         carregarHtmlParaPreview();
       }
     }
-  }, [contrato, carregarHtmlParaPreview]);
+  }, [contrato, carregarHtmlParaPreview, renderizarHtmlParaPreview]);
 
   // Carregar HTML quando mudar para aba editar (se ainda não foi carregado)
   useEffect(() => {
@@ -177,7 +206,7 @@ export default function ContratoViewPage() {
         setContrato(contratoAtualizado);
         const htmlSalvo = conteudoEditado.trim();
         setConteudoHtml(htmlSalvo);
-        setHtmlPreview(htmlSalvo);
+        await renderizarHtmlParaPreview(htmlSalvo);
         setTemAlteracoes(false);
         showToast('Contrato atualizado com sucesso', 'success');
         setAbaAtiva('visualizar');
@@ -404,6 +433,19 @@ export default function ContratoViewPage() {
               <CardDescription>
                 Edite o conteúdo do contrato livremente. As alterações serão salvas no contrato.
               </CardDescription>
+              <div className="pt-2">
+                <span
+                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${
+                    marcaDaguaAtiva
+                      ? 'bg-success-bg text-success-text'
+                      : 'bg-surface text-text-secondary border border-border'
+                  }`}
+                >
+                  {marcaDaguaAtiva
+                    ? "Marca d'agua ativa via {{marca_dagua_url}}"
+                    : "Marca d'agua inativa (adicione {{marca_dagua_url}} para ativar)"}
+                </span>
+              </div>
             </CardHeader>
             <CardContent>
               {carregandoHtml ? (

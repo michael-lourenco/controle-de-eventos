@@ -1,29 +1,54 @@
 import { FORMATADORES_VARIAVEIS } from '@/lib/utils/formatadores';
 
 export class TemplateService {
+  private static readonly BLOCO_MARCA_DAGUA_REGEX = /<div[^>]*data-marca-dagua-auto="true"[^>]*>[\s\S]*?<\/div>\s*/gi;
+
   private static normalizarTamanhoMarcaDagua(valor: unknown): number {
     const numero = Number(valor);
     if (!Number.isFinite(numero)) return 70;
     return Math.max(20, Math.min(120, Math.round(numero)));
   }
 
-  private static processarMarcaDagua(template: string, dados: Record<string, unknown>): string {
-    const placeholder = /\{\{marca_dagua_url\}\}/g;
-    if (!template.includes('{{marca_dagua_url}}')) {
-      return template;
+  /**
+   * Remove blocos de marca d'agua injetados automaticamente e preserva o placeholder.
+   * Usado antes de abrir no editor para evitar que o TipTap remova HTML avançado.
+   */
+  static normalizarConteudoParaEdicao(html: string): string {
+    if (!html) return html;
+
+    const tinhaBlocoAuto = html.includes('data-marca-dagua-auto="true"');
+    const semBlocoAuto = html.replace(this.BLOCO_MARCA_DAGUA_REGEX, '');
+
+    if (!tinhaBlocoAuto) {
+      return html;
     }
+
+    if (semBlocoAuto.includes('{{marca_dagua_url}}')) {
+      return semBlocoAuto;
+    }
+
+    return `{{marca_dagua_url}}\n${semBlocoAuto.trimStart()}`;
+  }
+
+  /**
+   * Injeta marca d'agua no HTML final de renderização (preview/PDF), de forma idempotente.
+   */
+  static aplicarMarcaDaguaNoHtmlFinal(html: string, dados: Record<string, unknown>): string {
+    const hasPlaceholder = html.includes('{{marca_dagua_url}}');
+    const hasBlocoAuto = html.includes('data-marca-dagua-auto="true"');
+    if (!hasPlaceholder && !hasBlocoAuto) {
+      return html;
+    }
+
+    const placeholder = /\{\{marca_dagua_url\}\}/g;
+    let resultado = html
+      .replace(this.BLOCO_MARCA_DAGUA_REGEX, '')
+      .replace(placeholder, '');
 
     const url = String(dados.marca_dagua_url || '').trim();
     const tamanho = this.normalizarTamanhoMarcaDagua(dados.marca_dagua_tamanho_percentual);
 
-    // Remove o placeholder de posição; a marca d'agua é injetada automaticamente no topo do documento.
-    let resultado = template.replace(placeholder, '');
-
     if (!url) {
-      return resultado;
-    }
-
-    if (resultado.includes('data-marca-dagua-auto="true"')) {
       return resultado;
     }
 
@@ -35,6 +60,13 @@ export class TemplateService {
 `;
 
     return `${blocoMarcaDagua}${resultado}`;
+  }
+
+  private static processarMarcaDagua(template: string, dados: Record<string, unknown>): string {
+    if (!template.includes('{{marca_dagua_url}}') && !template.includes('data-marca-dagua-auto="true"')) {
+      return template;
+    }
+    return this.aplicarMarcaDaguaNoHtmlFinal(template, dados);
   }
 
   /**
