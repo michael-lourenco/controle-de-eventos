@@ -287,3 +287,30 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 
 ### Resultado esperado
 - Criação de evento deixa de ser bloqueada por falhas transitórias de leitura de plano/funcionalidade.
+
+---
+
+## Nova tela — listar eventos reais do Google Calendar no sistema
+
+### Objetivo
+- Exibir no sistema os eventos da conta Google conectada para validar visualmente a integração.
+
+### Implementação
+#### Arquivo: `src/lib/services/google-calendar-service.ts`
+- Adicionado método `listEvents(userId, options)` para listar eventos do calendário primário via Google API.
+
+#### Arquivo: `src/app/api/google-calendar/list-events/route.ts`
+- Criada rota `GET /api/google-calendar/list-events` para retornar eventos do Google Calendar autenticados do usuário.
+- Suporte a parâmetros:
+  - `maxResults`
+  - `timeMin`
+  - `timeMax`
+
+#### Arquivo: `src/app/configuracoes/calendario/eventos/page.tsx`
+- Criada nova página para exibir lista de eventos do Google com atualização manual.
+
+#### Arquivo: `src/app/configuracoes/calendario/page.tsx`
+- Adicionado botão `Ver eventos do Google` para abrir a nova tela.
+
+### Resultado esperado
+- Usuário consegue visualizar no próprio sistema os eventos existentes na conta Google conectada.

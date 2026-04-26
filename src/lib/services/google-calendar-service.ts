@@ -354,6 +354,41 @@ export class GoogleCalendarService {
   }
 
   /**
+   * Lista eventos do Google Calendar do usuário
+   */
+  async listEvents(
+    userId: string,
+    options?: {
+      maxResults?: number;
+      timeMin?: string;
+      timeMax?: string;
+    }
+  ): Promise<GoogleCalendarEvent[]> {
+    const calendar = await this.getCalendarClient(userId);
+    const token = await this.tokenRepo.findByUserId(userId);
+
+    if (!token) {
+      throw new Error('Token não encontrado. Conecte sua conta do Google Calendar primeiro.');
+    }
+
+    try {
+      const response = await calendar.events.list({
+        calendarId: token.calendarId || 'primary',
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: options?.maxResults || 50,
+        ...(options?.timeMin ? { timeMin: options.timeMin } : {}),
+        ...(options?.timeMax ? { timeMax: options.timeMax } : {})
+      });
+
+      return (response.data.items || []) as GoogleCalendarEvent[];
+    } catch (error: any) {
+      console.error('Erro ao listar eventos do Google Calendar:', error);
+      throw new Error(`Erro ao listar eventos: ${error.message}`);
+    }
+  }
+
+  /**
    * Sincroniza evento do Clicksehub para Google Calendar
    */
   async syncEventToCalendar(userId: string, evento: Evento): Promise<string> {

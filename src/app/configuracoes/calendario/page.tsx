@@ -139,6 +139,15 @@ export default function GoogleCalendarConfigPage() {
                     <Button variant="outline" onClick={carregarStatus} disabled={carregando || processandoAcao}>
                       Atualizar status
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        window.location.href = '/configuracoes/calendario/eventos';
+                      }}
+                      disabled={!status?.connected}
+                    >
+                      Ver eventos do Google
+                    </Button>
                   </div>
                 </>
               )}
