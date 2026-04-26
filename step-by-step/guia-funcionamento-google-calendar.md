@@ -101,6 +101,21 @@ Registrar exatamente o que foi necessário para a integração com Google Calend
 - Resultado esperado:
   - fluxo de `/eventos/novo` e edição em `/eventos` passa a usar o caminho mínimo e mais estável para sincronização no Google.
 
+### 11) Horário padrão 12:00 no payload mínimo
+- Regra: se `horarioInicio` ou `horarioDesmontagem` estiverem ausentes ou inválidos, usar **12:00** (`America/Sao_Paulo`).
+- Se início e fim coincidirem após o padrão, o fim é ajustado em **+1 hora** para o Google Calendar aceitar o evento.
+- Arquivo: `src/lib/services/google-calendar-sync-service.ts` (`horarioOuMeioDia` + `montarPayloadMinimo`).
+
+### 12) Descrição no Google Calendar (identificação Clicksehub)
+- Conteúdo mínimo na descrição do evento no Google:
+  - nome do cliente (opcional, se existir);
+  - e-mail do cliente (ou texto `Não informado`);
+  - telefone (opcional);
+  - status do evento;
+  - link para abrir o evento no app (`NEXT_PUBLIC_APP_URL` ou `https://clicksehub.com` + `/eventos/:id`).
+- Após criação no banco, o repositório pode devolver `cliente` vazio; o sync chama `getEventoById` com join em `clientes` antes de montar o payload, para a descrição refletir os dados reais.
+- Arquivo: `src/lib/services/google-calendar-sync-service.ts` (`montarDescricaoGoogleCalendar`, `obterUrlEventoNoSistema`).
+
 ---
 
 ## Principais problemas encontrados e como foram resolvidos

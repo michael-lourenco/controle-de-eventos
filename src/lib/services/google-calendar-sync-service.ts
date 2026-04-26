@@ -17,6 +17,59 @@
 import { Evento } from '@/types';
 import { GoogleCalendarEvent } from '@/types/google-calendar';
 
+const HORARIO_PADRAO_MEIO_DIA = '12:00';
+
+const URL_BASE_CLICKSEHUB_PROD = 'https://clicksehub.com';
+
+/** URL pública do evento no app (usa env em dev, produção clicksehub.com). */
+function obterUrlEventoNoSistema(eventoId: string): string {
+  const base =
+    (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_APP_URL
+      ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
+      : '') || URL_BASE_CLICKSEHUB_PROD;
+  return `${base}/eventos/${eventoId}`;
+}
+
+/**
+ * Texto exibido na descrição do evento no Google Calendar.
+ * Dados vêm do `Evento` salvo (incl. cliente quando preenchido no payload).
+ */
+function montarDescricaoGoogleCalendar(evento: Evento): string {
+  const c = evento.cliente;
+  const nomeCliente = c?.nome?.trim();
+  const emailCliente = c?.email?.trim();
+  const telefoneCliente = c?.telefone?.trim();
+
+  const linhas: string[] = [
+    'Evento sincronizado pelo Clicksehub.',
+    '',
+    ...(nomeCliente ? [`Cliente: ${nomeCliente}`] : []),
+    `E-mail: ${emailCliente || 'Não informado'}`
+  ];
+
+  if (telefoneCliente) {
+    linhas.push(`Telefone: ${telefoneCliente}`);
+  }
+
+  linhas.push(`Status: ${evento.status}`);
+  linhas.push('');
+  linhas.push('Abrir no Clicksehub:');
+  linhas.push(obterUrlEventoNoSistema(evento.id));
+
+  return linhas.join('\n');
+}
+
+/** Se não houver horário válido (HH:mm), usa 12:00. */
+function horarioOuMeioDia(horario?: string | null): string {
+  if (horario && typeof horario === 'string') {
+    const t = horario.trim();
+    if (t && t.includes(':')) {
+      return t;
+    }
+  }
+  return HORARIO_PADRAO_MEIO_DIA;
+}
+
 function combinarDataHora(dataBase: Date | string, horario?: string): Date {
   const data = dataBase instanceof Date ? new Date(dataBase) : new Date(dataBase);
   if (Number.isNaN(data.getTime())) {
@@ -36,11 +89,14 @@ function combinarDataHora(dataBase: Date | string, horario?: string): Date {
 }
 
 function montarPayloadMinimo(evento: Evento): GoogleCalendarEvent {
-  const inicio = combinarDataHora(evento.dataEvento, evento.horarioInicio);
-  let fim = combinarDataHora(evento.dataEvento, evento.horarioDesmontagem || evento.horarioInicio);
+  const inicio = combinarDataHora(evento.dataEvento, horarioOuMeioDia(evento.horarioInicio));
+  let fim = combinarDataHora(
+    evento.dataEvento,
+    horarioOuMeioDia(evento.horarioDesmontagem)
+  );
 
-  // Garante fim >= inicio para evitar rejeição do Google.
-  if (fim.getTime() < inicio.getTime()) {
+  // Garante fim > inicio (incluindo empate) para evitar rejeição do Google.
+  if (fim.getTime() <= inicio.getTime()) {
     fim = new Date(inicio.getTime() + 60 * 60 * 1000);
   }
 
@@ -52,6 +108,7 @@ function montarPayloadMinimo(evento: Evento): GoogleCalendarEvent {
 
   return {
     summary: titulo,
+    description: montarDescricaoGoogleCalendar(evento),
     start: {
       dateTime: inicio.toISOString(),
       timeZone: 'America/Sao_Paulo'
@@ -95,12 +152,15 @@ export class GoogleCalendarSyncService {
         return;
       }
 
+      const eventoRepo = repositoryFactory.getEventoRepository();
+      // Após create, o repositório pode retornar sem join do cliente; buscar registro completo.
+      const eventoParaSync = (await eventoRepo.getEventoById(evento.id, userId)) ?? evento;
+
       const googleService = new GoogleCalendarService();
-      const payloadMinimo = montarPayloadMinimo(evento);
+      const payloadMinimo = montarPayloadMinimo(eventoParaSync);
       const googleEventId = await googleService.createEventDirectly(userId, payloadMinimo);
       
       // Atualizar evento com googleCalendarEventId usando o repository
-      const eventoRepo = repositoryFactory.getEventoRepository();
       await eventoRepo.update(evento.id, {
         googleCalendarEventId: googleEventId,
         googleCalendarSyncedAt: new Date()
@@ -142,13 +202,15 @@ export class GoogleCalendarSyncService {
         return;
       }
 
+      const eventoRepo = repositoryFactory.getEventoRepository();
+      const eventoSync = (await eventoRepo.getEventoById(evento.id, userId)) ?? evento;
+
       const googleService = new GoogleCalendarService();
 
       // Se evento foi arquivado, remover do Google Calendar
       if (evento.arquivado) {
         if (eventoAntigo && !eventoAntigo.arquivado && evento.googleCalendarEventId) {
           await googleService.deleteEvent(userId, evento.googleCalendarEventId);
-          const eventoRepo = repositoryFactory.getEventoRepository();
           await eventoRepo.update(evento.id, {
             googleCalendarEventId: undefined,
             googleCalendarSyncedAt: new Date()
@@ -160,9 +222,8 @@ export class GoogleCalendarSyncService {
 
       // Se evento foi desarquivado, criar no Google Calendar
       if (eventoAntigo && eventoAntigo.arquivado && !evento.arquivado) {
-        const payloadMinimo = montarPayloadMinimo(evento);
+        const payloadMinimo = montarPayloadMinimo(eventoSync);
         const googleEventId = await googleService.createEventDirectly(userId, payloadMinimo);
-        const eventoRepo = repositoryFactory.getEventoRepository();
         await eventoRepo.update(evento.id, {
           googleCalendarEventId: googleEventId,
           googleCalendarSyncedAt: new Date()
@@ -173,17 +234,15 @@ export class GoogleCalendarSyncService {
 
       // Atualizar ou criar evento no Google Calendar
       if (evento.googleCalendarEventId) {
-        const payloadMinimo = montarPayloadMinimo(evento);
+        const payloadMinimo = montarPayloadMinimo(eventoSync);
         await googleService.updateEventDirectly(userId, evento.googleCalendarEventId, payloadMinimo);
-        const eventoRepo = repositoryFactory.getEventoRepository();
         await eventoRepo.update(evento.id, {
           googleCalendarSyncedAt: new Date()
         });
         console.log('[GoogleCalendarSyncService] Evento atualizado no Google Calendar');
       } else {
-        const payloadMinimo = montarPayloadMinimo(evento);
+        const payloadMinimo = montarPayloadMinimo(eventoSync);
         const googleEventId = await googleService.createEventDirectly(userId, payloadMinimo);
-        const eventoRepo = repositoryFactory.getEventoRepository();
         await eventoRepo.update(evento.id, {
           googleCalendarEventId: googleEventId,
           googleCalendarSyncedAt: new Date()
