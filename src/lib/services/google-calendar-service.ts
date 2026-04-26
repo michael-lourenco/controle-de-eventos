@@ -187,6 +187,12 @@ export class GoogleCalendarService {
       access_token: accessToken,
       refresh_token: refreshTokenDecrypted
     });
+
+    // Garante que existe token de acesso válido no cliente OAuth antes de chamar a API.
+    const resolvedAccessToken = await oauth2Client.getAccessToken();
+    if (!resolvedAccessToken?.token) {
+      throw new Error('Não foi possível obter access token válido para Google Calendar');
+    }
     
     // Criar cliente calendar com OAuth2Client já configurado
     // A biblioteca googleapis usa o OAuth2Client para adicionar automaticamente
@@ -443,37 +449,19 @@ export class GoogleCalendarService {
   async getCalendarInfo(userId?: string, accessToken?: string): Promise<{ email: string; calendarId: string }> {
     try {
       let calendar;
-      const oauth2Client = this.getOAuth2Client();
       
       if (userId) {
-        // Se userId fornecido, obter token e configurar
-        console.log('[GoogleCalendarService] Obtendo token para userId:', userId);
-        const accessToken = await this.getAccessToken(userId);
-        console.log('[GoogleCalendarService] Token obtido, configurando OAuth2Client');
-        
-        // Buscar token completo para obter refresh token também
-        const tokenData = await this.tokenRepo.findByUserId(userId);
-        if (!tokenData) {
-          throw new Error('Token não encontrado');
-        }
-        
-        const refreshTokenDecrypted = decrypt(tokenData.refreshToken, ENCRYPTION_KEY);
-        
-        // Configurar OAuth2Client com access_token e refresh_token
-        oauth2Client.setCredentials({ 
-          access_token: accessToken,
-          refresh_token: refreshTokenDecrypted
-        });
-        
-        console.log('[GoogleCalendarService] OAuth2Client configurado com access_token e refresh_token');
-        calendar = google.calendar({
-          version: 'v3',
-          auth: oauth2Client as any
-        });
+        // Reaproveita o fluxo padrão de autenticação/refresh usado nos demais métodos.
+        calendar = await this.getCalendarClient(userId);
       } else if (accessToken) {
         // Se accessToken fornecido diretamente
         console.log('[GoogleCalendarService] Usando accessToken fornecido diretamente');
+        const oauth2Client = this.getOAuth2Client();
         oauth2Client.setCredentials({ access_token: accessToken });
+        const resolvedAccessToken = await oauth2Client.getAccessToken();
+        if (!resolvedAccessToken?.token) {
+          throw new Error('Access token fornecido é inválido ou expirado');
+        }
         calendar = google.calendar({
           version: 'v3',
           auth: oauth2Client as any
@@ -535,17 +523,7 @@ export class GoogleCalendarService {
             const novoToken = await this.getAccessToken(userId);
             console.log('[GoogleCalendarService] Novo token obtido, tentando novamente...');
             
-            const refreshTokenDecrypted = decrypt(token.refreshToken, ENCRYPTION_KEY);
-            const oauth2Client = this.getOAuth2Client();
-            oauth2Client.setCredentials({ 
-              access_token: novoToken,
-              refresh_token: refreshTokenDecrypted
-            });
-            
-            const calendar = google.calendar({
-              version: 'v3',
-              auth: oauth2Client as any
-            });
+            const calendar = await this.getCalendarClient(userId);
             
             const response = await calendar.calendars.get({
               calendarId: 'primary'

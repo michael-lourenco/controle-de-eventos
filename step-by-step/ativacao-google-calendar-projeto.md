@@ -153,3 +153,19 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 
 ### Resultado esperado
 - Build volta a compilar nessa etapa de checagem de tipos.
+
+---
+
+## Correção complementar — erro 401 "Login Required" no Google Calendar
+
+### Problema identificado
+- Logs mostraram falha de autenticação na leitura do calendário (`calendars.get`) com `401 UNAUTHENTICATED`.
+
+### Ajuste aplicado
+#### Arquivo: `src/lib/services/google-calendar-service.ts`
+- Reforçado `getCalendarClient` para resolver explicitamente token válido via `oauth2Client.getAccessToken()` antes de chamadas à API.
+- `getCalendarInfo(userId)` passou a reutilizar `getCalendarClient(userId)` (mesmo fluxo de refresh/autenticação dos demais métodos).
+- No caminho de recuperação após 401, retry também reutiliza `getCalendarClient(userId)` para padronizar comportamento.
+
+### Resultado esperado
+- Redução de erros intermitentes de credencial ausente/inválida ao consultar informações do calendário.
