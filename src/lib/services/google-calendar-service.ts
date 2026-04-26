@@ -214,23 +214,45 @@ export class GoogleCalendarService {
       throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Premium.');
     }
 
-    const calendar = await this.getCalendarClient(userId);
     const token = await this.tokenRepo.findByUserId(userId);
-    
     if (!token) {
       throw new Error('Token não encontrado');
     }
 
     const googleEvent = mapEventoToGoogleCalendar(evento);
 
-    try {
+    const executarCriacao = async (): Promise<string> => {
+      const calendar = await this.getCalendarClient(userId);
       const response = await calendar.events.insert({
         calendarId: token.calendarId || 'primary',
         requestBody: googleEvent
       });
-
       return response.data.id || '';
+    };
+
+    try {
+      return await executarCriacao();
     } catch (error: any) {
+      const errorMessage = String(error?.message || '');
+      const isAuthError =
+        error?.code === 401 ||
+        errorMessage.includes('Login Required') ||
+        errorMessage.includes('UNAUTHENTICATED') ||
+        errorMessage.includes('authentication credential');
+
+      if (isAuthError) {
+        try {
+          await this.tokenRepo.update(token.id, {
+            expiresAt: new Date(0),
+            dataAtualizacao: new Date()
+          });
+          return await executarCriacao();
+        } catch (retryError: any) {
+          console.error('Erro ao criar evento no Google Calendar (retry):', retryError);
+          throw new Error(`Erro ao criar evento: ${retryError?.message || 'Falha ao autenticar no Google Calendar'}`);
+        }
+      }
+
       console.error('Erro ao criar evento no Google Calendar:', error);
       throw new Error(`Erro ao criar evento: ${error.message}`);
     }
@@ -247,21 +269,44 @@ export class GoogleCalendarService {
       throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Premium.');
     }
 
-    const calendar = await this.getCalendarClient(userId);
     const token = await this.tokenRepo.findByUserId(userId);
     
     if (!token) {
       throw new Error('Token não encontrado. Conecte sua conta do Google Calendar primeiro.');
     }
 
-    try {
+    const executarCriacao = async (): Promise<string> => {
+      const calendar = await this.getCalendarClient(userId);
       const response = await calendar.events.insert({
         calendarId: token.calendarId || 'primary',
         requestBody: googleEvent
       });
-
       return response.data.id || '';
+    };
+
+    try {
+      return await executarCriacao();
     } catch (error: any) {
+      const errorMessage = String(error?.message || '');
+      const isAuthError =
+        error?.code === 401 ||
+        errorMessage.includes('Login Required') ||
+        errorMessage.includes('UNAUTHENTICATED') ||
+        errorMessage.includes('authentication credential');
+
+      if (isAuthError) {
+        try {
+          await this.tokenRepo.update(token.id, {
+            expiresAt: new Date(0),
+            dataAtualizacao: new Date()
+          });
+          return await executarCriacao();
+        } catch (retryError: any) {
+          console.error('Erro ao criar evento no Google Calendar (retry):', retryError);
+          throw new Error(`Erro ao criar evento: ${retryError?.message || 'Falha ao autenticar no Google Calendar'}`);
+        }
+      }
+
       console.error('Erro ao criar evento no Google Calendar:', error);
       throw new Error(`Erro ao criar evento: ${error.message}`);
     }

@@ -352,3 +352,22 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 
 ### Resultado esperado
 - Usuário consegue criar e visualizar eventos de teste direto no Google Calendar pela nova tela de configurações.
+
+---
+
+## Correção complementar — erro 401 "Login Required" ao criar evento direto
+
+### Problema identificado
+- Criação direta em `/api/google-calendar/events` retornava:
+  - `Login Required` (401)
+- Causa provável: token expirado/invalidado no momento da operação de escrita.
+
+### Ajuste aplicado
+#### Arquivo: `src/lib/services/google-calendar-service.ts`
+- `createEvent(...)` e `createEventDirectly(...)` agora têm retry automático para erro de autenticação:
+  - detecta erro 401/autenticação;
+  - força expiração (`expiresAt = new Date(0)`);
+  - tenta criar novamente com token renovado.
+
+### Resultado esperado
+- Redução de falhas de criação por autenticação transitória no Google Calendar.
