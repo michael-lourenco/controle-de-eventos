@@ -230,6 +230,25 @@ export class GoogleCalendarService {
       return response.data.id || '';
     };
 
+    const executarCriacaoViaRest = async (): Promise<string> => {
+      const accessToken = await this.getAccessToken(userId);
+      const calendarId = encodeURIComponent(token.calendarId || 'primary');
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
+      const restResponse = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(googleEvent)
+      });
+      const restData = await restResponse.json();
+      if (!restResponse.ok) {
+        throw new Error(restData?.error?.message || 'Erro ao criar evento via REST');
+      }
+      return restData?.id || '';
+    };
+
     try {
       return await executarCriacao();
     } catch (error: any) {
@@ -246,7 +265,21 @@ export class GoogleCalendarService {
             expiresAt: new Date(0),
             dataAtualizacao: new Date()
           });
-          return await executarCriacao();
+          try {
+            return await executarCriacao();
+          } catch (retryGoogleApisError: any) {
+            const retryMessage = String(retryGoogleApisError?.message || '');
+            const stillAuthError =
+              retryGoogleApisError?.code === 401 ||
+              retryMessage.includes('Login Required') ||
+              retryMessage.includes('UNAUTHENTICATED') ||
+              retryMessage.includes('authentication credential');
+
+            if (stillAuthError) {
+              return await executarCriacaoViaRest();
+            }
+            throw retryGoogleApisError;
+          }
         } catch (retryError: any) {
           console.error('Erro ao criar evento no Google Calendar (retry):', retryError);
           throw new Error(`Erro ao criar evento: ${retryError?.message || 'Falha ao autenticar no Google Calendar'}`);
@@ -284,6 +317,25 @@ export class GoogleCalendarService {
       return response.data.id || '';
     };
 
+    const executarCriacaoViaRest = async (): Promise<string> => {
+      const accessToken = await this.getAccessToken(userId);
+      const calendarId = encodeURIComponent(token.calendarId || 'primary');
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`;
+      const restResponse = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(googleEvent)
+      });
+      const restData = await restResponse.json();
+      if (!restResponse.ok) {
+        throw new Error(restData?.error?.message || 'Erro ao criar evento via REST');
+      }
+      return restData?.id || '';
+    };
+
     try {
       return await executarCriacao();
     } catch (error: any) {
@@ -300,7 +352,21 @@ export class GoogleCalendarService {
             expiresAt: new Date(0),
             dataAtualizacao: new Date()
           });
-          return await executarCriacao();
+          try {
+            return await executarCriacao();
+          } catch (retryGoogleApisError: any) {
+            const retryMessage = String(retryGoogleApisError?.message || '');
+            const stillAuthError =
+              retryGoogleApisError?.code === 401 ||
+              retryMessage.includes('Login Required') ||
+              retryMessage.includes('UNAUTHENTICATED') ||
+              retryMessage.includes('authentication credential');
+
+            if (stillAuthError) {
+              return await executarCriacaoViaRest();
+            }
+            throw retryGoogleApisError;
+          }
         } catch (retryError: any) {
           console.error('Erro ao criar evento no Google Calendar (retry):', retryError);
           throw new Error(`Erro ao criar evento: ${retryError?.message || 'Falha ao autenticar no Google Calendar'}`);
