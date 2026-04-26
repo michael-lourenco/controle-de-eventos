@@ -271,3 +271,19 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 
 ### Resultado esperado
 - Usuário admin volta a visualizar sua assinatura normalmente em `/assinatura`.
+
+---
+
+## Correção complementar — bloqueio indevido ao criar evento (403 plano)
+
+### Problema identificado
+- API de criação de evento retornava:
+  - `Seu plano não permite criar eventos` (403)
+- Em parte dos cenários, isso ocorria por falha técnica de leitura de assinatura/funcionalidades e não por ausência real de plano.
+
+### Ajuste aplicado
+#### Arquivo: `src/lib/services/funcionalidade-service.ts`
+- Em `verificarPermissao(...)`, quando a checagem de `EVENTOS_LIMITADOS` ou `CLIENTES_LIMITADOS` cai no `catch` (erro de leitura/permissão), retorna `true` para evitar bloqueio falso.
+
+### Resultado esperado
+- Criação de evento deixa de ser bloqueada por falhas transitórias de leitura de plano/funcionalidade.

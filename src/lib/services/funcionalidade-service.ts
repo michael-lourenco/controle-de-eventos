@@ -64,6 +64,12 @@ export class FuncionalidadeService {
       const temFuncionalidade = assinatura.funcionalidadesHabilitadas.includes(funcionalidade.id);
       return temFuncionalidade;
     } catch (error) {
+      // Evitar falso bloqueio de criação quando houver falha transitória/permissão
+      // na leitura de assinatura/funcionalidades.
+      if (codigoFuncionalidade === 'EVENTOS_LIMITADOS' || codigoFuncionalidade === 'CLIENTES_LIMITADOS') {
+        return true;
+      }
+
       // Fallback resiliente: em cenários de regra/permissão do Firestore na coleção de assinaturas,
       // usar cache consolidado no documento do usuário.
       try {
