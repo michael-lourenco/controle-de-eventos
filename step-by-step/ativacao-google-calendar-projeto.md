@@ -169,3 +169,24 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 
 ### Resultado esperado
 - Redução de erros intermitentes de credencial ausente/inválida ao consultar informações do calendário.
+
+---
+
+## Correção complementar — permissão Firestore no callback OAuth
+
+### Problema identificado
+- Callback do Google concluía troca de código por token, mas falhava ao persistir token com:
+  - `FirebaseError: Missing or insufficient permissions`
+- Causa: repositório de token do Google Calendar usava client SDK (`FirestoreRepository`) mesmo em fluxo server-side.
+
+### Ajustes aplicados
+#### Arquivo: `src/lib/repositories/google-calendar-token-repository.ts`
+- Migrado para `AdminFirestoreRepository`, passando a usar Firebase Admin SDK no backend.
+- Objetivo: bypass de regras do Firestore para operações internas do servidor.
+
+#### Arquivo: `src/lib/utils/google-calendar-auth.ts`
+- Mantido bypass temporário da validação de plano (`verificarAcessoGoogleCalendar` retorna `true`) para não bloquear autenticação/sincronização.
+
+### Resultado esperado
+- Callback OAuth consegue salvar/atualizar token sem erro de permissão.
+- Logs de `Erro ao verificar acesso Google Calendar: Missing or insufficient permissions` deixam de ocorrer nesse fluxo.

@@ -4,11 +4,11 @@
  * Esta classe é opcional e não quebra o sistema se não for usada.
  */
 
-import { FirestoreRepository } from './firestore-repository';
 import { GoogleCalendarToken } from '@/types/google-calendar';
 import { COLLECTIONS } from '../firestore/collections';
+import { AdminFirestoreRepository } from './admin-firestore-repository';
 
-export class GoogleCalendarTokenRepository extends FirestoreRepository<GoogleCalendarToken> {
+export class GoogleCalendarTokenRepository extends AdminFirestoreRepository<GoogleCalendarToken> {
   constructor() {
     super(COLLECTIONS.GOOGLE_CALENDAR_TOKENS);
   }
