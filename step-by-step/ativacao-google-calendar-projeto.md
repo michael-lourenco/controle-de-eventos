@@ -332,3 +332,23 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 
 ### Resultado esperado
 - Listagem de eventos funciona mesmo em ambientes onde a camada `googleapis` apresente falha de propagação de credencial OAuth.
+
+---
+
+## Extensão da tela de eventos — criação direta no Google Calendar
+
+### Objetivo
+- Permitir teste simples de criação de evento diretamente no Google Calendar sem registrar na base de eventos do sistema.
+
+### Ajuste aplicado
+#### Arquivo: `src/app/configuracoes/calendario/eventos/page.tsx`
+- Adicionado formulário mínimo com campos essenciais:
+  - título (obrigatório)
+  - início (obrigatório)
+  - fim (opcional)
+  - local (opcional)
+- Implementada ação de criação via `POST /api/google-calendar/events`.
+- Após criação, a lista é recarregada para validação imediata.
+
+### Resultado esperado
+- Usuário consegue criar e visualizar eventos de teste direto no Google Calendar pela nova tela de configurações.

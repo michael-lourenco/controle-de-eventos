@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/toast';
 import { GoogleCalendarEvent } from '@/types/google-calendar';
 
@@ -18,6 +19,11 @@ export default function GoogleCalendarEventosPage() {
   const { showToast } = useToast();
   const [eventos, setEventos] = useState<GoogleCalendarEvent[]>([]);
   const [carregando, setCarregando] = useState(false);
+  const [criando, setCriando] = useState(false);
+  const [titulo, setTitulo] = useState('');
+  const [inicio, setInicio] = useState('');
+  const [fim, setFim] = useState('');
+  const [local, setLocal] = useState('');
 
   async function carregarEventos() {
     setCarregando(true);
@@ -44,6 +50,49 @@ export default function GoogleCalendarEventosPage() {
     carregarEventos();
   }, []);
 
+  async function criarEventoDiretoNoGoogle() {
+    if (!titulo.trim()) {
+      showToast('Informe um título para o evento.', 'error');
+      return;
+    }
+
+    if (!inicio) {
+      showToast('Informe a data/hora de início.', 'error');
+      return;
+    }
+
+    setCriando(true);
+    try {
+      const response = await fetch('/api/google-calendar/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          summary: titulo.trim(),
+          startDateTime: new Date(inicio).toISOString(),
+          endDateTime: fim ? new Date(fim).toISOString() : undefined,
+          location: local.trim() || undefined,
+          timeZone: 'America/Sao_Paulo'
+        })
+      });
+
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error || 'Erro ao criar evento no Google Calendar');
+      }
+
+      showToast('Evento criado no Google Calendar com sucesso.', 'success');
+      setTitulo('');
+      setInicio('');
+      setFim('');
+      setLocal('');
+      await carregarEventos();
+    } catch (error: any) {
+      showToast(error?.message || 'Não foi possível criar evento no Google Calendar.', 'error');
+    } finally {
+      setCriando(false);
+    }
+  }
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8 space-y-6">
@@ -56,6 +105,41 @@ export default function GoogleCalendarEventosPage() {
             Atualizar
           </Button>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Criar evento direto no Google</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Input
+              label="Título"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ex: Reunião de teste"
+            />
+            <Input
+              label="Início"
+              type="datetime-local"
+              value={inicio}
+              onChange={(e) => setInicio(e.target.value)}
+            />
+            <Input
+              label="Fim (opcional)"
+              type="datetime-local"
+              value={fim}
+              onChange={(e) => setFim(e.target.value)}
+            />
+            <Input
+              label="Local (opcional)"
+              value={local}
+              onChange={(e) => setLocal(e.target.value)}
+              placeholder="Ex: Escritório"
+            />
+            <Button onClick={criarEventoDiretoNoGoogle} disabled={criando}>
+              {criando ? 'Criando...' : 'Criar evento no Google'}
+            </Button>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
