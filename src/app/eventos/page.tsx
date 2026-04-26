@@ -19,7 +19,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { useEventos, useEventosArquivados, useTiposEvento, useServicosPorEventos, usePreCadastros } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { dataService } from '@/lib/data-service';
 import { usePlano } from '@/lib/hooks/usePlano';
 import LimiteUsoCompacto from '@/components/LimiteUsoCompacto';
 import PlanOverlay from '@/components/PlanOverlay';
@@ -77,6 +76,19 @@ export default function EventosPage() {
 
   const recarregarEventos = async () => {
     await Promise.all([refetchAtivos(), refetchArquivados()]);
+  };
+
+  const atualizarEventoApi = async (eventoId: string, dados: Partial<Evento>) => {
+    const response = await fetch(`/api/eventos/${eventoId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+    const json = await response.json();
+    if (!response.ok) {
+      throw new Error(json?.error || 'Erro ao atualizar evento');
+    }
+    return json?.data;
   };
 
   // Mapeamento de tipoEventoId -> nome do tipo de evento (otimização)
@@ -240,7 +252,13 @@ export default function EventosPage() {
     if (!eventoParaArquivar || !userId) return;
 
     try {
-      await dataService.deleteEvento(eventoParaArquivar.id, userId);
+      const response = await fetch(`/api/eventos/${eventoParaArquivar.id}`, {
+        method: 'DELETE'
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error || 'Erro ao arquivar evento');
+      }
       showToast('Evento arquivado com sucesso!', 'success');
       await recarregarEventos();
       setEventoParaArquivar(null);
@@ -254,7 +272,15 @@ export default function EventosPage() {
     if (!userId) return;
 
     try {
-      await dataService.desarquivarEvento(evento.id, userId);
+      const response = await fetch(`/api/eventos/${evento.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'desarquivar' })
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error || 'Erro ao desarquivar evento');
+      }
       showToast('Evento desarquivado com sucesso!', 'success');
       await recarregarEventos();
     } catch (error) {
@@ -294,7 +320,7 @@ export default function EventosPage() {
 
     // Atualizar no backend de forma assíncrona
     try {
-      await dataService.updateEvento(eventoId, { status: novoStatusTyped }, userId);
+      await atualizarEventoApi(eventoId, { status: novoStatusTyped });
       showToast('Status atualizado com sucesso!', 'success');
     } catch (error) {
       // Erro - reverter a atualização otimista

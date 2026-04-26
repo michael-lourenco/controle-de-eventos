@@ -46,6 +46,20 @@ Registrar exatamente o que foi necessário para a integração com Google Calend
 - Serviço de sync:
   - `src/lib/services/google-calendar-sync-service.ts`
 
+### 6) Fluxo `/eventos` forçado via backend para disparar sync
+- Alguns pontos de `/eventos` ainda atualizavam por `dataService` no client, o que podia pular a sincronização server-side.
+- Ajuste aplicado:
+  - `src/app/eventos/page.tsx`: arquivar, desarquivar e alterar status via API (`/api/eventos/:id`).
+  - `src/app/eventos/[id]/page.tsx`: arquivar e atualizar campos (status/impressoes) via API.
+  - `src/app/api/eventos/[id]/route.ts`: adicionados `DELETE` (arquivar) e `PATCH` com `action=desarquivar`.
+- Resultado: mudanças em `/eventos` passam pelo backend e disparam integração Google.
+
+### 7) Indicador visual de sync no detalhe do evento
+- Em `src/app/eventos/[id]/page.tsx` foi adicionada seção:
+  - sincronizado (sim/não)
+  - id do evento no Google
+  - data/hora da última sincronização
+
 ---
 
 ## Principais problemas encontrados e como foram resolvidos

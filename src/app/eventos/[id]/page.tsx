@@ -33,7 +33,6 @@ import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEv
 import { useAnexos } from '@/hooks/useAnexos';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { usePlano } from '@/lib/hooks/usePlano';
-import { dataService } from '@/lib/data-service';
 import { AnexoEvento, Evento, StatusEvento, Contrato } from '@/types';
 import EventoStatusSelect from '@/components/EventoStatusSelect';
 import PagamentoHistorico from '@/components/PagamentoHistorico';
@@ -74,6 +73,19 @@ export default function EventoViewPage() {
   const { data: canaisEntrada } = useCanaisEntrada();
   
   const loading = loadingEvento || loadingPagamentos || loadingCustos || loadingServicos || loadingAnexos || loadingContratos;
+
+  const atualizarEventoApi = async (eventoId: string, dados: Partial<Evento>) => {
+    const response = await fetch(`/api/eventos/${eventoId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+    const json = await response.json();
+    if (!response.ok) {
+      throw new Error(json?.error || 'Erro ao atualizar evento');
+    }
+    return json?.data;
+  };
 
   // Verificar acesso ao botão copiar - chamado antes dos early returns
   useEffect(() => {
@@ -139,7 +151,13 @@ export default function EventoViewPage() {
     if (!evento || !userId) return;
 
     try {
-      await dataService.deleteEvento(evento.id, userId);
+      const response = await fetch(`/api/eventos/${evento.id}`, {
+        method: 'DELETE'
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json?.error || 'Erro ao arquivar evento');
+      }
       showToast('Evento arquivado com sucesso!', 'success');
       router.push('/eventos');
     } catch (error) {
@@ -200,7 +218,7 @@ export default function EventoViewPage() {
       setEventoLocal(eventoAtualizado as Evento);
 
       // Atualizar no banco
-      await dataService.updateEvento(evento.id, { numeroImpressoes }, userId);
+      await atualizarEventoApi(evento.id, { numeroImpressoes });
       
       // Recarregar dados do servidor
       await refetchEvento();
@@ -387,7 +405,7 @@ export default function EventoViewPage() {
     setEventoLocal(prev => prev ? { ...prev, status: novoStatusTyped } : null);
 
     try {
-      await dataService.updateEvento(eventoId, { status: novoStatusTyped }, userId);
+      await atualizarEventoApi(eventoId, { status: novoStatusTyped });
       showToast('Status do evento atualizado com sucesso!', 'success');
       // Recarregar evento para garantir sincronização
       await refetchEvento();
@@ -714,6 +732,26 @@ export default function EventoViewPage() {
             Criado em {format(evento.dataCadastro, 'dd/MM/yyyy', { locale: ptBR })}
           </span>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sincronização Google Calendar</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1 text-sm text-text-secondary">
+            <p>
+              <strong>Sincronizado:</strong> {evento.googleCalendarEventId ? 'Sim' : 'Não'}
+            </p>
+            <p>
+              <strong>ID no Google:</strong> {evento.googleCalendarEventId || 'N/A'}
+            </p>
+            <p>
+              <strong>Última sincronização:</strong>{' '}
+              {evento.googleCalendarSyncedAt
+                ? format(new Date(evento.googleCalendarSyncedAt), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+                : 'N/A'}
+            </p>
+          </CardContent>
+        </Card>
 
         <div id="basico" className="grid grid-cols-1 gap-6 lg:grid-cols-2 pt-4">
           {/* Informações do Cliente */}

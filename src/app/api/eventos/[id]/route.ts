@@ -44,3 +44,37 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUser();
+    const { id } = await getRouteParams(params);
+    await dataService.deleteEvento(id, user.id);
+    return createApiResponse({ success: true });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUser();
+    const { id } = await getRouteParams(params);
+    const body = await getRequestBody<{ action?: 'desarquivar' }>(request);
+
+    if (body?.action === 'desarquivar') {
+      await dataService.desarquivarEvento(id, user.id);
+      return createApiResponse({ success: true });
+    }
+
+    return createErrorResponse('Ação inválida', 400);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
