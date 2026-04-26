@@ -384,6 +384,46 @@ export class GoogleCalendarService {
       return (response.data.items || []) as GoogleCalendarEvent[];
     } catch (error: any) {
       console.error('Erro ao listar eventos do Google Calendar:', error);
+
+      // Fallback: em alguns ambientes a biblioteca pode não enviar OAuth corretamente
+      // e a API retorna "Method doesn't allow unregistered callers".
+      // Nesses casos, fazemos a chamada REST direta com Bearer token.
+      const errorMessage = String(error?.message || '');
+      const shouldTryRestFallback =
+        errorMessage.includes('unregistered callers') ||
+        errorMessage.includes('authentication credential') ||
+        error?.code === 401 ||
+        error?.code === 403;
+
+      if (shouldTryRestFallback) {
+        try {
+          const accessToken = await this.getAccessToken(userId);
+          const calendarId = encodeURIComponent(token.calendarId || 'primary');
+          const url = new URL(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`);
+          url.searchParams.set('singleEvents', 'true');
+          url.searchParams.set('orderBy', 'startTime');
+          url.searchParams.set('maxResults', String(options?.maxResults || 50));
+          if (options?.timeMin) url.searchParams.set('timeMin', options.timeMin);
+          if (options?.timeMax) url.searchParams.set('timeMax', options.timeMax);
+
+          const restResponse = await fetch(url.toString(), {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          const restData = await restResponse.json();
+          if (!restResponse.ok) {
+            throw new Error(restData?.error?.message || 'Erro na listagem REST do Google Calendar');
+          }
+
+          return (restData?.items || []) as GoogleCalendarEvent[];
+        } catch (fallbackError: any) {
+          throw new Error(`Erro ao listar eventos (fallback REST): ${fallbackError?.message || 'Erro desconhecido'}`);
+        }
+      }
+
       throw new Error(`Erro ao listar eventos: ${error.message}`);
     }
   }

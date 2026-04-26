@@ -314,3 +314,21 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 
 ### Resultado esperado
 - Usuário consegue visualizar no próprio sistema os eventos existentes na conta Google conectada.
+
+---
+
+## Correção complementar — erro 403 "unregistered callers" ao listar eventos
+
+### Problema identificado
+- Endpoint de listagem de eventos retornava:
+  - `Method doesn't allow unregistered callers`
+- Isso indica requisição sem identidade OAuth efetiva no momento da chamada.
+
+### Ajuste aplicado
+#### Arquivo: `src/lib/services/google-calendar-service.ts`
+- Em `listEvents(...)`, adicionada estratégia de fallback:
+  - tenta `googleapis` primeiro;
+  - em erros de autenticação/credencial (`401/403`, `unregistered callers`), executa chamada REST direta para Calendar API com `Authorization: Bearer <accessToken>`.
+
+### Resultado esperado
+- Listagem de eventos funciona mesmo em ambientes onde a camada `googleapis` apresente falha de propagação de credencial OAuth.
