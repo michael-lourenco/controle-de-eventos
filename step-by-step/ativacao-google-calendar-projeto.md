@@ -236,3 +236,38 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 ### Resultado esperado
 - Rotas `/api/google-calendar/*` executam com privilégios de servidor para ler/escrever `google_calendar_tokens`.
 - Sem regressão de exceção client-side nas páginas.
+
+---
+
+## Correção complementar — falso "sem plano" ao criar evento
+
+### Problema identificado
+- Usuário com assinatura válida era bloqueado na criação de evento com mensagem de ausência de plano.
+- Causa técnica provável: falha de leitura da coleção `assinaturas` em alguns fluxos, com retorno silencioso `false` na validação de permissão.
+
+### Ajuste aplicado
+#### Arquivo: `src/lib/services/funcionalidade-service.ts`
+- `verificarPermissao(...)` agora tem fallback para usar `user.assinatura.funcionalidadesHabilitadas` (cache consolidado no documento do usuário) quando a leitura da assinatura falhar.
+- `obterFuncionalidadesHabilitadas(...)` também ganhou fallback equivalente.
+- `obterLimitesUsuario(...)` passou a retornar uso atual mesmo em cenário de falha de leitura de assinatura/plano, evitando bloqueio indevido por erro de infraestrutura/regras.
+
+### Resultado esperado
+- Redução de bloqueios falsos de plano ao criar evento, mesmo com inconsistência temporária de leitura na coleção `assinaturas`.
+
+---
+
+## Correção complementar — assinatura não exibida para usuário admin
+
+### Problema identificado
+- Na página `/assinatura`, usuários com `role=admin` não viam a própria assinatura.
+- Causa: `GET /api/assinaturas` retornava payload diferente para admin (`{ assinaturas }`), enquanto a página espera `{ assinatura, todasAssinaturas }`.
+
+### Ajuste aplicado
+#### Arquivo: `src/app/api/assinaturas/route.ts`
+- Mantido comportamento admin por query (`?userId=...`) para inspeção de outros usuários.
+- Ajustado comportamento padrão de admin sem query para retornar a própria assinatura no mesmo formato da página:
+  - `assinatura`
+  - `todasAssinaturas`
+
+### Resultado esperado
+- Usuário admin volta a visualizar sua assinatura normalmente em `/assinatura`.

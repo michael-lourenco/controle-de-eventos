@@ -64,7 +64,34 @@ export class FuncionalidadeService {
       const temFuncionalidade = assinatura.funcionalidadesHabilitadas.includes(funcionalidade.id);
       return temFuncionalidade;
     } catch (error) {
-      return false;
+      // Fallback resiliente: em cenários de regra/permissão do Firestore na coleção de assinaturas,
+      // usar cache consolidado no documento do usuário.
+      try {
+        const user = await this.userRepo.findById(userId);
+        if (!user || user.role === 'admin') {
+          return !!user && user.role === 'admin';
+        }
+
+        const funcionalidade = await this.funcionalidadeRepo.findByCodigo(codigoFuncionalidade);
+        if (!funcionalidade || !funcionalidade.ativo) {
+          return false;
+        }
+
+        const assinaturaUser = user.assinatura;
+        if (!assinaturaUser) {
+          return false;
+        }
+
+        const status = (assinaturaUser.status || '').toUpperCase();
+        if (!status || !['ATIVA', 'TRIAL'].includes(status)) {
+          return false;
+        }
+
+        const funcionalidades = assinaturaUser.funcionalidadesHabilitadas || [];
+        return funcionalidades.includes(funcionalidade.id);
+      } catch {
+        return false;
+      }
     }
   }
 
@@ -90,7 +117,23 @@ export class FuncionalidadeService {
 
       return funcionalidades;
     } catch (error) {
-      return [];
+      // Fallback usando cache consolidado de funcionalidades no documento do usuário
+      try {
+        const user = await this.userRepo.findById(userId);
+        const assinaturaUser = user?.assinatura;
+        if (!assinaturaUser) return [];
+        const status = (assinaturaUser.status || '').toUpperCase();
+        if (!['ATIVA', 'TRIAL'].includes(status)) return [];
+
+        const funcionalidades: Funcionalidade[] = [];
+        for (const funcId of assinaturaUser.funcionalidadesHabilitadas || []) {
+          const func = await this.funcionalidadeRepo.findById(funcId);
+          if (func && func.ativo) funcionalidades.push(func);
+        }
+        return funcionalidades;
+      } catch {
+        return [];
+      }
     }
   }
 
@@ -150,12 +193,43 @@ export class FuncionalidadeService {
         armazenamentoLimite: limiteUsuarios ? undefined : undefined
       };
     } catch (error) {
-      return {
-        eventosMesAtual: 0,
-        clientesTotal: 0,
-        usuariosConta: 1,
-        armazenamentoUsado: 0
-      };
+      // Fallback usando plano consolidado no usuário
+      try {
+        const user = await this.userRepo.findById(userId);
+        const assinaturaUser = user?.assinatura;
+
+        // Contar uso mesmo sem limites carregados
+        const eventos = await this.eventoRepo.findAll(userId);
+        const agora = new Date();
+        const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+        const eventosMesAtual = eventos.filter(e => e.dataCadastro >= inicioMes && e.dataCadastro <= agora).length;
+        const anoAtual = agora.getFullYear();
+        const clientesAnoAtual = await this.clienteRepo.countClientesPorAno(anoAtual, userId);
+
+        // Sem acesso ao plano => retorna uso, com limites indefinidos (sem bloquear por limite)
+        if (!assinaturaUser?.planoId) {
+          return {
+            eventosMesAtual,
+            clientesTotal: clientesAnoAtual,
+            usuariosConta: 1,
+            armazenamentoUsado: 0
+          };
+        }
+
+        return {
+          eventosMesAtual,
+          clientesTotal: clientesAnoAtual,
+          usuariosConta: 1,
+          armazenamentoUsado: 0
+        };
+      } catch {
+        return {
+          eventosMesAtual: 0,
+          clientesTotal: 0,
+          usuariosConta: 1,
+          armazenamentoUsado: 0
+        };
+      }
     }
   }
 
