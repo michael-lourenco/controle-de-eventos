@@ -6,9 +6,9 @@
 
 import { GoogleCalendarToken } from '@/types/google-calendar';
 import { COLLECTIONS } from '../firestore/collections';
-import { AdminFirestoreRepository } from './admin-firestore-repository';
+import { FirestoreRepository } from './firestore-repository';
 
-export class GoogleCalendarTokenRepository extends AdminFirestoreRepository<GoogleCalendarToken> {
+export class GoogleCalendarTokenRepository extends FirestoreRepository<GoogleCalendarToken> {
   constructor() {
     super(COLLECTIONS.GOOGLE_CALENDAR_TOKENS);
   }

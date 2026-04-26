@@ -190,3 +190,19 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 ### Resultado esperado
 - Callback OAuth consegue salvar/atualizar token sem erro de permissão.
 - Logs de `Erro ao verificar acesso Google Calendar: Missing or insufficient permissions` deixam de ocorrer nesse fluxo.
+
+---
+
+## Correção emergencial — exceção client-side nas páginas
+
+### Problema identificado
+- Após alteração do repositório de token para Admin SDK, o sistema passou a exibir:
+  - `Application error: a client-side exception has occurred...`
+- Causa raiz: import de código server-only (Admin Firestore) em cadeia compartilhada com bundle client.
+
+### Ajuste aplicado
+#### Arquivo: `src/lib/repositories/google-calendar-token-repository.ts`
+- Revertido para `FirestoreRepository` (client SDK) para remover dependência de Admin SDK do bundle compartilhado e restaurar carregamento das páginas.
+
+### Resultado esperado
+- Páginas voltam a abrir normalmente sem exceção client-side.
