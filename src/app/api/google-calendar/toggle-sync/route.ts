@@ -15,7 +15,7 @@ import {
   getRequestBody
 } from '@/lib/api/route-helpers';
 import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { AdminGoogleCalendarTokenRepository } from '@/lib/repositories/admin-google-calendar-token-repository';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       return createErrorResponse('syncEnabled deve ser um boolean', 400);
     }
 
-    const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+    const tokenRepo = new AdminGoogleCalendarTokenRepository();
     await tokenRepo.updateSyncStatus(user.id, syncEnabled);
 
     return createApiResponse({ 

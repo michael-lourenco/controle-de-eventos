@@ -14,7 +14,7 @@ import {
   createErrorResponse
 } from '@/lib/api/route-helpers';
 import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { AdminGoogleCalendarTokenRepository } from '@/lib/repositories/admin-google-calendar-token-repository';
 
 interface StepResult {
   step: string;
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     // ETAPA 4: Buscar token no banco
     addStep('4. Buscar Token no Banco', 'pending', 'Buscando token do Google Calendar no Firestore...');
-    const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+    const tokenRepo = new AdminGoogleCalendarTokenRepository();
     const token = await tokenRepo.findByUserId(user.id);
     
     if (!token) {

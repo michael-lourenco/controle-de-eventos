@@ -11,7 +11,7 @@ import {
   getAuthenticatedUser,
   getQueryParams
 } from '@/lib/api/route-helpers';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { AdminGoogleCalendarTokenRepository } from '@/lib/repositories/admin-google-calendar-token-repository';
 
 // Funções simples de criptografia (usar biblioteca adequada em produção)
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
     const { getServiceFactory } = await import('@/lib/factories/service-factory');
     const serviceFactory = getServiceFactory();
     const googleService = serviceFactory.getGoogleCalendarService();
-    const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+    const tokenRepo = new AdminGoogleCalendarTokenRepository();
 
     // Trocar código por tokens
     let tokens;

@@ -26,6 +26,7 @@ export class GoogleCalendarSyncService {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
       const { repositoryFactory } = await import('../repositories/repository-factory');
+      const { AdminGoogleCalendarTokenRepository } = await import('../repositories/admin-google-calendar-token-repository');
       const { verificarAcessoGoogleCalendar } = await import('../utils/google-calendar-auth');
       
       // Verificar se usuário tem acesso
@@ -35,7 +36,7 @@ export class GoogleCalendarSyncService {
       }
 
       // Verificar se usuário tem token e sincronização ativa
-      const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+      const tokenRepo = new AdminGoogleCalendarTokenRepository();
       const token = await tokenRepo.findByUserId(userId);
       
       if (!token || !token.syncEnabled) {
@@ -76,6 +77,7 @@ export class GoogleCalendarSyncService {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
       const { repositoryFactory } = await import('../repositories/repository-factory');
+      const { AdminGoogleCalendarTokenRepository } = await import('../repositories/admin-google-calendar-token-repository');
       const { verificarAcessoGoogleCalendar } = await import('../utils/google-calendar-auth');
       
       // Verificar se usuário tem acesso
@@ -85,7 +87,7 @@ export class GoogleCalendarSyncService {
       }
 
       // Verificar se usuário tem token e sincronização ativa
-      const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+      const tokenRepo = new AdminGoogleCalendarTokenRepository();
       const token = await tokenRepo.findByUserId(userId);
       
       if (!token || !token.syncEnabled) {
@@ -150,7 +152,7 @@ export class GoogleCalendarSyncService {
     try {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
-      const { repositoryFactory } = await import('../repositories/repository-factory');
+      const { AdminGoogleCalendarTokenRepository } = await import('../repositories/admin-google-calendar-token-repository');
       const { verificarAcessoGoogleCalendar } = await import('../utils/google-calendar-auth');
       
       // Verificar se usuário tem acesso
@@ -160,7 +162,7 @@ export class GoogleCalendarSyncService {
       }
 
       // Verificar se usuário tem token e sincronização ativa
-      const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+      const tokenRepo = new AdminGoogleCalendarTokenRepository();
       const token = await tokenRepo.findByUserId(userId);
       
       if (!token || !token.syncEnabled) {

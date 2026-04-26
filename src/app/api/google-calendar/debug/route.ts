@@ -14,7 +14,7 @@ import {
   createApiResponse,
   createErrorResponse
 } from '@/lib/api/route-helpers';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { AdminGoogleCalendarTokenRepository } from '@/lib/repositories/admin-google-calendar-token-repository';
 
 // Função de descriptografia (mesma do serviço)
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
@@ -26,7 +26,7 @@ function decrypt(encrypted: string, key: string): string {
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
-    const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+    const tokenRepo = new AdminGoogleCalendarTokenRepository();
     const token = await tokenRepo.findByUserId(user.id);
 
     if (!token) {

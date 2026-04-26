@@ -13,7 +13,7 @@ import {
   createApiResponse
 } from '@/lib/api/route-helpers';
 import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { AdminGoogleCalendarTokenRepository } from '@/lib/repositories/admin-google-calendar-token-repository';
 import { GoogleCalendarSyncStatus } from '@/types/google-calendar';
 
 export async function GET(request: NextRequest) {
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // Verificar se usuário tem plano permitido
     const planAllowed = await verificarAcessoGoogleCalendar(user.id);
     
-    const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+    const tokenRepo = new AdminGoogleCalendarTokenRepository();
     const token = await tokenRepo.findByUserId(user.id);
 
     const status: GoogleCalendarSyncStatus = {

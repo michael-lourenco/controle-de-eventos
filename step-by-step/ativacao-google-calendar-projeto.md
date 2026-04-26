@@ -206,3 +206,33 @@ Colocar a integração do Google Calendar para funcionar de fato no fluxo princi
 
 ### Resultado esperado
 - Páginas voltam a abrir normalmente sem exceção client-side.
+
+---
+
+## Correção definitiva — token Google com Admin SDK apenas no servidor
+
+### Problema identificado
+- Em produção, callback OAuth e status do Google Calendar falhavam com:
+  - `Missing or insufficient permissions`
+- A tentativa anterior de usar Admin SDK no repositório compartilhado quebrou páginas client (bundle).
+
+### Solução implementada
+- Criado repositório server-only dedicado para tokens:
+  - `src/lib/repositories/admin-google-calendar-token-repository.ts`
+  - Baseado em `AdminFirestoreRepository`.
+- Mantido repositório compartilhado original (`google-calendar-token-repository`) com client SDK para evitar vazamento server-only no client bundle.
+
+### Arquivos ajustados para usar o repositório admin (somente backend)
+- `src/lib/services/google-calendar-service.ts`
+- `src/lib/services/google-calendar-sync-service.ts`
+- `src/app/api/google-calendar/callback/route.ts`
+- `src/app/api/google-calendar/status/route.ts`
+- `src/app/api/google-calendar/disconnect/route.ts`
+- `src/app/api/google-calendar/toggle-sync/route.ts`
+- `src/app/api/google-calendar/refresh-token/route.ts`
+- `src/app/api/google-calendar/detailed-status/route.ts`
+- `src/app/api/google-calendar/debug/route.ts`
+
+### Resultado esperado
+- Rotas `/api/google-calendar/*` executam com privilégios de servidor para ler/escrever `google_calendar_tokens`.
+- Sem regressão de exceção client-side nas páginas.

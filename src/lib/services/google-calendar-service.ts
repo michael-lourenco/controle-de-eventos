@@ -10,9 +10,8 @@
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import { Evento } from '@/types';
-import { GoogleCalendarEvent, GoogleCalendarToken } from '@/types/google-calendar';
-import { GoogleCalendarTokenRepository } from '../repositories/google-calendar-token-repository';
-import { repositoryFactory } from '../repositories/repository-factory';
+import { GoogleCalendarEvent } from '@/types/google-calendar';
+import { AdminGoogleCalendarTokenRepository } from '../repositories/admin-google-calendar-token-repository';
 import { mapEventoToGoogleCalendar, mapGoogleCalendarToEvento } from '../utils/google-calendar-mapper';
 import { verificarAcessoGoogleCalendar } from '../utils/google-calendar-auth';
 
@@ -34,10 +33,10 @@ function decrypt(encrypted: string, key: string): string {
 }
 
 export class GoogleCalendarService {
-  private tokenRepo: GoogleCalendarTokenRepository;
+  private tokenRepo: AdminGoogleCalendarTokenRepository;
 
   constructor() {
-    this.tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+    this.tokenRepo = new AdminGoogleCalendarTokenRepository();
   }
 
   /**

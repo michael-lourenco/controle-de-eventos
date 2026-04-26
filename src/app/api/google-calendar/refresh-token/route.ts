@@ -13,7 +13,7 @@ import {
   createApiResponse,
   createErrorResponse
 } from '@/lib/api/route-helpers';
-import { repositoryFactory } from '@/lib/repositories/repository-factory';
+import { AdminGoogleCalendarTokenRepository } from '@/lib/repositories/admin-google-calendar-token-repository';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production';
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
 
-    const tokenRepo = repositoryFactory.getGoogleCalendarTokenRepository();
+    const tokenRepo = new AdminGoogleCalendarTokenRepository();
     const token = await tokenRepo.findByUserId(user.id);
 
     if (!token) {
