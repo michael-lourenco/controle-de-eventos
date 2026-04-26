@@ -13,20 +13,10 @@ import {
   createErrorResponse,
   getQueryParams
 } from '@/lib/api/route-helpers';
-import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
 
 export async function GET(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
-
-    // Verificar se usuário tem plano permitido
-    const temAcesso = await verificarAcessoGoogleCalendar(user.id);
-    if (!temAcesso) {
-      return createErrorResponse(
-        'Esta funcionalidade está disponível apenas para planos Profissional e Premium.',
-        403
-      );
-    }
 
     // Verificar se variáveis de ambiente estão configuradas
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {

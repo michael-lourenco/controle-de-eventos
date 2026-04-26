@@ -5,8 +5,10 @@ import {
   handleApiError,
   createApiResponse,
   createErrorResponse,
-  getRouteParams
+  getRouteParams,
+  getRequestBody
 } from '@/lib/api/route-helpers';
+import { Evento } from '@/types';
 
 export async function GET(
   request: NextRequest,
@@ -21,6 +23,21 @@ export async function GET(
       return createErrorResponse('Evento não encontrado', 404);
     }
 
+    return createApiResponse(evento);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getAuthenticatedUser();
+    const { id } = await getRouteParams(params);
+    const body = await getRequestBody<Partial<Evento>>(request);
+    const evento = await dataService.updateEvento(id, body, user.id);
     return createApiResponse(evento);
   } catch (error) {
     return handleApiError(error);

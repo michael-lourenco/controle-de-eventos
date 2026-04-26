@@ -400,8 +400,6 @@ export class DataService {
 
     try {
       const resultado = await this.eventoRepo.createEvento(evento, userId);
-      // COMENTADO: Sincronização com Google Calendar desabilitada - Aguardando permissões diretas da Google
-      /*
       // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
       // Usar eval para evitar que webpack analise a importação
       if (typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
@@ -413,7 +411,6 @@ export class DataService {
           // Ignorar erro silenciosamente (pode não estar disponível no cliente)
         }
       }
-      */
       
       return resultado;
     } catch (error) {
@@ -431,8 +428,6 @@ export class DataService {
     // Buscar evento atualizado completo (pode ter mudado durante a atualização)
     const eventoAtualizado = await this.eventoRepo.getEventoById(id, userId) || resultado;
     
-    // COMENTADO: Sincronização com Google Calendar desabilitada - Aguardando permissões diretas da Google
-    /*
     // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
     // Usar eval para evitar que webpack analise a importação
     if (typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
@@ -444,7 +439,6 @@ export class DataService {
         // Ignorar erro silenciosamente (pode não estar disponível no cliente)
       }
     }
-    */
     
     return resultado;
   }
@@ -455,8 +449,6 @@ export class DataService {
     
     await this.eventoRepo.deleteEvento(id, userId);
     
-    // COMENTADO: Sincronização com Google Calendar desabilitada - Aguardando permissões diretas da Google
-    /*
     // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
     // Usar eval para evitar que webpack analise a importação
     if (evento && typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
@@ -468,7 +460,6 @@ export class DataService {
         // Ignorar erro silenciosamente (pode não estar disponível no cliente)
       }
     }
-    */
   }
   
   async desarquivarEvento(id: string, userId: string): Promise<void> {
@@ -480,8 +471,6 @@ export class DataService {
     // Buscar evento atualizado após desarquivamento
     const eventoAtualizado = await this.eventoRepo.getEventoById(id, userId);
     
-    // COMENTADO: Sincronização com Google Calendar desabilitada - Aguardando permissões diretas da Google
-    /*
     // Sincronizar com Google Calendar apenas no servidor (não bloquear se falhar)
     // Usar eval para evitar que webpack analise a importação
     if (eventoAtualizado && typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
@@ -493,7 +482,6 @@ export class DataService {
         // Ignorar erro silenciosamente (pode não estar disponível no cliente)
       }
     }
-    */
   }
   
   async getEventosArquivados(userId: string): Promise<Evento[]> {

@@ -769,11 +769,29 @@ export default function EventoForm({ evento, onSave, onCancel }: EventoFormProps
       };
 
       if (evento) {
-        const eventoAtualizado = await dataService.updateEvento(evento.id, eventoData, userId);
+        const response = await fetch(`/api/eventos/${evento.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventoData)
+        });
+        const json = await response.json();
+        if (!response.ok) {
+          throw new Error(json?.error || 'Erro ao atualizar evento');
+        }
+        const eventoAtualizado = json?.data;
         await sincronizarServicosEvento(eventoAtualizado.id);
         onSave(eventoAtualizado);
       } else {
-        const novoEvento = await dataService.createEvento(eventoData, userId);
+        const response = await fetch('/api/eventos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventoData)
+        });
+        const json = await response.json();
+        if (!response.ok) {
+          throw new Error(json?.error || 'Erro ao criar evento');
+        }
+        const novoEvento = json?.data;
         await sincronizarServicosEvento(novoEvento.id);
         onSave(novoEvento);
       }

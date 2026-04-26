@@ -22,10 +22,6 @@ export class GoogleCalendarSyncService {
    * COMENTADO: Aguardando permissões diretas da Google
    */
   static async syncAfterCreate(evento: Evento, userId: string): Promise<void> {
-    // Funcionalidade desabilitada temporariamente
-    return;
-    
-    /*
     try {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
@@ -59,13 +55,12 @@ export class GoogleCalendarSyncService {
       await eventoRepo.update(evento.id, {
         googleCalendarEventId: googleEventId,
         googleCalendarSyncedAt: new Date()
-      }, userId);
+      });
       
       console.log('[GoogleCalendarSyncService] Evento criado no Google Calendar:', googleEventId);
     } catch (error) {
       console.error('[GoogleCalendarSyncService] Erro ao sincronizar evento criado:', error);
     }
-    */
   }
 
   /**
@@ -77,10 +72,6 @@ export class GoogleCalendarSyncService {
     userId: string, 
     eventoAntigo?: Evento | null
   ): Promise<void> {
-    // Funcionalidade desabilitada temporariamente
-    return;
-    
-    /*
     try {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
@@ -111,7 +102,7 @@ export class GoogleCalendarSyncService {
           await eventoRepo.update(evento.id, {
             googleCalendarEventId: undefined,
             googleCalendarSyncedAt: new Date()
-          }, userId);
+          });
           console.log('[GoogleCalendarSyncService] Evento removido do Google Calendar');
         }
         return;
@@ -124,7 +115,7 @@ export class GoogleCalendarSyncService {
         await eventoRepo.update(evento.id, {
           googleCalendarEventId: googleEventId,
           googleCalendarSyncedAt: new Date()
-        }, userId);
+        });
         console.log('[GoogleCalendarSyncService] Evento desarquivado e criado no Google Calendar');
         return;
       }
@@ -135,7 +126,7 @@ export class GoogleCalendarSyncService {
         const eventoRepo = repositoryFactory.getEventoRepository();
         await eventoRepo.update(evento.id, {
           googleCalendarSyncedAt: new Date()
-        }, userId);
+        });
         console.log('[GoogleCalendarSyncService] Evento atualizado no Google Calendar');
       } else {
         const googleEventId = await googleService.syncEventToCalendar(userId, evento);
@@ -143,13 +134,12 @@ export class GoogleCalendarSyncService {
         await eventoRepo.update(evento.id, {
           googleCalendarEventId: googleEventId,
           googleCalendarSyncedAt: new Date()
-        }, userId);
+        });
         console.log('[GoogleCalendarSyncService] Evento criado no Google Calendar');
       }
     } catch (error) {
       console.error('[GoogleCalendarSyncService] Erro ao sincronizar evento atualizado:', error);
     }
-    */
   }
 
   /**
@@ -157,10 +147,6 @@ export class GoogleCalendarSyncService {
    * COMENTADO: Aguardando permissões diretas da Google
    */
   static async syncAfterDelete(evento: Evento, userId: string): Promise<void> {
-    // Funcionalidade desabilitada temporariamente
-    return;
-    
-    /*
     try {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
@@ -190,6 +176,5 @@ export class GoogleCalendarSyncService {
     } catch (error) {
       console.error('[GoogleCalendarSyncService] Erro ao remover evento do Google Calendar:', error);
     }
-    */
   }
 }

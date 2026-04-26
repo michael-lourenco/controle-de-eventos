@@ -11,7 +11,6 @@ import {
   getAuthenticatedUser,
   getQueryParams
 } from '@/lib/api/route-helpers';
-import { verificarAcessoGoogleCalendar } from '@/lib/utils/google-calendar-auth';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 
 // Funções simples de criptografia (usar biblioteca adequada em produção)
@@ -29,14 +28,6 @@ export async function GET(request: NextRequest) {
     console.log('[Google Calendar Callback] Iniciando callback OAuth');
     
     const user = await getAuthenticatedUser();
-
-    // Verificar se usuário tem plano permitido
-    const temAcesso = await verificarAcessoGoogleCalendar(user.id);
-    if (!temAcesso) {
-      return NextResponse.redirect(
-        new URL('/configuracoes/calendario?error=access_denied', request.url)
-      );
-    }
 
     const queryParams = getQueryParams(request);
     const code = queryParams.get('code');
