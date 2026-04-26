@@ -379,6 +379,92 @@ export class GoogleCalendarService {
   }
 
   /**
+   * Atualiza um evento diretamente no Google Calendar com payload mínimo
+   */
+  async updateEventDirectly(userId: string, googleEventId: string, googleEvent: GoogleCalendarEvent): Promise<void> {
+    const temAcesso = await verificarAcessoGoogleCalendar(userId);
+    if (!temAcesso) {
+      throw new Error('Acesso negado. Esta funcionalidade está disponível apenas para planos Profissional e Premium.');
+    }
+
+    const token = await this.tokenRepo.findByUserId(userId);
+    if (!token) {
+      throw new Error('Token não encontrado. Conecte sua conta do Google Calendar primeiro.');
+    }
+
+    const executarAtualizacao = async (): Promise<void> => {
+      const calendar = await this.getCalendarClient(userId);
+      await calendar.events.update({
+        calendarId: token.calendarId || 'primary',
+        eventId: googleEventId,
+        requestBody: googleEvent
+      });
+    };
+
+    const executarAtualizacaoViaRest = async (): Promise<void> => {
+      const accessToken = await this.getAccessToken(userId);
+      const calendarId = encodeURIComponent(token.calendarId || 'primary');
+      const eventId = encodeURIComponent(googleEventId);
+      const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events/${eventId}`;
+      const restResponse = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(googleEvent)
+      });
+      const restData = await restResponse.json();
+      if (!restResponse.ok) {
+        throw new Error(restData?.error?.message || 'Erro ao atualizar evento via REST');
+      }
+    };
+
+    try {
+      await executarAtualizacao();
+    } catch (error: any) {
+      const errorMessage = String(error?.message || '');
+      const isAuthError =
+        error?.code === 401 ||
+        errorMessage.includes('Login Required') ||
+        errorMessage.includes('UNAUTHENTICATED') ||
+        errorMessage.includes('authentication credential');
+
+      if (isAuthError) {
+        try {
+          await this.tokenRepo.update(token.id, {
+            expiresAt: new Date(0),
+            dataAtualizacao: new Date()
+          });
+          try {
+            await executarAtualizacao();
+            return;
+          } catch (retryGoogleApisError: any) {
+            const retryMessage = String(retryGoogleApisError?.message || '');
+            const stillAuthError =
+              retryGoogleApisError?.code === 401 ||
+              retryMessage.includes('Login Required') ||
+              retryMessage.includes('UNAUTHENTICATED') ||
+              retryMessage.includes('authentication credential');
+
+            if (stillAuthError) {
+              await executarAtualizacaoViaRest();
+              return;
+            }
+            throw retryGoogleApisError;
+          }
+        } catch (retryError: any) {
+          console.error('Erro ao atualizar evento no Google Calendar (retry):', retryError);
+          throw new Error(`Erro ao atualizar evento: ${retryError?.message || 'Falha ao autenticar no Google Calendar'}`);
+        }
+      }
+
+      console.error('Erro ao atualizar evento no Google Calendar:', error);
+      throw new Error(`Erro ao atualizar evento: ${error.message}`);
+    }
+  }
+
+  /**
    * Atualiza um evento no Google Calendar
    */
   async updateEvent(userId: string, googleEventId: string, evento: Evento): Promise<void> {

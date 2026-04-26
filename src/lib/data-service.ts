@@ -404,8 +404,8 @@ export class DataService {
       // Usar eval para evitar que webpack analise a importação
       if (typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
         try {
-          // Importação dinâmica que só funciona no servidor
-          const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
+          // Importação dinâmica server-side compatível com runtime do Next.js
+          const syncModule = await import('./services/google-calendar-sync-service');
           await syncModule.GoogleCalendarSyncService.syncAfterCreate(resultado, userId);
         } catch (error) {
           console.error('[DataService] Falha ao sincronizar criação de evento com Google Calendar:', error);
@@ -432,8 +432,8 @@ export class DataService {
     // Usar eval para evitar que webpack analise a importação
     if (typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
       try {
-        // Importação dinâmica que só funciona no servidor
-        const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
+        // Importação dinâmica server-side compatível com runtime do Next.js
+        const syncModule = await import('./services/google-calendar-sync-service');
         await syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo);
       } catch (error) {
         console.error('[DataService] Falha ao sincronizar atualização de evento com Google Calendar:', error);
@@ -453,8 +453,8 @@ export class DataService {
     // Usar eval para evitar que webpack analise a importação
     if (evento && typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
       try {
-        // Importação dinâmica que só funciona no servidor
-        const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
+        // Importação dinâmica server-side compatível com runtime do Next.js
+        const syncModule = await import('./services/google-calendar-sync-service');
         await syncModule.GoogleCalendarSyncService.syncAfterDelete({ ...evento, arquivado: true }, userId);
       } catch (error) {
         console.error('[DataService] Falha ao sincronizar arquivamento de evento com Google Calendar:', error);
@@ -475,8 +475,8 @@ export class DataService {
     // Usar eval para evitar que webpack analise a importação
     if (eventoAtualizado && typeof window === 'undefined' && typeof process !== 'undefined' && process.env) {
       try {
-        // Importação dinâmica que só funciona no servidor
-        const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
+        // Importação dinâmica server-side compatível com runtime do Next.js
+        const syncModule = await import('./services/google-calendar-sync-service');
         await syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo);
       } catch (error) {
         console.error('[DataService] Falha ao sincronizar desarquivamento de evento com Google Calendar:', error);

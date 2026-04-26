@@ -15,6 +15,53 @@
  */
 
 import { Evento } from '@/types';
+import { GoogleCalendarEvent } from '@/types/google-calendar';
+
+function combinarDataHora(dataBase: Date | string, horario?: string): Date {
+  const data = dataBase instanceof Date ? new Date(dataBase) : new Date(dataBase);
+  if (Number.isNaN(data.getTime())) {
+    return new Date();
+  }
+
+  let horas = 0;
+  let minutos = 0;
+  if (horario && horario.includes(':')) {
+    const [h, m] = horario.split(':').map(Number);
+    horas = Number.isFinite(h) ? h : 0;
+    minutos = Number.isFinite(m) ? m : 0;
+  }
+
+  data.setHours(horas, minutos, 0, 0);
+  return data;
+}
+
+function montarPayloadMinimo(evento: Evento): GoogleCalendarEvent {
+  const inicio = combinarDataHora(evento.dataEvento, evento.horarioInicio);
+  let fim = combinarDataHora(evento.dataEvento, evento.horarioDesmontagem || evento.horarioInicio);
+
+  // Garante fim >= inicio para evitar rejeição do Google.
+  if (fim.getTime() < inicio.getTime()) {
+    fim = new Date(inicio.getTime() + 60 * 60 * 1000);
+  }
+
+  const titulo =
+    evento.nomeEvento?.trim() ||
+    evento.tipoEvento?.trim() ||
+    evento.cliente?.nome?.trim() ||
+    'Evento';
+
+  return {
+    summary: titulo,
+    start: {
+      dateTime: inicio.toISOString(),
+      timeZone: 'America/Sao_Paulo'
+    },
+    end: {
+      dateTime: fim.toISOString(),
+      timeZone: 'America/Sao_Paulo'
+    }
+  };
+}
 
 export class GoogleCalendarSyncService {
   /**
@@ -49,7 +96,8 @@ export class GoogleCalendarSyncService {
       }
 
       const googleService = new GoogleCalendarService();
-      const googleEventId = await googleService.syncEventToCalendar(userId, evento);
+      const payloadMinimo = montarPayloadMinimo(evento);
+      const googleEventId = await googleService.createEventDirectly(userId, payloadMinimo);
       
       // Atualizar evento com googleCalendarEventId usando o repository
       const eventoRepo = repositoryFactory.getEventoRepository();
@@ -112,7 +160,8 @@ export class GoogleCalendarSyncService {
 
       // Se evento foi desarquivado, criar no Google Calendar
       if (eventoAntigo && eventoAntigo.arquivado && !evento.arquivado) {
-        const googleEventId = await googleService.syncEventToCalendar(userId, evento);
+        const payloadMinimo = montarPayloadMinimo(evento);
+        const googleEventId = await googleService.createEventDirectly(userId, payloadMinimo);
         const eventoRepo = repositoryFactory.getEventoRepository();
         await eventoRepo.update(evento.id, {
           googleCalendarEventId: googleEventId,
@@ -124,14 +173,16 @@ export class GoogleCalendarSyncService {
 
       // Atualizar ou criar evento no Google Calendar
       if (evento.googleCalendarEventId) {
-        await googleService.updateEvent(userId, evento.googleCalendarEventId, evento);
+        const payloadMinimo = montarPayloadMinimo(evento);
+        await googleService.updateEventDirectly(userId, evento.googleCalendarEventId, payloadMinimo);
         const eventoRepo = repositoryFactory.getEventoRepository();
         await eventoRepo.update(evento.id, {
           googleCalendarSyncedAt: new Date()
         });
         console.log('[GoogleCalendarSyncService] Evento atualizado no Google Calendar');
       } else {
-        const googleEventId = await googleService.syncEventToCalendar(userId, evento);
+        const payloadMinimo = montarPayloadMinimo(evento);
+        const googleEventId = await googleService.createEventDirectly(userId, payloadMinimo);
         const eventoRepo = repositoryFactory.getEventoRepository();
         await eventoRepo.update(evento.id, {
           googleCalendarEventId: googleEventId,

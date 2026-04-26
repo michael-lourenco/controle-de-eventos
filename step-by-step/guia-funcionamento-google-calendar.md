@@ -71,6 +71,36 @@ Registrar exatamente o que foi necessário para a integração com Google Calend
 - Resultado esperado:
   - Fluxo `/eventos/novo` e alterações em `/eventos` passam a concluir tentativa de sincronização durante a requisição backend, com rastreabilidade em log quando houver falha.
 
+### 9) Correção de runtime `Cannot use import statement outside a module`
+- Erro observado no deploy:
+  - `[DataService] Falha ao sincronizar criação de evento com Google Calendar: SyntaxError: Cannot use import statement outside a module`
+- Causa:
+  - uso de `Function('return import')()` no `DataService`, incompatível com o runtime/bundle atual do servidor.
+- Ajuste aplicado:
+  - `src/lib/data-service.ts`
+    - substituição de `Function('return import')()('./services/google-calendar-sync-service')`
+    - por `await import('./services/google-calendar-sync-service')` dentro do bloco server-only.
+- Resultado:
+  - import dinâmico compatível com Next.js server runtime, mantendo carregamento sob demanda do sync.
+
+### 10) Sync de `/eventos` com payload mínimo (mesma lógica da tela de configuração)
+- Solicitação aplicada:
+  - usar somente informações mínimas do formulário para replicar no Google Calendar:
+    - título
+    - data/hora de início
+    - data/hora de fim
+- Ajustes:
+  - `src/lib/services/google-calendar-sync-service.ts`
+    - criação de `montarPayloadMinimo(evento)` para montar `GoogleCalendarEvent` com campos mínimos.
+    - `syncAfterCreate` agora usa `googleService.createEventDirectly(...)`.
+    - `syncAfterUpdate` agora usa:
+      - `googleService.updateEventDirectly(...)` quando já existe `googleCalendarEventId`.
+      - `googleService.createEventDirectly(...)` quando ainda não existe vínculo.
+  - `src/lib/services/google-calendar-service.ts`
+    - novo método `updateEventDirectly(...)` com retry e fallback REST, seguindo o mesmo padrão resiliente já utilizado em criação direta.
+- Resultado esperado:
+  - fluxo de `/eventos/novo` e edição em `/eventos` passa a usar o caminho mínimo e mais estável para sincronização no Google.
+
 ---
 
 ## Principais problemas encontrados e como foram resolvidos
