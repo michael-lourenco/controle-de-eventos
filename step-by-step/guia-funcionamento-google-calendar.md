@@ -60,6 +60,17 @@ Registrar exatamente o que foi necessário para a integração com Google Calend
   - id do evento no Google
   - data/hora da última sincronização
 
+### 8) Correção da sincronização silenciosa em `/eventos/novo`
+- Problema identificado:
+  - O `DataService` disparava sync em background com `.catch(() => {})`, sem `await` e sem log real.
+  - Em ambiente serverless isso pode concluir após resposta ou falhar sem feedback, resultando em evento salvo localmente sem replicar no Google.
+- Ajuste aplicado:
+  - `src/lib/data-service.ts`
+    - `createEvento`, `updateEvento`, `deleteEvento` e `desarquivarEvento` agora fazem `await` do sync quando estiver no servidor.
+    - Troca de erro silencioso por logs explícitos (`console.error`) para facilitar diagnóstico.
+- Resultado esperado:
+  - Fluxo `/eventos/novo` e alterações em `/eventos` passam a concluir tentativa de sincronização durante a requisição backend, com rastreabilidade em log quando houver falha.
+
 ---
 
 ## Principais problemas encontrados e como foram resolvidos

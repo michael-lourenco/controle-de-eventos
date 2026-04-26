@@ -406,9 +406,9 @@ export class DataService {
         try {
           // Importação dinâmica que só funciona no servidor
           const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
-          syncModule.GoogleCalendarSyncService.syncAfterCreate(resultado, userId).catch(() => {});
+          await syncModule.GoogleCalendarSyncService.syncAfterCreate(resultado, userId);
         } catch (error) {
-          // Ignorar erro silenciosamente (pode não estar disponível no cliente)
+          console.error('[DataService] Falha ao sincronizar criação de evento com Google Calendar:', error);
         }
       }
       
@@ -434,9 +434,9 @@ export class DataService {
       try {
         // Importação dinâmica que só funciona no servidor
         const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
-        syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch(() => {});
+        await syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo);
       } catch (error) {
-        // Ignorar erro silenciosamente (pode não estar disponível no cliente)
+        console.error('[DataService] Falha ao sincronizar atualização de evento com Google Calendar:', error);
       }
     }
     
@@ -455,9 +455,9 @@ export class DataService {
       try {
         // Importação dinâmica que só funciona no servidor
         const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
-        syncModule.GoogleCalendarSyncService.syncAfterDelete({ ...evento, arquivado: true }, userId).catch(() => {});
+        await syncModule.GoogleCalendarSyncService.syncAfterDelete({ ...evento, arquivado: true }, userId);
       } catch (error) {
-        // Ignorar erro silenciosamente (pode não estar disponível no cliente)
+        console.error('[DataService] Falha ao sincronizar arquivamento de evento com Google Calendar:', error);
       }
     }
   }
@@ -477,9 +477,9 @@ export class DataService {
       try {
         // Importação dinâmica que só funciona no servidor
         const syncModule = await Function('return import')()('./services/google-calendar-sync-service');
-        syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo).catch(() => {});
+        await syncModule.GoogleCalendarSyncService.syncAfterUpdate(eventoAtualizado, userId, eventoAntigo);
       } catch (error) {
-        // Ignorar erro silenciosamente (pode não estar disponível no cliente)
+        console.error('[DataService] Falha ao sincronizar desarquivamento de evento com Google Calendar:', error);
       }
     }
   }
