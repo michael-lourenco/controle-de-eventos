@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,11 +25,6 @@ export interface DateFilter {
   quickFilter?: string;
 }
 
-interface DateRangeFilterProps {
-  onFilterChange: (filter: DateFilter | null) => void;
-  className?: string;
-}
-
 const QUICK_FILTERS: { key: string; label: string; description?: string }[] = [
   { key: 'today', label: 'Hoje', description: 'Eventos do dia' },
   { key: 'thisWeek', label: 'Esta semana', description: 'Seg - Dom' },
@@ -39,7 +34,109 @@ const QUICK_FILTERS: { key: string; label: string; description?: string }[] = [
   { key: 'lastMonth', label: 'Mês passado', description: 'Histórico recente' },
 ];
 
-export default function DateRangeFilter({ onFilterChange, className = '' }: DateRangeFilterProps) {
+/** Intervalo correspondente a um filtro rápido (mesma regra usada na UI). */
+export function obterIntervaloFiltroRapido(filterKey: string): DateRange {
+  const now = new Date();
+
+  switch (filterKey) {
+    case 'today':
+      return {
+        startDate: startOfDay(now),
+        endDate: endOfDay(now)
+      };
+    case 'yesterday': {
+      const yesterday = subDays(now, 1);
+      return {
+        startDate: startOfDay(yesterday),
+        endDate: endOfDay(yesterday)
+      };
+    }
+    case 'tomorrow': {
+      const tomorrow = subDays(now, -1);
+      return {
+        startDate: startOfDay(tomorrow),
+        endDate: endOfDay(tomorrow)
+      };
+    }
+    case 'thisWeek':
+      return {
+        startDate: startOfWeek(now, { locale: ptBR }),
+        endDate: endOfWeek(now, { locale: ptBR })
+      };
+    case 'thisYear':
+      return {
+        startDate: startOfYear(now),
+        endDate: endOfYear(now)
+      };
+    case 'next30Days':
+      return {
+        startDate: startOfDay(now),
+        endDate: endOfDay(addDays(now, 30))
+      };
+    case 'lastWeek': {
+      const lastWeek = subWeeks(now, 1);
+      return {
+        startDate: startOfWeek(lastWeek, { locale: ptBR }),
+        endDate: endOfWeek(lastWeek, { locale: ptBR })
+      };
+    }
+    case 'thisMonth':
+      return {
+        startDate: startOfMonth(now),
+        endDate: endOfMonth(now)
+      };
+    case 'lastMonth': {
+      const lastMonth = subMonths(now, 1);
+      return {
+        startDate: startOfMonth(lastMonth),
+        endDate: endOfMonth(lastMonth)
+      };
+    }
+    case 'last7Days':
+      return {
+        startDate: startOfDay(subDays(now, 7)),
+        endDate: endOfDay(now)
+      };
+    case 'last30Days':
+      return {
+        startDate: startOfDay(subDays(now, 30)),
+        endDate: endOfDay(now)
+      };
+    case 'last90Days':
+      return {
+        startDate: startOfDay(subDays(now, 90)),
+        endDate: endOfDay(now)
+      };
+    default:
+      return { startDate: null, endDate: null };
+  }
+}
+
+export function criarDateFilterPeriodoRapido(quickFilterKey: string): DateFilter {
+  return {
+    type: 'quick',
+    range: obterIntervaloFiltroRapido(quickFilterKey),
+    quickFilter: quickFilterKey
+  };
+}
+
+export function obterRotuloFiltroRapido(quickFilterKey?: string): string {
+  if (!quickFilterKey) return '';
+  return QUICK_FILTERS.find((f) => f.key === quickFilterKey)?.label ?? quickFilterKey;
+}
+
+interface DateRangeFilterProps {
+  onFilterChange: (filter: DateFilter | null) => void;
+  className?: string;
+  /** Espelha o filtro controlado pelo pai (valor inicial, troca de aba, limpar). */
+  valorSincronizado?: DateFilter | null;
+}
+
+export default function DateRangeFilter({
+  onFilterChange,
+  className = '',
+  valorSincronizado
+}: DateRangeFilterProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [filterType, setFilterType] = useState<'custom' | 'quick'>('quick');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -47,84 +144,46 @@ export default function DateRangeFilter({ onFilterChange, className = '' }: Date
   const [selectedQuickFilter, setSelectedQuickFilter] = useState<string>('');
   const [isFilterActive, setIsFilterActive] = useState(false);
 
-  const getQuickFilterRange = (filterKey: string): DateRange => {
-    const now = new Date();
-    
-    switch (filterKey) {
-      case 'today':
-        return {
-          startDate: startOfDay(now),
-          endDate: endOfDay(now)
-        };
-      case 'yesterday':
-        const yesterday = subDays(now, 1);
-        return {
-          startDate: startOfDay(yesterday),
-          endDate: endOfDay(yesterday)
-        };
-      case 'tomorrow':
-        const tomorrow = subDays(now, -1);
-        return {
-          startDate: startOfDay(tomorrow),
-          endDate: endOfDay(tomorrow)
-        };
-      case 'thisWeek':
-        return {
-          startDate: startOfWeek(now, { locale: ptBR }),
-          endDate: endOfWeek(now, { locale: ptBR })
-        };
-      case 'thisYear':
-        // Filtro "Este Ano" - mostra eventos do ano atual (1º de janeiro a 31 de dezembro)
-        return {
-          startDate: startOfYear(now),
-          endDate: endOfYear(now)
-        };
-      case 'next30Days':
-        return {
-          startDate: startOfDay(now),
-          endDate: endOfDay(addDays(now, 30))
-        };
-      case 'lastWeek':
-        const lastWeek = subWeeks(now, 1);
-        return {
-          startDate: startOfWeek(lastWeek, { locale: ptBR }),
-          endDate: endOfWeek(lastWeek, { locale: ptBR })
-        };
-      case 'thisMonth':
-        return {
-          startDate: startOfMonth(now),
-          endDate: endOfMonth(now)
-        };
-      case 'lastMonth':
-        const lastMonth = subMonths(now, 1);
-        return {
-          startDate: startOfMonth(lastMonth),
-          endDate: endOfMonth(lastMonth)
-        };
-      case 'last7Days':
-        return {
-          startDate: startOfDay(subDays(now, 7)),
-          endDate: endOfDay(now)
-        };
-      case 'last30Days':
-        return {
-          startDate: startOfDay(subDays(now, 30)),
-          endDate: endOfDay(now)
-        };
-      case 'last90Days':
-        return {
-          startDate: startOfDay(subDays(now, 90)),
-          endDate: endOfDay(now)
-        };
-      default:
-        return { startDate: null, endDate: null };
+  useEffect(() => {
+    if (valorSincronizado === undefined) {
+      return;
     }
-  };
+
+    if (valorSincronizado === null) {
+      setSelectedQuickFilter('');
+      setIsFilterActive(false);
+      setCustomStartDate('');
+      setCustomEndDate('');
+      setFilterType('quick');
+      return;
+    }
+
+    if (valorSincronizado.type === 'quick' && valorSincronizado.quickFilter) {
+      setFilterType('quick');
+      setSelectedQuickFilter(valorSincronizado.quickFilter);
+      setIsFilterActive(true);
+      setCustomStartDate('');
+      setCustomEndDate('');
+      return;
+    }
+
+    if (
+      valorSincronizado.type === 'custom' &&
+      valorSincronizado.range.startDate &&
+      valorSincronizado.range.endDate
+    ) {
+      setFilterType('custom');
+      setSelectedQuickFilter('');
+      setIsFilterActive(true);
+      setCustomStartDate(format(valorSincronizado.range.startDate, 'yyyy-MM-dd'));
+      setCustomEndDate(format(valorSincronizado.range.endDate, 'yyyy-MM-dd'));
+    }
+  }, [valorSincronizado]);
 
   const handleQuickFilterSelect = (filterKey: string) => {
     setSelectedQuickFilter(filterKey);
     setFilterType('quick');
-    const range = getQuickFilterRange(filterKey);
+    const range = obterIntervaloFiltroRapido(filterKey);
     setIsFilterActive(true);
     onFilterChange({
       type: 'quick',

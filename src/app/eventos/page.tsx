@@ -25,7 +25,12 @@ import PlanOverlay from '@/components/PlanOverlay';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Evento, DEFAULT_TIPOS_EVENTO } from '@/types';
-import DateRangeFilter, { DateFilter, isDateInFilter } from '@/components/filters/DateRangeFilter';
+import DateRangeFilter, {
+  DateFilter,
+  isDateInFilter,
+  criarDateFilterPeriodoRapido,
+  obterRotuloFiltroRapido
+} from '@/components/filters/DateRangeFilter';
 import ConfirmationDialog from '@/components/ui/confirmation-dialog';
 import { useToast } from '@/components/ui/toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -44,7 +49,9 @@ export default function EventosPage() {
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
-  const [dateFilter, setDateFilter] = useState<DateFilter | null>(null);
+  const [dateFilter, setDateFilter] = useState<DateFilter | null>(() =>
+    criarDateFilterPeriodoRapido('next30Days')
+  );
   const [abaAtiva, setAbaAtiva] = useState<'ativos' | 'arquivados' | 'pre-cadastros'>('ativos');
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [eventoParaArquivar, setEventoParaArquivar] = useState<Evento | null>(null);
@@ -419,7 +426,8 @@ export default function EventosPage() {
               <button
                 onClick={() => {
                   setAbaAtiva('ativos');
-                  setFilterStatus('todos'); // Resetar filtro de status ao mudar para ativos
+                  setFilterStatus('todos');
+                  setDateFilter(criarDateFilterPeriodoRapido('next30Days'));
                 }}
                 className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg cursor-pointer ${
                   abaAtiva === 'ativos'
@@ -432,7 +440,8 @@ export default function EventosPage() {
               <button
                 onClick={() => {
                   setAbaAtiva('arquivados');
-                  setFilterStatus('todos'); // Resetar filtro de status ao mudar para arquivados
+                  setFilterStatus('todos');
+                  setDateFilter(null);
                 }}
                 className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg cursor-pointer ${
                   abaAtiva === 'arquivados'
@@ -446,6 +455,7 @@ export default function EventosPage() {
                 onClick={() => {
                   setAbaAtiva('pre-cadastros');
                   setFilterStatus('todos');
+                  setDateFilter(null);
                 }}
                 className={`flex-1 px-6 py-3 text-sm font-medium transition-all rounded-lg cursor-pointer relative ${
                   abaAtiva === 'pre-cadastros'
@@ -547,7 +557,8 @@ export default function EventosPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Filtro por Período */}
           <div>
-            <DateRangeFilter 
+            <DateRangeFilter
+              valorSincronizado={dateFilter}
               onFilterChange={setDateFilter}
               className="w-full"
             />
@@ -604,8 +615,8 @@ export default function EventosPage() {
                     )}
                     {dateFilter && (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-bg text-warning-text">
-                        {dateFilter.type === 'quick' 
-                          ? `Período: ${dateFilter.quickFilter}`
+                        {dateFilter.type === 'quick' && dateFilter.quickFilter
+                          ? `Período: ${obterRotuloFiltroRapido(dateFilter.quickFilter)}`
                           : `Período: ${format(dateFilter.range.startDate!, 'dd/MM/yyyy', { locale: ptBR })} - ${format(dateFilter.range.endDate!, 'dd/MM/yyyy', { locale: ptBR })}`
                         }
                       </span>
