@@ -12,7 +12,9 @@ import { OAuth2Client } from 'google-auth-library';
 import { Evento } from '@/types';
 import { GoogleCalendarEvent } from '@/types/google-calendar';
 import { AdminGoogleCalendarTokenRepository } from '../repositories/admin-google-calendar-token-repository';
+import { EventoSupabaseRepository } from '../repositories/supabase/evento-supabase-repository';
 import { mapEventoToGoogleCalendar, mapGoogleCalendarToEvento } from '../utils/google-calendar-mapper';
+import { filtrarEventosGoogleCalendarVinculadosAoSistema } from '../utils/google-calendar-vinculo';
 import { verificarAcessoGoogleCalendar } from '../utils/google-calendar-auth';
 
 // Chave de criptografia (deve vir de variável de ambiente)
@@ -33,11 +35,10 @@ function decrypt(encrypted: string, key: string): string {
 }
 
 export class GoogleCalendarService {
-  private tokenRepo: AdminGoogleCalendarTokenRepository;
-
-  constructor() {
-    this.tokenRepo = new AdminGoogleCalendarTokenRepository();
-  }
+  constructor(
+    private readonly eventoRepository: EventoSupabaseRepository,
+    private readonly tokenRepo: AdminGoogleCalendarTokenRepository = new AdminGoogleCalendarTokenRepository()
+  ) {}
 
   /**
    * Inicializa o cliente OAuth2
@@ -623,6 +624,25 @@ export class GoogleCalendarService {
 
       throw new Error(`Erro ao listar eventos: ${error.message}`);
     }
+  }
+
+  /**
+   * Lista eventos do Google Calendar que possuem correspondência no Clicksehub
+   * (campo `google_calendar_event_id` na tabela `eventos` para o mesmo `user_id`).
+   */
+  async listarEventosGoogleCalendarVinculadosAoSistema(
+    userId: string,
+    options?: {
+      maxResults?: number;
+      timeMin?: string;
+      timeMax?: string;
+    }
+  ): Promise<GoogleCalendarEvent[]> {
+    const [eventosCalendario, idsSalvos] = await Promise.all([
+      this.listEvents(userId, options),
+      this.eventoRepository.listarGoogleCalendarEventIdsPorUsuario(userId)
+    ]);
+    return filtrarEventosGoogleCalendarVinculadosAoSistema(eventosCalendario, idsSalvos);
   }
 
   /**

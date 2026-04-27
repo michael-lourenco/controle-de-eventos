@@ -408,5 +408,31 @@ export class EventoSupabaseRepository extends BaseSupabaseRepository<Evento> {
     }
     return this.getEventoById(id, userId);
   }
+
+  /**
+   * IDs de eventos no Google Calendar já vinculados a registros de `eventos` deste usuário.
+   * Usado para listar no app apenas compromissos originados do Clicksehub.
+   */
+  async listarGoogleCalendarEventIdsPorUsuario(userId: string): Promise<ReadonlySet<string>> {
+    const { data, error } = await this.supabase
+      .from(this.tableName)
+      .select('google_calendar_event_id')
+      .eq('user_id', userId)
+      .not('google_calendar_event_id', 'is', null);
+
+    if (error) {
+      throw new Error(`Erro ao listar IDs do Google Calendar: ${error.message}`);
+    }
+
+    const linhas = (data || []) as Array<{ google_calendar_event_id?: string | null }>;
+    const ids = new Set<string>();
+    for (const row of linhas) {
+      const id = row.google_calendar_event_id;
+      if (id && typeof id === 'string' && id.trim()) {
+        ids.add(id.trim());
+      }
+    }
+    return ids;
+  }
 }
 

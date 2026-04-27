@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const serviceFactory = getServiceFactory();
     const googleService = serviceFactory.getGoogleCalendarService();
 
-    const eventos = await googleService.listEvents(user.id, {
+    const eventos = await googleService.listarEventosGoogleCalendarVinculadosAoSistema(user.id, {
       maxResults,
       timeMin,
       timeMax

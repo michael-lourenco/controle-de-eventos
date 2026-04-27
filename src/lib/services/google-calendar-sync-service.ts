@@ -156,7 +156,7 @@ export class GoogleCalendarSyncService {
       // Após create, o repositório pode retornar sem join do cliente; buscar registro completo.
       const eventoParaSync = (await eventoRepo.getEventoById(evento.id, userId)) ?? evento;
 
-      const googleService = new GoogleCalendarService();
+      const googleService = new GoogleCalendarService(eventoRepo);
       const payloadMinimo = montarPayloadMinimo(eventoParaSync);
       const googleEventId = await googleService.createEventDirectly(userId, payloadMinimo);
       
@@ -205,7 +205,7 @@ export class GoogleCalendarSyncService {
       const eventoRepo = repositoryFactory.getEventoRepository();
       const eventoSync = (await eventoRepo.getEventoById(evento.id, userId)) ?? evento;
 
-      const googleService = new GoogleCalendarService();
+      const googleService = new GoogleCalendarService(eventoRepo);
 
       // Se evento foi arquivado, remover do Google Calendar
       if (evento.arquivado) {
@@ -262,6 +262,7 @@ export class GoogleCalendarSyncService {
     try {
       // Importação dinâmica para evitar bundle no cliente
       const { GoogleCalendarService } = await import('./google-calendar-service');
+      const { repositoryFactory } = await import('../repositories/repository-factory');
       const { AdminGoogleCalendarTokenRepository } = await import('../repositories/admin-google-calendar-token-repository');
       const { verificarAcessoGoogleCalendar } = await import('../utils/google-calendar-auth');
       
@@ -281,7 +282,7 @@ export class GoogleCalendarSyncService {
 
       // Remover evento do Google Calendar se tiver googleCalendarEventId
       if (evento.googleCalendarEventId) {
-        const googleService = new GoogleCalendarService();
+        const googleService = new GoogleCalendarService(repositoryFactory.getEventoRepository());
         await googleService.deleteEvent(userId, evento.googleCalendarEventId);
         console.log('[GoogleCalendarSyncService] Evento removido do Google Calendar');
       }

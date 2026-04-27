@@ -99,7 +99,10 @@ export default function GoogleCalendarEventosPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-text-primary">Eventos do Google Calendar</h1>
-            <p className="text-text-secondary">Visualização dos próximos eventos sincronizados da sua conta Google.</p>
+            <p className="text-text-secondary">
+              Próximos compromissos do Google Calendar que estão vinculados a eventos do Clicksehub (sincronizados pelo
+              sistema). Outros eventos da mesma conta não aparecem aqui.
+            </p>
           </div>
           <Button variant="outline" onClick={carregarEventos} disabled={carregando}>
             Atualizar

@@ -107,7 +107,7 @@ export class ServiceFactory {
       this.assinaturaService
     );
 
-    this.googleCalendarService = new GoogleCalendarService();
+    this.googleCalendarService = new GoogleCalendarService(repoFactory.getEventoRepository());
     this.googleCalendarSyncService = new GoogleCalendarSyncService();
     this.contratoService = new ContratoService();
     this.pdfService = new PDFService();
