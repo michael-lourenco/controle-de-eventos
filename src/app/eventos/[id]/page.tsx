@@ -27,7 +27,8 @@ import {
   LockClosedIcon,
   XMarkIcon,
   ArrowDownTrayIcon,
-  PlusIcon
+  PlusIcon,
+  DocumentDuplicateIcon
 } from '@heroicons/react/24/outline';
 import { useEvento, usePagamentosPorEvento, useCustosPorEvento, useServicosPorEvento, useContratosPorEvento, useCanaisEntrada } from '@/hooks/useData';
 import { useAnexos } from '@/hooks/useAnexos';
@@ -47,13 +48,15 @@ import { useEffect } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Lock } from 'lucide-react';
 import LoadingHotmart from '@/components/LoadingHotmart';
+import { handlePlanoError } from '@/lib/utils/plano-errors';
 
 export default function EventoViewPage() {
   const params = useParams();
   const router = useRouter();
   const { userId } = useCurrentUser();
   const { showToast } = useToast();
-  const { temPermissao, statusPlano } = usePlano();
+  const { temPermissao, statusPlano, podeCriar } = usePlano();
+  const [podeClonarEvento, setPodeClonarEvento] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -63,6 +66,7 @@ export default function EventoViewPage() {
   const [editandoImpressoes, setEditandoImpressoes] = useState(false);
   const [valorImpressoes, setValorImpressoes] = useState<string>('');
   const [salvandoImpressoes, setSalvandoImpressoes] = useState(false);
+  const [clonando, setClonando] = useState(false);
   
   const { data: evento, loading: loadingEvento, error: errorEvento, refetch: refetchEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
@@ -86,6 +90,20 @@ export default function EventoViewPage() {
     }
     return json?.data;
   };
+
+  useEffect(() => {
+    let ativo = true;
+    const verificarLimiteClonagem = async () => {
+      const resultado = await podeCriar('eventos');
+      if (ativo) {
+        setPodeClonarEvento(resultado.pode);
+      }
+    };
+    verificarLimiteClonagem();
+    return () => {
+      ativo = false;
+    };
+  }, [podeCriar]);
 
   // Verificar acesso ao botão copiar - chamado antes dos early returns
   useEffect(() => {
@@ -145,6 +163,39 @@ export default function EventoViewPage() {
 
   const handleEdit = () => {
     router.push(`/eventos/${params.id}/editar`);
+  };
+
+  const handleClonar = async () => {
+    if (!evento || !userId) return;
+
+    const limite = await podeCriar('eventos');
+    if (!limite.pode) {
+      showToast(limite.motivo || 'Não é possível clonar evento no plano atual', 'error');
+      return;
+    }
+
+    setClonando(true);
+    try {
+      const response = await fetch(`/api/eventos/${evento.id}/clonar`, { method: 'POST' });
+      const json = await response.json();
+      if (!response.ok) {
+        const erro = new Error(json?.error || 'Erro ao clonar evento');
+        (erro as { status?: number }).status = response.status;
+        throw erro;
+      }
+      const eventoClonado = json?.data;
+      showToast('Evento clonado com sucesso!', 'success');
+      if (eventoClonado?.id) {
+        router.push(`/eventos/${eventoClonado.id}`);
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string; status?: number };
+      if (!handlePlanoError(err, showToast, () => router.push('/assinatura'))) {
+        showToast(err?.message || 'Erro ao clonar evento', 'error');
+      }
+    } finally {
+      setClonando(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -596,6 +647,25 @@ export default function EventoViewPage() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+              {podeClonarEvento && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        disabled={clonando}
+                        onClick={handleClonar}
+                      >
+                        <DocumentDuplicateIcon className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="font-medium">
+                      <p>{clonando ? 'Clonando...' : 'Clonar evento'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>

@@ -17,6 +17,7 @@ import {
 } from '@/types';
 import { initializeAllCollections, initializeTiposCusto } from './collections-init';
 import { FuncionalidadeService } from './services/funcionalidade-service';
+import { EventoCloneService } from './services/evento-clone-service';
 import { DashboardReportService } from './services/dashboard-report-service';
 // RelatoriosReportService importado dinamicamente para evitar dependência circular
 
@@ -416,6 +417,15 @@ export class DataService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async clonarEvento(eventoId: string, userId: string): Promise<Evento> {
+    const cloneService = new EventoCloneService(
+      this.eventoRepo,
+      this.servicoEventoRepo,
+      this.funcionalidadeService
+    );
+    return cloneService.clonar(eventoId, userId);
   }
 
   async updateEvento(id: string, evento: Partial<Evento>, userId: string): Promise<Evento> {

@@ -16,6 +16,7 @@ import {
   PencilIcon,
   TrashIcon,
   ArrowPathIcon,
+  DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { useEventos, useEventosArquivados, useTiposEvento, useServicosPorEventos, usePreCadastros } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -37,6 +38,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import ServicosBadges from '@/components/ServicosBadges';
 import EventoStatusSelect from '@/components/EventoStatusSelect';
 import PreCadastrosSection from '@/components/PreCadastrosSection';
+import { handlePlanoError } from '@/lib/utils/plano-errors';
 
 export default function EventosPage() {
   const router = useRouter();
@@ -45,7 +47,8 @@ export default function EventosPage() {
   const { data: eventosArquivados, loading: loadingArquivados, error: errorArquivados, refetch: refetchArquivados } = useEventosArquivados();
   const { data: tiposEventoData } = useTiposEvento();
   const { data: preCadastros } = usePreCadastros();
-  const { limites } = usePlano();
+  const { limites, podeCriar } = usePlano();
+  const [podeClonarEvento, setPodeClonarEvento] = useState(false);
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
@@ -56,6 +59,7 @@ export default function EventosPage() {
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [eventoParaArquivar, setEventoParaArquivar] = useState<Evento | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [clonandoEventoId, setClonandoEventoId] = useState<string | null>(null);
   
   const loading = loadingAtivos || loadingArquivados;
   const error = errorAtivos || errorArquivados;
@@ -76,6 +80,20 @@ export default function EventosPage() {
       setEventosArquivadosLocais(eventosArquivados);
     }
   }, [eventosArquivados]);
+
+  useEffect(() => {
+    let ativo = true;
+    const verificarLimiteClonagem = async () => {
+      const resultado = await podeCriar('eventos');
+      if (ativo) {
+        setPodeClonarEvento(resultado.pode);
+      }
+    };
+    verificarLimiteClonagem();
+    return () => {
+      ativo = false;
+    };
+  }, [podeCriar]);
   
   const eventosLista = abaAtiva === 'ativos' 
     ? (eventosLocais ?? eventos ?? []) 
@@ -248,6 +266,44 @@ export default function EventosPage() {
 
   const handleEdit = (evento: Evento) => {
     router.push(`/eventos/${evento.id}/editar`);
+  };
+
+  const handleClonarEvento = async (evento: Evento) => {
+    if (!userId) {
+      showToast('Usuário não autenticado', 'error');
+      return;
+    }
+
+    const limite = await podeCriar('eventos');
+    if (!limite.pode) {
+      showToast(limite.motivo || 'Não é possível clonar evento no plano atual', 'error');
+      return;
+    }
+
+    setClonandoEventoId(evento.id);
+    try {
+      const response = await fetch(`/api/eventos/${evento.id}/clonar`, { method: 'POST' });
+      const json = await response.json();
+      if (!response.ok) {
+        const erro = new Error(json?.error || 'Erro ao clonar evento');
+        (erro as { status?: number }).status = response.status;
+        throw erro;
+      }
+      const eventoClonado = json?.data;
+      showToast('Evento clonado com sucesso!', 'success');
+      if (eventoClonado?.id) {
+        router.push(`/eventos/${eventoClonado.id}`);
+      } else {
+        await recarregarEventos();
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string; status?: number };
+      if (!handlePlanoError(err, showToast, () => router.push('/assinatura'))) {
+        showToast(err?.message || 'Erro ao clonar evento', 'error');
+      }
+    } finally {
+      setClonandoEventoId(null);
+    }
   };
 
   const handleExcluirEvento = (evento: Evento) => {
@@ -762,6 +818,28 @@ export default function EventosPage() {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      {abaAtiva === 'ativos' && podeClonarEvento && (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                disabled={clonandoEventoId === evento.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleClonarEvento(evento);
+                                }}
+                              >
+                                <DocumentDuplicateIcon className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>Clonar evento</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       {abaAtiva === 'ativos' ? (
                         <TooltipProvider delayDuration={200}>
                           <Tooltip>
