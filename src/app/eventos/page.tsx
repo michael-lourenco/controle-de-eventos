@@ -39,6 +39,7 @@ import ServicosBadges from '@/components/ServicosBadges';
 import EventoStatusSelect from '@/components/EventoStatusSelect';
 import PreCadastrosSection from '@/components/PreCadastrosSection';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
+import { montarTituloEventoClonado } from '@/lib/utils/evento-clone';
 
 export default function EventosPage() {
   const router = useRouter();
@@ -60,6 +61,8 @@ export default function EventosPage() {
   const [eventoParaArquivar, setEventoParaArquivar] = useState<Evento | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [clonandoEventoId, setClonandoEventoId] = useState<string | null>(null);
+  const [eventoParaClonar, setEventoParaClonar] = useState<Evento | null>(null);
+  const [showCloneDialog, setShowCloneDialog] = useState(false);
   
   const loading = loadingAtivos || loadingArquivados;
   const error = errorAtivos || errorArquivados;
@@ -268,7 +271,7 @@ export default function EventosPage() {
     router.push(`/eventos/${evento.id}/editar`);
   };
 
-  const handleClonarEvento = async (evento: Evento) => {
+  const handleAbrirDialogoClonar = async (evento: Evento) => {
     if (!userId) {
       showToast('Usuário não autenticado', 'error');
       return;
@@ -280,9 +283,16 @@ export default function EventosPage() {
       return;
     }
 
-    setClonandoEventoId(evento.id);
+    setEventoParaClonar(evento);
+    setShowCloneDialog(true);
+  };
+
+  const handleConfirmarClonagem = async () => {
+    if (!eventoParaClonar || !userId) return;
+
+    setClonandoEventoId(eventoParaClonar.id);
     try {
-      const response = await fetch(`/api/eventos/${evento.id}/clonar`, { method: 'POST' });
+      const response = await fetch(`/api/eventos/${eventoParaClonar.id}/clonar`, { method: 'POST' });
       const json = await response.json();
       if (!response.ok) {
         const erro = new Error(json?.error || 'Erro ao clonar evento');
@@ -291,6 +301,7 @@ export default function EventosPage() {
       }
       const eventoClonado = json?.data;
       showToast('Evento clonado com sucesso!', 'success');
+      setEventoParaClonar(null);
       if (eventoClonado?.id) {
         router.push(`/eventos/${eventoClonado.id}`);
       } else {
@@ -828,7 +839,7 @@ export default function EventosPage() {
                                 disabled={clonandoEventoId === evento.id}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleClonarEvento(evento);
+                                  handleAbrirDialogoClonar(evento);
                                 }}
                               >
                                 <DocumentDuplicateIcon className="h-5 w-5" />
@@ -920,6 +931,24 @@ export default function EventosPage() {
             </CardContent>
           </Card>
         )}
+
+        <ConfirmationDialog
+          open={showCloneDialog}
+          onOpenChange={(open) => {
+            setShowCloneDialog(open);
+            if (!open) setEventoParaClonar(null);
+          }}
+          title="Clonar evento"
+          description={
+            eventoParaClonar
+              ? `Deseja criar uma cópia deste evento? O novo registro terá o título "${montarTituloEventoClonado(eventoParaClonar.nomeEvento, eventoParaClonar.cliente?.nome)}". Pagamentos, custos e contratos não serão copiados.`
+              : 'Deseja criar uma cópia deste evento?'
+          }
+          confirmText="Sim"
+          cancelText="Não"
+          variant="default"
+          onConfirm={handleConfirmarClonagem}
+        />
 
         {/* Modal de Confirmação de Arquivamento */}
         <ConfirmationDialog

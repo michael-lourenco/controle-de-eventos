@@ -28,3 +28,7 @@ Permitir duplicar um evento com novo ID e título com sufixo ` (clone)`, sem cop
 ## API
 
 `POST /api/eventos/{id}/clonar` — respeita limite de eventos do plano (mesma regra de criação).
+
+## Confirmação na UI
+
+Antes de chamar a API, lista e detalhe exibem `ConfirmationDialog` com **Sim** / **Não**. A clonagem só ocorre após **Sim**; o texto do modal mostra o título previsto com sufixo ` (clone)`.

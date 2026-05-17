@@ -49,6 +49,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Lock } from 'lucide-react';
 import LoadingHotmart from '@/components/LoadingHotmart';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
+import { montarTituloEventoClonado } from '@/lib/utils/evento-clone';
 
 export default function EventoViewPage() {
   const params = useParams();
@@ -67,6 +68,7 @@ export default function EventoViewPage() {
   const [valorImpressoes, setValorImpressoes] = useState<string>('');
   const [salvandoImpressoes, setSalvandoImpressoes] = useState(false);
   const [clonando, setClonando] = useState(false);
+  const [showCloneConfirm, setShowCloneConfirm] = useState(false);
   
   const { data: evento, loading: loadingEvento, error: errorEvento, refetch: refetchEvento } = useEvento(params.id as string);
   const { data: pagamentos, loading: loadingPagamentos, refetch: refetchPagamentos } = usePagamentosPorEvento(params.id as string);
@@ -165,7 +167,7 @@ export default function EventoViewPage() {
     router.push(`/eventos/${params.id}/editar`);
   };
 
-  const handleClonar = async () => {
+  const handleAbrirDialogoClonar = async () => {
     if (!evento || !userId) return;
 
     const limite = await podeCriar('eventos');
@@ -173,6 +175,12 @@ export default function EventoViewPage() {
       showToast(limite.motivo || 'Não é possível clonar evento no plano atual', 'error');
       return;
     }
+
+    setShowCloneConfirm(true);
+  };
+
+  const handleConfirmarClonagem = async () => {
+    if (!evento || !userId) return;
 
     setClonando(true);
     try {
@@ -655,7 +663,7 @@ export default function EventoViewPage() {
                         variant="outline"
                         size="icon"
                         disabled={clonando}
-                        onClick={handleClonar}
+                        onClick={handleAbrirDialogoClonar}
                       >
                         <DocumentDuplicateIcon className="h-5 w-5" />
                       </Button>
@@ -1298,6 +1306,21 @@ export default function EventoViewPage() {
             </CardContent>
           </Card>
         </div>
+
+        <ConfirmationDialog
+          open={showCloneConfirm}
+          onOpenChange={setShowCloneConfirm}
+          title="Clonar evento"
+          description={
+            evento
+              ? `Deseja criar uma cópia deste evento? O novo registro terá o título "${montarTituloEventoClonado(evento.nomeEvento, evento.cliente?.nome)}". Pagamentos, custos e contratos não serão copiados.`
+              : 'Deseja criar uma cópia deste evento?'
+          }
+          confirmText="Sim"
+          cancelText="Não"
+          variant="default"
+          onConfirm={handleConfirmarClonagem}
+        />
 
         {/* Modal de Confirmação de Arquivamento */}
         <ConfirmationDialog
