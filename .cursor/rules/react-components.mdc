@@ -59,7 +59,8 @@ const { statusPlano, limites, temPermissao, podeCriar, loading, error, refresh }
 - `podeCriar('eventos' | 'clientes')` → `{ pode, motivo?, limite?, usado?, restante? }`
 
 ## Formulários
-- Componentes em `src/components/forms/` (EventoForm, PagamentoForm, CustoForm, etc.)
+- Componentes em `src/components/forms/` (EventoForm, PagamentoForm, CustoForm, CustoFixoForm, etc.)
+- Custos de evento ≠ custos fixos: form/página/tabela próprios (ver rule `custos-fixos.mdc`)
 - Padrão: estado local controlado + callbacks `onSave`/`onCancel`
 - Validação client-side antes de chamar a API
 

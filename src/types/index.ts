@@ -452,6 +452,14 @@ export interface TipoCusto {
   dataCadastro: Date;
 }
 
+export interface TipoCustoFixo {
+  id: string;
+  nome: string;
+  descricao: string;
+  ativo: boolean;
+  dataCadastro: Date;
+}
+
 export interface CustoEvento {
   id: string;
   eventoId: string;
@@ -464,6 +472,34 @@ export interface CustoEvento {
   removido?: boolean;
   dataRemocao?: Date;
   motivoRemocao?: string;
+  dataCadastro: Date;
+}
+
+export interface CustoFixo {
+  id: string;
+  tipoCustoFixoId: string;
+  tipoCustoFixo?: TipoCustoFixo;
+  valor: number;
+  quantidade?: number;
+  dataPagamento: Date;
+  descricao?: string;
+  removido?: boolean;
+  dataRemocao?: Date;
+  motivoRemocao?: string;
+  dataCadastro: Date;
+  dataAtualizacao?: Date;
+}
+
+export interface AnexoCustoFixo {
+  id: string;
+  userId: string;
+  custoFixoId: string;
+  nome: string;
+  tipo: string;
+  tamanho: number;
+  s3Key: string;
+  url: string;
+  dataUpload: Date;
   dataCadastro: Date;
 }
 

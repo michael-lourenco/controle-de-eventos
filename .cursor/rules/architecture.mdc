@@ -12,7 +12,7 @@ Pages/Components → API Routes → DataService/Services → Repositories → Su
 
 ## Repository Pattern
 - **RepositoryFactory** (`src/lib/repositories/repository-factory.ts`): singleton que cria todos os repositórios
-  - **Supabase repos**: clientes, eventos, pagamentos, custos, serviços, canais, tipos, contratos, relatórios, pré-cadastros, anexos, valores atrasados
+  - **Supabase repos**: clientes, eventos, pagamentos, custos, custos fixos, serviços, canais, tipos (incl. tipos de custo fixo), contratos, relatórios, pré-cadastros, anexos (pagamento/custo/custo fixo), valores atrasados
   - **Firestore repos**: users, planos, assinaturas, funcionalidades, tokens Google Calendar, arquivos, password-reset-tokens
 - Cada repositório herda de `BaseSupabaseRepository<T>` (CRUD genérico) ou implementa interface própria
 - Acessar repos via `repositoryFactory.getXxxRepository()`, nunca instanciar diretamente

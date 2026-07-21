@@ -1,0 +1,46 @@
+---
+description: Padrões da feature CUSTOS FIXOS (tipos, lançamentos, anexos) — domínio separado de custos de evento
+globs: src/app/custos-fixos/**/*,src/app/tipos-custos-fixos/**/*,src/app/api/custos-fixos/**/*,src/app/api/tipos-custo-fixo/**/*,src/app/api/anexos-custo-fixo/**/*,src/app/api/upload-anexo-custo-fixo/**/*,src/lib/repositories/supabase/*custo-fixo*,src/components/forms/CustoFixoForm.tsx
+alwaysApply: false
+---
+
+# CUSTOS FIXOS
+
+Domínio financeiro **sem vínculo com eventos**. Spec completa: `.cursor/specs/custos-fixos/SPEC.md`. Skill: `.cursor/skills/implementar-custos-fixos/SKILL.md`.
+
+## Separação obrigatória
+
+| Evento (existente) | Custo fixo (novo) |
+|--------------------|-------------------|
+| `tipo_custos` | `tipo_custos_fixos` |
+| `custos` + `evento_id` | `custos_fixos` (sem evento) |
+| `anexos_custo` | `anexos_custo_fixo` |
+
+Não reutilizar repos/tabelas de custo de evento com `evento_id` nullable.
+
+## Campos do lançamento
+
+`dataPagamento`, `valor`, `quantidade` (default 1), `tipoCustoFixoId`, `descricao`, anexos opcionais.
+
+## Soft delete / exclusão
+
+- Tipo de custo fixo: `ativo = false` + reativar
+- **Custo fixo: hard delete** (remove o registro; anexos em cascade + limpeza S3 na API). Sem mensagem de “restaurar via suporte”.
+
+## Multi-tenant e camadas
+
+Sempre `.eq('user_id', userId)`. Acesso via Repository → DataService → API. Feature flags: `CUSTOS_FIXOS`, `ANEXOS_CUSTO_FIXO`.
+
+## Menu
+
+`/custos-fixos` e `/tipos-custos-fixos` no `Layout.tsx` navigation.
+
+`isActive` no Layout: match exato ou `pathname.startsWith(href + '/')` — nunca `startsWith(href)` puro (evita `/tipos-custos` marcar `/tipos-custos-fixos`).
+
+## Filtros (`/custos-fixos`)
+
+Ver `.cursor/specs/custos-fixos/FILTROS.md`. Componente: `src/components/filters/CustosFixosFiltros.tsx` + `DateRangeFilter`.
+
+## S3
+
+`users/{userId}/custos-fixos/{custoFixoId}/anexos/...`

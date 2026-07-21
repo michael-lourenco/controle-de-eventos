@@ -45,10 +45,12 @@ const navigation = [
   { name: 'Relatórios', href: '/relatorios', icon: ChartBarIcon },
   { name: 'Contratos', href: '/contratos', icon: DocumentTextIcon },
   { name: 'Pagamentos', href: '/pagamentos', icon: BanknotesIcon },
+  { name: 'Custos Fixos', href: '/custos-fixos', icon: CurrencyDollarIcon },
   { name: 'Tipos de Serviços', href: '/servicos', icon: WrenchScrewdriverIcon },
   { name: 'Canais de Entrada', href: '/canais-entrada', icon: TagIcon },
   { name: 'Tipos de Evento', href: '/tipos-eventos', icon: CalendarDaysIcon },
   { name: 'Tipos de Custo', href: '/tipos-custos', icon: CalculatorIcon },
+  { name: 'Tipos de Custo Fixo', href: '/tipos-custos-fixos', icon: CalculatorIcon },
   { name: 'Configurações', href: '/configuracoes', icon: CogIcon },
   // { name: 'Google Calendar', href: '/configuracoes/calendario', icon: CalendarIcon }, // COMENTADO: Aguardando permissões diretas da Google para dados sensíveis
 ];
@@ -100,11 +102,16 @@ export default function Layout({ children }: LayoutProps) {
   };
 
   // Verificar se um item do menu está ativo
+  // Usa match exato ou prefixo com '/' para evitar colisão
+  // (ex.: /tipos-custos não marca /tipos-custos-fixos)
   const isActive = (href: string) => {
     if (href === '/painel') {
       return pathname === '/painel' || pathname === '/dashboard';
     }
-    return pathname.startsWith(href);
+    if (pathname === href) {
+      return true;
+    }
+    return pathname.startsWith(`${href}/`);
   };
 
   return (

@@ -33,6 +33,8 @@ const FUNCIONALIDADES_INICIAIS: Omit<Funcionalidade, 'id' | 'dataCadastro'>[] = 
   { codigo: 'BOTAO_COPIAR', nome: 'Botão Copiar', descricao: 'Copiar informações do evento para enviar para Colaboradores e Cerimonialistas', categoria: 'EVENTOS', ativo: true, ordem: 41 },
   { codigo: 'CONTRATO_AUTOMATIZADO', nome: 'Preenchimento Automatizado de Contrato', descricao: 'Preenchimento automatizado de contrato com dados do evento', categoria: 'EVENTOS', ativo: true, ordem: 42 },
   { codigo: 'ANEXOS_CUSTO', nome: 'Anexos de Custo', descricao: 'Upload de anexos para custos', categoria: 'FINANCEIRO', ativo: true, ordem: 43 },
+  { codigo: 'CUSTOS_FIXOS', nome: 'Custos Fixos', descricao: 'Gerenciar custos fixos sem vínculo com eventos', categoria: 'FINANCEIRO', ativo: true, ordem: 44 },
+  { codigo: 'ANEXOS_CUSTO_FIXO', nome: 'Anexos de Custo Fixo', descricao: 'Upload de anexos para custos fixos', categoria: 'FINANCEIRO', ativo: true, ordem: 45 },
 ];
 
 export async function POST(request: NextRequest) {
@@ -150,6 +152,7 @@ export async function POST(request: NextRequest) {
           funcionalidadesMap.get('PAGAMENTOS_CONTROLE_PADRAO')?.id,
           funcionalidadesMap.get('TIPOS_PADRAO')?.id,
           funcionalidadesMap.get('RELATORIOS_BASICOS')?.id,
+          funcionalidadesMap.get('CUSTOS_FIXOS')?.id,
         ].filter(Boolean) as string[],
         preco: 49.90,
         intervalo: 'mensal',
@@ -174,6 +177,7 @@ export async function POST(request: NextRequest) {
           funcionalidadesMap.get('FLUXO_CAIXA')?.id,
           funcionalidadesMap.get('UPLOAD_ANEXOS')?.id,
           funcionalidadesMap.get('BOTAO_COPIAR')?.id,
+          funcionalidadesMap.get('CUSTOS_FIXOS')?.id,
         ].filter(Boolean) as string[],
         preco: 97.90,
         intervalo: 'mensal',
@@ -202,6 +206,8 @@ export async function POST(request: NextRequest) {
           funcionalidadesMap.get('BOTAO_COPIAR')?.id,
           funcionalidadesMap.get('CONTRATO_AUTOMATIZADO')?.id,
           funcionalidadesMap.get('ANEXOS_CUSTO')?.id,
+          funcionalidadesMap.get('CUSTOS_FIXOS')?.id,
+          funcionalidadesMap.get('ANEXOS_CUSTO_FIXO')?.id,
         ].filter(Boolean) as string[],
         preco: 149.90,
         intervalo: 'mensal',

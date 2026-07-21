@@ -40,6 +40,21 @@ DROP POLICY IF EXISTS "Users can manage own custos" ON custos;
 CREATE POLICY "Users can manage own custos" ON custos
     FOR ALL USING (true) WITH CHECK (true);
 
+-- Tipos de Custo Fixo
+DROP POLICY IF EXISTS "Users can manage own tipo_custos_fixos" ON tipo_custos_fixos;
+CREATE POLICY "Users can manage own tipo_custos_fixos" ON tipo_custos_fixos
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- Custos Fixos
+DROP POLICY IF EXISTS "Users can manage own custos_fixos" ON custos_fixos;
+CREATE POLICY "Users can manage own custos_fixos" ON custos_fixos
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- Anexos Custo Fixo
+DROP POLICY IF EXISTS "Users can manage own anexos_custo_fixo" ON anexos_custo_fixo;
+CREATE POLICY "Users can manage own anexos_custo_fixo" ON anexos_custo_fixo
+    FOR ALL USING (true) WITH CHECK (true);
+
 -- Serviços Evento
 DROP POLICY IF EXISTS "Users can manage own servicos_evento" ON servicos_evento;
 CREATE POLICY "Users can manage own servicos_evento" ON servicos_evento

@@ -14,14 +14,15 @@ alwaysApply: false
 - **clientes** (id, user_id FK, nome, cpf, email, telefone, endereco, canal_entrada_id, arquivado)
 - **eventos** (id, user_id FK, cliente_id, nome_evento, data_evento, local, tipo_evento_id, status, valor_total, arquivado)
 - **pagamentos** (id, user_id FK, evento_id, valor, data_pagamento, forma_pagamento, status, anexo_id)
-- **custos** (id, user_id FK, evento_id, tipo_custo_id, valor, quantidade, removido)
+- **custos** (id, user_id FK, evento_id, tipo_custo_id, valor, quantidade, removido) — sempre vinculados a evento
+- **custos_fixos** (id, user_id FK, tipo_custo_fixo_id, valor, quantidade, data_pagamento, descricao, removido) — sem evento; spec `.cursor/specs/custos-fixos/`
 - **servicos_evento** (id, user_id FK, evento_id, tipo_servico_id, removido)
 - **contratos** (id, user_id FK, evento_id, modelo_contrato_id, dados_preenchidos jsonb, status, pdf_url)
 - **modelos_contrato** / **variaveis_contrato** / **configuracao_contrato**
 - **pre_cadastros_eventos** (status: pendente|preenchido|convertido|expirado|ignorado)
 - **relatorios_diarios** / **relatorios_cache** (dados agregados em jsonb)
-- **tipo_eventos** / **tipo_custos** / **tipo_servicos** / **canais_entrada** (tabelas de lookup por user_id)
-- **anexos_pagamento** / **anexos_custo** / **anexos_eventos** (s3_key, url)
+- **tipo_eventos** / **tipo_custos** / **tipo_custos_fixos** / **tipo_servicos** / **canais_entrada** (lookups por user_id)
+- **anexos_pagamento** / **anexos_custo** / **anexos_custo_fixo** / **anexos_eventos** (s3_key, url)
 
 ## Firestore (dados de controle — NÃO migrar)
 - `controle_users`, planos, assinaturas, funcionalidades, google_calendar_tokens

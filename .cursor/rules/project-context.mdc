@@ -28,11 +28,13 @@ src/
 │   ├── admin/              # Páginas admin
 │   ├── eventos/            # CRUD de eventos
 │   ├── clientes/           # CRUD de clientes
+│   ├── custos-fixos/       # Lançamentos de custos fixos (sem evento)
+│   ├── tipos-custos-fixos/ # Tipos/categorias de custos fixos
 │   ├── contratos/          # Contratos, templates, variáveis
 │   └── ...                 # Demais páginas
 ├── components/             # Componentes React
 │   ├── ui/                 # Primitivos shadcn (Button, Input, Dialog, etc.)
-│   ├── forms/              # Formulários (EventoForm, PagamentoForm, etc.)
+│   ├── forms/              # Formulários (EventoForm, PagamentoForm, CustoFixoForm, etc.)
 │   ├── charts/             # Gráficos (StatCard, BarChart, PieChart)
 │   ├── relatorios/         # Componentes de relatório
 │   ├── filters/            # Filtros reutilizáveis

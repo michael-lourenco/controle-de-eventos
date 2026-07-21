@@ -41,6 +41,9 @@ import { RelatorioCacheSupabaseRepository } from './supabase/relatorio-cache-sup
 import { AnexoEventoSupabaseRepository } from './supabase/anexo-evento-supabase-repository';
 import { AnexoPagamentoSupabaseRepository } from './supabase/anexo-pagamento-supabase-repository';
 import { AnexoCustoSupabaseRepository } from './supabase/anexo-custo-supabase-repository';
+import { TipoCustoFixoSupabaseRepository } from './supabase/tipo-custo-fixo-supabase-repository';
+import { CustoFixoSupabaseRepository } from './supabase/custo-fixo-supabase-repository';
+import { AnexoCustoFixoSupabaseRepository } from './supabase/anexo-custo-fixo-supabase-repository';
 import { PreCadastroEventoSupabaseRepository } from './supabase/pre-cadastro-evento-supabase-repository';
 import { PreCadastroServicoSupabaseRepository } from './supabase/pre-cadastro-servico-supabase-repository';
 import { ValoresAtrasadosSupabaseRepository } from './supabase/valores-atrasados-supabase-repository';
@@ -72,6 +75,9 @@ export class RepositoryFactory {
   private anexoEventoRepository: AnexoEventoSupabaseRepository;
   private anexoPagamentoRepository: AnexoPagamentoSupabaseRepository;
   private anexoCustoRepository: AnexoCustoSupabaseRepository;
+  private tipoCustoFixoRepository: TipoCustoFixoSupabaseRepository;
+  private custoFixoRepository: CustoFixoSupabaseRepository;
+  private anexoCustoFixoRepository: AnexoCustoFixoSupabaseRepository;
   private preCadastroEventoRepository: PreCadastroEventoSupabaseRepository;
   private preCadastroServicoRepository: PreCadastroServicoSupabaseRepository;
   private valoresAtrasadosRepository: ValoresAtrasadosSupabaseRepository;
@@ -111,6 +117,9 @@ export class RepositoryFactory {
     this.anexoEventoRepository = new AnexoEventoSupabaseRepository();
     this.anexoPagamentoRepository = new AnexoPagamentoSupabaseRepository();
     this.anexoCustoRepository = new AnexoCustoSupabaseRepository();
+    this.tipoCustoFixoRepository = new TipoCustoFixoSupabaseRepository();
+    this.custoFixoRepository = new CustoFixoSupabaseRepository();
+    this.anexoCustoFixoRepository = new AnexoCustoFixoSupabaseRepository();
     this.preCadastroEventoRepository = new PreCadastroEventoSupabaseRepository();
     this.preCadastroServicoRepository = new PreCadastroServicoSupabaseRepository();
     this.valoresAtrasadosRepository = new ValoresAtrasadosSupabaseRepository();
@@ -208,6 +217,18 @@ export class RepositoryFactory {
 
   public getAnexoCustoRepository(): AnexoCustoSupabaseRepository {
     return this.anexoCustoRepository;
+  }
+
+  public getTipoCustoFixoRepository(): TipoCustoFixoSupabaseRepository {
+    return this.tipoCustoFixoRepository;
+  }
+
+  public getCustoFixoRepository(): CustoFixoSupabaseRepository {
+    return this.custoFixoRepository;
+  }
+
+  public getAnexoCustoFixoRepository(): AnexoCustoFixoSupabaseRepository {
+    return this.anexoCustoFixoRepository;
   }
 
   public getPreCadastroEventoRepository(): PreCadastroEventoSupabaseRepository {

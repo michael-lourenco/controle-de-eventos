@@ -4,7 +4,9 @@ import {
   Evento,
   Pagamento,
   TipoCusto,
+  TipoCustoFixo,
   CustoEvento,
+  CustoFixo,
   TipoServico,
   ServicoEvento,
   CanalEntrada,
@@ -27,6 +29,8 @@ export class DataService {
   private pagamentoRepo = repositoryFactory.getPagamentoRepository();
   private tipoCustoRepo = repositoryFactory.getTipoCustoRepository();
   private custoEventoRepo = repositoryFactory.getCustoEventoRepository();
+  private tipoCustoFixoRepo = repositoryFactory.getTipoCustoFixoRepository();
+  private custoFixoRepo = repositoryFactory.getCustoFixoRepository();
   private tipoServicoRepo = repositoryFactory.getTipoServicoRepository();
   private servicoEventoRepo = repositoryFactory.getServicoEventoRepository();
   private canalEntradaRepo = repositoryFactory.getCanalEntradaRepository();
@@ -810,6 +814,205 @@ export class DataService {
   
   async getTiposCustoInativos(userId: string): Promise<TipoCusto[]> {
     return this.tipoCustoRepo.getInativos(userId);
+  }
+
+  // Métodos para Tipos de Custo Fixo
+  async getTiposCustoFixo(userId: string): Promise<TipoCustoFixo[]> {
+    if (!userId) throw new Error('userId é obrigatório para buscar tipos de custo fixo');
+    try {
+      return this.tipoCustoFixoRepo.getAtivos(userId);
+    } catch {
+      return [];
+    }
+  }
+
+  async getTiposCustoFixoAtivos(userId: string): Promise<TipoCustoFixo[]> {
+    return this.tipoCustoFixoRepo.getAtivos(userId);
+  }
+
+  async getTiposCustoFixoInativos(userId: string): Promise<TipoCustoFixo[]> {
+    return this.tipoCustoFixoRepo.getInativos(userId);
+  }
+
+  async createTipoCustoFixo(
+    tipo: Omit<TipoCustoFixo, 'id' | 'dataCadastro'>,
+    userId: string
+  ): Promise<TipoCustoFixo> {
+    if (!userId) throw new Error('userId é obrigatório para criar tipo de custo fixo');
+
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/tipos-custo-fixo/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tipo),
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erro ao criar tipo de custo fixo');
+        }
+        const responseData = await response.json();
+        const data = responseData.data ?? responseData;
+        return {
+          id: data.id,
+          nome: data.nome,
+          descricao: data.descricao || '',
+          ativo: data.ativo,
+          dataCadastro: new Date(data.dataCadastro),
+        };
+      } catch {
+        // fallback para repo direto
+      }
+    }
+
+    return this.tipoCustoFixoRepo.createTipoCustoFixo(tipo, userId);
+  }
+
+  async updateTipoCustoFixo(
+    id: string,
+    tipo: Partial<TipoCustoFixo>,
+    userId: string
+  ): Promise<TipoCustoFixo> {
+    return this.tipoCustoFixoRepo.updateTipoCustoFixo(id, tipo, userId);
+  }
+
+  async deleteTipoCustoFixo(id: string, userId: string): Promise<void> {
+    return this.tipoCustoFixoRepo.deleteTipoCustoFixo(id, userId);
+  }
+
+  async reativarTipoCustoFixo(id: string, userId: string): Promise<void> {
+    return this.tipoCustoFixoRepo.reativarTipoCustoFixo(id, userId);
+  }
+
+  // Métodos para Custos Fixos
+  async getCustosFixos(userId: string): Promise<CustoFixo[]> {
+    if (!userId) throw new Error('userId é obrigatório para buscar custos fixos');
+
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/custos-fixos');
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Erro ao buscar custos fixos');
+        }
+        const responseData = await response.json();
+        const data = responseData.data ?? responseData;
+        const lista = Array.isArray(data) ? data : [];
+        return lista.map((item: any) => ({
+          ...item,
+          dataPagamento: new Date(item.dataPagamento),
+          dataCadastro: new Date(item.dataCadastro),
+          dataAtualizacao: item.dataAtualizacao ? new Date(item.dataAtualizacao) : undefined,
+        }));
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    return this.custoFixoRepo.findAll(userId, true);
+  }
+
+  async getCustoFixoById(userId: string, id: string): Promise<CustoFixo | null> {
+    return this.custoFixoRepo.findById(id, userId);
+  }
+
+  async createCustoFixo(
+    userId: string,
+    custo: Omit<CustoFixo, 'id' | 'dataCadastro' | 'tipoCustoFixo'>
+  ): Promise<CustoFixo> {
+    if (!userId) throw new Error('userId é obrigatório para criar custo fixo');
+
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/custos-fixos/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipoCustoFixoId: custo.tipoCustoFixoId,
+            valor: custo.valor,
+            quantidade: custo.quantidade,
+            dataPagamento: custo.dataPagamento instanceof Date
+              ? custo.dataPagamento.toISOString().slice(0, 10)
+              : custo.dataPagamento,
+            descricao: custo.descricao,
+          }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erro ao criar custo fixo');
+        }
+        const responseData = await response.json();
+        const data = responseData.data ?? responseData;
+        return {
+          id: data.id,
+          tipoCustoFixoId: data.tipoCustoFixoId,
+          valor: data.valor,
+          quantidade: data.quantidade,
+          dataPagamento: new Date(data.dataPagamento),
+          descricao: data.descricao,
+          removido: data.removido || false,
+          dataCadastro: new Date(data.dataCadastro),
+          tipoCustoFixo: data.tipoCustoFixo,
+        };
+      } catch {
+        // fallback
+      }
+    }
+
+    return this.custoFixoRepo.createCustoFixo(userId, custo);
+  }
+
+  async updateCustoFixo(
+    userId: string,
+    custoId: string,
+    custo: Partial<CustoFixo>
+  ): Promise<CustoFixo> {
+    if (typeof window !== 'undefined') {
+      try {
+        const body: any = { ...custo };
+        if (custo.dataPagamento instanceof Date) {
+          body.dataPagamento = custo.dataPagamento.toISOString().slice(0, 10);
+        }
+        delete body.tipoCustoFixo;
+        const response = await fetch(`/api/custos-fixos/${custoId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Erro ao atualizar custo fixo');
+        }
+        const responseData = await response.json();
+        const data = responseData.data ?? responseData;
+        return {
+          ...data,
+          dataPagamento: new Date(data.dataPagamento),
+          dataCadastro: new Date(data.dataCadastro),
+        };
+      } catch {
+        // fallback
+      }
+    }
+    return this.custoFixoRepo.updateCustoFixo(userId, custoId, custo);
+  }
+
+  async deleteCustoFixo(userId: string, custoId: string): Promise<void> {
+    if (typeof window !== 'undefined') {
+      const response = await fetch(`/api/custos-fixos/${custoId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erro ao excluir custo fixo');
+      }
+      return;
+    }
+    return this.custoFixoRepo.deleteCustoFixo(userId, custoId);
+  }
+
+  async getTotalCustosFixos(userId: string): Promise<number> {
+    return this.custoFixoRepo.getTotalCustosFixos(userId);
   }
 
   // Métodos para Custos de Evento
