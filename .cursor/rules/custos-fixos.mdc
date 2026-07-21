@@ -41,6 +41,10 @@ Sempre `.eq('user_id', userId)`. Acesso via Repository → DataService → API. 
 
 Ver `.cursor/specs/custos-fixos/FILTROS.md`. Componente: `src/components/filters/CustosFixosFiltros.tsx` + `DateRangeFilter`.
 
+## Relatórios
+
+Fluxo de Caixa (`FluxoCaixaReport`): despesas variáveis (eventos/`dataCadastro`) + fixas (`dataPagamento`); coluna `tipoCusto` em DESPESAS POR CATEGORIA.
+
 ## S3
 
 `users/{userId}/custos-fixos/{custoFixoId}/anexos/...`

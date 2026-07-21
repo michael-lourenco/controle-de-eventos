@@ -5,6 +5,7 @@ import {
   Evento,
   Pagamento,
   CustoEvento,
+  CustoFixo,
   ServicoEvento,
   TipoServico,
   Cliente,
@@ -14,6 +15,10 @@ import { dataService } from '../data-service';
 import { startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { filtrarEventosValidos, filtrarEventosValidosComValor } from '../utils/evento-filters';
+import {
+  agregarDespesaCategoria,
+  finalizarDespesasPorCategoria,
+} from '../utils/fluxo-caixa-despesas';
 
 export class RelatoriosReportService {
   private static instance: RelatoriosReportService;
@@ -58,10 +63,10 @@ export class RelatoriosReportService {
     // Removido initializeAllCollections() - não é necessário e causa queries desnecessárias de subcollections
 
     // Buscar todos os dados necessários uma única vez
-    let eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada;
+    let eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada, custosFixos;
     
     try {
-      [eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada] = await Promise.all([
+      [eventos, pagamentos, todosCustos, todosServicos, tiposServicos, tiposCusto, clientes, canaisEntrada, custosFixos] = await Promise.all([
         this.eventoRepo.findAll(userId),
         this.pagamentoRepo.findAll(userId),
         this.custoEventoRepo.findAll(userId),
@@ -69,7 +74,8 @@ export class RelatoriosReportService {
         this.tipoServicoRepo.findAll(userId),
         this.tipoCustoRepo.findAll(userId),
         this.clienteRepo.findAll(userId),
-        this.canalEntradaRepo.findAll(userId)
+        this.canalEntradaRepo.findAll(userId),
+        dataService.getCustosFixos(userId).catch(() => [] as CustoFixo[])
       ]);
     } catch (error: any) {
       console.error('Erro ao buscar dados para gerar relatórios:', error);
@@ -117,7 +123,7 @@ export class RelatoriosReportService {
         this.gerarDetalhamentoReceber(eventos, pagamentos),
         this.gerarReceitaMensal(pagamentos),
         this.gerarPerformanceEventos(eventos),
-        this.gerarFluxoCaixa(pagamentos, custos),
+        this.gerarFluxoCaixa(pagamentos, custos, custosFixos || []),
         this.gerarServicos(eventos, servicos, tiposServicos),
         this.gerarCanaisEntrada(clientes, canaisEntrada, eventos),
         this.gerarImpressoes(eventos)
@@ -352,7 +358,11 @@ export class RelatoriosReportService {
     };
   }
 
-  private async gerarFluxoCaixa(pagamentos: Pagamento[], custos: CustoEvento[]): Promise<RelatorioPersistido> {
+  private async gerarFluxoCaixa(
+    pagamentos: Pagamento[],
+    custos: CustoEvento[],
+    custosFixos: CustoFixo[] = []
+  ): Promise<RelatorioPersistido> {
     const hoje = new Date();
     const inicio = subMonths(hoje, 11);
     inicio.setHours(0, 0, 0, 0);
@@ -376,6 +386,18 @@ export class RelatoriosReportService {
       }
     });
 
+    const custosFixosPeriodo = custosFixos.filter(c => {
+      if (c.removido) return false;
+      if (!c.dataPagamento) return false;
+      try {
+        const dataPag = new Date(c.dataPagamento);
+        if (isNaN(dataPag.getTime())) return false;
+        return dataPag >= inicio && dataPag <= fim;
+      } catch {
+        return false;
+      }
+    });
+
     const receitasPorMes: Record<string, number> = {};
     pagamentosPeriodo.forEach(pagamento => {
       const mes = format(new Date(pagamento.dataPagamento), 'yyyy-MM');
@@ -385,6 +407,11 @@ export class RelatoriosReportService {
     const despesasPorMes: Record<string, number> = {};
     custosPeriodo.forEach(custo => {
       const mes = format(new Date(custo.dataCadastro), 'yyyy-MM');
+      const valorTotal = custo.valor * (custo.quantidade || 1);
+      despesasPorMes[mes] = (despesasPorMes[mes] || 0) + valorTotal;
+    });
+    custosFixosPeriodo.forEach(custo => {
+      const mes = format(new Date(custo.dataPagamento), 'yyyy-MM');
       const valorTotal = custo.valor * (custo.quantidade || 1);
       despesasPorMes[mes] = (despesasPorMes[mes] || 0) + valorTotal;
     });
@@ -425,19 +452,26 @@ export class RelatoriosReportService {
       percentual: totalReceitas > 0 ? (valor / totalReceitas) * 100 : 0
     }));
 
-    const despesasPorCategoria: Record<string, number> = {};
+    const mapaDespesas: Record<string, { categoria: string; tipoCusto: 'fixo' | 'variável'; valor: number }> = {};
     custosPeriodo.forEach(custo => {
-      const categoria = custo.tipoCusto?.nome || 'Sem categoria';
-      const valorTotal = custo.valor * (custo.quantidade || 1);
-      despesasPorCategoria[categoria] = (despesasPorCategoria[categoria] || 0) + valorTotal;
+      agregarDespesaCategoria(
+        mapaDespesas,
+        'variável',
+        custo.tipoCusto?.nome || 'Sem categoria',
+        custo.valor * (custo.quantidade || 1)
+      );
+    });
+    custosFixosPeriodo.forEach(custo => {
+      agregarDespesaCategoria(
+        mapaDespesas,
+        'fixo',
+        custo.tipoCustoFixo?.nome || 'Sem categoria',
+        custo.valor * (custo.quantidade || 1)
+      );
     });
 
-    const totalDespesas = Object.values(despesasPorCategoria).reduce((sum, val) => sum + val, 0);
-    const despesasPorCategoriaData = Object.entries(despesasPorCategoria).map(([categoria, valor]) => ({
-      categoria,
-      valor,
-      percentual: totalDespesas > 0 ? (valor / totalDespesas) * 100 : 0
-    }));
+    const despesasPorCategoriaData = finalizarDespesasPorCategoria(mapaDespesas);
+    const totalDespesas = despesasPorCategoriaData.reduce((sum, item) => sum + item.valor, 0);
 
     const receitaTotal = totalReceitas;
     const despesaTotal = totalDespesas;
@@ -447,8 +481,8 @@ export class RelatoriosReportService {
     const percentualVariacao = saldoAnterior !== 0 ? (variacaoSaldo / Math.abs(saldoAnterior)) * 100 : 0;
 
     const ultimos3Meses = fluxoMensal.slice(-3);
-    const mediaReceita = ultimos3Meses.reduce((sum, m) => sum + m.receitas, 0) / ultimos3Meses.length;
-    const mediaDespesa = ultimos3Meses.reduce((sum, m) => sum + m.despesas, 0) / ultimos3Meses.length;
+    const mediaReceita = ultimos3Meses.reduce((sum, m) => sum + m.receitas, 0) / (ultimos3Meses.length || 1);
+    const mediaDespesa = ultimos3Meses.reduce((sum, m) => sum + m.despesas, 0) / (ultimos3Meses.length || 1);
 
     const projecao = [];
     for (let i = 1; i <= 3; i++) {
@@ -479,7 +513,8 @@ export class RelatoriosReportService {
       meta: {
         geradoEm: new Date().toISOString(),
         totalPagamentos: pagamentos.length,
-        totalCustos: custos.length
+        totalCustos: custos.length,
+        totalCustosFixos: custosFixos.length
       }
     };
   }

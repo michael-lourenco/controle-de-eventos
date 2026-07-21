@@ -23,6 +23,7 @@ export class RelatorioCacheService {
         eventos,
         pagamentos,
         custos,
+        custosFixos,
         servicos,
         clientes,
         canaisEntrada,
@@ -32,6 +33,7 @@ export class RelatorioCacheService {
         dataService.getAllEventos(userId),
         dataService.getAllPagamentos(userId),
         dataService.getAllCustos(userId),
+        dataService.getCustosFixos(userId).catch(() => []),
         dataService.getAllServicos(userId),
         dataService.getAllClientes(userId),
         dataService.getCanaisEntradaAtivos(userId),
@@ -39,7 +41,7 @@ export class RelatorioCacheService {
         dataService.getTiposCusto(userId)
       ]);
 
-      console.log(`[RelatorioCacheService] Dados carregados: ${eventos.length} eventos, ${pagamentos.length} pagamentos, ${custos.length} custos, ${servicos.length} serviços`);
+      console.log(`[RelatorioCacheService] Dados carregados: ${eventos.length} eventos, ${pagamentos.length} pagamentos, ${custos.length} custos, ${custosFixos.length} custos fixos, ${servicos.length} serviços`);
 
       const agora = new Date();
       const inicioAno = new Date(agora.getFullYear(), 0, 1);
@@ -49,7 +51,7 @@ export class RelatorioCacheService {
       const resumoGeral = this.calcularResumoGeral(eventos, pagamentos, custos, clientes);
       const receitaMensal = this.calcularReceitaMensal(pagamentos, 24); // Últimos 24 meses
       const eventosResumo = await this.calcularEventosResumo(userId, eventos, pagamentos, custos, servicos);
-      const fluxoCaixa = this.calcularFluxoCaixa(pagamentos, custos, 24); // Últimos 24 meses
+      const fluxoCaixa = this.calcularFluxoCaixa(pagamentos, custos, custosFixos, 24); // Últimos 24 meses
       const servicosResumo = this.calcularServicosResumo(eventos, servicos, tiposServicos);
       const canaisEntradaResumo = this.calcularCanaisEntradaResumo(clientes, eventos, canaisEntrada);
       const impressoesResumo = this.calcularImpressoesResumo(eventos);
@@ -260,7 +262,12 @@ export class RelatorioCacheService {
   /**
    * Calcula fluxo de caixa mensal
    */
-  private calcularFluxoCaixa(pagamentos: any[], custos: any[], meses: number): FluxoCaixaMensal[] {
+  private calcularFluxoCaixa(
+    pagamentos: any[],
+    custos: any[],
+    custosFixos: any[],
+    meses: number
+  ): FluxoCaixaMensal[] {
     const hoje = new Date();
     const inicio = startOfMonth(subMonths(hoje, meses - 1));
     const fim = endOfMonth(hoje);
@@ -269,6 +276,7 @@ export class RelatorioCacheService {
 
     const pagamentosPagos = pagamentos.filter(p => p.status === 'Pago' && !p.cancelado);
     const custosAtivos = custos.filter(c => !c.removido);
+    const custosFixosAtivos = (custosFixos || []).filter(c => !c.removido);
 
     const fluxoMensal: FluxoCaixaMensal[] = [];
     let saldoAcumulado = 0;
@@ -277,7 +285,6 @@ export class RelatorioCacheService {
       const inicioMes = startOfMonth(mes);
       const fimMes = endOfMonth(mes);
 
-      // Receitas do mês
       const pagamentosDoMes = pagamentosPagos.filter(p => {
         const dataPag = new Date(p.dataPagamento);
         return dataPag >= inicioMes && dataPag <= fimMes;
@@ -289,17 +296,46 @@ export class RelatorioCacheService {
         receitasPorForma[p.formaPagamento] = (receitasPorForma[p.formaPagamento] || 0) + p.valor;
       });
 
-      // Despesas do mês
       const custosDoMes = custosAtivos.filter(c => {
         const dataCusto = new Date(c.dataCadastro);
         return dataCusto >= inicioMes && dataCusto <= fimMes;
       });
 
-      const despesas = custosDoMes.reduce((sum, c) => sum + (c.valor * (c.quantidade || 1)), 0);
+      const custosFixosDoMes = custosFixosAtivos.filter(c => {
+        const dataPag = new Date(c.dataPagamento);
+        return dataPag >= inicioMes && dataPag <= fimMes;
+      });
+
+      const despesasVariaveis = custosDoMes.reduce((sum, c) => sum + (c.valor * (c.quantidade || 1)), 0);
+      const despesasFixas = custosFixosDoMes.reduce((sum, c) => sum + (c.valor * (c.quantidade || 1)), 0);
+      const despesas = despesasVariaveis + despesasFixas;
+
       const despesasPorCategoria: Record<string, number> = {};
+      const despesasPorCategoriaDetalhe: Array<{ categoria: string; valor: number; tipoCusto: 'fixo' | 'variável' }> = [];
+
+      const mapa: Record<string, { categoria: string; tipoCusto: 'fixo' | 'variável'; valor: number }> = {};
       custosDoMes.forEach(c => {
         const categoria = c.tipoCusto?.nome || 'Sem categoria';
-        despesasPorCategoria[categoria] = (despesasPorCategoria[categoria] || 0) + (c.valor * (c.quantidade || 1));
+        const valor = c.valor * (c.quantidade || 1);
+        const key = `variável::${categoria}`;
+        if (!mapa[key]) mapa[key] = { categoria, tipoCusto: 'variável', valor: 0 };
+        mapa[key].valor += valor;
+      });
+      custosFixosDoMes.forEach(c => {
+        const categoria = c.tipoCustoFixo?.nome || 'Sem categoria';
+        const valor = c.valor * (c.quantidade || 1);
+        const key = `fixo::${categoria}`;
+        if (!mapa[key]) mapa[key] = { categoria, tipoCusto: 'fixo', valor: 0 };
+        mapa[key].valor += valor;
+      });
+
+      Object.values(mapa).forEach(item => {
+        despesasPorCategoria[`${item.categoria} (${item.tipoCusto})`] = item.valor;
+        despesasPorCategoriaDetalhe.push({
+          categoria: item.categoria,
+          valor: item.valor,
+          tipoCusto: item.tipoCusto,
+        });
       });
 
       const saldo = receitas - despesas;
@@ -312,7 +348,8 @@ export class RelatorioCacheService {
         saldo,
         saldoAcumulado,
         receitasPorForma,
-        despesasPorCategoria
+        despesasPorCategoria,
+        despesasPorCategoriaDetalhe,
       });
     });
 

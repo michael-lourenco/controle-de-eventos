@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Evento, Pagamento, CustoEvento } from '@/types';
+import { Evento, Pagamento, CustoEvento, CustoFixo } from '@/types';
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ArrowDownTrayIcon, ChartBarIcon, ExclamationTriangleIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline';
@@ -17,14 +17,24 @@ import {
   BarChart,
   ChartDataPoint 
 } from '@/components/charts';
+import {
+  agregarDespesaCategoria,
+  finalizarDespesasPorCategoria,
+} from '@/lib/utils/fluxo-caixa-despesas';
 
 interface FluxoCaixaReportProps {
   eventos: Evento[];
   pagamentos: Pagamento[];
   custos: CustoEvento[];
+  custosFixos?: CustoFixo[];
 }
 
-export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoCaixaReportProps) {
+export default function FluxoCaixaReport({
+  eventos,
+  pagamentos,
+  custos,
+  custosFixos = [],
+}: FluxoCaixaReportProps) {
   const [dataInicio, setDataInicio] = useState(
     format(subMonths(new Date(), 11), 'yyyy-MM-dd')
   );
@@ -38,50 +48,53 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
     const fim = new Date(dataFim);
     fim.setHours(23, 59, 59, 999);
     
-    // Filtrar dados do período
     const pagamentosPeriodo = pagamentos.filter(p => {
       const dataPag = new Date(p.dataPagamento);
       return dataPag >= inicio && dataPag <= fim && p.status === 'Pago';
     });
 
     const custosPeriodo = custos.filter(c => {
-      // Filtrar custos removidos
-      if (c.removido) {
-        return false;
-      }
-      // Validar se tem dataCadastro
-      if (!c.dataCadastro) {
-        return false;
-      }
+      if (c.removido) return false;
+      if (!c.dataCadastro) return false;
       try {
         const dataCusto = new Date(c.dataCadastro);
-        // Verificar se a data é válida
-        if (isNaN(dataCusto.getTime())) {
-          return false;
-        }
+        if (isNaN(dataCusto.getTime())) return false;
         return dataCusto >= inicio && dataCusto <= fim;
-      } catch (error) {
+      } catch {
         return false;
       }
     });
 
-    // Calcular receitas por mês
+    const custosFixosPeriodo = custosFixos.filter(c => {
+      if (c.removido) return false;
+      if (!c.dataPagamento) return false;
+      try {
+        const dataPag = new Date(c.dataPagamento);
+        if (isNaN(dataPag.getTime())) return false;
+        return dataPag >= inicio && dataPag <= fim;
+      } catch {
+        return false;
+      }
+    });
+
     const receitasPorMes: Record<string, number> = {};
     pagamentosPeriodo.forEach(pagamento => {
       const mes = format(new Date(pagamento.dataPagamento), 'yyyy-MM');
       receitasPorMes[mes] = (receitasPorMes[mes] || 0) + pagamento.valor;
     });
 
-    // Calcular despesas por mês
     const despesasPorMes: Record<string, number> = {};
     custosPeriodo.forEach(custo => {
       const mes = format(new Date(custo.dataCadastro), 'yyyy-MM');
-      // Multiplicar valor pela quantidade (mesma lógica do cálculo por categoria)
+      const valorTotal = custo.valor * (custo.quantidade || 1);
+      despesasPorMes[mes] = (despesasPorMes[mes] || 0) + valorTotal;
+    });
+    custosFixosPeriodo.forEach(custo => {
+      const mes = format(new Date(custo.dataPagamento), 'yyyy-MM');
       const valorTotal = custo.valor * (custo.quantidade || 1);
       despesasPorMes[mes] = (despesasPorMes[mes] || 0) + valorTotal;
     });
 
-    // Gerar fluxo mensal
     const meses = eachMonthOfInterval({ start: inicio, end: fim });
     const fluxoMensal = meses.map(mes => {
       const mesKey = format(mes, 'yyyy-MM');
@@ -95,18 +108,16 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
         receitas,
         despesas,
         saldo,
-        saldoAcumulado: 0 // Será calculado depois
+        saldoAcumulado: 0
       };
     });
 
-    // Calcular saldo acumulado
     let saldoAcumulado = 0;
     fluxoMensal.forEach(item => {
       saldoAcumulado += item.saldo;
       item.saldoAcumulado = saldoAcumulado;
     });
 
-    // Receitas por forma de pagamento
     const receitasPorForma: Record<string, number> = {};
     pagamentosPeriodo.forEach(pagamento => {
       receitasPorForma[pagamento.formaPagamento] = 
@@ -120,22 +131,27 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
       percentual: totalReceitas > 0 ? (valor / totalReceitas) * 100 : 0
     }));
 
-    // Despesas por categoria
-    const despesasPorCategoria: Record<string, number> = {};
+    const mapaDespesas: Record<string, { categoria: string; tipoCusto: 'fixo' | 'variável'; valor: number }> = {};
     custosPeriodo.forEach(custo => {
-      const categoria = custo.tipoCusto?.nome || 'Sem categoria';
-      const valorTotal = custo.valor * (custo.quantidade || 1);
-      despesasPorCategoria[categoria] = (despesasPorCategoria[categoria] || 0) + valorTotal;
+      agregarDespesaCategoria(
+        mapaDespesas,
+        'variável',
+        custo.tipoCusto?.nome || 'Sem categoria',
+        custo.valor * (custo.quantidade || 1)
+      );
+    });
+    custosFixosPeriodo.forEach(custo => {
+      agregarDespesaCategoria(
+        mapaDespesas,
+        'fixo',
+        custo.tipoCustoFixo?.nome || 'Sem categoria',
+        custo.valor * (custo.quantidade || 1)
+      );
     });
 
-    const totalDespesas = Object.values(despesasPorCategoria).reduce((sum, val) => sum + val, 0);
-    const despesasPorCategoriaData = Object.entries(despesasPorCategoria).map(([categoria, valor]) => ({
-      categoria,
-      valor,
-      percentual: totalDespesas > 0 ? (valor / totalDespesas) * 100 : 0
-    }));
+    const despesasPorCategoriaData = finalizarDespesasPorCategoria(mapaDespesas);
+    const totalDespesas = despesasPorCategoriaData.reduce((sum, item) => sum + item.valor, 0);
 
-    // Resumo geral
     const receitaTotal = totalReceitas;
     const despesaTotal = totalDespesas;
     const saldoAtual = receitaTotal - despesaTotal;
@@ -144,10 +160,9 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
     const variacaoSaldo = saldoAtual - saldoAnterior;
     const percentualVariacao = saldoAnterior !== 0 ? (variacaoSaldo / Math.abs(saldoAnterior)) * 100 : 0;
 
-    // Projeção (simples baseada na média dos últimos 3 meses)
     const ultimos3Meses = fluxoMensal.slice(-3);
-    const mediaReceita = ultimos3Meses.reduce((sum, m) => sum + m.receitas, 0) / ultimos3Meses.length;
-    const mediaDespesa = ultimos3Meses.reduce((sum, m) => sum + m.despesas, 0) / ultimos3Meses.length;
+    const mediaReceita = ultimos3Meses.reduce((sum, m) => sum + m.receitas, 0) / (ultimos3Meses.length || 1);
+    const mediaDespesa = ultimos3Meses.reduce((sum, m) => sum + m.despesas, 0) / (ultimos3Meses.length || 1);
     
     const proximos3Meses = [];
     for (let i = 1; i <= 3; i++) {
@@ -161,12 +176,10 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
       });
     }
 
-    // Determinar tendência
     const crescimento = ultimos3Meses.length >= 2 ? 
       ultimos3Meses[ultimos3Meses.length - 1].saldo - ultimos3Meses[0].saldo : 0;
     const tendencia = crescimento > 0 ? 'crescimento' : crescimento < 0 ? 'declinio' : 'estavel';
 
-    // Alertas
     const alertas = [];
     if (saldoAtual < 0) {
       alertas.push({
@@ -199,11 +212,11 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
       projecao: {
         proximos3Meses,
         tendencia,
-        confiabilidade: 75 // Baseado na estabilidade dos dados
+        confiabilidade: 75
       },
       alertas
     };
-  }, [dataInicio, dataFim, pagamentos, custos]);
+  }, [dataInicio, dataFim, pagamentos, custos, custosFixos]);
 
   // Converter dados para formato dos gráficos
   const receitasPorFormaData: ChartDataPoint[] = dadosFluxoCaixa.receitasPorFormaPagamento.map(item => ({
@@ -213,7 +226,7 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
   }));
 
   const despesasPorCategoriaData: ChartDataPoint[] = dadosFluxoCaixa.despesasPorCategoria.map(item => ({
-    label: item.categoria,
+    label: `${item.categoria} (${item.tipoCusto})`,
     value: item.valor,
     percentage: item.percentual
   }));
@@ -283,11 +296,12 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
       ]),
       [''],
       ['DESPESAS POR CATEGORIA'],
-      ['Categoria', 'Valor', 'Percentual (%)'],
+      ['Categoria', 'Valor', 'Percentual (%)', 'Tipo de Custo'],
       ...dadosFluxoCaixa.despesasPorCategoria.map(item => [
         item.categoria,
         item.valor,
-        item.percentual.toFixed(2)
+        item.percentual.toFixed(2),
+        item.tipoCusto
       ])
     ];
 
@@ -682,17 +696,17 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
               <CardTitle>Despesas por Categoria</CardTitle>
               <InfoTooltip
                 title="Despesas por Categoria"
-                description="Distribuição visual das despesas agrupadas por categoria de custo (Insumos, Transporte, Equipamento, etc.) no período selecionado."
-                calculation="Cada custo é contabilizado de acordo com seu tipoCusto. O valor total considera (valor × quantidade) de cada custo. O gráfico mostra o valor total e percentual de cada categoria."
+                description="Distribuição das despesas por categoria, incluindo custos variáveis (vinculados a eventos) e custos fixos (lançamentos do período por data de pagamento)."
+                calculation="Custos de evento usam dataCadastro e contam como variável. Custos fixos usam dataPagamento e contam como fixo. Valor = valor × quantidade. Percentual = valor da categoria / total de despesas."
                 className="flex-shrink-0"
                 iconClassName="h-6 w-6"
               />
             </div>
             <CardDescription>
-              Distribuição dos custos por categoria
+              Custos variáveis (eventos) e fixos no período
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <PieChart 
               data={despesasPorCategoriaData}
               config={{ 
@@ -701,6 +715,35 @@ export default function FluxoCaixaReport({ eventos, pagamentos, custos }: FluxoC
                 showPercentages: true 
               }}
             />
+            {dadosFluxoCaixa.despesasPorCategoria.length > 0 && (
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-surface-hover text-text-secondary">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium">Categoria</th>
+                      <th className="px-4 py-3 text-right font-medium">Valor</th>
+                      <th className="px-4 py-3 text-right font-medium">Percentual (%)</th>
+                      <th className="px-4 py-3 text-left font-medium">Tipo de Custo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dadosFluxoCaixa.despesasPorCategoria.map((item) => (
+                      <tr
+                        key={`${item.tipoCusto}-${item.categoria}`}
+                        className="border-t border-border"
+                      >
+                        <td className="px-4 py-3">{item.categoria}</td>
+                        <td className="px-4 py-3 text-right">
+                          {item.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </td>
+                        <td className="px-4 py-3 text-right">{item.percentual.toFixed(2)}</td>
+                        <td className="px-4 py-3 capitalize">{item.tipoCusto}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -21,12 +21,14 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { useToast } from '@/components/ui/toast';
+import { CustoFixo } from '@/types';
 
 export default function RelatoriosPage() {
   const { userId } = useCurrentUser();
   const { showToast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [custosFixos, setCustosFixos] = useState<CustoFixo[]>([]);
   
   // Carregar dados essenciais primeiro (sempre necessários)
   const { data: eventos, loading: loadingEventos } = useAllEventos();
@@ -63,6 +65,13 @@ export default function RelatoriosPage() {
   const { data: clientes, loading: loadingClientes } = useAllClientes();
   const { data: canaisEntrada, loading: loadingCanaisEntrada } = useCanaisEntrada();
   const { data: custos, loading: loadingCustos } = useAllCustos();
+
+  useEffect(() => {
+    if (!userId) return;
+    dataService.getCustosFixos(userId)
+      .then(setCustosFixos)
+      .catch(() => setCustosFixos([]));
+  }, [userId]);
   
   // Carregar dados adicionais após um pequeno delay (permitir que dados essenciais carreguem primeiro)
   useEffect(() => {
@@ -359,7 +368,8 @@ export default function RelatoriosPage() {
               <FluxoCaixaReport 
                 eventos={eventos} 
                 pagamentos={pagamentos || []} 
-                custos={custos || []} 
+                custos={custos || []}
+                custosFixos={custosFixos}
               />
             </CardContent>
           </Card>

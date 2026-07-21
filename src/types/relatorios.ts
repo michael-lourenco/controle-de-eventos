@@ -63,7 +63,14 @@ export interface FluxoCaixaMensal {
   saldo: number;
   saldoAcumulado: number;
   receitasPorForma: Record<string, number>;
+  /** Totais por categoria (chave: "tipo::nome") para compatibilidade */
   despesasPorCategoria: Record<string, number>;
+  /** Detalhe com tipo fixo/variável */
+  despesasPorCategoriaDetalhe?: Array<{
+    categoria: string;
+    valor: number;
+    tipoCusto: 'fixo' | 'variável';
+  }>;
 }
 
 export interface ServicosResumo {

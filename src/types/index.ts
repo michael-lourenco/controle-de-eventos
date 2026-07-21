@@ -701,6 +701,7 @@ export interface RelatorioFluxoCaixa {
     categoria: string;
     valor: number;
     percentual: number;
+    tipoCusto: 'fixo' | 'variável';
   }>;
   projecao: {
     proximos3Meses: Array<{
