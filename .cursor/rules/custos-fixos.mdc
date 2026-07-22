@@ -45,6 +45,10 @@ Ver `.cursor/specs/custos-fixos/FILTROS.md`. Componente: `src/components/filters
 
 Fluxo de Caixa (`FluxoCaixaReport`): despesas variáveis (eventos/`dataCadastro`) + fixas (`dataPagamento`); coluna `tipoCusto` em DESPESAS POR CATEGORIA.
 
+## Planos (temporário)
+
+Gates `CUSTOS_FIXOS` / `ANEXOS_CUSTO_FIXO` nas APIs e no form de anexos estão **comentados** — feature liberada para todos. Reativar os `assert*` / `temPermissao` quando for restringir por plano.
+
 ## S3
 
 `users/{userId}/custos-fixos/{custoFixoId}/anexos/...`

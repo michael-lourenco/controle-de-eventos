@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
 import { s3Service } from '@/lib/s3-service';
-import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
-import { AdminFuncionalidadeRepository } from '@/lib/repositories/admin-funcionalidade-repository';
-import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
-import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
+// import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
+// import { AdminFuncionalidadeRepository } from '@/lib/repositories/admin-funcionalidade-repository';
+// import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
+// import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
 import {
   getAuthenticatedUser,
   handleApiError,
@@ -13,19 +13,20 @@ import {
   getQueryParams
 } from '@/lib/api/route-helpers';
 
-async function assertAnexos(userId: string) {
-  const funcionalidadeService = new FuncionalidadeService(
-    new AdminFuncionalidadeRepository(),
-    new AdminAssinaturaRepository(),
-    new AdminUserRepository()
-  );
-  const temPermissao = await funcionalidadeService.verificarPermissao(userId, 'ANEXOS_CUSTO_FIXO');
-  if (!temPermissao) {
-    return createErrorResponse(
-      'Esta funcionalidade está disponível apenas no plano Premium.',
-      403
-    );
-  }
+async function assertAnexos(_userId: string) {
+  // TODO: reativar bloqueio por plano quando ANEXOS_CUSTO_FIXO estiver liberado nos planos
+  // const funcionalidadeService = new FuncionalidadeService(
+  //   new AdminFuncionalidadeRepository(),
+  //   new AdminAssinaturaRepository(),
+  //   new AdminUserRepository()
+  // );
+  // const temPermissao = await funcionalidadeService.verificarPermissao(_userId, 'ANEXOS_CUSTO_FIXO');
+  // if (!temPermissao) {
+  //   return createErrorResponse(
+  //     'Esta funcionalidade está disponível apenas no plano Premium.',
+  //     403
+  //   );
+  // }
   return null;
 }
 

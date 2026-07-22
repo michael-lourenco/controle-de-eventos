@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { s3Service } from '@/lib/s3-service';
 import { repositoryFactory } from '@/lib/repositories/repository-factory';
-import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
-import { AdminFuncionalidadeRepository } from '@/lib/repositories/admin-funcionalidade-repository';
-import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
-import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
+// import { FuncionalidadeService } from '@/lib/services/funcionalidade-service';
+// import { AdminFuncionalidadeRepository } from '@/lib/repositories/admin-funcionalidade-repository';
+// import { AdminAssinaturaRepository } from '@/lib/repositories/admin-assinatura-repository';
+// import { AdminUserRepository } from '@/lib/repositories/admin-user-repository';
 import {
   getAuthenticatedUser,
   handleApiError,
@@ -15,18 +15,19 @@ export async function POST(request: NextRequest) {
   try {
     const user = await getAuthenticatedUser();
 
-    const funcionalidadeService = new FuncionalidadeService(
-      new AdminFuncionalidadeRepository(),
-      new AdminAssinaturaRepository(),
-      new AdminUserRepository()
-    );
-    const temPermissao = await funcionalidadeService.verificarPermissao(user.id, 'ANEXOS_CUSTO_FIXO');
-    if (!temPermissao) {
-      return createErrorResponse(
-        'Esta funcionalidade está disponível apenas no plano Premium.',
-        403
-      );
-    }
+    // TODO: reativar bloqueio por plano quando ANEXOS_CUSTO_FIXO estiver liberado nos planos
+    // const funcionalidadeService = new FuncionalidadeService(
+    //   new AdminFuncionalidadeRepository(),
+    //   new AdminAssinaturaRepository(),
+    //   new AdminUserRepository()
+    // );
+    // const temPermissao = await funcionalidadeService.verificarPermissao(user.id, 'ANEXOS_CUSTO_FIXO');
+    // if (!temPermissao) {
+    //   return createErrorResponse(
+    //     'Esta funcionalidade está disponível apenas no plano Premium.',
+    //     403
+    //   );
+    // }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;

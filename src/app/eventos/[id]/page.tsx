@@ -50,6 +50,7 @@ import { Lock } from 'lucide-react';
 import LoadingHotmart from '@/components/LoadingHotmart';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
 import { montarTituloEventoClonado } from '@/lib/utils/evento-clone';
+import { formatEventInfoForCopy, copiarTextoParaClipboard } from '@/lib/utils/evento-copy-info';
 
 export default function EventoViewPage() {
   const params = useParams();
@@ -307,125 +308,25 @@ export default function EventoViewPage() {
     return diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
   };
 
-  const formatEventInfoForCopy = () => {
-    if (!evento) return '';
-
-    let text = '';
-
-    // Helpers para data com fuso horário de São Paulo
-    const formatDatePtBR = (value: any) => {
-      const d = value instanceof Date ? value : new Date(value);
-      return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-    };
-    const getWeekdayPtBR = (value: any) => {
-      const d = value instanceof Date ? value : new Date(value);
-      return d
-        .toLocaleDateString('pt-BR', { weekday: 'long', timeZone: 'America/Sao_Paulo' })
-        .toUpperCase();
-    };
-
-    // Nome do Evento
-    const nomeEvento =
-      (evento as any).nomeEvento ||
-      (evento.tipoEvento ? `${evento.tipoEvento}${evento.cliente?.nome ? ` - ${evento.cliente.nome}` : ''}` : '') ||
-      evento.local ||
-      'Evento';
-    text += 'Nome do Evento\n\n';
-    text += `${nomeEvento}\n`;
-
-    text += '\n────────────────────────\n\n';
-
-    // Informações do Evento
-    text += 'Informações do Evento\n\n';
-    text += `Data: ${formatDatePtBR(evento.dataEvento)} - ${getWeekdayPtBR(evento.dataEvento)}\n`;
-    if (evento.local) text += `Local: ${evento.local}\n`;
-    if (evento.endereco) text += `Endereço: ${evento.endereco}\n`;
-    if (evento.numeroConvidados) text += `Convidados: ${evento.numeroConvidados}\n`;
-    if (evento.tipoEvento) text += `Tipo: ${evento.tipoEvento}\n`;
-
-    text += '\n────────────────────────\n\n';
-
-    // Detalhes do Serviço
-    text += 'Detalhes do Serviço\n\n';
-    if ((evento as any).saida) text += `Saída: ${(evento as any).saida}\n`;
-    if ((evento as any).chegadaNoLocal) text += `Chegada no local: ${(evento as any).chegadaNoLocal}\n`;
-    if ((evento as any).horarioInicio) text += `Horário de início: ${(evento as any).horarioInicio}\n`;
-    if ((evento as any).horarioDesmontagem) text += `Horário de Desmontagem: ${(evento as any).horarioDesmontagem}\n`;
-    if ((evento as any).tempoEvento) text += `Duração: ${(evento as any).tempoEvento}\n`;
-    if ((evento as any).quantidadeMesas) text += `Mesas: ${(evento as any).quantidadeMesas}\n`;
-    if ((evento as any).numeroImpressoes) text += `Impressões: ${(evento as any).numeroImpressoes}\n`;
-    if ((evento as any).hashtag) text += `Hashtag: ${(evento as any).hashtag}\n`;
-
-    text += '\n────────────────────────\n\n';
-
-    // Cerimonialista
-    text += 'Cerimonialista\n\n';
-    if ((evento as any).cerimonialista?.nome) text += `Nome: ${(evento as any).cerimonialista.nome}\n`;
-    if ((evento as any).cerimonialista?.telefone) text += `Telefone: ${(evento as any).cerimonialista.telefone}\n`;
-
-    text += '\n────────────────────────\n\n';
-
-    // Serviços do Evento
-    text += 'Serviços do Evento\n\n';
-    const nomesServicos = (servicos || []).map((s: any) => s?.tipoServico?.nome || s?.nome || s?.descricao).filter(Boolean);
-    text += nomesServicos.length > 0 ? nomesServicos.join(', ') : '-';
-    text += '\n';
-
-    return text;
-  };
-
   const handleCopyInfo = async () => {
-    // Verificar permissão antes de copiar
+    if (!evento) return;
+
     if (!temAcessoCopiar) {
       showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Premium', 'error');
       return;
     }
 
-    const text = formatEventInfoForCopy();
-    
-    // Tentar usar a API moderna do clipboard
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => {
-          setCopied(false);
-        }, 2000);
-        return;
-      } catch (error) {
-        // Erro silencioso
-      }
-    }
-    
-    // Fallback para navegadores mais antigos
-    try {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.top = '0';
-      textArea.style.left = '0';
-      textArea.style.width = '2em';
-      textArea.style.height = '2em';
-      textArea.style.padding = '0';
-      textArea.style.border = 'none';
-      textArea.style.outline = 'none';
-      textArea.style.boxShadow = 'none';
-      textArea.style.background = 'transparent';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      
-      const successful = document.execCommand('copy');
-      document.body.removeChild(textArea);
-      
-      if (successful) {
-        setCopied(true);
-        setTimeout(() => {
-          setCopied(false);
-        }, 2000);
-      }
-    } catch (err) {
-      // Erro silencioso
+    const nomesServicos = (servicos || [])
+      .map((s: { tipoServico?: { nome?: string }; nome?: string; descricao?: string }) =>
+        s?.tipoServico?.nome || s?.nome || s?.descricao
+      )
+      .filter(Boolean) as string[];
+
+    const text = formatEventInfoForCopy(evento, nomesServicos);
+    const ok = await copiarTextoParaClipboard(text);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 

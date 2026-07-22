@@ -8,7 +8,7 @@ import SelectWithSearch from '@/components/ui/SelectWithSearch';
 import { CustoFixo, AnexoCustoFixo, TipoCustoFixo } from '@/types';
 import { dataService } from '@/lib/data-service';
 import { useCurrentUser } from '@/hooks/useAuth';
-import { usePlano } from '@/lib/hooks/usePlano';
+// import { usePlano } from '@/lib/hooks/usePlano'; // TODO: reativar com gate ANEXOS_CUSTO_FIXO
 
 interface CustoFixoFormProps {
   custo?: CustoFixo;
@@ -30,7 +30,7 @@ function hojeISO(): string {
 
 export default function CustoFixoForm({ custo, onSave, onCancel }: CustoFixoFormProps) {
   const { userId } = useCurrentUser();
-  const { temPermissao } = usePlano();
+  // const { temPermissao } = usePlano(); // TODO: reativar com gate ANEXOS_CUSTO_FIXO
   const [temAnexos, setTemAnexos] = useState(false);
   const [anexos, setAnexos] = useState<AnexoCustoFixo[]>([]);
   const [anexosTemporarios, setAnexosTemporarios] = useState<File[]>([]);
@@ -80,8 +80,9 @@ export default function CustoFixoForm({ custo, onSave, onCancel }: CustoFixoForm
   }, [custo]);
 
   useEffect(() => {
-    temPermissao('ANEXOS_CUSTO_FIXO').then(setTemAnexos);
-  }, [temPermissao]);
+    // TODO: reativar gate de plano — temPermissao('ANEXOS_CUSTO_FIXO').then(setTemAnexos);
+    setTemAnexos(true);
+  }, []);
 
   const carregarAnexos = async (custoFixoId: string) => {
     try {

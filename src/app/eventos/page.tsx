@@ -17,6 +17,8 @@ import {
   TrashIcon,
   ArrowPathIcon,
   DocumentDuplicateIcon,
+  ClipboardDocumentIcon,
+  CheckIcon,
 } from '@heroicons/react/24/outline';
 import { useEventos, useEventosArquivados, useTiposEvento, useServicosPorEventos, usePreCadastros } from '@/hooks/useData';
 import { useCurrentUser } from '@/hooks/useAuth';
@@ -40,6 +42,7 @@ import EventoStatusSelect from '@/components/EventoStatusSelect';
 import PreCadastrosSection from '@/components/PreCadastrosSection';
 import { handlePlanoError } from '@/lib/utils/plano-errors';
 import { montarTituloEventoClonado } from '@/lib/utils/evento-clone';
+import { formatEventInfoForCopy, copiarTextoParaClipboard } from '@/lib/utils/evento-copy-info';
 
 export default function EventosPage() {
   const router = useRouter();
@@ -48,8 +51,9 @@ export default function EventosPage() {
   const { data: eventosArquivados, loading: loadingArquivados, error: errorArquivados, refetch: refetchArquivados } = useEventosArquivados();
   const { data: tiposEventoData } = useTiposEvento();
   const { data: preCadastros } = usePreCadastros();
-  const { limites, podeCriar } = usePlano();
+  const { limites, podeCriar, temPermissao } = usePlano();
   const [podeClonarEvento, setPodeClonarEvento] = useState(false);
+  const [temAcessoCopiar, setTemAcessoCopiar] = useState(false);
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState<string>('todos');
@@ -63,6 +67,7 @@ export default function EventosPage() {
   const [clonandoEventoId, setClonandoEventoId] = useState<string | null>(null);
   const [eventoParaClonar, setEventoParaClonar] = useState<Evento | null>(null);
   const [showCloneDialog, setShowCloneDialog] = useState(false);
+  const [eventoCopiadoId, setEventoCopiadoId] = useState<string | null>(null);
   
   const loading = loadingAtivos || loadingArquivados;
   const error = errorAtivos || errorArquivados;
@@ -97,6 +102,20 @@ export default function EventosPage() {
       ativo = false;
     };
   }, [podeCriar]);
+
+  useEffect(() => {
+    let ativo = true;
+    const verificarAcessoCopiar = async () => {
+      const acesso = await temPermissao('BOTAO_COPIAR');
+      if (ativo) {
+        setTemAcessoCopiar(acesso);
+      }
+    };
+    verificarAcessoCopiar();
+    return () => {
+      ativo = false;
+    };
+  }, [temPermissao]);
   
   const eventosLista = abaAtiva === 'ativos' 
     ? (eventosLocais ?? eventos ?? []) 
@@ -269,6 +288,27 @@ export default function EventosPage() {
 
   const handleEdit = (evento: Evento) => {
     router.push(`/eventos/${evento.id}/editar`);
+  };
+
+  const handleCopyInfo = async (evento: Evento) => {
+    if (!temAcessoCopiar) {
+      showToast('Esta funcionalidade está disponível apenas nos planos Profissional e Premium', 'error');
+      return;
+    }
+
+    const servicosDoEvento = servicosPorEvento.get(evento.id) || [];
+    const servicosNomes = servicosDoEvento
+      .map((s: { tipoServico?: { nome?: string }; nome?: string; descricao?: string }) =>
+        s?.tipoServico?.nome || s?.nome || s?.descricao
+      )
+      .filter(Boolean) as string[];
+
+    const text = formatEventInfoForCopy(evento, servicosNomes);
+    const ok = await copiarTextoParaClipboard(text);
+    if (ok) {
+      setEventoCopiadoId(evento.id);
+      setTimeout(() => setEventoCopiadoId(null), 2000);
+    }
   };
 
   const handleAbrirDialogoClonar = async (evento: Evento) => {
@@ -810,6 +850,40 @@ export default function EventosPage() {
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
+                      {temAcessoCopiar && (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="action-copy"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyInfo(evento);
+                                }}
+                                className={
+                                  eventoCopiadoId === evento.id
+                                    ? 'bg-success-bg text-success-text border-success'
+                                    : ''
+                                }
+                              >
+                                {eventoCopiadoId === evento.id ? (
+                                  <CheckIcon className="h-5 w-5" />
+                                ) : (
+                                  <ClipboardDocumentIcon className="h-5 w-5" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="font-medium">
+                              <p>
+                                {eventoCopiadoId === evento.id
+                                  ? 'Informações copiadas!'
+                                  : 'Copiar informações do evento'}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       <TooltipProvider delayDuration={200}>
                         <Tooltip>
                           <TooltipTrigger asChild>
